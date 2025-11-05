@@ -18,6 +18,14 @@ class Barangay extends Model
     ];
 
     /**
+     * Get the puroks for the barangay
+     */
+    public function puroks()
+    {
+        return $this->hasMany(Purok::class, 'b_id', 'b_id');
+    }
+
+    /**
      * Get the status associated with the barangay
      */
     public function status()
