@@ -102,22 +102,16 @@ docker-compose exec water_billing_app composer install
 
 ## Architecture Overview
 
-### Critical Architectural Pattern: Dual Billing System
+### Water Billing System
 
-This codebase contains **TWO PARALLEL BILLING SYSTEMS** - a legacy Consumer-based system and a modern ServiceConnection-based system. Understanding this duality is essential.
+This system manages water utility billing for Initao, Philippines using a ServiceConnection-based architecture.
 
-#### Legacy System (Consumer-based)
-- **Core Entity:** `Consumer` (represents customer + meter + area relationship)
-- **Billing Flow:** `ConsumerLedger` → `WaterBill` → `MiscBill`
-- **Meter:** `ConsumerMeter`
-- **Ledger:** `ConsumerLedger` (simple debit/credit tracking)
-
-#### Modern System (ServiceConnection-based)
-- **Core Entity:** `ServiceConnection` (replaces Consumer concept)
+#### Core Billing Flow
+- **Core Entity:** `ServiceConnection` (water service connection for a customer)
 - **Billing Flow:** `ServiceConnection` → `MeterAssignment` → `MeterReading` → `WaterBillHistory`
-- **Meter:** `Meter` → `MeterAssignment` (supports meter swaps)
-- **Ledger:** `CustomerLedger` (polymorphic source tracking)
-- **Payment:** `Payment` → `PaymentAllocation` (polymorphic distribution)
+- **Meter:** `Meter` → `MeterAssignment` (supports meter swaps and tracking)
+- **Ledger:** `CustomerLedger` (polymorphic source tracking for accounting)
+- **Payment:** `Payment` → `PaymentAllocation` (polymorphic distribution across bills and charges)
 
 ### Feature-Based Folder Structure
 
@@ -147,10 +141,9 @@ app/
 
 ### Key Domain Concepts
 
-**Customer vs Consumer:**
+**Customer vs ServiceConnection:**
 - `Customer` = Person/organization (account holder with contact info)
-- `Consumer` (legacy) = Relationship linking customer + meter + area
-- `ServiceConnection` (modern) = Replaces Consumer with cleaner service model
+- `ServiceConnection` = Active water service connection (customer can have multiple connections)
 
 **Address Hierarchy:**
 ```
@@ -304,15 +297,15 @@ event(new BillGenerated($connection, $periodId));
 
 ### Important Business Rules
 
-1. **Polymorphic Relationships:** Always check `source_type`/`target_type` before accessing polymorphic relations
+1. **Polymorphic Relationships:** Always check `source_type`/`target_type` before accessing polymorphic relations (CustomerLedger, PaymentAllocation)
 2. **Status Tracking:** Most entities use `status_id` (not soft deletes)
    - Use `Status::getIdByDescription(Status::ACTIVE)` to get IDs
    - Constants: `Status::PENDING`, `Status::ACTIVE`, `Status::INACTIVE`
-3. **Period-based Operations:** Most billing tied to specific periods
+3. **Period-based Operations:** Most billing tied to specific billing periods
 4. **Audit Trails:** Critical operations track `user_id` + timestamps
 5. **No Timestamps:** Many models have `public $timestamps = false`
 6. **Uppercase Validation:** Customer names use `Uppercase` rule
-7. **Resolution Numbers:** Use `CustomerHelper::generateCustomerResolutionNumber()` for unique IDs
+7. **Resolution Numbers:** Use `CustomerHelper::generateCustomerResolutionNumber()` for unique IDs (format: INITAO-{initials}-{timestamp})
 8. **Period Closure:** Respect `is_closed` flag - no modifications to closed periods
 
 ### Migration Sequencing
@@ -322,13 +315,13 @@ Migrations numbered 0001-0043 with critical dependencies:
 1. **0001_statuses_table** - **MUST run first** (required by all models)
 2. 0002_user_types_table
 3. 0003-0006 - RBAC (Roles, Permissions)
-4. 0012_consumers_table (modern with name fields)
-5. 0018_customers_table
-6. 0019_service_connections_table
-7. 0020-0021 - Meters and MeterAssignments
-8. 0026_consumers_table (legacy: customer+meter+area relation)
+4. 0018_customers_table
+5. 0019_service_connections_table
+6. 0020-0021 - Meters and MeterAssignments
+7. 0022-0025 - Billing and Payment tables
+8. 0026-0030 - Areas, Readings, Periods
 
-**Note:** Some numbers duplicate (0015, 0019, 0021, 0037) - parallel features.
+**Note:** Some numbers duplicate (0015, 0019, 0021, 0037) - parallel features developed simultaneously.
 
 ### Helper Functions
 
@@ -368,10 +361,10 @@ $statusId = Status::getIdByDescription(Status::ACTIVE);
 
 Follow **PSR-12** + Laravel naming + trailing commas + strict typing when possible.
 
-**Database Naming Note:** Codebase has inconsistent naming (legacy vs modern):
-- Legacy: PascalCase tables (`Consumer`, `MeterReading`)
-- Modern: snake_case tables (`service_connection`, `customer_ledger`)
-- **For new code:** Prefer snake_case to align with modern Laravel conventions
+**Database Naming Note:** Codebase has some naming inconsistencies from evolution:
+- Some older tables: PascalCase (`Consumer`, `MeterReading`)
+- Newer tables: snake_case (`service_connection`, `customer_ledger`)
+- **For new code:** Always use snake_case to align with Laravel conventions
 
 ### Commit Message Format
 
@@ -465,13 +458,13 @@ From host machine:
 
 ## Critical Notes for Development
 
-1. **Check which billing system** you're working with (legacy Consumer vs modern ServiceConnection)
-2. **Customer ≠ Consumer** - Customer is person, Consumer is legacy relationship entity
-3. **Status table dependency** - Ensure Status model exists and is seeded before creating records
-4. **No business logic in controllers** - Always use Services
-5. **No repository pattern** - Use Eloquent models directly in services
-6. **Polymorphic queries** - Always check type fields before accessing polymorphic relations
-7. **Meter reassignment** - Use MeterAssignment table, not direct consumer-meter links
-8. **Payment allocation** - Use PaymentAllocation for distributing payments, not direct updates
-9. **Resolution number uniqueness** - Always use helper function, never generate manually
-10. **Feature-based organization** - Place new code in appropriate feature folder (Auth, Billing, Payments, Consumers)
+1. **Status table dependency** - Ensure Status model exists and is seeded before creating records
+2. **No business logic in controllers** - Always use Services for business logic
+3. **No repository pattern** - Use Eloquent models directly in services
+4. **Polymorphic queries** - Always check `source_type`/`target_type` fields before accessing polymorphic relations (CustomerLedger, PaymentAllocation)
+5. **Meter reassignment** - Use MeterAssignment table for proper tracking of meter history
+6. **Payment allocation** - Use PaymentAllocation for distributing payments across bills and charges
+7. **Resolution number uniqueness** - Always use `CustomerHelper::generateCustomerResolutionNumber()`, never generate manually
+8. **Period closure** - Respect `is_closed` flag on Period model - no modifications to closed periods
+9. **Feature-based organization** - Place new code in appropriate feature folder (Auth, Billing, Payments, Consumers)
+10. **Service layer pattern** - All business logic goes in Services, controllers only orchestrate
