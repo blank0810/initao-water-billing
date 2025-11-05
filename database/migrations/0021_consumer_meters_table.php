@@ -24,21 +24,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id'); // User who created the record
             $table->timestamps();
 
-            // Foreign key constraints
-            $table->foreign('mr_id')
-                  ->references('mr_id')
-                  ->on('meter_readers')
-                  ->onDelete('restrict');
-
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
-
-            $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('restrict');
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
 
             // Add index for search optimization
             $table->index('create_date', 'consumer_meter_create_date_index');

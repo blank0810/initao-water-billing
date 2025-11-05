@@ -18,17 +18,13 @@ return new class extends Migration
             $table->decimal('rate', 10, 5);
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
-            
-            // Foreign key constraint
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
-            
+
+            // Foreign key constraint (will be added in a separate migration after all tables are created)
+
             // Add index for search optimization
             $table->index('rate_desc', 'water_rate_desc_index');
         });
-        
+
         // Insert default water rates
         DB::table('water_rates')->insert([
             [
@@ -67,18 +63,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign key first if it exists
+        // Drop index if exists
         Schema::table('water_rates', function (Blueprint $table) {
-            if (Schema::hasColumn('water_rates', 'stat_id')) {
-                $table->dropForeign(['water_rates_stat_id_foreign']);
-            }
-            
-            // Drop index if exists
             if (Schema::hasIndex('water_rates', 'water_rate_desc_index')) {
                 $table->dropIndex('water_rate_desc_index');
             }
         });
-        
+
         Schema::dropIfExists('water_rates');
     }
 };

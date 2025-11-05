@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PurokSeeder::class,           // 4. Puroks (1-A through 12-B per barangay)
 
             // Seed service-related tables
+            UserTypeSeeder::class,        // User types (ADMIN, BILLING)
             AccountTypeSeeder::class,     // Account types (Individual, Corporation, etc.)
             WaterRateSeeder::class,       // Water rates (Residential, Commercial, etc.)
             ChargeItemSeeder::class,      // Charge items (Connection Fee, Deposits, etc.)
@@ -27,8 +28,11 @@ class DatabaseSeeder extends Seeder
 
         // Create default admin user (optional)
         User::factory()->create([
+            'username' => 'admin',
             'name' => 'Admin User',
             'email' => 'admin@initao-water.gov.ph',
+            'u_type' => 3, // ADMIN user type
+            'stat_id' => 1, // ACTIVE status (column name is stat_id in database)
         ]);
 
         $this->command->info('✅ All seeders completed successfully!');

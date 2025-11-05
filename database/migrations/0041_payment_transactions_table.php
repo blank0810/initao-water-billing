@@ -29,26 +29,7 @@ return new class extends Migration
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
 
-            // Foreign key constraints
-            $table->foreign('payment_id')
-                  ->references('payment_id')
-                  ->on('Payment')
-                  ->onDelete('cascade');
-
-            $table->foreign('bill_id')
-                  ->references('wb_id')
-                  ->on('water_bill')
-                  ->onDelete('set null');
-
-            $table->foreign('processed_by')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('restrict');
-
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
 
             // Add index for search optimization
             $table->index('payment_id', 'payment_transaction_payment_index');

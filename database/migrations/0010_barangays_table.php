@@ -17,11 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
 
-            // Foreign key constraint
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
+            // Foreign key constraint (will be added in a separate migration after all tables are created)
 
             // Add index for performance
             $table->index('b_desc');
@@ -34,10 +30,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('barangay', function (Blueprint $table) {
-            $table->dropForeign(['stat_id']);
             $table->dropIndex(['b_desc']);
         });
-        
+
         Schema::dropIfExists('barangay');
     }
 };

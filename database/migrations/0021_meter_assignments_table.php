@@ -20,16 +20,7 @@ return new class extends Migration
             $table->decimal('install_read', 12, 3)->default(0.000);
             $table->decimal('removal_read', 12, 3)->nullable();
 
-            // Foreign key constraints
-            $table->foreign('connection_id')
-                  ->references('connection_id')
-                  ->on('ServiceConnection')
-                  ->onDelete('cascade');
-
-            $table->foreign('meter_id')
-                  ->references('mtr_id')
-                  ->on('meter')
-                  ->onDelete('restrict');
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
         });
     }
 

@@ -35,19 +35,25 @@ class BarangaySeeder extends Seeder
             'Tubigan',
         ];
 
-        $data = [];
-        foreach ($barangays as $index => $barangay) {
-            $data[] = [
-                'b_id' => $index + 1,
-                'b_desc' => $barangay,
-                'stat_id' => $activeStatusId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+        $insertCount = 0;
+        foreach ($barangays as $barangay) {
+            // Check if this barangay already exists
+            $existing = DB::table('barangay')
+                ->where('b_desc', $barangay)
+                ->exists();
+
+            // Only insert if it doesn't exist
+            if (!$existing) {
+                DB::table('barangay')->insert([
+                    'b_desc' => $barangay,
+                    'stat_id' => $activeStatusId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $insertCount++;
+            }
         }
 
-        DB::table('barangay')->insert($data);
-
-        $this->command->info('Barangays seeded: ' . count($barangays) . ' barangays in Initao');
+        $this->command->info('Barangays seeded: ' . $insertCount . ' new barangays in Initao');
     }
 }

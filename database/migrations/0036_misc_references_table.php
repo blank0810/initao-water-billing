@@ -22,28 +22,19 @@ return new class extends Migration
             $table->unsignedBigInteger('stat_id');
             $table->unsignedBigInteger('created_by');
             $table->timestamps();
-            
-            // Foreign key constraints
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('created_by')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('restrict');
-            
+
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
+
             // Add index for search optimization
             $table->index('reference_type', 'misc_reference_type_index');
             $table->index('reference_code', 'misc_reference_code_index');
             $table->index('is_active', 'misc_reference_active_index');
         });
-        
+
         // Only insert default reference types if users table has records
         if (DB::table('users')->exists()) {
             $adminId = DB::table('users')->first()->id;
-            
+
             DB::table('misc_reference')->insert([
                 [
                     'reference_type' => 'penalty',
@@ -87,30 +78,21 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
+        // Drop indexes if they exist
         Schema::table('misc_reference', function (Blueprint $table) {
-            $foreignKeys = ['stat_id', 'created_by'];
-            
-            foreach ($foreignKeys as $column) {
-                if (Schema::hasColumn('misc_reference', $column)) {
-                    $table->dropForeign(["miscreference_{$column}_foreign"]);
-                }
-            }
-            
-            // Drop indexes if they exist
             $indexes = [
                 'misc_reference_type_index',
                 'misc_reference_code_index',
                 'misc_reference_active_index'
             ];
-            
+
             foreach ($indexes as $index) {
                 if (Schema::hasIndex('misc_reference', $index)) {
                     $table->dropIndex($index);
                 }
             }
         });
-        
+
         Schema::dropIfExists('misc_reference');
     }
 };

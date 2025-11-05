@@ -77,19 +77,23 @@ class WaterRateSeeder extends Seeder
             ],
         ];
 
-        $data = [];
-        foreach ($waterRates as $index => $rate) {
-            $data[] = [
-                'wr_id' => $index + 1,
-                'rate_desc' => $rate['rate_desc'],
-                'rate' => $rate['rate'],
-                'stat_id' => $activeStatusId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+        foreach ($waterRates as $rate) {
+            // Use updateOrInsert to avoid duplicate entries
+            DB::table('water_rates')->updateOrInsert(
+                ['rate_desc' => $rate['rate_desc']], // Check for existing record by description
+                [
+                    'rate_desc' => $rate['rate_desc'],
+                    'rate' => $rate['rate'],
+                    'stat_id' => $activeStatusId,
+                    'updated_at' => now(),
+                ]
+            );
         }
 
-        DB::table('water_rates')->insert($data);
+        // If this is a new insert, set the created_at timestamp
+        DB::table('water_rates')
+            ->whereNull('created_at')
+            ->update(['created_at' => now()]);
 
         $this->command->info('Water Rates seeded: ' . count($waterRates) . ' rate tiers');
     }

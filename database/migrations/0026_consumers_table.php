@@ -18,30 +18,11 @@ return new class extends Migration
             $table->id('c_id');
             $table->unsignedBigInteger('cust_id')->nullable(); // Customer ID
             $table->unsignedBigInteger('cm_id')->nullable();   // Consumer Meter ID
-            $table->unsignedInteger('a_id')->nullable();       // Area ID
-            $table->unsignedInteger('stat_id')->nullable();
+            $table->unsignedBigInteger('a_id')->nullable();    // Area ID (changed from unsignedInteger to unsignedBigInteger)
+            $table->unsignedBigInteger('stat_id')->nullable();
             $table->boolean('chng_mtr_stat')->nullable()->default(false);
 
-            // Foreign key constraints
-            $table->foreign('cust_id')
-                  ->references('cust_id')
-                  ->on('customer')
-                  ->onDelete('restrict');
-
-            $table->foreign('cm_id')
-                  ->references('cm_id')
-                  ->on('consumer_meters')
-                  ->onDelete('restrict');
-
-            $table->foreign('a_id')
-                  ->references('a_id')
-                  ->on('area')
-                  ->onDelete('restrict');
-
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
 
             // Add unique constraint for customer and meter combination
             $table->unique(['cust_id', 'cm_id'], 'consumer_customer_meter_unique');

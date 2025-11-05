@@ -22,21 +22,7 @@ return new class extends Migration
             $table->unsignedBigInteger('connection_id'); // Service connection
             $table->timestamps();
 
-            // Foreign key constraints
-            $table->foreign('payment_id')
-                  ->references('payment_id')
-                  ->on('Payment')
-                  ->onDelete('cascade');
-
-            $table->foreign('period_id')
-                  ->references('per_id')
-                  ->on('period')
-                  ->onDelete('restrict');
-
-            $table->foreign('connection_id')
-                  ->references('connection_id')
-                  ->on('service_connection')
-                  ->onDelete('restrict');
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
 
             // Add index for search optimization
             $table->index(['payment_id', 'target_type', 'target_id'], 'payment_allocation_index');

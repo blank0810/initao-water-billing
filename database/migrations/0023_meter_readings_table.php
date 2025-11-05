@@ -22,21 +22,7 @@ return new class extends Migration
             $table->unsignedBigInteger('meter_reader_id');
             $table->timestamps();
 
-            // Foreign key constraints
-            $table->foreign('assignment_id')
-                  ->references('assignment_id')
-                  ->on('MeterAssignment')
-                  ->onDelete('restrict');
-
-            $table->foreign('period_id')
-                  ->references('per_id')
-                  ->on('period')
-                  ->onDelete('restrict');
-
-            $table->foreign('meter_reader_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('restrict');
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
 
             // Add composite index for search optimization
             $table->index(['assignment_id', 'period_id'], 'meter_reading_assignment_period_index');

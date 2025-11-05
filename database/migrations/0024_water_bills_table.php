@@ -20,23 +20,9 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
-            
-            // Foreign key constraints
-            $table->foreign('cl_id')
-                  ->references('cl_id')
-                  ->on('consumer_ledger')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('per_id')
-                  ->references('per_id')
-                  ->on('period')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
-            
+
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
+
             // Add index for search optimization
             $table->index(['cl_id', 'per_id'], 'water_bill_consumer_period_index');
         });
@@ -47,22 +33,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
+        // Drop index if exists
         Schema::table('water_bill', function (Blueprint $table) {
-            $foreignKeys = ['cl_id', 'per_id', 'stat_id'];
-            
-            foreach ($foreignKeys as $column) {
-                if (Schema::hasColumn('water_bill', $column)) {
-                    $table->dropForeign(["water_bill_{$column}_foreign"]);
-                }
-            }
-            
-            // Drop index if exists
             if (Schema::hasIndex('water_bill', 'water_bill_consumer_period_index')) {
                 $table->dropIndex('water_bill_consumer_period_index');
             }
         });
-        
+
         Schema::dropIfExists('water_bill');
     }
 };

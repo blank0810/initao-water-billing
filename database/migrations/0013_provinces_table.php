@@ -17,17 +17,13 @@ return new class extends Migration
             $table->string('prov_desc');
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
-            
-            // Foreign key constraint
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
-            
+
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
+
             // Add index for search optimization
             $table->index('prov_desc', 'province_desc_index');
         });
-        
+
         // Insert some default provinces (Philippines as example)
         $provinces = [
             ['prov_desc' => 'Abra', 'stat_id' => 2], // ACTIVE
@@ -37,16 +33,16 @@ return new class extends Migration
             ['prov_desc' => 'Albay', 'stat_id' => 2],
             // Add more provinces as needed
         ];
-        
+
         // Add timestamps to each province
         $now = now();
-        $provinces = array_map(function($province) use ($now) {
+        $provinces = array_map(function ($province) use ($now) {
             return array_merge($province, [
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
         }, $provinces);
-        
+
         DB::table('province')->insert($provinces);
     }
 
@@ -55,18 +51,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign key first if it exists
+        // Drop index if exists
         Schema::table('province', function (Blueprint $table) {
-            if (Schema::hasColumn('province', 'stat_id')) {
-                $table->dropForeign(['province_stat_id_foreign']);
-            }
-            
-            // Drop index if exists
             if (Schema::hasIndex('province', 'province_desc_index')) {
                 $table->dropIndex('province_desc_index');
             }
         });
-        
+
         Schema::dropIfExists('province');
     }
 };

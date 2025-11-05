@@ -23,18 +23,9 @@ return new class extends Migration
             $table->string('c_type');
             $table->string('resolution_no')->nullable();
             $table->timestamps();
-            
-            // Foreign key constraints
-            $table->foreign('ca_id')
-                  ->references('ca_id')
-                  ->on('consumer_address')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
-                  
+
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
+
             // Add index for search optimization
             $table->index(['cust_last_name', 'cust_first_name'], 'customer_name_index');
         });
@@ -45,25 +36,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
+        // Drop index if exists
         Schema::table('customer', function (Blueprint $table) {
-            $foreignKeys = [
-                'ca_id',
-                'stat_id'
-            ];
-            
-            foreach ($foreignKeys as $column) {
-                if (Schema::hasColumn('customer', $column)) {
-                    $table->dropForeign(['customer_' . $column . '_foreign']);
-                }
-            }
-            
-            // Drop index if exists
             if (Schema::hasIndex('customer', 'customer_name_index')) {
                 $table->dropIndex('customer_name_index');
             }
         });
-        
+
         Schema::dropIfExists('customer');
     }
 };

@@ -28,12 +28,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('stat_id');
 
-            // Foreign keys
-            $table->foreign('customer_id')->references('cust_id')->on('customer')->onDelete('cascade');
-            $table->foreign('connection_id')->references('connection_id')->on('ServiceConnection')->onDelete('cascade');
-            $table->foreign('period_id')->references('per_id')->on('period')->onDelete('set null');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('stat_id')->references('stat_id')->on('statuses');
+            // Foreign keys (will be added in a separate migration after all tables are created)
 
             // Indexes
             $table->index('customer_id');

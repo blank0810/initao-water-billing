@@ -21,13 +21,9 @@ return new class extends Migration
             $table->boolean('is_taxable')->default(false);
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
-            
-            // Foreign key constraint
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
-                  
+
+            // Foreign key constraint (will be added in a separate migration after all tables are created)
+
             // Add index for search optimization
             $table->index('code', 'charge_item_code_index');
             $table->index('charge_type', 'charge_item_type_index');
@@ -40,18 +36,16 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('ChargeItem', function (Blueprint $table) {
-            $table->dropForeign(['stat_id']);
-            
             // Drop indexes if they exist
             if (Schema::hasIndex('ChargeItem', 'charge_item_code_index')) {
                 $table->dropIndex('charge_item_code_index');
             }
-            
+
             if (Schema::hasIndex('ChargeItem', 'charge_item_type_index')) {
                 $table->dropIndex('charge_item_type_index');
             }
         });
-        
+
         Schema::dropIfExists('ChargeItem');
     }
 };

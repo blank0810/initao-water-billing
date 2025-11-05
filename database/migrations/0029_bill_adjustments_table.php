@@ -21,21 +21,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id'); // User who created the adjustment
             $table->timestamps();
 
-            // Foreign key constraints
-            $table->foreign('bill_id')
-                  ->references('wb_id')
-                  ->on('water_bill_history')
-                  ->onDelete('cascade');
-
-            $table->foreign('bill_adjustment_type_id')
-                  ->references('bill_adjustment_type_id')
-                  ->on('BillAdjustmentType')
-                  ->onDelete('restrict');
-
-            $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('restrict');
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
 
             // Add index for search optimization
             $table->index('bill_id', 'bill_adjustment_bill_index');

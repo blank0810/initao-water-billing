@@ -18,30 +18,35 @@ class PurokSeeder extends Seeder
         // Get all barangays
         $barangays = DB::table('barangay')->get();
 
-        $data = [];
-        $purokId = 1;
+        $insertCount = 0;
 
         foreach ($barangays as $barangay) {
             // For each barangay, create puroks from 1-A through 12-B
             for ($number = 1; $number <= 12; $number++) {
                 foreach (['A', 'B'] as $suffix) {
-                    $data[] = [
-                        'p_id' => $purokId++,
-                        'p_desc' => "Purok {$number}-{$suffix}",
-                        'b_id' => $barangay->b_id,
-                        'stat_id' => $activeStatusId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
+                    $purokDesc = "Purok {$number}-{$suffix}";
+
+                    // Check if this purok already exists for this barangay
+                    $existing = DB::table('purok')
+                        ->where('p_desc', $purokDesc)
+                        ->where('b_id', $barangay->b_id)
+                        ->exists();
+
+                    // Only insert if it doesn't exist
+                    if (!$existing) {
+                        DB::table('purok')->insert([
+                            'p_desc' => $purokDesc,
+                            'b_id' => $barangay->b_id,
+                            'stat_id' => $activeStatusId,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        $insertCount++;
+                    }
                 }
             }
         }
 
-        // Insert in chunks to avoid memory issues
-        foreach (array_chunk($data, 100) as $chunk) {
-            DB::table('purok')->insert($chunk);
-        }
-
-        $this->command->info('Puroks seeded: ' . count($data) . ' puroks (24 per barangay)');
+        $this->command->info('Puroks seeded: ' . $insertCount . ' new puroks (24 per barangay)');
     }
 }

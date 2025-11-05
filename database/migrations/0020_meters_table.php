@@ -17,12 +17,8 @@ return new class extends Migration
             $table->string('mtr_brand');
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
-            
-            // Foreign key constraint
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
+
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
         });
     }
 
@@ -31,13 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign key first if it exists
-        Schema::table('meter', function (Blueprint $table) {
-            if (Schema::hasColumn('meter', 'stat_id')) {
-                $table->dropForeign(['stat_id']);
-            }
-        });
-        
         Schema::dropIfExists('meter');
     }
 };

@@ -23,14 +23,9 @@ return new class extends Migration
             $table->decimal('adjustment_total', 12, 2)->default(0.00);
             $table->decimal('total_amount', 12, 2)->storedAs('water_amount + adjustment_total');
             $table->datetime('created_at', 6)->useCurrent();
-            $table->unsignedInteger('stat_id');
+            $table->unsignedBigInteger('stat_id'); // Changed from unsignedInteger to unsignedBigInteger
 
-            // Foreign keys
-            $table->foreign('connection_id')->references('connection_id')->on('ServiceConnection')->onDelete('cascade');
-            $table->foreign('period_id')->references('per_id')->on('period')->onDelete('cascade');
-            $table->foreign('prev_reading_id')->references('reading_id')->on('MeterReading')->onDelete('restrict');
-            $table->foreign('curr_reading_id')->references('reading_id')->on('MeterReading')->onDelete('restrict');
-            $table->foreign('stat_id')->references('stat_id')->on('statuses');
+            // Foreign keys (will be added in a separate migration after all tables are created)
 
             // Indexes
             $table->index('connection_id');

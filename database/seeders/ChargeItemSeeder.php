@@ -103,23 +103,26 @@ class ChargeItemSeeder extends Seeder
             ],
         ];
 
-        $data = [];
-        foreach ($chargeItems as $index => $item) {
-            $data[] = [
-                'charge_item_id' => $index + 1,
-                'name' => $item['name'],
-                'code' => $item['code'],
-                'description' => $item['description'],
-                'default_amount' => $item['default_amount'],
-                'charge_type' => $item['charge_type'],
-                'is_taxable' => $item['is_taxable'],
-                'stat_id' => $activeStatusId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+        foreach ($chargeItems as $item) {
+            // Use updateOrInsert to avoid duplicate entries
+            DB::table('ChargeItem')->updateOrInsert(
+                ['code' => $item['code']], // Check for existing record by code
+                [
+                    'name' => $item['name'],
+                    'description' => $item['description'],
+                    'default_amount' => $item['default_amount'],
+                    'charge_type' => $item['charge_type'],
+                    'is_taxable' => $item['is_taxable'],
+                    'stat_id' => $activeStatusId,
+                    'updated_at' => now(),
+                ]
+            );
         }
 
-        DB::table('ChargeItem')->insert($data);
+        // If this is a new insert, set the created_at timestamp
+        DB::table('ChargeItem')
+            ->whereNull('created_at')
+            ->update(['created_at' => now()]);
 
         $this->command->info('Charge Items seeded: ' . count($chargeItems) . ' charge items');
     }

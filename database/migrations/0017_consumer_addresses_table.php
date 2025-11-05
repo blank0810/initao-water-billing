@@ -19,32 +19,8 @@ return new class extends Migration
             $table->unsignedBigInteger('prov_id');
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
-            
-            // Foreign key constraints
-            $table->foreign('p_id')
-                  ->references('p_id')
-                  ->on('purok')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('b_id')
-                  ->references('b_id')
-                  ->on('barangay')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('t_id')
-                  ->references('t_id')
-                  ->on('town')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('prov_id')
-                  ->references('prov_id')
-                  ->on('province')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
+
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
         });
     }
 
@@ -53,23 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
-        Schema::table('consumer_address', function (Blueprint $table) {
-            $foreignKeys = [
-                'p_id',
-                'b_id',
-                't_id',
-                'prov_id',
-                'stat_id'
-            ];
-            
-            foreach ($foreignKeys as $column) {
-                if (Schema::hasColumn('consumer_address', $column)) {
-                    $table->dropForeign(['consumer_address_' . $column . '_foreign']);
-                }
-            }
-        });
-        
         Schema::dropIfExists('consumer_address');
     }
 };

@@ -24,23 +24,9 @@ return new class extends Migration
             $table->unsignedBigInteger('stat_id');
             $table->unsignedBigInteger('user_id'); // User who created the entry
             $table->timestamps();
-            
-            // Foreign key constraints
-            $table->foreign('c_id')
-                  ->references('c_id')
-                  ->on('consumer')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
-                  
-            $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('restrict');
-            
+
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
+
             // Add index for search optimization
             $table->index('c_id', 'consumer_ledger_consumer_index');
             $table->index('cl_no', 'consumer_ledger_number_index');
@@ -53,30 +39,21 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
+        // Drop indexes if they exist
         Schema::table('consumer_ledger', function (Blueprint $table) {
-            $foreignKeys = ['c_id', 'stat_id', 'user_id'];
-            
-            foreach ($foreignKeys as $column) {
-                if (Schema::hasColumn('consumer_ledger', $column)) {
-                    $table->dropForeign(["consumer_ledger_{$column}_foreign"]);
-                }
-            }
-            
-            // Drop indexes if they exist
             $indexes = [
                 'consumer_ledger_consumer_index',
                 'consumer_ledger_number_index',
                 'consumer_ledger_date_index'
             ];
-            
+
             foreach ($indexes as $index) {
                 if (Schema::hasIndex('consumer_ledger', $index)) {
                     $table->dropIndex($index);
                 }
             }
         });
-        
+
         Schema::dropIfExists('consumer_ledger');
     }
 };

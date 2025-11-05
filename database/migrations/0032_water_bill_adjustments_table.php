@@ -21,18 +21,9 @@ return new class extends Migration
             $table->unsignedBigInteger('approved_by')->nullable(); // User who approved the adjustment
             $table->dateTime('approved_at')->nullable();
             $table->timestamps();
-            
-            // Foreign key constraints
-            $table->foreign('wb_id')
-                  ->references('wb_id')
-                  ->on('water_bill')
-                  ->onDelete('cascade');
-                  
-            $table->foreign('approved_by')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('set null');
-            
+
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
+
             // Add index for search optimization
             $table->index('wb_id', 'water_bill_adjustment_bill_index');
             $table->index('adj_type', 'water_bill_adjustment_type_index');
@@ -44,26 +35,17 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
+        // Drop indexes if they exist
         Schema::table('water_bill_adjustment', function (Blueprint $table) {
-            $foreignKeys = ['wb_id', 'approved_by'];
-            
-            foreach ($foreignKeys as $column) {
-                if (Schema::hasColumn('water_bill_adjustment', $column)) {
-                    $table->dropForeign(["water_bill_adjustment_{$column}_foreign"]);
-                }
-            }
-            
-            // Drop indexes if they exist
             if (Schema::hasIndex('water_bill_adjustment', 'water_bill_adjustment_bill_index')) {
                 $table->dropIndex('water_bill_adjustment_bill_index');
             }
-            
+
             if (Schema::hasIndex('water_bill_adjustment', 'water_bill_adjustment_type_index')) {
                 $table->dropIndex('water_bill_adjustment_type_index');
             }
         });
-        
+
         Schema::dropIfExists('water_bill_adjustment');
     }
 };

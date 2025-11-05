@@ -22,21 +22,7 @@ return new class extends Migration
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
 
-            // Foreign key constraints
-            $table->foreign('payer_id')
-                  ->references('cust_id')
-                  ->on('customer')
-                  ->onDelete('restrict');
-
-            $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('restrict');
-
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
 
             // Add index for search optimization
             $table->index('receipt_no', 'payment_receipt_no_index');

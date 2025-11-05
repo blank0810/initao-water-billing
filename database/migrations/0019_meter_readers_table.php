@@ -20,11 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
 
-            // Foreign key constraint
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
+            // Foreign key constraints (will be added in a separate migration after all tables are created)
 
             // Add index for search optimization
             $table->index('mr_name', 'meter_reader_name_index');
@@ -59,6 +55,13 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Drop index if exists
+        Schema::table('meter_readers', function (Blueprint $table) {
+            if (Schema::hasIndex('meter_readers', 'meter_reader_name_index')) {
+                $table->dropIndex('meter_reader_name_index');
+            }
+        });
+
         Schema::dropIfExists('meter_readers');
     }
 };

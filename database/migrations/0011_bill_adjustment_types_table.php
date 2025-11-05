@@ -17,14 +17,10 @@ return new class extends Migration
             $table->string('name');
             $table->enum('direction', ['debit', 'credit']);
             $table->unsignedBigInteger('stat_id');
-            
-            // Foreign key constraint
-            $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
+
+            // Foreign key constraint (will be added in a separate migration after all tables are created)
         });
-        
+
         // Insert default adjustment types
         DB::table('BillAdjustmentType')->insert([
             ['name' => 'Meter Reading Error', 'direction' => 'credit', 'stat_id' => DB::table('statuses')->where('stat_desc', 'ACTIVE')->value('stat_id')],
@@ -40,10 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('BillAdjustmentType', function (Blueprint $table) {
-            $table->dropForeign(['stat_id']);
-        });
-        
         Schema::dropIfExists('BillAdjustmentType');
     }
 };

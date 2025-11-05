@@ -15,15 +15,24 @@ class TownSeeder extends Seeder
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
-        DB::table('town')->insert([
-            't_id' => 1,
-            't_desc' => 'Initao',
-            'prov_id' => 1, // Misamis Oriental
-            'stat_id' => $activeStatusId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Check if Initao town already exists
+        $existing = DB::table('town')
+            ->where('t_desc', 'Initao')
+            ->exists();
 
-        $this->command->info('Town seeded: Initao');
+        // Only insert if it doesn't exist
+        if (!$existing) {
+            DB::table('town')->insert([
+                't_desc' => 'Initao',
+                'prov_id' => 1, // Misamis Oriental
+                'stat_id' => $activeStatusId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $this->command->info('Town seeded: Initao');
+        } else {
+            $this->command->info('Town already exists: Initao');
+        }
     }
 }

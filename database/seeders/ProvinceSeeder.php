@@ -15,14 +15,23 @@ class ProvinceSeeder extends Seeder
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
-        DB::table('province')->insert([
-            'prov_id' => 1,
-            'prov_desc' => 'Misamis Oriental',
-            'stat_id' => $activeStatusId,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Check if Misamis Oriental province already exists
+        $existing = DB::table('province')
+            ->where('prov_desc', 'Misamis Oriental')
+            ->exists();
 
-        $this->command->info('Province seeded: Misamis Oriental');
+        // Only insert if it doesn't exist
+        if (!$existing) {
+            DB::table('province')->insert([
+                'prov_desc' => 'Misamis Oriental',
+                'stat_id' => $activeStatusId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $this->command->info('Province seeded: Misamis Oriental');
+        } else {
+            $this->command->info('Province already exists: Misamis Oriental');
+        }
     }
 }
