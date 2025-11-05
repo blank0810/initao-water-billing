@@ -20,4 +20,7 @@ Route::prefix('address')->group(function () {
     Route::get('/towns', [AddressController::class, 'getTowns']);
     Route::get('/barangays', [AddressController::class, 'getBarangays']);
     Route::get('/puroks', [AddressController::class, 'getPuroks']);
+    Route::get('/account-types', [AddressController::class, 'getAccountTypes']);
+    Route::get('/water-rates', [AddressController::class, 'getWaterRates']);
+    Route::get('/application-charges', [AddressController::class, 'getApplicationCharges']);
 });

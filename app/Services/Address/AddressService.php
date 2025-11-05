@@ -6,6 +6,9 @@ use App\Models\Province;
 use App\Models\Town;
 use App\Models\Barangay;
 use App\Models\Purok;
+use App\Models\AccountType;
+use App\Models\WaterRate;
+use App\Models\ChargeItem;
 use App\Models\Status;
 
 class AddressService
@@ -61,5 +64,42 @@ class AddressService
             ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
             ->orderBy('p_desc')
             ->get(['p_id', 'p_desc']);
+    }
+
+    /**
+     * Get all active account types
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAccountTypes()
+    {
+        return AccountType::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->orderBy('at_desc')
+            ->get(['at_id', 'at_desc']);
+    }
+
+    /**
+     * Get all active water rates
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getWaterRates()
+    {
+        return WaterRate::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->orderBy('rate_desc')
+            ->get(['wr_id', 'rate_desc', 'rate']);
+    }
+
+    /**
+     * Get application charge items (one-time charges for new applications)
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getApplicationCharges()
+    {
+        return ChargeItem::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->where('charge_type', 'one_time')
+            ->orderBy('name')
+            ->get(['charge_item_id', 'name', 'code', 'description', 'default_amount']);
     }
 }

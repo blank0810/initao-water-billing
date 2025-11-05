@@ -70,4 +70,37 @@ class AddressController extends Controller
         $puroks = $this->addressService->getPuroksByBarangay($request->barangay_id);
         return response()->json($puroks);
     }
+
+    /**
+     * Get all account types
+     *
+     * @return JsonResponse
+     */
+    public function getAccountTypes(): JsonResponse
+    {
+        $accountTypes = $this->addressService->getAccountTypes();
+        return response()->json($accountTypes);
+    }
+
+    /**
+     * Get all water rates
+     *
+     * @return JsonResponse
+     */
+    public function getWaterRates(): JsonResponse
+    {
+        $waterRates = $this->addressService->getWaterRates();
+        return response()->json($waterRates);
+    }
+
+    /**
+     * Get application charge items
+     *
+     * @return JsonResponse
+     */
+    public function getApplicationCharges(): JsonResponse
+    {
+        $charges = $this->addressService->getApplicationCharges();
+        return response()->json($charges);
+    }
 }
