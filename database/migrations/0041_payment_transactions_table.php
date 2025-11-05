@@ -1,0 +1,98 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('payment_transaction', function (Blueprint $table) {
+            $table->id('transaction_id');
+            $table->unsignedBigInteger('payment_id');
+            $table->unsignedBigInteger('bill_id')->nullable(); // Can be null for advance payments
+            $table->string('reference_number')->nullable(); // For tracking external references
+            $table->string('transaction_type'); // e.g., 'PAYMENT', 'ADJUSTMENT', 'REFUND'
+            $table->decimal('amount', 12, 2);
+            
+            // For tracking what the payment is applied to
+            $table->string('applied_to_type')->nullable(); // e.g., 'WATER_BILL', 'MISC_BILL', 'PENALTY'
+            $table->unsignedBigInteger('applied_to_id')->nullable(); // Polymorphic relation ID
+            
+            $table->text('notes')->nullable();
+            $table->unsignedBigInteger('processed_by');
+            $table->unsignedBigInteger('stat_id');
+            $table->timestamps();
+            
+            // Foreign key constraints
+            $table->foreign('payment_id')
+                  ->references('payment_id')
+                  ->on('payment')
+                  ->onDelete('cascade');
+                  
+            $table->foreign('bill_id')
+                  ->references('wb_id')
+                  ->on('water_bill')
+                  ->onDelete('set null');
+                  
+            $table->foreign('processed_by')
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('restrict');
+                  
+            $table->foreign('stat_id')
+                  ->references('stat_id')
+                  ->on('statuses')
+                  ->onDelete('restrict');
+            
+            // Add index for search optimization
+            $table->index('payment_id', 'payment_transaction_payment_index');
+            $table->index('bill_id', 'payment_transaction_bill_index');
+            $table->index('reference_number', 'payment_transaction_reference_index');
+            $table->index(['applied_to_type', 'applied_to_id'], 'payment_transaction_applied_to_index');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Drop foreign keys first if they exist
+        Schema::table('payment_transaction', function (Blueprint $table) {
+            $foreignKeys = [
+                'payment_id',
+                'bill_id',
+                'processed_by',
+                'stat_id'
+            ];
+            
+            foreach ($foreignKeys as $column) {
+                if (Schema::hasColumn('payment_transaction', $column)) {
+                    $table->dropForeign(["paymenttransaction_{$column}_foreign"]);
+                }
+            }
+            
+            // Drop indexes if they exist
+            $indexes = [
+                'payment_transaction_payment_index',
+                'payment_transaction_bill_index',
+                'payment_transaction_reference_index',
+                'payment_transaction_applied_to_index'
+            ];
+            
+            foreach ($indexes as $index) {
+                if (Schema::hasIndex('payment_transaction', $index)) {
+                    $table->dropIndex($index);
+                }
+            }
+        });
+        
+        Schema::dropIfExists('payment_transaction');
+    }
+};

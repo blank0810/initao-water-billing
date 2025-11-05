@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  # --- PHP-FPM (Laravel App) ---
+  water_billing_app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: ${APP_CONTAINER_NAME}
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    depends_on:
+      - water_billing_db
+      - mailpit
+    networks:
+      - app-network
+    # ✅ No need for "environment:" block — Laravel reads .env directly via volume mount.
+
+  # --- Nginx Web Server ---
+  water_billing_nginx:
+    image: nginx:alpine
+    container_name: ${NGINX_CONTAINER_NAME}
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "${NGINX_PORT}:80"
+    depends_on:
+      - water_billing_app
+    networks:
+      - app-network
+
+  # --- MySQL Database ---
+  water_billing_db:
+    image: mysql:${MYSQL_VERSION}
+    container_name: ${DB_CONTAINER_NAME}
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT_HOST}:${DB_PORT}"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  # --- PhpMyAdmin ---
+  water_billing_phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ${PHPMYADMIN_CONTAINER_NAME}
+    restart: unless-stopped
+    environment:
+      PMA_HOST: ${DB_CONTAINER_NAME}
+      PMA_PORT: ${DB_PORT}
+    ports:
+      - "${PHPMYADMIN_PORT}:80"
+    depends_on:
+      - water_billing_db
+    networks:
+      - app-network
+
+  # --- Mailpit (Local Email Testing) ---
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: ${MAILPIT_CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_UI_PORT}:8025"  # Web UI
+      - "${MAILPIT_SMTP_PORT}:1025" # SMTP server
+    networks:
+      - app-network
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
+    driver: bridge
