@@ -102,16 +102,22 @@ docker-compose exec water_billing_app composer install
 
 ## Architecture Overview
 
-### Water Billing System
+### ⚠️ CRITICAL: Dual Billing System
 
-This system manages water utility billing for Initao, Philippines using a ServiceConnection-based architecture.
+This codebase contains **TWO PARALLEL BILLING SYSTEMS** that coexist in production:
 
-#### Core Billing Flow
+#### Modern System (ServiceConnection-based) - **Recommended for new features**
 - **Core Entity:** `ServiceConnection` (water service connection for a customer)
-- **Billing Flow:** `ServiceConnection` → `MeterAssignment` → `MeterReading` → `WaterBillHistory`
-- **Meter:** `Meter` → `MeterAssignment` (supports meter swaps and tracking)
-- **Ledger:** `CustomerLedger` (polymorphic source tracking for accounting)
-- **Payment:** `Payment` → `PaymentAllocation` (polymorphic distribution across bills and charges)
+- **Billing Flow:** `ServiceConnection` → `MeterAssignment` → `MeterReading` → `water_bill_history`
+- **Ledger:** `CustomerLedger` (polymorphic source tracking: BILL/CHARGE/PAYMENT)
+- **Payment:** `Payment` → `PaymentAllocation` (polymorphic distribution)
+- **Tables use:** PascalCase (`Payment`, `PaymentAllocation`, `MeterReading`, `MeterAssignment`, `BillAdjustment`, `CustomerCharge`, `ServiceConnection`)
+
+#### Legacy System (Consumer-based) - **Maintenance only**
+- **Core Entity:** `Consumer` (links customer + meter + area)
+- **Billing Flow:** `Customer` → `Consumer` → `consumer_meters` → `consumer_ledger` → `water_bill`
+- **Ledger:** `consumer_ledger` (simple debit/credit)
+- **Tables use:** snake_case (`consumer_meters`, `meter_readers`, `payment_transactions`, `water_bill`)
 
 ### Feature-Based Folder Structure
 
@@ -361,10 +367,27 @@ $statusId = Status::getIdByDescription(Status::ACTIVE);
 
 Follow **PSR-12** + Laravel naming + trailing commas + strict typing when possible.
 
-**Database Naming Note:** Codebase has some naming inconsistencies from evolution:
-- Some older tables: PascalCase (`Consumer`, `MeterReading`)
-- Newer tables: snake_case (`service_connection`, `customer_ledger`)
-- **For new code:** Always use snake_case to align with Laravel conventions
+**Database Naming Convention - CRITICAL:**
+
+The database uses **TWO naming conventions** based on the billing system:
+
+1. **Modern System Tables** (PascalCase):
+   - `Payment`, `PaymentAllocation`, `MeterReading`, `MeterAssignment`
+   - `BillAdjustment`, `CustomerCharge`, `ServiceConnection`, `CustomerLedger`
+   - `ServiceApplication`, `AreaAssignment`, `BillAdjustmentType`, `ChargeItem`
+
+2. **Legacy System Tables** (snake_case):
+   - `consumer_meters`, `meter_readers`, `payment_transactions`
+   - `consumer_ledger`, `water_bill`, `misc_bill`, `Consumer`
+
+3. **Shared/Common Tables** (snake_case):
+   - `customer`, `consumer_address`, `area`, `barangay`, `town`, `province`, `purok`
+   - `meter`, `period`, `statuses`, `users`, `roles`, etc.
+
+**For New Code:**
+- Modern system features: Use PascalCase (e.g., new `BillingFeature` table)
+- Legacy system maintenance: Use snake_case (e.g., `old_table_name`)
+- **Important:** Models MUST explicitly set `protected $table` property to match!
 
 ### Commit Message Format
 
@@ -458,13 +481,15 @@ From host machine:
 
 ## Critical Notes for Development
 
-1. **Status table dependency** - Ensure Status model exists and is seeded before creating records
-2. **No business logic in controllers** - Always use Services for business logic
-3. **No repository pattern** - Use Eloquent models directly in services
-4. **Polymorphic queries** - Always check `source_type`/`target_type` fields before accessing polymorphic relations (CustomerLedger, PaymentAllocation)
-5. **Meter reassignment** - Use MeterAssignment table for proper tracking of meter history
-6. **Payment allocation** - Use PaymentAllocation for distributing payments across bills and charges
-7. **Resolution number uniqueness** - Always use `CustomerHelper::generateCustomerResolutionNumber()`, never generate manually
-8. **Period closure** - Respect `is_closed` flag on Period model - no modifications to closed periods
-9. **Feature-based organization** - Place new code in appropriate feature folder (Auth, Billing, Payments, Consumers)
-10. **Service layer pattern** - All business logic goes in Services, controllers only orchestrate
+1. **⚠️ DUAL BILLING SYSTEM** - Two parallel systems exist (Modern ServiceConnection-based vs Legacy Consumer-based). Always confirm which system you're working with before coding.
+2. **Table naming convention** - Modern system uses PascalCase tables, Legacy uses snake_case. Models must specify correct $table property.
+3. **Status table dependency** - Ensure Status model exists and is seeded before creating records
+4. **No business logic in controllers** - Always use Services for business logic
+5. **No repository pattern** - Use Eloquent models directly in services
+6. **Polymorphic queries** - Always check `source_type`/`target_type` fields before accessing polymorphic relations (CustomerLedger, PaymentAllocation - Modern system only)
+7. **Meter handling** - Modern: Use MeterAssignment table. Legacy: Use consumer_meters table
+8. **Payment handling** - Modern: Use PaymentAllocation (polymorphic). Legacy: Use payment_transactions
+9. **Resolution number uniqueness** - Always use `CustomerHelper::generateCustomerResolutionNumber()`, never generate manually
+10. **Period closure** - Respect `is_closed` flag on Period model - no modifications to closed periods
+11. **Feature-based organization** - Place new code in appropriate feature folder (Auth, Billing, Payments, Consumers)
+12. **Service layer pattern** - All business logic goes in Services, controllers only orchestrate

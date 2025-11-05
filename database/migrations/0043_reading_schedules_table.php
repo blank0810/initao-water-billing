@@ -54,7 +54,7 @@ return new class extends Migration
                   
             $table->foreign('reader_id')
                   ->references('mr_id')
-                  ->on('meter_reader')
+                  ->on('meter_readers')
                   ->onDelete('restrict');
                   
             $table->foreign('created_by')
@@ -86,39 +86,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
-        Schema::table('reading_schedule', function (Blueprint $table) {
-            $foreignKeys = [
-                'period_id',
-                'area_id',
-                'reader_id',
-                'created_by',
-                'completed_by',
-                'stat_id'
-            ];
-            
-            foreach ($foreignKeys as $column) {
-                if (Schema::hasColumn('reading_schedule', $column)) {
-                    $table->dropForeign(["readingschedule_{$column}_foreign"]);
-                }
-            }
-            
-            // Drop indexes if they exist
-            $indexes = [
-                'reading_schedule_period_index',
-                'reading_schedule_area_index',
-                'reading_schedule_reader_index',
-                'reading_schedule_status_index',
-                'reading_schedule_start_date_index'
-            ];
-            
-            foreach ($indexes as $index) {
-                if (Schema::hasIndex('reading_schedule', $index)) {
-                    $table->dropIndex($index);
-                }
-            }
-        });
-        
         Schema::dropIfExists('reading_schedule');
     }
 };
