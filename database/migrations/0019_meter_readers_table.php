@@ -12,24 +12,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('meter_reader', function (Blueprint $table) {
+        Schema::create('meter_readers', function (Blueprint $table) {
             $table->id('mr_id');
             $table->string('mr_name');
             $table->string('contact_number')->nullable();
             $table->string('email')->nullable();
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
-            
+
             // Foreign key constraint
             $table->foreign('stat_id')
                   ->references('stat_id')
                   ->on('statuses')
                   ->onDelete('restrict');
-            
+
             // Add index for search optimization
             $table->index('mr_name', 'meter_reader_name_index');
         });
-        
+
         // Insert default meter readers
         $now = now();
         $meterReaders = [
@@ -50,8 +50,8 @@ return new class extends Migration
                 'updated_at' => $now,
             ],
         ];
-        
-        DB::table('meter_reader')->insert($meterReaders);
+
+        DB::table('meter_readers')->insert($meterReaders);
     }
 
     /**
@@ -59,18 +59,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign key first if it exists
-        Schema::table('meter_reader', function (Blueprint $table) {
-            if (Schema::hasColumn('meter_reader', 'stat_id')) {
-                $table->dropForeign(['meter_readers_stat_id_foreign']);
-            }
-            
-            // Drop index if exists
-            if (Schema::hasIndex('meter_reader', 'meter_reader_name_index')) {
-                $table->dropIndex('meter_reader_name_index');
-            }
-        });
-        
-        Schema::dropIfExists('meter_reader');
+        Schema::dropIfExists('meter_readers');
     }
 };

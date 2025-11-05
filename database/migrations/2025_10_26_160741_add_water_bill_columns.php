@@ -125,12 +125,12 @@ return new class extends Migration
             }
             
             // Add foreign key for meter_reading
-            if (Schema::hasColumn('water_bill', 'reading_id') && 
-                Schema::hasTable('meter_reading') &&
+            if (Schema::hasColumn('water_bill', 'reading_id') &&
+                Schema::hasTable('MeterReading') &&
                 !Schema::hasColumn('water_bill', 'water_bill_reading_id_foreign')) {
                 $table->foreign('reading_id')
                       ->references('reading_id')
-                      ->on('meter_reading')
+                      ->on('MeterReading')
                       ->onDelete('restrict');
             }
             

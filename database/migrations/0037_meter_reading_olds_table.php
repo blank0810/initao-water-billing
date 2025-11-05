@@ -37,7 +37,7 @@ return new class extends Migration
                   
             $table->foreign('reader_id')
                   ->references('mr_id')
-                  ->on('meter_reader')
+                  ->on('meter_readers')
                   ->onDelete('restrict');
                   
             $table->foreign('stat_id')
@@ -62,36 +62,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
-        Schema::table('meter_reading_old', function (Blueprint $table) {
-            $foreignKeys = [
-                'connection_id',
-                'meter_id',
-                'reader_id',
-                'stat_id',
-                'user_id'
-            ];
-            
-            foreach ($foreignKeys as $column) {
-                if (Schema::hasColumn('meter_reading_old', $column)) {
-                    $table->dropForeign(["meterreadingold_{$column}_foreign"]);
-                }
-            }
-            
-            // Drop indexes if they exist
-            $indexes = [
-                'meter_reading_old_connection_index',
-                'meter_reading_old_date_index',
-                'meter_reading_old_meter_index'
-            ];
-            
-            foreach ($indexes as $index) {
-                if (Schema::hasIndex('meter_reading_old', $index)) {
-                    $table->dropIndex($index);
-                }
-            }
-        });
-        
         Schema::dropIfExists('meter_reading_old');
     }
 };

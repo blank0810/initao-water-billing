@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ConsumerController;
@@ -52,10 +52,7 @@ Route::get('/customer/add', function () {
     return view('pages.customer.add-customer');
 })->name('customer.add');
 
-Route::get('/customer/list', function () {
-    session(['active_menu' => 'customer-list']);
-    return view('pages.customer.customer-list');
-})->name('customer.list');
+Route::get('/customer/list', [CustomerController::class, 'index'])->name('customer.list');
 
 // Payment Management Page (updated to use PaymentController)
 Route::get('/customer/payment-management', [PaymentController::class, 'index'])

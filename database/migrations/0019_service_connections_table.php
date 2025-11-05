@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_connection', function (Blueprint $table) {
+        Schema::create('ServiceConnection', function (Blueprint $table) {
             $table->id('connection_id');
             $table->string('account_no')->unique();
             $table->unsignedBigInteger('customer_id');
@@ -56,23 +56,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
-        Schema::table('service_connection', function (Blueprint $table) {
-            $foreignKeys = [
-                'customer_id',
-                'address_id',
-                'account_type_id',
-                'rate_id',
-                'stat_id'
-            ];
-            
-            foreach ($foreignKeys as $column) {
-                if (Schema::hasColumn('service_connection', $column)) {
-                    $table->dropForeign([$column]);
-                }
-            }
-        });
-        
-        Schema::dropIfExists('service_connection');
+        Schema::dropIfExists('ServiceConnection');
     }
 };

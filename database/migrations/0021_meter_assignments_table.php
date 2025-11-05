@@ -11,22 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('meter_assignment', function (Blueprint $table) {
+        Schema::create('MeterAssignment', function (Blueprint $table) {
             $table->id('assignment_id');
             $table->unsignedBigInteger('connection_id');
             $table->unsignedBigInteger('meter_id');
             $table->date('installed_at');
             $table->date('removed_at')->nullable();
-            $table->decimal('install_read', 10, 3);
-            $table->decimal('removal_read', 10, 3)->nullable();
-            $table->timestamps();
-            
+            $table->decimal('install_read', 12, 3)->default(0.000);
+            $table->decimal('removal_read', 12, 3)->nullable();
+
             // Foreign key constraints
             $table->foreign('connection_id')
                   ->references('connection_id')
-                  ->on('service_connection')
+                  ->on('ServiceConnection')
                   ->onDelete('cascade');
-                  
+
             $table->foreign('meter_id')
                   ->references('mtr_id')
                   ->on('meter')
@@ -39,16 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop foreign keys first if they exist
-        Schema::table('meter_assignment', function (Blueprint $table) {
-            if (Schema::hasColumn('meter_assignment', 'connection_id')) {
-                $table->dropForeign(['connection_id']);
-            }
-            if (Schema::hasColumn('meter_assignment', 'meter_id')) {
-                $table->dropForeign(['meter_id']);
-            }
-        });
-        
-        Schema::dropIfExists('meter_assignment');
+        Schema::dropIfExists('MeterAssignment');
     }
 };
