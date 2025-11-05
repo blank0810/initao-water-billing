@@ -38,70 +38,62 @@ class CustomerController extends Controller
     }
 
     /**
-     * Validation rules for customer creation
+     * Validation rules for customer creation with service application
      */
     protected function validationRules(): array
     {
         return [
             // Customer fields
-            'cust_last_name' => ['required', 'string', 'max:50', new Uppercase],
-            'cust_first_name' => ['required', 'string', 'max:50', new Uppercase],
-            'cust_middle_name' => ['nullable', 'string', 'max:50', new Uppercase],
-            'land_mark' => ['nullable', 'string', 'max:100', new Uppercase],
-            'c_type' => ['nullable', 'string', 'max:50', new Uppercase],
-            // Status is set automatically to PENDING
+            'cust_first_name' => ['required', 'string', 'max:50'],
+            'cust_middle_name' => ['nullable', 'string', 'max:50'],
+            'cust_last_name' => ['required', 'string', 'max:50'],
+            'c_type' => ['required', 'string', 'max:50'],
+            'land_mark' => ['nullable', 'string', 'max:100'],
 
             // Address fields
-            'p_id' => 'nullable|integer',
-            'b_id' => 'nullable|integer',
-            't_id' => 'nullable|integer',
-            'prov_id' => 'nullable|integer',
-            'address_stat_id' => 'nullable|integer',
+            'prov_id' => ['required', 'integer', 'exists:province,prov_id'],
+            't_id' => ['required', 'integer', 'exists:town,t_id'],
+            'b_id' => ['required', 'integer', 'exists:barangay,b_id'],
+            'p_id' => ['required', 'integer', 'exists:purok,p_id'],
+
+            // Service application fields
+            'account_type_id' => ['required', 'integer', 'exists:account_type,at_id'],
+            'rate_id' => ['required', 'integer', 'exists:water_rates,wr_id'],
         ];
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created customer with service application (Approach B)
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
-        $validated = $request->validate($this->validationRules());
-
-        // Set PENDING status for new customers
-        $validated['stat_id'] = Status::getIdByDescription(Status::PENDING);
-
-        // Generate resolution number
-        $validated['resolution_no'] = CustomerHelper::generateCustomerResolutionNumber(
-            $validated['cust_first_name'],
-            $validated['cust_last_name']
-        );
-
-        return $this->createCustomer($validated);
-    }
-
-    /**
-     * Create customer record (synchronously)
-     */
-    private function createCustomer(array $validated)
-    {
         try {
-            return DB::transaction(function () use ($validated) {
-                $address = CustomerHelper::createConsumerAddress($validated);
-                $customer = CustomerHelper::createCustomer($validated, $address->ca_id);
+            $validated = $request->validate($this->validationRules());
 
-                return response()->json([
-                    'message' => 'Customer created successfully',
-                    'data' => $customer->load('address')
-                ], 200);
-            });
-        } catch (\Exception $e) {
-            DB::rollBack();
+            // Create customer with service application
+            $result = $this->customerService->createCustomerWithApplication($validated);
+
             return response()->json([
-                'message' => 'Failed to create customer',
-                'error' => $e->getMessage()
+                'success' => true,
+                'message' => $result['message'],
+                'customer' => $result['customer'],
+                'application' => $result['application'],
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
