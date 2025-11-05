@@ -25,8 +25,8 @@ return new class extends Migration
             $table->string('description', 200)->nullable();
             $table->decimal('debit', 12, 2)->default(0.00);
             $table->decimal('credit', 12, 2)->default(0.00);
-            $table->unsignedInteger('user_id')->nullable();
-            $table->unsignedInteger('stat_id');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('stat_id');
 
             // Foreign keys
             $table->foreign('customer_id')->references('cust_id')->on('customer')->onDelete('cascade');

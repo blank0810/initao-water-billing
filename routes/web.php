@@ -52,6 +52,8 @@ Route::get('/customer/add', function () {
     return view('pages.customer.add-customer');
 })->name('customer.add');
 
+Route::post('/customer/store', [CustomerController::class, 'store'])->name('customer.store');
+
 Route::get('/customer/list', [CustomerController::class, 'index'])->name('customer.list');
 
 // Payment Management Page (updated to use PaymentController)

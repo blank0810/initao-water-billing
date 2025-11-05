@@ -15,13 +15,14 @@ return new class extends Migration
             $table->id('b_id');
             $table->string('b_desc');
             $table->unsignedBigInteger('stat_id');
-            
+            $table->timestamps();
+
             // Foreign key constraint
             $table->foreign('stat_id')
                   ->references('stat_id')
                   ->on('statuses')
                   ->onDelete('restrict');
-                  
+
             // Add index for performance
             $table->index('b_desc');
         });

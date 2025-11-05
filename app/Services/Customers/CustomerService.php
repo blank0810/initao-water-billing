@@ -3,8 +3,14 @@
 namespace App\Services\Customers;
 
 use App\Models\Customer;
+use App\Models\ConsumerAddress;
+use App\Models\ServiceApplication;
+use App\Models\CustomerCharge;
+use App\Models\Status;
+use App\Http\Helpers\CustomerHelper;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomerService
 {
@@ -140,5 +146,97 @@ class CustomerService
     public function getCustomerById(int $id): ?Customer
     {
         return Customer::with(['status', 'address'])->find($id);
+    }
+
+    /**
+     * Create customer with service application (Approach B)
+     * Creates: Customer + ConsumerAddress + ServiceApplication + CustomerCharges in one transaction
+     *
+     * @param array $data
+     * @return array
+     * @throws \Exception
+     */
+    public function createCustomerWithApplication(array $data): array
+    {
+        try {
+            return DB::transaction(function () use ($data) {
+                // 1. Create service address
+                $address = ConsumerAddress::create([
+                    'p_id' => $data['p_id'] ?? null,
+                    'b_id' => $data['b_id'] ?? null,
+                    't_id' => $data['t_id'] ?? null,
+                    'prov_id' => $data['prov_id'] ?? null,
+                    'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+                ]);
+
+                // 2. Create customer
+                $customer = Customer::create([
+                    'cust_first_name' => strtoupper($data['cust_first_name']),
+                    'cust_middle_name' => isset($data['cust_middle_name']) ? strtoupper($data['cust_middle_name']) : null,
+                    'cust_last_name' => strtoupper($data['cust_last_name']),
+                    'ca_id' => $address->ca_id,
+                    'land_mark' => isset($data['land_mark']) ? strtoupper($data['land_mark']) : null,
+                    'c_type' => strtoupper($data['c_type']),
+                    'resolution_no' => CustomerHelper::generateCustomerResolutionNumber(
+                        $data['cust_first_name'],
+                        $data['cust_last_name']
+                    ),
+                    'create_date' => now(),
+                    'stat_id' => Status::getIdByDescription(Status::PENDING), // PENDING until application is approved
+                ]);
+
+                // 3. Create service application
+                $application = ServiceApplication::create([
+                    'customer_id' => $customer->cust_id,
+                    'address_id' => $address->ca_id, // Service address (same as billing for now)
+                    'application_number' => $this->generateApplicationNumber(),
+                    'submitted_at' => now(),
+                    'stat_id' => Status::getIdByDescription(Status::PENDING),
+                ]);
+
+                // 4. Create customer charges if charge items are provided
+                if (isset($data['charge_items']) && is_array($data['charge_items'])) {
+                    foreach ($data['charge_items'] as $chargeItem) {
+                        CustomerCharge::create([
+                            'customer_id' => $customer->cust_id,
+                            'application_id' => $application->application_id,
+                            'connection_id' => null, // No connection yet
+                            'charge_item_id' => $chargeItem['charge_item_id'],
+                            'description' => $chargeItem['description'] ?? null,
+                            'quantity' => $chargeItem['quantity'] ?? 1,
+                            'unit_amount' => $chargeItem['unit_amount'],
+                            'due_date' => $data['due_date'] ?? now()->addDays(30),
+                            'stat_id' => Status::getIdByDescription(Status::PENDING), // PENDING payment
+                        ]);
+                    }
+                }
+
+                return [
+                    'success' => true,
+                    'customer' => $customer->load(['address', 'status']),
+                    'application' => $application->load('status'),
+                    'message' => 'Customer and service application created successfully',
+                ];
+            });
+        } catch (\Exception $e) {
+            throw new \Exception('Failed to create customer with application: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate unique application number
+     *
+     * @return string
+     */
+    private function generateApplicationNumber(): string
+    {
+        $year = date('Y');
+        $lastApplication = ServiceApplication::whereYear('submitted_at', $year)
+            ->orderBy('application_id', 'desc')
+            ->first();
+
+        $nextNumber = $lastApplication ? ((int) substr($lastApplication->application_number, -5)) + 1 : 1;
+
+        return 'APP-' . $year . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
     }
 }
