@@ -6,19 +6,35 @@ use App\Http\Controllers\Controller;
 use App\Http\Helpers\CustomerHelper;
 use App\Models\Status;
 use App\Rules\Uppercase;
+use App\Services\Customers\CustomerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
+    protected CustomerService $customerService;
+
+    public function __construct(CustomerService $customerService)
+    {
+        $this->customerService = $customerService;
+    }
+
     /**
      * Display a listing of the resource.
+     * Returns JSON for DataTables
      *
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        if ($request->ajax() || $request->wantsJson()) {
+            $data = $this->customerService->getCustomerList($request);
+            return response()->json($data);
+        }
+
+        // If not AJAX, return the view
+        return view('pages.customer.customer-list');
     }
 
     /**

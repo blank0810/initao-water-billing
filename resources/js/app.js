@@ -10,7 +10,7 @@ Alpine.start();
 // Initialize charts
 document.addEventListener('DOMContentLoaded', () => {
     initializeCharts();
-    renderCustomerTable(); // <-- Render table on DOM load
+    // renderCustomerTable(); // <-- COMMENTED OUT: Now using DataTables instead of custom table
 });
 
 // --- Chart initialization (unchanged) ---
@@ -19,6 +19,9 @@ function initializeCharts() {
 }
 
 // --- Customer Table ---
+// DEPRECATED: This custom table implementation has been replaced with DataTables
+// See resources/views/pages/customer/customer-list.blade.php for the new implementation
+/*
 window.renderCustomerTable = function() {
     const tableBody = document.getElementById('customerTable');
     const rowsPerPage = 10;
@@ -134,3 +137,4 @@ window.goToPayment = function(customerId, customerName) {
     // --- Initial render ---
     renderTable();
 };
+*/

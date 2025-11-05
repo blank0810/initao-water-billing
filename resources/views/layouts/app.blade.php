@@ -19,6 +19,9 @@
                 display: none !important;
             }
         </style>
+
+        <!-- Additional styles from pages -->
+        @stack('styles')
     </head>
     <body class="font-sans antialiased h-full">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -103,5 +106,8 @@
                 });
             });
         </script>
+
+        <!-- Additional scripts from pages -->
+        @stack('scripts')
     </body>
 </html>
