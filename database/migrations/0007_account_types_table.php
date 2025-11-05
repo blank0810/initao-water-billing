@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id('at_id');
             $table->string('at_desc');
             $table->unsignedBigInteger('stat_id');
-            
+            $table->timestamps();
+
             // Foreign key constraint
             $table->foreign('stat_id')
                   ->references('stat_id')

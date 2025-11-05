@@ -41,6 +41,8 @@ class BarangaySeeder extends Seeder
                 'b_id' => $index + 1,
                 'b_desc' => $barangay,
                 'stat_id' => $activeStatusId,
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
         }
 

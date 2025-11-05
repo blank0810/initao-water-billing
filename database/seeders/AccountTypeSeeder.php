@@ -30,6 +30,8 @@ class AccountTypeSeeder extends Seeder
                 'at_id' => $index + 1,
                 'at_desc' => $type,
                 'stat_id' => $activeStatusId,
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
         }
 
