@@ -1,3 +1,33 @@
+@push('styles')
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Smooth transitions for step indicators */
+    #step1-indicator, #step2-indicator, #step3-indicator, #step4-indicator {
+        transition: all 0.3s ease;
+    }
+
+    /* Input focus effects */
+    input:focus, select:focus {
+        transform: scale(1.01);
+        transition: transform 0.2s ease;
+    }
+</style>
+@endpush
+
 <x-app-layout>
     <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
         <div class="flex-1 flex flex-col overflow-auto">
@@ -20,45 +50,45 @@
                         </div>
                     </div>
 
-                    <!-- Success Alert (Flowbite) -->
-                    <div id="successAlert" class="hidden flex items-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
-                        <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-                        </svg>
-                        <span class="sr-only">Success</span>
-                        <div>
-                            <span class="font-medium">Success!</span> <span id="successDetails"></span>
-                        </div>
-                        <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-gray-700" data-dismiss-target="#successAlert" aria-label="Close">
-                            <span class="sr-only">Close</span>
-                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                            </svg>
-                        </button>
+                    <!-- Progress Stepper -->
+                    <div class="mb-8">
+                        <ol class="flex items-center w-full text-sm font-medium text-center text-gray-500 dark:text-gray-400 sm:text-base">
+                            <li id="step1-indicator" class="flex md:w-full items-center text-blue-600 dark:text-blue-500 sm:after:content-[''] after:w-full after:h-1 after:border-b after:border-gray-200 after:border-1 after:hidden sm:after:inline-block after:mx-6 xl:after:mx-10 dark:after:border-gray-700">
+                                <span class="flex items-center after:content-['/'] sm:after:hidden after:mx-2 after:text-gray-200 dark:after:text-gray-500">
+                                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+                                    </svg>
+                                    Personal <span class="hidden sm:inline-flex sm:ms-2">Info</span>
+                                </span>
+                            </li>
+                            <li id="step2-indicator" class="flex md:w-full items-center after:content-[''] after:w-full after:h-1 after:border-b after:border-gray-200 after:border-1 after:hidden sm:after:inline-block after:mx-6 xl:after:mx-10 dark:after:border-gray-700">
+                                <span class="flex items-center after:content-['/'] sm:after:hidden after:mx-2 after:text-gray-200 dark:after:text-gray-500">
+                                    <span class="me-2">2</span>
+                                    Service <span class="hidden sm:inline-flex sm:ms-2">Address</span>
+                                </span>
+                            </li>
+                            <li id="step3-indicator" class="flex md:w-full items-center after:content-[''] after:w-full after:h-1 after:border-b after:border-gray-200 after:border-1 after:hidden sm:after:inline-block after:mx-6 xl:after:mx-10 dark:after:border-gray-700">
+                                <span class="flex items-center after:content-['/'] sm:after:hidden after:mx-2 after:text-gray-200 dark:after:text-gray-500">
+                                    <span class="me-2">3</span>
+                                    Connection <span class="hidden sm:inline-flex sm:ms-2">Details</span>
+                                </span>
+                            </li>
+                            <li id="step4-indicator" class="flex items-center">
+                                <span class="me-2">4</span>
+                                Review
+                            </li>
+                        </ol>
                     </div>
 
-                    <!-- Error Alert (Flowbite) -->
-                    <div id="errorAlert" class="hidden flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
-                        <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-                        </svg>
-                        <span class="sr-only">Error</span>
-                        <div>
-                            <span class="font-medium">Error!</span> <span id="errorDetails"></span>
-                        </div>
-                        <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg focus:ring-2 focus:ring-red-400 p-1.5 hover:bg-red-200 inline-flex items-center justify-center h-8 w-8 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-gray-700" data-dismiss-target="#errorAlert" aria-label="Close">
-                            <span class="sr-only">Close</span>
-                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                            </svg>
-                        </button>
-                    </div>
+                    <!-- Toast Notifications (will be inserted by JavaScript) -->
+                    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-4"></div>
 
                     <!-- Application Form -->
                     <form id="customerApplicationForm" class="space-y-6">
                         @csrf
 
-                        <!-- Personal Information Section -->
+                        <!-- STEP 1: Personal Information -->
+                        <div id="step1" class="step-content transition-all duration-300">
                         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
                             <div class="flex items-center mb-6">
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900">
@@ -109,7 +139,20 @@
                             </div>
                         </div>
 
-                        <!-- Service Address Section -->
+                        <!-- Step 1 Navigation -->
+                        <div class="flex items-center justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <button type="button" onclick="nextStep()" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                                Next Step
+                                <svg class="w-4 h-4 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                </svg>
+                            </button>
+                        </div>
+                        </div>
+                        <!-- End STEP 1 -->
+
+                        <!-- STEP 2: Service Address -->
+                        <div id="step2" class="step-content hidden transition-all duration-300">
                         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
                             <div class="flex items-center mb-6">
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 dark:bg-green-900">
@@ -172,7 +215,26 @@
                             </div>
                         </div>
 
-                        <!-- Service Connection Details Section -->
+                        <!-- Step 2 Navigation -->
+                        <div class="flex items-center justify-between space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <button type="button" onclick="prevStep()" class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                Previous
+                            </button>
+                            <button type="button" onclick="nextStep()" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                                Next Step
+                                <svg class="w-4 h-4 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                </svg>
+                            </button>
+                        </div>
+                        </div>
+                        <!-- End STEP 2 -->
+
+                        <!-- STEP 3: Service Connection Details -->
+                        <div id="step3" class="step-content hidden transition-all duration-300">
                         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
                             <div class="flex items-center mb-6">
                                 <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900">
@@ -205,46 +267,80 @@
                                 </div>
                             </div>
 
-                            <!-- Application Summary -->
-                            <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                                <h4 class="font-semibold text-blue-900 dark:text-blue-300 mb-3 flex items-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                    Application Summary
-                                </h4>
-                                <div class="space-y-2 text-sm">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-600 dark:text-gray-400">Application Date:</span>
-                                        <span class="font-medium text-gray-900 dark:text-white">{{ now()->format('F d, Y') }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-600 dark:text-gray-400">Status:</span>
-                                        <span class="px-2.5 py-0.5 bg-orange-100 text-orange-800 text-xs font-medium rounded dark:bg-orange-900 dark:text-orange-300">PENDING</span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
-                        <!-- Form Actions -->
-                        <div class="flex items-center justify-between pt-6">
-                            <div class="flex items-center p-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
-                                <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                        <!-- Step 3 Navigation -->
+                        <div class="flex items-center justify-between space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <button type="button" onclick="prevStep()" class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                                 </svg>
-                                <span class="sr-only">Info</span>
-                                <div>
-                                    <span class="font-medium">Note:</span> Fields marked with <span class="text-red-500">*</span> are required
+                                Previous
+                            </button>
+                            <button type="button" onclick="nextStep()" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                                Review Application
+                                <svg class="w-4 h-4 inline-block ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                            </button>
+                        </div>
+                        </div>
+                        <!-- End STEP 3 -->
+
+                        <!-- STEP 4: Review & Confirm -->
+                        <div id="step4" class="step-content hidden transition-all duration-300">
+                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                                <div class="flex items-center mb-6">
+                                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900">
+                                        <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="ml-4 text-xl font-semibold text-gray-900 dark:text-white">Review Your Application</h3>
+                                </div>
+
+                                <div id="reviewContent" class="space-y-6">
+                                    <!-- Review content will be populated by JavaScript -->
+                                </div>
+
+                                <!-- Application Info -->
+                                <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                    <div class="flex items-center mb-3">
+                                        <svg class="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <h4 class="font-semibold text-blue-900 dark:text-blue-300">Application Summary</h4>
+                                    </div>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600 dark:text-gray-400">Application Date:</span>
+                                            <span class="font-medium text-gray-900 dark:text-white">{{ now()->format('F d, Y') }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-600 dark:text-gray-400">Status:</span>
+                                            <span class="px-2.5 py-0.5 bg-orange-100 text-orange-800 text-xs font-medium rounded dark:bg-orange-900 dark:text-orange-300">PENDING</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Terms & Conditions -->
+                                <div class="mt-6 flex items-start">
+                                    <input id="terms-checkbox" type="checkbox" class="w-4 h-4 mt-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                    <label for="terms-checkbox" class="ms-2 text-sm text-gray-900 dark:text-gray-300">
+                                        I confirm that all information provided is accurate and I agree to the terms and conditions of the water service application.
+                                    </label>
                                 </div>
                             </div>
 
-                            <div class="flex items-center space-x-3">
-                                <a href="{{ route('customer.list') }}"
-                                    class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                                    Cancel
-                                </a>
-                                <button type="submit" id="submitButton"
-                                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                            <!-- Step 4 Navigation -->
+                            <div class="flex items-center justify-between space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                                <button type="button" onclick="prevStep()" class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                    </svg>
+                                    Previous
+                                </button>
+                                <button type="submit" id="submitButton" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">
                                     <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                     </svg>
@@ -252,6 +348,7 @@
                                 </button>
                             </div>
                         </div>
+                        <!-- End STEP 4 -->
                     </form>
 
                 </div>
@@ -261,6 +358,13 @@
 
     @push('scripts')
     <script>
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        let currentStep = 1;
+        const totalSteps = 4;
+        let formData = {};
+
         document.addEventListener('DOMContentLoaded', function() {
             // Load all dropdown data on page load
             loadProvinces();
@@ -270,9 +374,301 @@
             loadAccountTypes();
             loadWaterRates();
 
+            // Load saved form data from localStorage
+            loadFormFromLocalStorage();
+
+            // Auto-save form data on input change
+            document.getElementById('customerApplicationForm').addEventListener('input', saveFormToLocalStorage);
+
             // Form submission
             document.getElementById('customerApplicationForm').addEventListener('submit', handleFormSubmit);
+
+            // Initialize first step
+            showStep(1);
         });
+
+        // ============================================
+        // STEP NAVIGATION
+        // ============================================
+        function nextStep() {
+            if (validateStep(currentStep)) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    showStep(currentStep);
+                    if (currentStep === 4) {
+                        populateReviewStep();
+                    }
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        function showStep(step) {
+            // Hide all steps
+            for (let i = 1; i <= totalSteps; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                if (stepEl) {
+                    stepEl.classList.add('hidden');
+                }
+            }
+
+            // Show current step with animation
+            const currentStepEl = document.getElementById(`step${step}`);
+            if (currentStepEl) {
+                currentStepEl.classList.remove('hidden');
+                currentStepEl.classList.add('animate-fadeIn');
+            }
+
+            // Update progress indicators
+            updateProgressIndicators(step);
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateProgressIndicators(step) {
+            for (let i = 1; i <= totalSteps; i++) {
+                const indicator = document.getElementById(`step${i}-indicator`);
+                if (!indicator) continue;
+
+                if (i < step) {
+                    // Completed step - green with checkmark
+                    indicator.classList.remove('text-gray-500', 'dark:text-gray-400', 'text-blue-600', 'dark:text-blue-500');
+                    indicator.classList.add('text-green-600', 'dark:text-green-500');
+                } else if (i === step) {
+                    // Current step - blue
+                    indicator.classList.remove('text-gray-500', 'dark:text-gray-400', 'text-green-600', 'dark:text-green-500');
+                    indicator.classList.add('text-blue-600', 'dark:text-blue-500');
+                } else {
+                    // Future step - gray
+                    indicator.classList.remove('text-blue-600', 'dark:text-blue-500', 'text-green-600', 'dark:text-green-500');
+                    indicator.classList.add('text-gray-500', 'dark:text-gray-400');
+                }
+            }
+        }
+
+        // ============================================
+        // STEP VALIDATION
+        // ============================================
+        function validateStep(step) {
+            let requiredFields = [];
+
+            if (step === 1) {
+                requiredFields = [
+                    { id: 'cust_first_name', label: 'First Name' },
+                    { id: 'cust_last_name', label: 'Last Name' },
+                    { id: 'c_type', label: 'Customer Type' }
+                ];
+            } else if (step === 2) {
+                requiredFields = [
+                    { id: 'province', label: 'Province' },
+                    { id: 'town', label: 'Town/Municipality' },
+                    { id: 'barangay', label: 'Barangay' },
+                    { id: 'purok', label: 'Purok' }
+                ];
+            } else if (step === 3) {
+                requiredFields = [
+                    { id: 'account_type', label: 'Account Type' },
+                    { id: 'water_rate', label: 'Water Rate' }
+                ];
+            } else if (step === 4) {
+                // Check terms checkbox
+                const termsCheckbox = document.getElementById('terms-checkbox');
+                if (!termsCheckbox.checked) {
+                    showToast('error', 'Please accept the terms and conditions to continue.');
+                    return false;
+                }
+                return true;
+            }
+
+            const errors = [];
+            requiredFields.forEach(field => {
+                const element = document.getElementById(field.id);
+                if (!element || !element.value) {
+                    errors.push(field.label);
+                }
+            });
+
+            if (errors.length > 0) {
+                showToast('error', `Please fill in required fields: ${errors.join(', ')}`);
+                return false;
+            }
+
+            return true;
+        }
+
+        // ============================================
+        // REVIEW STEP
+        // ============================================
+        function populateReviewStep() {
+            const reviewContent = document.getElementById('reviewContent');
+
+            // Get form values
+            const firstName = document.getElementById('cust_first_name').value;
+            const middleName = document.getElementById('cust_middle_name').value || 'N/A';
+            const lastName = document.getElementById('cust_last_name').value;
+            const customerType = document.getElementById('c_type').value;
+
+            const provinceEl = document.getElementById('province');
+            const townEl = document.getElementById('town');
+            const barangayEl = document.getElementById('barangay');
+            const purokEl = document.getElementById('purok');
+            const landmark = document.getElementById('land_mark').value || 'N/A';
+
+            const accountTypeEl = document.getElementById('account_type');
+            const waterRateEl = document.getElementById('water_rate');
+
+            reviewContent.innerHTML = `
+                <!-- Personal Information -->
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Personal Information
+                    </h4>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Full Name</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white font-semibold">${firstName} ${middleName} ${lastName}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Customer Type</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white font-semibold">${customerType}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Service Address -->
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        </svg>
+                        Service Address
+                    </h4>
+                    <dl class="space-y-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Complete Address</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white font-semibold">
+                                Purok ${purokEl.options[purokEl.selectedIndex]?.text || 'N/A'},
+                                Barangay ${barangayEl.options[barangayEl.selectedIndex]?.text || 'N/A'},
+                                ${townEl.options[townEl.selectedIndex]?.text || 'N/A'},
+                                ${provinceEl.options[provinceEl.selectedIndex]?.text || 'N/A'}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Landmark</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">${landmark}</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <!-- Connection Details -->
+                <div>
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Service Connection Details
+                    </h4>
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Account Type</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white font-semibold">${accountTypeEl.options[accountTypeEl.selectedIndex]?.text || 'N/A'}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Water Rate Schedule</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white font-semibold">${waterRateEl.options[waterRateEl.selectedIndex]?.text || 'N/A'}</dd>
+                        </div>
+                    </dl>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // TOAST NOTIFICATIONS
+        // ============================================
+        function showToast(type, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const colors = {
+                success: 'text-green-500 bg-green-100 dark:bg-green-800 dark:text-green-200',
+                error: 'text-red-500 bg-red-100 dark:bg-red-800 dark:text-red-200',
+                warning: 'text-orange-500 bg-orange-100 dark:bg-orange-700 dark:text-orange-200',
+                info: 'text-blue-500 bg-blue-100 dark:bg-blue-800 dark:text-blue-200'
+            };
+
+            const icons = {
+                success: '<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>',
+                error: '<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"/>',
+                warning: '<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z"/>',
+                info: '<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>'
+            };
+
+            toast.className = `flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 transition-all duration-300 transform translate-x-0`;
+            toast.innerHTML = `
+                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 ${colors[type]} rounded-lg">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        ${icons[type]}
+                    </svg>
+                </div>
+                <div class="ms-3 text-sm font-normal">${message}</div>
+                <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" onclick="this.parentElement.remove()">
+                    <span class="sr-only">Close</span>
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // ============================================
+        // LOCAL STORAGE AUTO-SAVE
+        // ============================================
+        function saveFormToLocalStorage() {
+            const form = document.getElementById('customerApplicationForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            localStorage.setItem('customerApplicationDraft', JSON.stringify(data));
+        }
+
+        function loadFormFromLocalStorage() {
+            const savedData = localStorage.getItem('customerApplicationDraft');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                Object.keys(data).forEach(key => {
+                    const field = document.querySelector(`[name="${key}"]`);
+                    if (field && data[key]) {
+                        field.value = data[key];
+                    }
+                });
+                showToast('info', 'Draft form data restored from previous session.');
+            }
+        }
+
+        function clearFormFromLocalStorage() {
+            localStorage.removeItem('customerApplicationDraft');
+        }
+
+        // ============================================
+        // DATA LOADING FUNCTIONS
+        // ============================================
 
         // Load provinces
         async function loadProvinces() {
@@ -411,8 +807,8 @@
         async function handleFormSubmit(e) {
             e.preventDefault();
 
-            // Validate form first
-            if (!validateForm()) {
+            // Final validation
+            if (!validateStep(4)) {
                 return;
             }
 
@@ -429,13 +825,12 @@
             `;
             submitButton.disabled = true;
 
-            // Hide previous messages
-            document.getElementById('successAlert').classList.add('hidden');
-            document.getElementById('errorAlert').classList.add('hidden');
-
             try {
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData.entries());
+
+                // Remove terms checkbox from data (not needed in backend)
+                delete data['terms-checkbox'];
 
                 const response = await fetch('{{ route("customer.store") }}', {
                     method: 'POST',
@@ -450,32 +845,37 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    // Show success message
-                    document.getElementById('successDetails').textContent =
-                        `Customer: ${result.customer.cust_first_name} ${result.customer.cust_last_name} | Application #: ${result.application.application_number}`;
-                    document.getElementById('successAlert').classList.remove('hidden');
+                    // Show success toast
+                    showToast('success', `Customer created successfully! Application #: ${result.application.application_number}`);
 
-                    // Reset form
+                    // Clear localStorage draft
+                    clearFormFromLocalStorage();
+
+                    // Reset form and go back to step 1
                     e.target.reset();
-
-                    // Scroll to top
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    currentStep = 1;
+                    showStep(1);
 
                     // Reload dropdowns
-                    loadProvinces();
-                    loadTowns();
-                    loadBarangays();
-                    loadPuroks();
-                    loadAccountTypes();
-                    loadWaterRates();
+                    setTimeout(() => {
+                        loadProvinces();
+                        loadTowns();
+                        loadBarangays();
+                        loadPuroks();
+                        loadAccountTypes();
+                        loadWaterRates();
+                    }, 1000);
+
+                    // Optional: Redirect to customer list after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = '{{ route("customer.list") }}';
+                    }, 3000);
                 } else {
                     throw new Error(result.message || 'Failed to submit application');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('errorDetails').textContent = error.message;
-                document.getElementById('errorAlert').classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showToast('error', error.message || 'Failed to submit application. Please try again.');
             } finally {
                 // Re-enable button
                 submitButton.innerHTML = originalHTML;
