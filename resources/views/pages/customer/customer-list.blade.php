@@ -1,4 +1,61 @@
+@push('styles')
+<style>
+    /* Skeleton loader animation */
+    @keyframes shimmer {
+        0% { background-position: -1000px 0; }
+        100% { background-position: 1000px 0; }
+    }
+
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 1000px 100%;
+        animation: shimmer 2s infinite linear;
+    }
+
+    .dark .skeleton {
+        background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+        background-size: 1000px 100%;
+    }
+
+    /* Action buttons hover effect */
+    .action-buttons {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    tr:hover .action-buttons {
+        opacity: 1;
+    }
+
+    /* Smooth checkbox animation */
+    input[type="checkbox"] {
+        transition: all 0.2s ease;
+    }
+
+    /* Sticky header */
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: inherit;
+    }
+
+    /* Badge pulse animation */
+    @keyframes pulse-badge {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+
+    .badge-new {
+        animation: pulse-badge 2s ease-in-out infinite;
+    }
+</style>
+@endpush
+
 <x-app-layout>
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-4"></div>
+
     <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
         <div class="flex-1 flex flex-col overflow-auto">
             <main class="flex-1 p-6 overflow-auto">
@@ -11,19 +68,63 @@
                                 <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Customer List</h1>
                                 <p class="text-gray-600 dark:text-gray-400">Manage all registered customers and their service applications</p>
                             </div>
-                            <a href="{{ route('customer.add') }}"
-                                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            <div class="flex items-center space-x-3">
+                                <button onclick="showKeyboardShortcuts()" title="Keyboard Shortcuts (Press ?)" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </button>
+                                <a href="{{ route('customer.add') }}"
+                                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Add Customer
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Actions Toolbar (Hidden by default) -->
+                    <div id="bulkActionsToolbar" class="hidden mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                Add Customer
-                            </a>
+                                <span class="text-sm font-medium text-blue-900 dark:text-blue-300">
+                                    <span id="selectedCount">0</span> customer(s) selected
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="exportSelected('csv')" class="text-sm px-3 py-2 text-blue-700 hover:text-white border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-500 dark:focus:ring-blue-800">
+                                    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    Export CSV
+                                </button>
+                                <button onclick="exportSelected('excel')" class="text-sm px-3 py-2 text-green-700 hover:text-white border border-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:hover:bg-green-500 dark:focus:ring-green-800">
+                                    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    Export Excel
+                                </button>
+                                <button onclick="bulkDelete()" class="text-sm px-3 py-2 text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+                                    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Delete Selected
+                                </button>
+                                <button onclick="clearSelection()" class="text-sm px-3 py-2 text-gray-700 hover:text-white border border-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg dark:border-gray-600 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-700">
+                                    Clear
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Search and Filter Bar -->
                     <div class="mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
-                        <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex flex-col sm:flex-row gap-4 mb-4">
                             <!-- Search -->
                             <div class="flex-1">
                                 <label for="table-search" class="sr-only">Search</label>
@@ -34,8 +135,11 @@
                                         </svg>
                                     </div>
                                     <input type="text" id="table-search"
-                                        class="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                        placeholder="Search customers...">
+                                        class="block w-full p-2.5 pl-10 pr-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        placeholder="Search customers... (Press / to focus)">
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg dark:bg-gray-600 dark:text-gray-100 dark:border-gray-500">/</kbd>
+                                    </div>
                                 </div>
                             </div>
 
@@ -60,6 +164,92 @@
                                     <option value="100">100 per page</option>
                                 </select>
                             </div>
+
+                            <!-- Column Visibility Toggle -->
+                            <div>
+                                <button id="columnToggleButton" type="button"
+                                    class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+                                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                    </svg>
+                                    Columns
+                                </button>
+                                <!-- Dropdown -->
+                                <div id="columnToggleDropdown" class="hidden absolute z-10 mt-2 w-48 bg-white rounded-lg shadow-lg dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                                    <ul class="p-3 space-y-1 text-sm text-gray-700 dark:text-gray-200">
+                                        <li>
+                                            <label class="flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">
+                                                <input type="checkbox" checked data-column="id" class="column-toggle w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
+                                                <span class="ms-2">ID</span>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label class="flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">
+                                                <input type="checkbox" checked data-column="name" class="column-toggle w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
+                                                <span class="ms-2">Customer Name</span>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label class="flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">
+                                                <input type="checkbox" checked data-column="location" class="column-toggle w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
+                                                <span class="ms-2">Location</span>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label class="flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">
+                                                <input type="checkbox" checked data-column="created" class="column-toggle w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
+                                                <span class="ms-2">Created On</span>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label class="flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">
+                                                <input type="checkbox" checked data-column="status" class="column-toggle w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
+                                                <span class="ms-2">Status</span>
+                                            </label>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Export All Button -->
+                            <div>
+                                <button id="exportAllButton" type="button"
+                                    class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+                                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                    Export
+                                </button>
+                                <!-- Dropdown -->
+                                <div id="exportAllDropdown" class="hidden absolute z-10 mt-2 w-44 bg-white rounded-lg shadow-lg dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+                                    <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+                                        <li>
+                                            <a href="#" onclick="exportAll('csv')" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                                Export as CSV
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#" onclick="exportAll('excel')" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                                Export as Excel
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#" onclick="exportAll('pdf')" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                                </svg>
+                                                Export as PDF
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -67,9 +257,13 @@
                     <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky-header">
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" data-sort="cust_id">
+                                        <!-- Bulk Selection Checkbox -->
+                                        <th scope="col" class="px-4 py-3">
+                                            <input id="select-all" type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                        </th>
+                                        <th scope="col" data-column-name="id" class="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" data-sort="cust_id">
                                             <div class="flex items-center">
                                                 ID
                                                 <svg class="w-3 h-3 ml-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
@@ -77,7 +271,7 @@
                                                 </svg>
                                             </div>
                                         </th>
-                                        <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" data-sort="name">
+                                        <th scope="col" data-column-name="name" class="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" data-sort="name">
                                             <div class="flex items-center">
                                                 Customer Name
                                                 <svg class="w-3 h-3 ml-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
@@ -85,8 +279,8 @@
                                                 </svg>
                                             </div>
                                         </th>
-                                        <th scope="col" class="px-6 py-3">Location</th>
-                                        <th scope="col" class="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" data-sort="created_at">
+                                        <th scope="col" data-column-name="location" class="px-6 py-3">Location</th>
+                                        <th scope="col" data-column-name="created" class="px-6 py-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600" data-sort="created_at">
                                             <div class="flex items-center">
                                                 Created On
                                                 <svg class="w-3 h-3 ml-1.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
@@ -94,20 +288,62 @@
                                                 </svg>
                                             </div>
                                         </th>
-                                        <th scope="col" class="px-6 py-3 text-center">Status</th>
-                                        <th scope="col" class="px-6 py-3 text-center">Actions</th>
+                                        <th scope="col" data-column-name="status" class="px-6 py-3 text-center">Status</th>
+                                        <th scope="col" class="px-6 py-3 text-center sticky right-0 bg-gray-50 dark:bg-gray-700">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="customer-table-body">
-                                    <!-- Loading state -->
-                                    <tr id="loading-row">
-                                        <td colspan="6" class="px-6 py-12 text-center">
-                                            <svg class="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-                                                <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
-                                            </svg>
-                                            <p class="mt-2 text-gray-500 dark:text-gray-400">Loading customers...</p>
+                                    <!-- Skeleton Loading State -->
+                                    <tr id="skeleton-row-1" class="skeleton-row bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                        <td class="px-4 py-4"><div class="skeleton w-4 h-4 rounded"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-16 rounded"></div></td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="skeleton h-10 w-10 rounded-full mr-4"></div>
+                                                <div class="space-y-2">
+                                                    <div class="skeleton h-4 w-32 rounded"></div>
+                                                    <div class="skeleton h-3 w-24 rounded"></div>
+                                                </div>
+                                            </div>
                                         </td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-40 rounded"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-24 rounded"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-6 w-16 rounded-full mx-auto"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-32 rounded mx-auto"></div></td>
+                                    </tr>
+                                    <tr id="skeleton-row-2" class="skeleton-row bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                        <td class="px-4 py-4"><div class="skeleton w-4 h-4 rounded"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-16 rounded"></div></td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="skeleton h-10 w-10 rounded-full mr-4"></div>
+                                                <div class="space-y-2">
+                                                    <div class="skeleton h-4 w-32 rounded"></div>
+                                                    <div class="skeleton h-3 w-24 rounded"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-40 rounded"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-24 rounded"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-6 w-16 rounded-full mx-auto"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-32 rounded mx-auto"></div></td>
+                                    </tr>
+                                    <tr id="skeleton-row-3" class="skeleton-row bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                        <td class="px-4 py-4"><div class="skeleton w-4 h-4 rounded"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-16 rounded"></div></td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="skeleton h-10 w-10 rounded-full mr-4"></div>
+                                                <div class="space-y-2">
+                                                    <div class="skeleton h-4 w-32 rounded"></div>
+                                                    <div class="skeleton h-3 w-24 rounded"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-40 rounded"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-24 rounded"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-6 w-16 rounded-full mx-auto"></div></td>
+                                        <td class="px-6 py-4"><div class="skeleton h-4 w-32 rounded mx-auto"></div></td>
                                     </tr>
                                 </tbody>
                             </table>
