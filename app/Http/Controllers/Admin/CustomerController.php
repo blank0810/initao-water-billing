@@ -99,36 +99,142 @@ class CustomerController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified customer
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
     {
-        //
+        try {
+            $customer = $this->customerService->getCustomerById($id);
+
+            if (!$customer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Customer not found',
+                ], 404);
+            }
+
+            return response()->json($customer, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
-     * Update the specified resource in storage.
+     * Get customer's service applications
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getApplications($id)
+    {
+        try {
+            $data = $this->customerService->getCustomerApplications($id);
+            return response()->json($data, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Check if customer can be deleted
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function canDelete($id)
+    {
+        try {
+            $result = $this->customerService->canDeleteCustomer($id);
+            return response()->json($result, 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update the specified customer
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
-        //
+        try {
+            $validated = $request->validate([
+                'cust_first_name' => ['required', 'string', 'max:50'],
+                'cust_middle_name' => ['nullable', 'string', 'max:50'],
+                'cust_last_name' => ['required', 'string', 'max:50'],
+                'c_type' => ['required', 'string', 'max:50'],
+                'land_mark' => ['nullable', 'string', 'max:100'],
+            ]);
+
+            $customer = $this->customerService->updateCustomer($id, $validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer updated successfully',
+                'customer' => $customer,
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified customer
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {
-        //
+        try {
+            // Check if customer can be deleted
+            $canDelete = $this->customerService->canDeleteCustomer($id);
+
+            if (!$canDelete['can_delete']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $canDelete['message'],
+                ], 400);
+            }
+
+            $this->customerService->deleteCustomer($id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer deleted successfully',
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

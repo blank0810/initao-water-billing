@@ -24,22 +24,31 @@ class CustomerService
     {
         $query = Customer::with(['status', 'address.purok', 'address.barangay', 'address.town', 'address.province']);
 
-        // Apply search filter
-        if ($request->has('search') && !empty($request->search['value'])) {
-            $search = $request->search['value'];
-            $query->where(function (Builder $q) use ($search) {
-                $q->where('cust_id', 'like', "%{$search}%")
-                    ->orWhere('cust_first_name', 'like', "%{$search}%")
-                    ->orWhere('cust_middle_name', 'like', "%{$search}%")
-                    ->orWhere('cust_last_name', 'like', "%{$search}%")
-                    ->orWhere('resolution_no', 'like', "%{$search}%");
+        // Apply search filter (support both DataTables and direct search)
+        $search = $request->input('search');
+        if (is_array($search) && !empty($search['value'])) {
+            // DataTables format
+            $searchValue = $search['value'];
+        } elseif (is_string($search) && !empty($search)) {
+            // Direct search format (from Flowbite)
+            $searchValue = $search;
+        }
+
+        if (isset($searchValue)) {
+            $query->where(function (Builder $q) use ($searchValue) {
+                $q->where('cust_id', 'like', "%{$searchValue}%")
+                    ->orWhere('cust_first_name', 'like', "%{$searchValue}%")
+                    ->orWhere('cust_middle_name', 'like', "%{$searchValue}%")
+                    ->orWhere('cust_last_name', 'like', "%{$searchValue}%")
+                    ->orWhere('resolution_no', 'like', "%{$searchValue}%");
             });
         }
 
-        // Apply status filter if provided
-        if ($request->has('status_filter') && !empty($request->status_filter)) {
-            $query->whereHas('status', function (Builder $q) use ($request) {
-                $q->where('stat_description', $request->status_filter);
+        // Apply status filter (support both formats)
+        $statusFilter = $request->input('status_filter') ?? $request->input('status');
+        if (!empty($statusFilter)) {
+            $query->whereHas('status', function (Builder $q) use ($statusFilter) {
+                $q->where('stat_description', $statusFilter);
             });
         }
 
@@ -47,27 +56,40 @@ class CustomerService
         $totalRecords = Customer::count();
         $filteredRecords = $query->count();
 
-        // Apply ordering
+        // Apply ordering (support both DataTables and direct sort)
         if ($request->has('order')) {
+            // DataTables format
             $orderColumn = $request->input('order.0.column', 0);
             $orderDir = $request->input('order.0.dir', 'desc');
-
             $columns = ['cust_id', 'cust_last_name', 'land_mark', 'create_date', 'stat_id'];
-
             if (isset($columns[$orderColumn])) {
                 $query->orderBy($columns[$orderColumn], $orderDir);
             }
+        } elseif ($request->has('sort_column')) {
+            // Direct sort format (from Flowbite)
+            $sortColumn = $request->input('sort_column', 'created_at');
+            $sortDirection = $request->input('sort_direction', 'desc');
+
+            // Map frontend column names to database columns
+            $columnMap = [
+                'cust_id' => 'cust_id',
+                'name' => 'cust_last_name',
+                'created_at' => 'create_date',
+            ];
+
+            $dbColumn = $columnMap[$sortColumn] ?? 'create_date';
+            $query->orderBy($dbColumn, $sortDirection);
         } else {
             $query->orderBy('create_date', 'desc');
         }
 
         // Apply pagination
-        $start = $request->input('start', 0);
-        $length = $request->input('length', 10);
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', $request->input('length', 10));
 
-        $customers = $query->skip($start)->take($length)->get();
+        $customers = $query->paginate($perPage, ['*'], 'page', $page);
 
-        // Format data for DataTables
+        // Format data
         $data = $customers->map(function ($customer) {
             return [
                 'cust_id' => $customer->cust_id,
@@ -85,12 +107,27 @@ class CustomerService
             ];
         });
 
-        return [
-            'draw' => (int) $request->input('draw', 1),
-            'recordsTotal' => $totalRecords,
-            'recordsFiltered' => $filteredRecords,
-            'data' => $data,
-        ];
+        // Return format supports both DataTables and Laravel pagination
+        if ($request->has('draw')) {
+            // DataTables format
+            return [
+                'draw' => (int) $request->input('draw', 1),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data,
+            ];
+        } else {
+            // Laravel pagination format
+            return [
+                'data' => $data,
+                'current_page' => $customers->currentPage(),
+                'last_page' => $customers->lastPage(),
+                'per_page' => $customers->perPage(),
+                'total' => $customers->total(),
+                'from' => $customers->firstItem(),
+                'to' => $customers->lastItem(),
+            ];
+        }
     }
 
     /**
@@ -238,5 +275,152 @@ class CustomerService
         $nextNumber = $lastApplication ? ((int) substr($lastApplication->application_number, -5)) + 1 : 1;
 
         return 'APP-' . $year . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Get customer's service applications
+     *
+     * @param int $customerId
+     * @return array
+     */
+    public function getCustomerApplications(int $customerId): array
+    {
+        $customer = Customer::with('status')->find($customerId);
+
+        if (!$customer) {
+            throw new \Exception('Customer not found');
+        }
+
+        $applications = ServiceApplication::where('customer_id', $customerId)
+            ->with('status')
+            ->orderBy('submitted_at', 'desc')
+            ->get();
+
+        $formattedApplications = $applications->map(function ($app) {
+            $statusDesc = $app->status->stat_description ?? 'Unknown';
+            return [
+                'application_id' => $app->application_id,
+                'application_number' => $app->application_number,
+                'submitted_at' => $app->submitted_at ? $app->submitted_at->format('Y-m-d H:i') : 'N/A',
+                'status_text' => $statusDesc,
+                'status_class' => $this->getApplicationStatusClass($statusDesc),
+            ];
+        });
+
+        return [
+            'customer' => [
+                'cust_id' => $customer->cust_id,
+                'customer_name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
+            ],
+            'applications' => $formattedApplications,
+        ];
+    }
+
+    /**
+     * Get status class for application badge
+     *
+     * @param string $status
+     * @return string
+     */
+    private function getApplicationStatusClass(string $status): string
+    {
+        $classes = [
+            'PENDING' => 'px-2.5 py-0.5 bg-orange-100 text-orange-800 text-xs font-medium rounded dark:bg-orange-900 dark:text-orange-300',
+            'ACTIVE' => 'px-2.5 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded dark:bg-green-900 dark:text-green-300',
+            'APPROVED' => 'px-2.5 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded dark:bg-green-900 dark:text-green-300',
+            'INACTIVE' => 'px-2.5 py-0.5 bg-gray-100 text-gray-800 text-xs font-medium rounded dark:bg-gray-700 dark:text-gray-300',
+            'REJECTED' => 'px-2.5 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded dark:bg-red-900 dark:text-red-300',
+        ];
+
+        return $classes[$status] ?? 'px-2.5 py-0.5 bg-gray-100 text-gray-800 text-xs font-medium rounded';
+    }
+
+    /**
+     * Check if customer can be deleted
+     *
+     * @param int $customerId
+     * @return array
+     */
+    public function canDeleteCustomer(int $customerId): array
+    {
+        $customer = Customer::find($customerId);
+
+        if (!$customer) {
+            throw new \Exception('Customer not found');
+        }
+
+        // Check for active service applications
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $approvedStatusId = Status::getIdByDescription('APPROVED');
+
+        $activeApplicationsCount = ServiceApplication::where('customer_id', $customerId)
+            ->whereIn('stat_id', [$activeStatusId, $approvedStatusId])
+            ->count();
+
+        if ($activeApplicationsCount > 0) {
+            return [
+                'can_delete' => false,
+                'message' => "Cannot delete customer. There are {$activeApplicationsCount} active/approved service application(s). Please deactivate or reject them first.",
+            ];
+        }
+
+        return [
+            'can_delete' => true,
+            'message' => 'Customer can be safely deleted.',
+        ];
+    }
+
+    /**
+     * Update customer information
+     *
+     * @param int $customerId
+     * @param array $data
+     * @return Customer
+     */
+    public function updateCustomer(int $customerId, array $data): Customer
+    {
+        $customer = Customer::find($customerId);
+
+        if (!$customer) {
+            throw new \Exception('Customer not found');
+        }
+
+        $customer->update([
+            'cust_first_name' => strtoupper($data['cust_first_name']),
+            'cust_middle_name' => isset($data['cust_middle_name']) ? strtoupper($data['cust_middle_name']) : null,
+            'cust_last_name' => strtoupper($data['cust_last_name']),
+            'c_type' => strtoupper($data['c_type']),
+            'land_mark' => isset($data['land_mark']) ? strtoupper($data['land_mark']) : null,
+        ]);
+
+        return $customer->fresh(['status', 'address']);
+    }
+
+    /**
+     * Delete customer
+     *
+     * @param int $customerId
+     * @return bool
+     */
+    public function deleteCustomer(int $customerId): bool
+    {
+        return DB::transaction(function () use ($customerId) {
+            $customer = Customer::find($customerId);
+
+            if (!$customer) {
+                throw new \Exception('Customer not found');
+            }
+
+            // Delete related service applications (only if they're in PENDING status)
+            $pendingStatusId = Status::getIdByDescription(Status::PENDING);
+            ServiceApplication::where('customer_id', $customerId)
+                ->where('stat_id', $pendingStatusId)
+                ->delete();
+
+            // Delete customer
+            $customer->delete();
+
+            return true;
+        });
     }
 }

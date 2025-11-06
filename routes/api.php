@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Api\AddressController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,4 +24,13 @@ Route::prefix('address')->group(function () {
     Route::get('/account-types', [AddressController::class, 'getAccountTypes']);
     Route::get('/water-rates', [AddressController::class, 'getWaterRates']);
     Route::get('/application-charges', [AddressController::class, 'getApplicationCharges']);
+});
+
+// Customer API endpoints for CRUD operations
+Route::prefix('customers')->group(function () {
+    Route::get('/{id}', [CustomerController::class, 'show']);
+    Route::get('/{id}/applications', [CustomerController::class, 'getApplications']);
+    Route::get('/{id}/can-delete', [CustomerController::class, 'canDelete']);
+    Route::put('/{id}', [CustomerController::class, 'update']);
+    Route::delete('/{id}', [CustomerController::class, 'destroy']);
 });

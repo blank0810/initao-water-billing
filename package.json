@@ -21,6 +21,7 @@
     "dependencies": {
         "chart.js": "^4.5.1",
         "datatables.net-dt": "^2.3.4",
-        "datatables.net-responsive-dt": "^3.0.7"
+        "datatables.net-responsive-dt": "^3.0.7",
+        "flowbite": "^3.1.2"
     }
 }
