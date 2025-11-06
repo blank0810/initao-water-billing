@@ -3,6 +3,7 @@ import Chart from 'chart.js/auto';
 import { customerAllData } from './data/all-dummy.js';
 import Alpine from 'alpinejs';
 import { printCustomerForm } from './print.js';
+import 'flowbite';
 
 window.Alpine = Alpine;
 Alpine.start();
