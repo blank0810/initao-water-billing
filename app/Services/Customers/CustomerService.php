@@ -91,7 +91,7 @@ class CustomerService
 
         // Format data
         $data = $customers->map(function ($customer) {
-            $statusDescription = $customer->status ? $customer->status->stat_description : 'UNKNOWN';
+            $statusDescription = $customer->status?->stat_desc ?? 'UNKNOWN';
 
             return [
                 'cust_id' => $customer->cust_id,
@@ -103,7 +103,6 @@ class CustomerService
                 'land_mark' => $customer->land_mark ?? 'N/A',
                 'created_at' => $customer->create_date ? $customer->create_date->format('Y-m-d') : 'N/A',
                 'status' => $statusDescription,
-                'status_text' => $statusDescription,
                 'status_badge' => $this->getStatusBadge($statusDescription),
                 'resolution_no' => $customer->resolution_no ?? 'N/A',
                 'c_type' => $customer->c_type ?? 'N/A',
@@ -148,13 +147,13 @@ class CustomerService
         $parts = [];
 
         if ($customer->address->purok) {
-            $parts[] = $customer->address->purok->p_name;
+            $parts[] = $customer->address->purok->p_desc;
         }
         if ($customer->address->barangay) {
-            $parts[] = $customer->address->barangay->b_name;
+            $parts[] = $customer->address->barangay->b_desc;
         }
         if ($customer->address->town) {
-            $parts[] = $customer->address->town->t_name;
+            $parts[] = $customer->address->town->t_desc;
         }
 
         return !empty($parts) ? implode(', ', $parts) : 'N/A';
