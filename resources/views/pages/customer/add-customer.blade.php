@@ -86,13 +86,18 @@
                                         <select id="province" name="prov_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                                             <option value="">Select Province</option>
                                         </select>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select province first</p>
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Town/Municipality *</label>
-                                        <select id="town" name="t_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                            <option value="">Select Town</option>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Town/Municipality *
+                                            <span id="town-lock-icon" class="ml-1 text-gray-400" title="Select province first">🔒</span>
+                                        </label>
+                                        <select id="town" name="t_id" required disabled class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <option value="">Select Province First</option>
                                         </select>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" id="town-helper">Please select a province first</p>
                                     </div>
 
                                     <div>
@@ -100,13 +105,18 @@
                                         <select id="barangay" name="b_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                                             <option value="">Select Barangay</option>
                                         </select>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose your barangay</p>
                                     </div>
 
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Purok *</label>
-                                        <select id="purok" name="p_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                            <option value="">Select Purok</option>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Purok *
+                                            <span id="purok-lock-icon" class="ml-1 text-gray-400" title="Select barangay first">🔒</span>
+                                        </label>
+                                        <select id="purok" name="p_id" required disabled class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <option value="">Select Barangay First</option>
                                         </select>
+                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" id="purok-helper">Please select a barangay first</p>
                                     </div>
                                 </div>
 
@@ -180,6 +190,8 @@
                                 <ul class="list-disc list-inside space-y-1">
                                     <li>Fields marked with * are required</li>
                                     <li>Names will be automatically converted to UPPERCASE</li>
+                                    <li>Fill out address fields in order: Province → Town → Barangay → Purok</li>
+                                    <li>Disabled fields (🔒) will unlock when you complete their prerequisite</li>
                                     <li>Application creates both customer record and service application</li>
                                     <li>Application will be PENDING until approved by admin</li>
                                 </ul>
@@ -203,19 +215,47 @@
             // Cascading dropdown event listeners
             document.getElementById('province').addEventListener('change', function() {
                 const provinceId = this.value;
+                const townSelect = document.getElementById('town');
+                const townLockIcon = document.getElementById('town-lock-icon');
+                const townHelper = document.getElementById('town-helper');
+
                 if (provinceId) {
                     loadTowns(provinceId);
+                    townSelect.disabled = false;
+                    townLockIcon.style.display = 'none';
+                    townHelper.textContent = 'Select your town/municipality';
+                    townHelper.classList.remove('text-orange-500');
+                    townHelper.classList.add('text-gray-500', 'dark:text-gray-400');
                 } else {
                     clearDropdown('town');
+                    townSelect.disabled = true;
+                    townLockIcon.style.display = 'inline';
+                    townHelper.textContent = 'Please select a province first';
+                    townHelper.classList.remove('text-gray-500', 'dark:text-gray-400');
+                    townHelper.classList.add('text-orange-500');
                 }
             });
 
             document.getElementById('barangay').addEventListener('change', function() {
                 const barangayId = this.value;
+                const purokSelect = document.getElementById('purok');
+                const purokLockIcon = document.getElementById('purok-lock-icon');
+                const purokHelper = document.getElementById('purok-helper');
+
                 if (barangayId) {
                     loadPuroks(barangayId);
+                    purokSelect.disabled = false;
+                    purokLockIcon.style.display = 'none';
+                    purokHelper.textContent = 'Select your purok';
+                    purokHelper.classList.remove('text-orange-500');
+                    purokHelper.classList.add('text-gray-500', 'dark:text-gray-400');
                 } else {
                     clearDropdown('purok');
+                    purokSelect.disabled = true;
+                    purokLockIcon.style.display = 'inline';
+                    purokHelper.textContent = 'Please select a barangay first';
+                    purokHelper.classList.remove('text-gray-500', 'dark:text-gray-400');
+                    purokHelper.classList.add('text-orange-500');
                 }
             });
 
@@ -294,8 +334,19 @@
             const select = document.getElementById(elementId);
             const currentValue = select.value;
 
-            // Clear existing options except first
-            select.innerHTML = select.options[0].outerHTML;
+            // Define proper placeholders for each dropdown
+            const placeholders = {
+                'province': 'Select Province',
+                'town': 'Select Town',
+                'barangay': 'Select Barangay',
+                'purok': 'Select Purok',
+                'account_type': 'Select Account Type',
+                'water_rate': 'Select Water Rate'
+            };
+
+            // Clear existing options and set proper placeholder
+            const placeholder = placeholders[elementId] || 'Please select...';
+            select.innerHTML = `<option value="">${placeholder}</option>`;
 
             // Add new options
             items.forEach(item => {
@@ -314,12 +365,82 @@
         // Clear dropdown
         function clearDropdown(elementId) {
             const select = document.getElementById(elementId);
-            select.innerHTML = select.options[0].outerHTML;
+            const placeholders = {
+                'town': 'Select Province First',
+                'purok': 'Select Barangay First'
+            };
+
+            const placeholder = placeholders[elementId] || 'Please select...';
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+        }
+
+        // Reset dependent fields to initial disabled state
+        function resetDependentFields() {
+            // Reset Town field
+            const townSelect = document.getElementById('town');
+            const townLockIcon = document.getElementById('town-lock-icon');
+            const townHelper = document.getElementById('town-helper');
+            townSelect.disabled = true;
+            townSelect.innerHTML = '<option value="">Select Province First</option>';
+            townLockIcon.style.display = 'inline';
+            townHelper.textContent = 'Please select a province first';
+            townHelper.classList.remove('text-gray-500', 'dark:text-gray-400');
+            townHelper.classList.add('text-orange-500');
+
+            // Reset Purok field
+            const purokSelect = document.getElementById('purok');
+            const purokLockIcon = document.getElementById('purok-lock-icon');
+            const purokHelper = document.getElementById('purok-helper');
+            purokSelect.disabled = true;
+            purokSelect.innerHTML = '<option value="">Select Barangay First</option>';
+            purokLockIcon.style.display = 'inline';
+            purokHelper.textContent = 'Please select a barangay first';
+            purokHelper.classList.remove('text-gray-500', 'dark:text-gray-400');
+            purokHelper.classList.add('text-orange-500');
+        }
+
+        // Validate form before submission
+        function validateForm() {
+            const errors = [];
+
+            // Check required fields
+            const requiredFields = {
+                'cust_first_name': 'First Name',
+                'cust_last_name': 'Last Name',
+                'c_type': 'Customer Type',
+                'prov_id': 'Province',
+                't_id': 'Town/Municipality',
+                'b_id': 'Barangay',
+                'p_id': 'Purok',
+                'account_type_id': 'Account Type',
+                'rate_id': 'Water Rate Schedule'
+            };
+
+            for (const [fieldName, fieldLabel] of Object.entries(requiredFields)) {
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                if (!field || !field.value) {
+                    errors.push(`${fieldLabel} is required`);
+                }
+            }
+
+            if (errors.length > 0) {
+                document.getElementById('errorDetails').innerHTML = errors.join('<br>');
+                document.getElementById('errorMessage').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return false;
+            }
+
+            return true;
         }
 
         // Handle form submission
         async function handleFormSubmit(e) {
             e.preventDefault();
+
+            // Validate form first
+            if (!validateForm()) {
+                return;
+            }
 
             const submitButton = document.getElementById('submitButton');
             const originalText = submitButton.textContent;
@@ -356,6 +477,9 @@
 
                     // Reset form
                     e.target.reset();
+
+                    // Reset dependent field states
+                    resetDependentFields();
 
                     // Scroll to top
                     window.scrollTo({ top: 0, behavior: 'smooth' });
