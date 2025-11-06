@@ -2,191 +2,258 @@
     <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
         <div class="flex-1 flex flex-col overflow-auto">
             <main class="flex-1 p-6 overflow-auto">
-                <div class="max-w-4xl mx-auto">
+                <div class="max-w-5xl mx-auto">
                     <!-- Header -->
-                    <div class="mb-8">
-                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Customer Application</h1>
-                        <p class="text-gray-600 dark:text-gray-400">Register new customer with service application</p>
-                    </div>
-
-                    <!-- Success Message -->
-                    <div id="successMessage" class="hidden mb-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                        <div class="flex items-start space-x-3">
-                            <svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between">
                             <div>
-                                <p class="font-medium text-green-800 dark:text-green-300">Application submitted successfully!</p>
-                                <p class="text-sm text-green-700 dark:text-green-400 mt-1" id="successDetails"></p>
+                                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Customer Application</h1>
+                                <p class="text-gray-600 dark:text-gray-400">Register new customer with service application</p>
                             </div>
+                            <a href="{{ route('customer.list') }}"
+                                class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                                </svg>
+                                Back to List
+                            </a>
                         </div>
                     </div>
 
-                    <!-- Error Message -->
-                    <div id="errorMessage" class="hidden mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                        <div class="flex items-start space-x-3">
-                            <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            <div>
-                                <p class="font-medium text-red-800 dark:text-red-300">Error submitting application</p>
-                                <p class="text-sm text-red-700 dark:text-red-400 mt-1" id="errorDetails"></p>
-                            </div>
+                    <!-- Success Alert (Flowbite) -->
+                    <div id="successAlert" class="hidden flex items-center p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400" role="alert">
+                        <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                        </svg>
+                        <span class="sr-only">Success</span>
+                        <div>
+                            <span class="font-medium">Success!</span> <span id="successDetails"></span>
                         </div>
+                        <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-green-50 text-green-500 rounded-lg focus:ring-2 focus:ring-green-400 p-1.5 hover:bg-green-200 inline-flex items-center justify-center h-8 w-8 dark:bg-gray-800 dark:text-green-400 dark:hover:bg-gray-700" data-dismiss-target="#successAlert" aria-label="Close">
+                            <span class="sr-only">Close</span>
+                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Error Alert (Flowbite) -->
+                    <div id="errorAlert" class="hidden flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                        <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                        </svg>
+                        <span class="sr-only">Error</span>
+                        <div>
+                            <span class="font-medium">Error!</span> <span id="errorDetails"></span>
+                        </div>
+                        <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg focus:ring-2 focus:ring-red-400 p-1.5 hover:bg-red-200 inline-flex items-center justify-center h-8 w-8 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-gray-700" data-dismiss-target="#errorAlert" aria-label="Close">
+                            <span class="sr-only">Close</span>
+                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                            </svg>
+                        </button>
                     </div>
 
                     <!-- Application Form -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                        <form id="customerApplicationForm" class="space-y-6">
-                            @csrf
+                    <form id="customerApplicationForm" class="space-y-6">
+                        @csrf
 
-                            <!-- Personal Information -->
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Personal Information</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">First Name *</label>
-                                        <input type="text" name="cust_first_name" required
-                                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white uppercase"
-                                            placeholder="JUAN">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Middle Name</label>
-                                        <input type="text" name="cust_middle_name"
-                                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white uppercase"
-                                            placeholder="SANTOS">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Last Name *</label>
-                                        <input type="text" name="cust_last_name" required
-                                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white uppercase"
-                                            placeholder="DELA CRUZ">
-                                    </div>
+                        <!-- Personal Information Section -->
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                            <div class="flex items-center mb-6">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900">
+                                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="ml-4 text-xl font-semibold text-gray-900 dark:text-white">Personal Information</h3>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label for="cust_first_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        First Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" id="cust_first_name" name="cust_first_name" required
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase"
+                                        placeholder="JUAN">
+                                </div>
+                                <div>
+                                    <label for="cust_middle_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Middle Name</label>
+                                    <input type="text" id="cust_middle_name" name="cust_middle_name"
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase"
+                                        placeholder="SANTOS">
+                                </div>
+                                <div>
+                                    <label for="cust_last_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Last Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" id="cust_last_name" name="cust_last_name" required
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase"
+                                        placeholder="DELA CRUZ">
+                                </div>
+                            </div>
+
+                            <div class="mt-6">
+                                <label for="c_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Customer Type <span class="text-red-500">*</span>
+                                </label>
+                                <select id="c_type" name="c_type" required
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                    <option value="">Select Customer Type</option>
+                                    <option value="RESIDENTIAL">Residential</option>
+                                    <option value="COMMERCIAL">Commercial</option>
+                                    <option value="INDUSTRIAL">Industrial</option>
+                                    <option value="GOVERNMENT">Government</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Service Address Section -->
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                            <div class="flex items-center mb-6">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 dark:bg-green-900">
+                                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                                <h3 class="ml-4 text-xl font-semibold text-gray-900 dark:text-white">Service Address</h3>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="province" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Province <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="province" name="prov_id" required
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <option value="">Select Province</option>
+                                    </select>
                                 </div>
 
-                                <div class="mt-4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Customer Type *</label>
-                                    <select name="c_type" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                        <option value="">Select Customer Type</option>
-                                        <option value="RESIDENTIAL">Residential</option>
-                                        <option value="COMMERCIAL">Commercial</option>
-                                        <option value="INDUSTRIAL">Industrial</option>
-                                        <option value="GOVERNMENT">Government</option>
+                                <div>
+                                    <label for="town" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Town/Municipality <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="town" name="t_id" required
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <option value="">Select Town</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="barangay" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Barangay <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="barangay" name="b_id" required
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <option value="">Select Barangay</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="purok" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Purok <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="purok" name="p_id" required
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <option value="">Select Purok</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <!-- Service Address -->
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Service Address</h3>
+                            <div class="mt-6">
+                                <label for="land_mark" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Landmark</label>
+                                <input type="text" id="land_mark" name="land_mark"
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase"
+                                    placeholder="NEAR CHURCH, BESIDE STORE, ETC.">
+                                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Optional - helps with location identification</p>
+                            </div>
+                        </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Province *</label>
-                                        <select id="province" name="prov_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                            <option value="">Select Province</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Town/Municipality *</label>
-                                        <select id="town" name="t_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                            <option value="">Select Town</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Barangay *</label>
-                                        <select id="barangay" name="b_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                            <option value="">Select Barangay</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Purok *</label>
-                                        <select id="purok" name="p_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                            <option value="">Select Purok</option>
-                                        </select>
-                                    </div>
+                        <!-- Service Connection Details Section -->
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+                            <div class="flex items-center mb-6">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900">
+                                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
                                 </div>
-
-                                <div class="mt-4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Landmark</label>
-                                    <input type="text" name="land_mark"
-                                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white uppercase"
-                                        placeholder="NEAR CHURCH, BESIDE STORE, ETC.">
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Optional - helps with location identification</p>
-                                </div>
+                                <h3 class="ml-4 text-xl font-semibold text-gray-900 dark:text-white">Service Connection Details</h3>
                             </div>
 
-                            <!-- Service Connection Details -->
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Service Connection Details</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="account_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Account Type <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="account_type" name="account_type_id" required
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <option value="">Select Account Type</option>
+                                    </select>
+                                </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Account Type *</label>
-                                        <select id="account_type" name="account_type_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                            <option value="">Select Account Type</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Water Rate Schedule *</label>
-                                        <select id="water_rate" name="rate_id" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                            <option value="">Select Water Rate</option>
-                                        </select>
-                                    </div>
+                                <div>
+                                    <label for="water_rate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Water Rate Schedule <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="water_rate" name="rate_id" required
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                        <option value="">Select Water Rate</option>
+                                    </select>
                                 </div>
                             </div>
 
                             <!-- Application Summary -->
-                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                                <h4 class="font-medium text-gray-900 dark:text-white mb-3">Application Summary</h4>
+                            <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                <h4 class="font-semibold text-blue-900 dark:text-blue-300 mb-3 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Application Summary
+                                </h4>
                                 <div class="space-y-2 text-sm">
-                                    <div class="flex justify-between">
+                                    <div class="flex justify-between items-center">
                                         <span class="text-gray-600 dark:text-gray-400">Application Date:</span>
                                         <span class="font-medium text-gray-900 dark:text-white">{{ now()->format('F d, Y') }}</span>
                                     </div>
-                                    <div class="flex justify-between">
+                                    <div class="flex justify-between items-center">
                                         <span class="text-gray-600 dark:text-gray-400">Status:</span>
-                                        <span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded text-xs font-medium">PENDING</span>
+                                        <span class="px-2.5 py-0.5 bg-orange-100 text-orange-800 text-xs font-medium rounded dark:bg-orange-900 dark:text-orange-300">PENDING</span>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Form Actions -->
-                            <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <!-- Form Actions -->
+                        <div class="flex items-center justify-between pt-6">
+                            <div class="flex items-center p-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
+                                <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                                </svg>
+                                <span class="sr-only">Info</span>
+                                <div>
+                                    <span class="font-medium">Note:</span> Fields marked with <span class="text-red-500">*</span> are required
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-3">
                                 <a href="{{ route('customer.list') }}"
-                                    class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-200 font-medium">
+                                    class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
                                     Cancel
                                 </a>
                                 <button type="submit" id="submitButton"
-                                    class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium shadow-sm">
+                                    class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
                                     Submit Application
                                 </button>
                             </div>
-                        </form>
-                    </div>
-
-                    <!-- Form Instructions -->
-                    <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                        <div class="flex items-start space-x-3">
-                            <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <div class="text-sm text-blue-800 dark:text-blue-300">
-                                <p class="font-medium mb-1">Application Guidelines</p>
-                                <ul class="list-disc list-inside space-y-1">
-                                    <li>Fields marked with * are required</li>
-                                    <li>Names will be automatically converted to UPPERCASE</li>
-                                    <li>Select appropriate address: Province, Town, Barangay, and Purok</li>
-                                    <li>Application creates both customer record and service application</li>
-                                    <li>Application will be PENDING until approved by admin</li>
-                                </ul>
-                            </div>
                         </div>
-                    </div>
+                    </form>
+
                 </div>
             </main>
         </div>
@@ -331,8 +398,8 @@
             }
 
             if (errors.length > 0) {
-                document.getElementById('errorDetails').innerHTML = errors.join('<br>');
-                document.getElementById('errorMessage').classList.remove('hidden');
+                document.getElementById('errorDetails').textContent = errors.join(', ');
+                document.getElementById('errorAlert').classList.remove('hidden');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return false;
             }
@@ -350,15 +417,21 @@
             }
 
             const submitButton = document.getElementById('submitButton');
-            const originalText = submitButton.textContent;
+            const originalHTML = submitButton.innerHTML;
 
             // Disable button and show loading
-            submitButton.textContent = 'Submitting...';
+            submitButton.innerHTML = `
+                <svg class="inline w-4 h-4 mr-2 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Submitting...
+            `;
             submitButton.disabled = true;
 
             // Hide previous messages
-            document.getElementById('successMessage').classList.add('hidden');
-            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('successAlert').classList.add('hidden');
+            document.getElementById('errorAlert').classList.add('hidden');
 
             try {
                 const formData = new FormData(e.target);
@@ -380,24 +453,32 @@
                     // Show success message
                     document.getElementById('successDetails').textContent =
                         `Customer: ${result.customer.cust_first_name} ${result.customer.cust_last_name} | Application #: ${result.application.application_number}`;
-                    document.getElementById('successMessage').classList.remove('hidden');
+                    document.getElementById('successAlert').classList.remove('hidden');
 
                     // Reset form
                     e.target.reset();
 
                     // Scroll to top
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                    // Reload dropdowns
+                    loadProvinces();
+                    loadTowns();
+                    loadBarangays();
+                    loadPuroks();
+                    loadAccountTypes();
+                    loadWaterRates();
                 } else {
                     throw new Error(result.message || 'Failed to submit application');
                 }
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('errorDetails').textContent = error.message;
-                document.getElementById('errorMessage').classList.remove('hidden');
+                document.getElementById('errorAlert').classList.remove('hidden');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } finally {
                 // Re-enable button
-                submitButton.textContent = originalText;
+                submitButton.innerHTML = originalHTML;
                 submitButton.disabled = false;
             }
         }
