@@ -1,15 +1,19 @@
-import './bootstrap';
-import Chart from 'chart.js/auto';
-import { customerAllData } from './data/all-dummy.js';
-import Alpine from 'alpinejs';
-import { printCustomerForm } from './print.js';
-import 'flowbite';
+import "./bootstrap";
+import Chart from "chart.js/auto";
+import { customerAllData } from "./data/all-dummy.js";
+import Alpine from "alpinejs";
+import { printCustomerForm } from "./print.js";
+import "flowbite";
+import { Modal } from "flowbite";
 
 window.Alpine = Alpine;
 Alpine.start();
 
+// Make Modal available globally
+window.Modal = Modal;
+
 // Initialize charts
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     initializeCharts();
     // renderCustomerTable(); // <-- COMMENTED OUT: Now using DataTables instead of custom table
 });

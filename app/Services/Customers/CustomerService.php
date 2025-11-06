@@ -91,6 +91,8 @@ class CustomerService
 
         // Format data
         $data = $customers->map(function ($customer) {
+            $statusDescription = $customer->status?->stat_desc ?? 'UNKNOWN';
+
             return [
                 'cust_id' => $customer->cust_id,
                 'customer_name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
@@ -100,8 +102,8 @@ class CustomerService
                 'location' => $this->formatLocation($customer),
                 'land_mark' => $customer->land_mark ?? 'N/A',
                 'created_at' => $customer->create_date ? $customer->create_date->format('Y-m-d') : 'N/A',
-                'status' => $customer->status->stat_description ?? 'Unknown',
-                'status_badge' => $this->getStatusBadge($customer->status->stat_description ?? ''),
+                'status' => $statusDescription,
+                'status_badge' => $this->getStatusBadge($statusDescription),
                 'resolution_no' => $customer->resolution_no ?? 'N/A',
                 'c_type' => $customer->c_type ?? 'N/A',
             ];
@@ -145,13 +147,13 @@ class CustomerService
         $parts = [];
 
         if ($customer->address->purok) {
-            $parts[] = $customer->address->purok->p_name;
+            $parts[] = $customer->address->purok->p_desc;
         }
         if ($customer->address->barangay) {
-            $parts[] = $customer->address->barangay->b_name;
+            $parts[] = $customer->address->barangay->b_desc;
         }
         if ($customer->address->town) {
-            $parts[] = $customer->address->town->t_name;
+            $parts[] = $customer->address->town->t_desc;
         }
 
         return !empty($parts) ? implode(', ', $parts) : 'N/A';
@@ -166,12 +168,13 @@ class CustomerService
     private function getStatusBadge(string $status): string
     {
         $badges = [
-            'PENDING' => '<span class="px-3 py-1 bg-orange-200 dark:bg-orange-600 text-orange-800 dark:text-white rounded-full text-xs font-semibold">Pending</span>',
-            'ACTIVE' => '<span class="px-3 py-1 bg-green-200 dark:bg-green-600 text-green-800 dark:text-white rounded-full text-xs font-semibold">Active</span>',
-            'INACTIVE' => '<span class="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white rounded-full text-xs font-semibold">Inactive</span>',
+            'PENDING' => '<span class="inline-flex px-3 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-300 rounded-full text-xs font-semibold">Pending</span>',
+            'ACTIVE' => '<span class="inline-flex px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 rounded-full text-xs font-semibold">Active</span>',
+            'INACTIVE' => '<span class="inline-flex px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full text-xs font-semibold">Inactive</span>',
+            'UNKNOWN' => '<span class="inline-flex px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full text-xs font-semibold">Unknown</span>',
         ];
 
-        return $badges[$status] ?? '<span class="px-3 py-1 bg-gray-200 text-gray-800 rounded-full text-xs font-semibold">' . $status . '</span>';
+        return $badges[$status] ?? '<span class="inline-flex px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded-full text-xs font-semibold">' . ucfirst(strtolower($status)) . '</span>';
     }
 
     /**
