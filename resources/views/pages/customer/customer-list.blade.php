@@ -505,8 +505,8 @@
         let deleteModal;
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Flowbite modals
-            initModals();
+            // Note: Modal initialization removed - using vanilla JS show/hide instead
+            // initModals();
 
             // Load hidden columns from localStorage
             const savedHiddenColumns = localStorage.getItem('hiddenColumns');
@@ -565,6 +565,9 @@
         // ============================================
         // MODAL INITIALIZATION
         // ============================================
+        // DEPRECATED: Removed Flowbite Modal class initialization
+        // Using vanilla JS show/hide instead (see close functions below)
+        /*
         function initModals() {
             // Initialize View Applications Modal
             const viewAppModalEl = document.getElementById('view-applications-modal');
@@ -614,26 +617,33 @@
                 });
             }
         }
+        */
 
         // ============================================
-        // MODAL CLOSE FUNCTIONS
+        // MODAL CLOSE FUNCTIONS (Vanilla JS)
         // ============================================
         function closeViewApplicationsModal() {
-            if (viewApplicationsModal) {
-                viewApplicationsModal.hide();
-            }
+            const modalEl = document.getElementById('view-applications-modal');
+            modalEl.classList.add('hidden');
+            modalEl.classList.remove('flex');
+            modalEl.removeAttribute('aria-modal');
+            modalEl.removeAttribute('role');
         }
 
         function closeEditCustomerModal() {
-            if (editCustomerModal) {
-                editCustomerModal.hide();
-            }
+            const modalEl = document.getElementById('edit-customer-modal');
+            modalEl.classList.add('hidden');
+            modalEl.classList.remove('flex');
+            modalEl.removeAttribute('aria-modal');
+            modalEl.removeAttribute('role');
         }
 
         function closeDeleteModal() {
-            if (deleteModal) {
-                deleteModal.hide();
-            }
+            const modalEl = document.getElementById('delete-modal');
+            modalEl.classList.add('hidden');
+            modalEl.classList.remove('flex');
+            modalEl.removeAttribute('aria-modal');
+            modalEl.removeAttribute('role');
         }
 
         // ============================================
@@ -1274,10 +1284,12 @@
                     applicationsList.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400">No service applications found</p>';
                 }
 
-                // Open modal
-                if (viewApplicationsModal) {
-                    viewApplicationsModal.show();
-                }
+                // Open modal using vanilla JS
+                const modalEl = document.getElementById('view-applications-modal');
+                modalEl.classList.remove('hidden');
+                modalEl.classList.add('flex');
+                modalEl.setAttribute('aria-modal', 'true');
+                modalEl.setAttribute('role', 'dialog');
             } catch (error) {
                 console.error('Error loading applications:', error);
                 showToast('error', 'Error loading service applications');
@@ -1297,10 +1309,12 @@
                 document.getElementById('edit-customer-type').value = customer.c_type;
                 document.getElementById('edit-landmark').value = customer.land_mark || '';
 
-                // Open modal
-                if (editCustomerModal) {
-                    editCustomerModal.show();
-                }
+                // Open modal using vanilla JS
+                const modalEl = document.getElementById('edit-customer-modal');
+                modalEl.classList.remove('hidden');
+                modalEl.classList.add('flex');
+                modalEl.setAttribute('aria-modal', 'true');
+                modalEl.setAttribute('role', 'dialog');
             } catch (error) {
                 console.error('Error loading customer:', error);
                 showToast('error', 'Error loading customer details');
@@ -1330,9 +1344,7 @@
 
                 if (response.ok) {
                     // Close modal
-                    if (editCustomerModal) {
-                        editCustomerModal.hide();
-                    }
+                    closeEditCustomerModal();
 
                     // Reload table
                     loadCustomers();
@@ -1382,9 +1394,7 @@
 
                             if (response.ok) {
                                 // Close modal
-                                if (deleteModal) {
-                                    deleteModal.hide();
-                                }
+                                closeDeleteModal();
 
                                 // Reload table
                                 loadCustomers();
@@ -1400,10 +1410,12 @@
                     };
                 }
 
-                // Open modal
-                if (deleteModal) {
-                    deleteModal.show();
-                }
+                // Open modal using vanilla JS
+                const modalEl = document.getElementById('delete-modal');
+                modalEl.classList.remove('hidden');
+                modalEl.classList.add('flex');
+                modalEl.setAttribute('aria-modal', 'true');
+                modalEl.setAttribute('role', 'dialog');
             } catch (error) {
                 console.error('Error checking delete eligibility:', error);
                 showToast('error', 'Error checking if customer can be deleted');
