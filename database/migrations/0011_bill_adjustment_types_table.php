@@ -20,15 +20,6 @@ return new class extends Migration
 
             // Foreign key constraint (will be added in a separate migration after all tables are created)
         });
-
-        // Insert default adjustment types
-        DB::table('BillAdjustmentType')->insert([
-            ['name' => 'Meter Reading Error', 'direction' => 'credit', 'stat_id' => DB::table('statuses')->where('stat_desc', 'ACTIVE')->value('stat_id')],
-            ['name' => 'Billing Error', 'direction' => 'credit', 'stat_id' => DB::table('statuses')->where('stat_desc', 'ACTIVE')->value('stat_id')],
-            ['name' => 'Penalty Waiver', 'direction' => 'credit', 'stat_id' => DB::table('statuses')->where('stat_desc', 'ACTIVE')->value('stat_id')],
-            ['name' => 'Surcharge', 'direction' => 'debit', 'stat_id' => DB::table('statuses')->where('stat_desc', 'ACTIVE')->value('stat_id')],
-            ['name' => 'Other', 'direction' => 'debit', 'stat_id' => DB::table('statuses')->where('stat_desc', 'ACTIVE')->value('stat_id')],
-        ]);
     }
 
     /**

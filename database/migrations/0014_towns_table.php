@@ -24,25 +24,6 @@ return new class extends Migration
             // Add index for search optimization
             $table->index('t_desc', 'town_desc_index');
         });
-
-        // Insert some default towns (example for one province)
-        $towns = [
-            ['t_desc' => 'Bangued', 'prov_id' => 1, 'stat_id' => 2], // Assuming Abra is prov_id 1
-            ['t_desc' => 'Boliney', 'prov_id' => 1, 'stat_id' => 2],
-            ['t_desc' => 'Bucay', 'prov_id' => 1, 'stat_id' => 2],
-            // Add more towns as needed
-        ];
-
-        // Add timestamps to each town
-        $now = now();
-        $towns = array_map(function ($town) use ($now) {
-            return array_merge($town, [
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-        }, $towns);
-
-        DB::table('town')->insert($towns);
     }
 
     /**

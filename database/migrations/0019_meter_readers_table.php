@@ -25,29 +25,6 @@ return new class extends Migration
             // Add index for search optimization
             $table->index('mr_name', 'meter_reader_name_index');
         });
-
-        // Insert default meter readers
-        $now = now();
-        $meterReaders = [
-            [
-                'mr_name' => 'John Doe',
-                'contact_number' => '09123456789',
-                'email' => 'john.doe@example.com',
-                'stat_id' => 2, // ACTIVE
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-                'mr_name' => 'Jane Smith',
-                'contact_number' => '09123456780',
-                'email' => 'jane.smith@example.com',
-                'stat_id' => 2, // ACTIVE
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-        ];
-
-        DB::table('meter_readers')->insert($meterReaders);
     }
 
     /**

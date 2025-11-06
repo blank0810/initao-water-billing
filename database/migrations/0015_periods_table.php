@@ -43,27 +43,6 @@ return new class extends Migration
             $table->index('start_date', 'period_start_date_index');
             $table->index('is_closed', 'period_closed_index');
         });
-        
-        // Insert default periods for the next 12 months
-        $startDate = now()->startOfMonth();
-        for ($i = 0; $i < 12; $i++) {
-            $endDate = $startDate->copy()->endOfMonth();
-            
-            DB::table('period')->insert([
-                'per_name' => $startDate->format('F Y'),
-                'per_code' => $startDate->format('Ym'),
-                'start_date' => $startDate->format('Y-m-d'),
-                'end_date' => $endDate->format('Y-m-d'),
-                'is_closed' => $endDate->isPast() && $endDate->diffInDays(now(), false) > 1, // Auto-close past periods
-                'closed_at' => $endDate->isPast() ? now() : null,
-                'closed_by' => $endDate->isPast() ? 1 : null, // Assuming user 1 is admin
-                'stat_id' => 1, // Assuming 1 is active
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            
-            $startDate->addMonth();
-        }
     }
 
     /**
