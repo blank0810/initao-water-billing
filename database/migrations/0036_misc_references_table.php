@@ -30,47 +30,6 @@ return new class extends Migration
             $table->index('reference_code', 'misc_reference_code_index');
             $table->index('is_active', 'misc_reference_active_index');
         });
-
-        // Only insert default reference types if users table has records
-        if (DB::table('users')->exists()) {
-            $adminId = DB::table('users')->first()->id;
-
-            DB::table('misc_reference')->insert([
-                [
-                    'reference_type' => 'penalty',
-                    'reference_code' => 'LATE_PAYMENT',
-                    'description' => 'Late payment penalty',
-                    'default_amount' => 100.00,
-                    'is_active' => true,
-                    'stat_id' => 1, // Assuming 1 is active
-                    'created_by' => $adminId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'reference_type' => 'discount',
-                    'reference_code' => 'SENIOR_CITIZEN',
-                    'description' => 'Senior citizen discount',
-                    'default_amount' => 100.00,
-                    'is_active' => true,
-                    'stat_id' => 1,
-                    'created_by' => $adminId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'reference_type' => 'surcharge',
-                    'reference_code' => 'DAMAGED_METER',
-                    'description' => 'Damaged meter surcharge',
-                    'default_amount' => 500.00,
-                    'is_active' => true,
-                    'stat_id' => 1,
-                    'created_by' => $adminId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            ]);
-        }
     }
 
     /**

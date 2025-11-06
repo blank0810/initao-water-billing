@@ -24,38 +24,6 @@ return new class extends Migration
             // Add index for search optimization
             $table->index('rate_desc', 'water_rate_desc_index');
         });
-
-        // Insert default water rates
-        DB::table('water_rates')->insert([
-            [
-                'rate_desc' => 'Residential - First 10 cubic meters',
-                'rate' => 100.00,
-                'stat_id' => 2, // Assuming 2 is ACTIVE status
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'rate_desc' => 'Residential - 11-20 cubic meters',
-                'rate' => 15.00,
-                'stat_id' => 2, // Assuming 2 is ACTIVE status
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'rate_desc' => 'Commercial - First 10 cubic meters',
-                'rate' => 150.00,
-                'stat_id' => 2, // Assuming 2 is ACTIVE status
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'rate_desc' => 'Commercial - 11-20 cubic meters',
-                'rate' => 20.00,
-                'stat_id' => 2, // Assuming 2 is ACTIVE status
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        ]);
     }
 
     /**
