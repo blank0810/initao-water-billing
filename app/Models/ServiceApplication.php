@@ -15,6 +15,7 @@ class ServiceApplication extends Model
     protected $fillable = [
         'customer_id',
         'address_id',
+        'application_number',
         'submitted_at',
         'stat_id'
     ];

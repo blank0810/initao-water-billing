@@ -15,7 +15,6 @@ return new class extends Migration
         Schema::create('town', function (Blueprint $table) {
             $table->id('t_id');
             $table->string('t_desc');
-            $table->unsignedBigInteger('prov_id');
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
 

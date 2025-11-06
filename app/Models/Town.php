@@ -26,14 +26,6 @@ class Town extends Model
     }
 
     /**
-     * Get the province that owns the town
-     */
-    public function province()
-    {
-        return $this->belongsTo(Province::class, 'prov_id', 'prov_id');
-    }
-
-    /**
      * Get the consumer addresses for the town
      */
     public function consumerAddresses()

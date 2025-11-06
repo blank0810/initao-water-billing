@@ -24,7 +24,6 @@ class TownSeeder extends Seeder
         if (!$existing) {
             DB::table('town')->insert([
                 't_desc' => 'Initao',
-                'prov_id' => 1, // Misamis Oriental
                 'stat_id' => $activeStatusId,
                 'created_at' => now(),
                 'updated_at' => now(),

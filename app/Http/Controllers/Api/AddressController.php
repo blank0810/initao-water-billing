@@ -28,7 +28,7 @@ class AddressController extends Controller
     }
 
     /**
-     * Get towns by province
+     * Get towns (all or by province)
      *
      * @param Request $request
      * @return JsonResponse
@@ -36,10 +36,15 @@ class AddressController extends Controller
     public function getTowns(Request $request): JsonResponse
     {
         $request->validate([
-            'province_id' => 'required|integer|exists:province,prov_id'
+            'province_id' => 'nullable|integer|exists:province,prov_id'
         ]);
 
-        $towns = $this->addressService->getTownsByProvince($request->province_id);
+        if ($request->has('province_id') && $request->province_id) {
+            $towns = $this->addressService->getTownsByProvince($request->province_id);
+        } else {
+            $towns = $this->addressService->getAllTowns();
+        }
+
         return response()->json($towns);
     }
 
@@ -56,18 +61,14 @@ class AddressController extends Controller
     }
 
     /**
-     * Get puroks by barangay
+     * Get all puroks
      *
      * @param Request $request
      * @return JsonResponse
      */
     public function getPuroks(Request $request): JsonResponse
     {
-        $request->validate([
-            'barangay_id' => 'required|integer|exists:barangay,b_id'
-        ]);
-
-        $puroks = $this->addressService->getPuroksByBarangay($request->barangay_id);
+        $puroks = $this->addressService->getAllPuroks();
         return response()->json($puroks);
     }
 
