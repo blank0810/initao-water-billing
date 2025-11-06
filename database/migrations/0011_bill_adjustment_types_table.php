@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->enum('direction', ['debit', 'credit']);
             $table->unsignedBigInteger('stat_id');
+            $table->timestamps();
 
             // Foreign key constraint (will be added in a separate migration after all tables are created)
         });
