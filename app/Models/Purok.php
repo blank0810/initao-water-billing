@@ -18,14 +18,6 @@ class Purok extends Model
     ];
 
     /**
-     * Get the barangay that owns the purok
-     */
-    public function barangay()
-    {
-        return $this->belongsTo(Barangay::class, 'b_id', 'b_id');
-    }
-
-    /**
      * Get the status associated with the purok
      */
     public function status()

@@ -15,7 +15,6 @@ return new class extends Migration
         Schema::create('purok', function (Blueprint $table) {
             $table->id('p_id');
             $table->string('p_desc');
-            $table->unsignedBigInteger('b_id'); // Barangay ID
             $table->unsignedBigInteger('stat_id');
             $table->timestamps();
 

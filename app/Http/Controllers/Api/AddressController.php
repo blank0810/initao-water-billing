@@ -61,23 +61,14 @@ class AddressController extends Controller
     }
 
     /**
-     * Get puroks (all or by barangay)
+     * Get all puroks
      *
      * @param Request $request
      * @return JsonResponse
      */
     public function getPuroks(Request $request): JsonResponse
     {
-        $request->validate([
-            'barangay_id' => 'nullable|integer|exists:barangay,b_id'
-        ]);
-
-        if ($request->has('barangay_id') && $request->barangay_id) {
-            $puroks = $this->addressService->getPuroksByBarangay($request->barangay_id);
-        } else {
-            $puroks = $this->addressService->getAllPuroks();
-        }
-
+        $puroks = $this->addressService->getAllPuroks();
         return response()->json($puroks);
     }
 

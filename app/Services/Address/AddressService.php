@@ -77,20 +77,6 @@ class AddressService
     }
 
     /**
-     * Get puroks by barangay
-     *
-     * @param int $barangayId
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function getPuroksByBarangay(int $barangayId)
-    {
-        return Purok::where('b_id', $barangayId)
-            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
-            ->orderBy('p_desc')
-            ->get(['p_id', 'p_desc']);
-    }
-
-    /**
      * Get all active account types
      *
      * @return \Illuminate\Database\Eloquent\Collection

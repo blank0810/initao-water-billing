@@ -13,11 +13,6 @@ return new class extends Migration
   {
     Schema::table('purok', function (Blueprint $table) {
       // Add foreign key constraints now that all tables exist
-      $table->foreign('b_id')
-        ->references('b_id')
-        ->on('barangay')
-        ->onDelete('restrict');
-
       $table->foreign('stat_id')
         ->references('stat_id')
         ->on('statuses')
@@ -31,12 +26,8 @@ return new class extends Migration
   public function down(): void
   {
     Schema::table('purok', function (Blueprint $table) {
-      $foreignKeys = ['b_id', 'stat_id'];
-
-      foreach ($foreignKeys as $column) {
-        if (Schema::hasColumn('purok', $column)) {
-          $table->dropForeign(["purok_{$column}_foreign"]);
-        }
+      if (Schema::hasColumn('purok', 'stat_id')) {
+        $table->dropForeign(['purok_stat_id_foreign']);
       }
 
       // Drop index if exists
