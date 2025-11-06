@@ -19,12 +19,8 @@
 
     /* Action buttons hover effect */
     .action-buttons {
-        opacity: 0;
+        opacity: 1; /* Changed from 0 to always visible */
         transition: opacity 0.2s ease;
-    }
-
-    tr:hover .action-buttons {
-        opacity: 1;
     }
 
     /* Smooth checkbox animation */
@@ -503,7 +499,15 @@
         let allCustomersData = [];
         let hiddenColumns = new Set();
 
+        // Modal instances
+        let viewApplicationsModal;
+        let editCustomerModal;
+        let deleteModal;
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Flowbite modals
+            initModals();
+
             // Load hidden columns from localStorage
             const savedHiddenColumns = localStorage.getItem('hiddenColumns');
             if (savedHiddenColumns) {
@@ -557,6 +561,29 @@
             // Edit form submission
             document.getElementById('edit-customer-form').addEventListener('submit', handleEditSubmit);
         });
+
+        // ============================================
+        // MODAL INITIALIZATION
+        // ============================================
+        function initModals() {
+            // Initialize View Applications Modal
+            const viewAppModalEl = document.getElementById('view-applications-modal');
+            if (viewAppModalEl) {
+                viewApplicationsModal = new Modal(viewAppModalEl);
+            }
+
+            // Initialize Edit Customer Modal
+            const editModalEl = document.getElementById('edit-customer-modal');
+            if (editModalEl) {
+                editCustomerModal = new Modal(editModalEl);
+            }
+
+            // Initialize Delete Modal (if exists)
+            const deleteModalEl = document.getElementById('delete-modal');
+            if (deleteModalEl) {
+                deleteModal = new Modal(deleteModalEl);
+            }
+        }
 
         // ============================================
         // TOAST NOTIFICATIONS
@@ -1071,19 +1098,26 @@
                 <td class="px-6 py-4 text-center sticky right-0 bg-white dark:bg-gray-800">
                     <div class="flex items-center justify-center space-x-2 action-buttons">
                         <button onclick="viewCustomer(${customer.cust_id})"
-                            class="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                            class="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 transition-colors"
                             title="View Customer">
-                            View
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
                         </button>
                         <button onclick="editCustomer(${customer.cust_id})"
-                            class="text-green-600 dark:text-green-400 hover:underline font-medium"
+                            class="p-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/40 transition-colors"
                             title="Edit Customer">
-                            Edit
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
                         </button>
                         <button onclick="deleteCustomer(${customer.cust_id})"
-                            class="text-red-600 dark:text-red-400 hover:underline font-medium"
+                            class="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 transition-colors"
                             title="Delete Customer">
-                            Delete
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
                         </button>
                     </div>
                 </td>
@@ -1190,9 +1224,8 @@
                 }
 
                 // Open modal
-                const modal = FlowbiteInstances.getInstance('Modal', 'view-applications-modal');
-                if (modal) {
-                    modal.show();
+                if (viewApplicationsModal) {
+                    viewApplicationsModal.show();
                 }
             } catch (error) {
                 console.error('Error loading applications:', error);
@@ -1214,9 +1247,8 @@
                 document.getElementById('edit-landmark').value = customer.land_mark || '';
 
                 // Open modal
-                const modal = FlowbiteInstances.getInstance('Modal', 'edit-customer-modal');
-                if (modal) {
-                    modal.show();
+                if (editCustomerModal) {
+                    editCustomerModal.show();
                 }
             } catch (error) {
                 console.error('Error loading customer:', error);
@@ -1247,9 +1279,8 @@
 
                 if (response.ok) {
                     // Close modal
-                    const modal = FlowbiteInstances.getInstance('Modal', 'edit-customer-modal');
-                    if (modal) {
-                        modal.hide();
+                    if (editCustomerModal) {
+                        editCustomerModal.hide();
                     }
 
                     // Reload table
@@ -1300,9 +1331,8 @@
 
                             if (response.ok) {
                                 // Close modal
-                                const modal = FlowbiteInstances.getInstance('Modal', 'delete-modal');
-                                if (modal) {
-                                    modal.hide();
+                                if (deleteModal) {
+                                    deleteModal.hide();
                                 }
 
                                 // Reload table
@@ -1320,9 +1350,8 @@
                 }
 
                 // Open modal
-                const modal = FlowbiteInstances.getInstance('Modal', 'delete-modal');
-                if (modal) {
-                    modal.show();
+                if (deleteModal) {
+                    deleteModal.show();
                 }
             } catch (error) {
                 console.error('Error checking delete eligibility:', error);
