@@ -490,15 +490,33 @@
 
     @push('scripts')
     <script>
-        // State management
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
         let currentPage = 1;
         let perPage = 10;
         let searchQuery = '';
         let statusFilter = '';
         let sortColumn = 'created_at';
         let sortDirection = 'desc';
+        let selectedCustomers = new Set();
+        let allCustomersData = [];
+        let hiddenColumns = new Set();
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Load hidden columns from localStorage
+            const savedHiddenColumns = localStorage.getItem('hiddenColumns');
+            if (savedHiddenColumns) {
+                hiddenColumns = new Set(JSON.parse(savedHiddenColumns));
+                applyColumnVisibility();
+            }
+
+            // Initialize event listeners
+            initBulkSelection();
+            initDropdowns();
+            initKeyboardShortcuts();
+            initColumnToggles();
+
             loadCustomers();
 
             // Search
@@ -540,12 +558,402 @@
             document.getElementById('edit-customer-form').addEventListener('submit', handleEditSubmit);
         });
 
+        // ============================================
+        // TOAST NOTIFICATIONS
+        // ============================================
+        function showToast(type, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const colors = {
+                success: 'text-green-500 bg-green-100 dark:bg-green-800 dark:text-green-200',
+                error: 'text-red-500 bg-red-100 dark:bg-red-800 dark:text-red-200',
+                warning: 'text-orange-500 bg-orange-100 dark:bg-orange-700 dark:text-orange-200',
+                info: 'text-blue-500 bg-blue-100 dark:bg-blue-800 dark:text-blue-200'
+            };
+
+            const icons = {
+                success: '<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>',
+                error: '<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"/>',
+                warning: '<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM10 15a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm1-4a1 1 0 0 1-2 0V6a1 1 0 0 1 2 0v5Z"/>',
+                info: '<path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>'
+            };
+
+            toast.className = `flex items-center w-full max-w-xs p-4 mb-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 transition-all duration-300 transform translate-x-0`;
+            toast.innerHTML = `
+                <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 ${colors[type]} rounded-lg">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                        ${icons[type]}
+                    </svg>
+                </div>
+                <div class="ms-3 text-sm font-normal">${message}</div>
+                <button type="button" class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" onclick="this.parentElement.remove()">
+                    <span class="sr-only">Close</span>
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // ============================================
+        // BULK SELECTION
+        // ============================================
+        function initBulkSelection() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', handleSelectAll);
+            }
+        }
+
+        function handleSelectAll(e) {
+            const isChecked = e.target.checked;
+            const checkboxes = document.querySelectorAll('.customer-checkbox');
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                const customerId = parseInt(checkbox.dataset.customerId);
+                if (isChecked) {
+                    selectedCustomers.add(customerId);
+                } else {
+                    selectedCustomers.delete(customerId);
+                }
+            });
+
+            updateBulkToolbar();
+        }
+
+        function handleRowCheckbox(checkbox) {
+            const customerId = parseInt(checkbox.dataset.customerId);
+
+            if (checkbox.checked) {
+                selectedCustomers.add(customerId);
+            } else {
+                selectedCustomers.delete(customerId);
+                document.getElementById('select-all').checked = false;
+            }
+
+            updateBulkToolbar();
+
+            // Check if all checkboxes are selected
+            const allCheckboxes = document.querySelectorAll('.customer-checkbox');
+            const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+            if (allChecked && allCheckboxes.length > 0) {
+                document.getElementById('select-all').checked = true;
+            }
+        }
+
+        function updateBulkToolbar() {
+            const toolbar = document.getElementById('bulkActionsToolbar');
+            const count = selectedCustomers.size;
+
+            if (count > 0) {
+                toolbar.classList.remove('hidden');
+                document.getElementById('selectedCount').textContent = count;
+            } else {
+                toolbar.classList.add('hidden');
+            }
+        }
+
+        function clearSelection() {
+            selectedCustomers.clear();
+            document.getElementById('select-all').checked = false;
+            document.querySelectorAll('.customer-checkbox').forEach(cb => cb.checked = false);
+            updateBulkToolbar();
+            showToast('info', 'Selection cleared');
+        }
+
+        // ============================================
+        // EXPORT FUNCTIONALITY
+        // ============================================
+        function exportSelected(format) {
+            if (selectedCustomers.size === 0) {
+                showToast('warning', 'Please select customers to export');
+                return;
+            }
+
+            const selectedData = allCustomersData.filter(c => selectedCustomers.has(c.cust_id));
+            performExport(selectedData, format, `customers_selected_${selectedCustomers.size}`);
+        }
+
+        function exportAll(format) {
+            if (allCustomersData.length === 0) {
+                showToast('warning', 'No data to export');
+                return;
+            }
+
+            performExport(allCustomersData, format, 'customers_all');
+        }
+
+        function performExport(data, format, filename) {
+            if (format === 'csv') {
+                exportToCSV(data, filename);
+            } else if (format === 'excel') {
+                exportToExcel(data, filename);
+            } else if (format === 'pdf') {
+                exportToPDF(data, filename);
+            }
+        }
+
+        function exportToCSV(data, filename) {
+            const headers = ['ID', 'First Name', 'Middle Name', 'Last Name', 'Customer Type', 'Location', 'Resolution No', 'Created At', 'Status'];
+            const rows = data.map(c => [
+                c.cust_id,
+                c.cust_first_name || '',
+                c.cust_middle_name || '',
+                c.cust_last_name || '',
+                c.c_type || '',
+                c.location || '',
+                c.resolution_no || '',
+                c.created_at || '',
+                c.status_text || ''
+            ]);
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+
+            downloadFile(csvContent, `${filename}.csv`, 'text/csv');
+            showToast('success', `Exported ${data.length} customers to CSV`);
+        }
+
+        function exportToExcel(data, filename) {
+            // Simple Excel export using HTML table method
+            const headers = ['ID', 'First Name', 'Middle Name', 'Last Name', 'Customer Type', 'Location', 'Resolution No', 'Created At', 'Status'];
+            let excelContent = '<table><thead><tr>';
+            headers.forEach(h => excelContent += `<th>${h}</th>`);
+            excelContent += '</tr></thead><tbody>';
+
+            data.forEach(c => {
+                excelContent += '<tr>';
+                excelContent += `<td>${c.cust_id}</td>`;
+                excelContent += `<td>${c.cust_first_name || ''}</td>`;
+                excelContent += `<td>${c.cust_middle_name || ''}</td>`;
+                excelContent += `<td>${c.cust_last_name || ''}</td>`;
+                excelContent += `<td>${c.c_type || ''}</td>`;
+                excelContent += `<td>${c.location || ''}</td>`;
+                excelContent += `<td>${c.resolution_no || ''}</td>`;
+                excelContent += `<td>${c.created_at || ''}</td>`;
+                excelContent += `<td>${c.status_text || ''}</td>`;
+                excelContent += '</tr>';
+            });
+
+            excelContent += '</tbody></table>';
+            downloadFile(excelContent, `${filename}.xls`, 'application/vnd.ms-excel');
+            showToast('success', `Exported ${data.length} customers to Excel`);
+        }
+
+        function exportToPDF(data, filename) {
+            showToast('info', 'PDF export feature coming soon!');
+            // PDF export would require a library like jsPDF
+            // For now, we'll show a message
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function bulkDelete() {
+            if (selectedCustomers.size === 0) {
+                showToast('warning', 'Please select customers to delete');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to delete ${selectedCustomers.size} customer(s)? This action cannot be undone.`)) {
+                // Here you would make API calls to delete the selected customers
+                showToast('info', `Bulk delete functionality will be implemented with backend API`);
+                // For now, just show message
+            }
+        }
+
+        // ============================================
+        // COLUMN VISIBILITY
+        // ============================================
+        function initColumnToggles() {
+            const toggles = document.querySelectorAll('.column-toggle');
+            toggles.forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const columnName = this.dataset.column;
+                    if (this.checked) {
+                        hiddenColumns.delete(columnName);
+                    } else {
+                        hiddenColumns.add(columnName);
+                    }
+                    saveColumnVisibility();
+                    applyColumnVisibility();
+                });
+            });
+        }
+
+        function applyColumnVisibility() {
+            // Apply to headers
+            document.querySelectorAll('th[data-column-name]').forEach(th => {
+                const columnName = th.dataset.columnName;
+                if (hiddenColumns.has(columnName)) {
+                    th.classList.add('hidden');
+                } else {
+                    th.classList.remove('hidden');
+                }
+            });
+
+            // Apply to all table cells
+            const columnIndexMap = {
+                'id': 1,
+                'name': 2,
+                'location': 3,
+                'created': 4,
+                'status': 5
+            };
+
+            hiddenColumns.forEach(columnName => {
+                const index = columnIndexMap[columnName];
+                if (index) {
+                    document.querySelectorAll(`tbody tr td:nth-child(${index + 1})`).forEach(td => {
+                        td.classList.add('hidden');
+                    });
+                }
+            });
+
+            // Show visible columns
+            Object.keys(columnIndexMap).forEach(columnName => {
+                if (!hiddenColumns.has(columnName)) {
+                    const index = columnIndexMap[columnName];
+                    document.querySelectorAll(`tbody tr td:nth-child(${index + 1})`).forEach(td => {
+                        td.classList.remove('hidden');
+                    });
+                }
+            });
+
+            // Update checkboxes
+            document.querySelectorAll('.column-toggle').forEach(toggle => {
+                toggle.checked = !hiddenColumns.has(toggle.dataset.column);
+            });
+        }
+
+        function saveColumnVisibility() {
+            localStorage.setItem('hiddenColumns', JSON.stringify(Array.from(hiddenColumns)));
+        }
+
+        // ============================================
+        // KEYBOARD SHORTCUTS
+        // ============================================
+        function initKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                // Focus search on '/' key
+                if (e.key === '/' && !isInputFocused()) {
+                    e.preventDefault();
+                    document.getElementById('table-search').focus();
+                }
+
+                // Clear search on 'Esc' key
+                if (e.key === 'Escape') {
+                    const searchInput = document.getElementById('table-search');
+                    if (searchInput.value) {
+                        searchInput.value = '';
+                        searchQuery = '';
+                        currentPage = 1;
+                        loadCustomers();
+                    }
+                    // Also clear selection
+                    if (selectedCustomers.size > 0) {
+                        clearSelection();
+                    }
+                }
+
+                // Show shortcuts modal on '?' key
+                if (e.key === '?' && !isInputFocused()) {
+                    e.preventDefault();
+                    showKeyboardShortcuts();
+                }
+            });
+        }
+
+        function isInputFocused() {
+            const activeElement = document.activeElement;
+            return activeElement.tagName === 'INPUT' ||
+                   activeElement.tagName === 'TEXTAREA' ||
+                   activeElement.tagName === 'SELECT';
+        }
+
+        function showKeyboardShortcuts() {
+            const shortcuts = [
+                { key: '/', description: 'Focus search bar' },
+                { key: 'Esc', description: 'Clear search and selections' },
+                { key: '?', description: 'Show this help' }
+            ];
+
+            let message = '<div class="text-left"><strong class="block mb-2">Keyboard Shortcuts:</strong>';
+            shortcuts.forEach(s => {
+                message += `<div class="mb-1"><kbd class="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded dark:bg-gray-600 dark:text-gray-100">${s.key}</kbd> - ${s.description}</div>`;
+            });
+            message += '</div>';
+
+            showToast('info', message);
+        }
+
+        // ============================================
+        // DROPDOWN TOGGLES
+        // ============================================
+        function initDropdowns() {
+            // Column toggle dropdown
+            const columnToggleButton = document.getElementById('columnToggleButton');
+            const columnToggleDropdown = document.getElementById('columnToggleDropdown');
+
+            if (columnToggleButton && columnToggleDropdown) {
+                columnToggleButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    columnToggleDropdown.classList.toggle('hidden');
+                });
+            }
+
+            // Export all dropdown
+            const exportAllButton = document.getElementById('exportAllButton');
+            const exportAllDropdown = document.getElementById('exportAllDropdown');
+
+            if (exportAllButton && exportAllDropdown) {
+                exportAllButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    exportAllDropdown.classList.toggle('hidden');
+                });
+            }
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (columnToggleDropdown && !columnToggleDropdown.contains(e.target)) {
+                    columnToggleDropdown.classList.add('hidden');
+                }
+                if (exportAllDropdown && !exportAllDropdown.contains(e.target)) {
+                    exportAllDropdown.classList.add('hidden');
+                }
+            });
+        }
+
+        // ============================================
+        // LOAD CUSTOMERS (Enhanced)
+        // ============================================
         async function loadCustomers() {
             const tbody = document.getElementById('customer-table-body');
-            const loadingRow = document.getElementById('loading-row');
+            const skeletonRows = document.querySelectorAll('.skeleton-row');
 
-            // Show loading
-            loadingRow.classList.remove('hidden');
+            // Show skeleton loading
+            skeletonRows.forEach(row => row.classList.remove('hidden'));
 
             try {
                 const params = new URLSearchParams({
@@ -566,12 +974,15 @@
 
                 const data = await response.json();
 
-                // Hide loading
-                loadingRow.classList.add('hidden');
+                // Store all customers data for export
+                allCustomersData = data.data || [];
 
-                // Clear tbody (keep loading row)
+                // Hide skeleton loading
+                skeletonRows.forEach(row => row.classList.add('hidden'));
+
+                // Clear tbody (keep skeleton rows)
                 Array.from(tbody.children).forEach(row => {
-                    if (row.id !== 'loading-row') {
+                    if (!row.classList.contains('skeleton-row')) {
                         row.remove();
                     }
                 });
@@ -582,10 +993,13 @@
                         const row = createCustomerRow(customer);
                         tbody.appendChild(row);
                     });
+
+                    // Apply column visibility after rendering
+                    applyColumnVisibility();
                 } else {
                     const emptyRow = document.createElement('tr');
                     emptyRow.innerHTML = `
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                             <svg class="mx-auto w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                             </svg>
@@ -601,7 +1015,8 @@
 
             } catch (error) {
                 console.error('Error loading customers:', error);
-                loadingRow.classList.add('hidden');
+                skeletonRows.forEach(row => row.classList.add('hidden'));
+                showToast('error', 'Failed to load customers. Please try again.');
             }
         }
 
@@ -611,42 +1026,63 @@
 
             const initials = customer.first_name.charAt(0) + customer.last_name.charAt(0);
 
+            // Check if customer is new (created within last 24 hours)
+            const createdDate = new Date(customer.created_at);
+            const now = new Date();
+            const hoursDiff = (now - createdDate) / (1000 * 60 * 60);
+            const isNew = hoursDiff < 24;
+
+            // Check if customer is in selected list
+            const isSelected = selectedCustomers.has(customer.cust_id);
+
             row.innerHTML = `
-                <td class="px-6 py-4 font-mono text-gray-900 dark:text-white">
+                <td class="px-4 py-4">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''}
+                           class="customer-checkbox w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                           data-customer-id="${customer.cust_id}"
+                           onchange="handleRowCheckbox(this)">
+                </td>
+                <td data-column-name="id" class="px-6 py-4 font-mono text-gray-900 dark:text-white">
                     ${customer.cust_id}
                 </td>
-                <td class="px-6 py-4">
+                <td data-column-name="name" class="px-6 py-4">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
                             ${initials}
                         </div>
                         <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">${customer.customer_name}</div>
+                            <div class="flex items-center">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">${customer.customer_name}</div>
+                                ${isNew ? '<span class="ml-2 px-2 py-0.5 text-xs font-semibold text-green-800 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300 badge-new">NEW</span>' : ''}
+                            </div>
                             <div class="text-sm text-gray-500 dark:text-gray-400">${customer.resolution_no}</div>
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-4 text-gray-900 dark:text-white">
+                <td data-column-name="location" class="px-6 py-4 text-gray-900 dark:text-white">
                     ${customer.location || '-'}
                 </td>
-                <td class="px-6 py-4 text-gray-900 dark:text-white">
+                <td data-column-name="created" class="px-6 py-4 text-gray-900 dark:text-white">
                     ${customer.created_at}
                 </td>
-                <td class="px-6 py-4 text-center">
+                <td data-column-name="status" class="px-6 py-4 text-center">
                     ${customer.status_badge}
                 </td>
-                <td class="px-6 py-4 text-center">
-                    <div class="flex items-center justify-center space-x-2">
+                <td class="px-6 py-4 text-center sticky right-0 bg-white dark:bg-gray-800">
+                    <div class="flex items-center justify-center space-x-2 action-buttons">
                         <button onclick="viewCustomer(${customer.cust_id})"
-                            class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                            class="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                            title="View Customer">
                             View
                         </button>
                         <button onclick="editCustomer(${customer.cust_id})"
-                            class="text-green-600 dark:text-green-400 hover:underline font-medium">
+                            class="text-green-600 dark:text-green-400 hover:underline font-medium"
+                            title="Edit Customer">
                             Edit
                         </button>
                         <button onclick="deleteCustomer(${customer.cust_id})"
-                            class="text-red-600 dark:text-red-400 hover:underline font-medium">
+                            class="text-red-600 dark:text-red-400 hover:underline font-medium"
+                            title="Delete Customer">
                             Delete
                         </button>
                     </div>
@@ -760,7 +1196,7 @@
                 }
             } catch (error) {
                 console.error('Error loading applications:', error);
-                alert('Error loading service applications');
+                showToast('error', 'Error loading service applications');
             }
         }
 
@@ -784,7 +1220,7 @@
                 }
             } catch (error) {
                 console.error('Error loading customer:', error);
-                alert('Error loading customer details');
+                showToast('error', 'Error loading customer details');
             }
         }
 
@@ -819,13 +1255,13 @@
                     // Reload table
                     loadCustomers();
 
-                    alert('Customer updated successfully!');
+                    showToast('success', 'Customer updated successfully!');
                 } else {
                     throw new Error(result.message || 'Failed to update customer');
                 }
             } catch (error) {
                 console.error('Error updating customer:', error);
-                alert('Error: ' + error.message);
+                showToast('error', 'Error: ' + error.message);
             }
         }
 
@@ -872,13 +1308,13 @@
                                 // Reload table
                                 loadCustomers();
 
-                                alert('Customer deleted successfully!');
+                                showToast('success', 'Customer deleted successfully!');
                             } else {
                                 throw new Error(result.message || 'Failed to delete customer');
                             }
                         } catch (error) {
                             console.error('Error deleting customer:', error);
-                            alert('Error: ' + error.message);
+                            showToast('error', 'Error: ' + error.message);
                         }
                     };
                 }
@@ -890,7 +1326,7 @@
                 }
             } catch (error) {
                 console.error('Error checking delete eligibility:', error);
-                alert('Error checking if customer can be deleted');
+                showToast('error', 'Error checking if customer can be deleted');
             }
         }
 
