@@ -26,6 +26,18 @@ class AddressService
     }
 
     /**
+     * Get all active towns
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAllTowns()
+    {
+        return Town::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->orderBy('t_desc')
+            ->get(['t_id', 't_desc']);
+    }
+
+    /**
      * Get towns by province
      *
      * @param int $provinceId
@@ -50,6 +62,18 @@ class AddressService
         return Barangay::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
             ->orderBy('b_desc')
             ->get(['b_id', 'b_desc']);
+    }
+
+    /**
+     * Get all active puroks
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAllPuroks()
+    {
+        return Purok::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->orderBy('p_desc')
+            ->get(['p_id', 'p_desc']);
     }
 
     /**
