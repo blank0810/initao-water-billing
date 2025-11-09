@@ -300,7 +300,7 @@ class CustomerService
             ->get();
 
         $formattedApplications = $applications->map(function ($app) {
-            $statusDesc = $app->status->stat_description ?? 'Unknown';
+            $statusDesc = $app->status->stat_desc ?? 'Unknown';
             return [
                 'application_id' => $app->application_id,
                 'application_number' => $app->application_number,
