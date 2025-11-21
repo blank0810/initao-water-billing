@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Outfit Font */
+body {
+    font-family: 'Outfit', sans-serif;
+}
+
+/* Ensure dark mode styles work */
+html.dark {
+    color-scheme: dark;
+}
+
+.test-dark-mode {
+    @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-white;
+}
