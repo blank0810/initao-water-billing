@@ -125,6 +125,9 @@
                 }
             }
         </style>
+
+        <!-- Additional styles from pages -->
+        @stack('styles')
     </head>
     <body class="font-sans antialiased h-full">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900" x-data="appState()">
@@ -164,6 +167,7 @@
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
         <script>
+<<<<<<< HEAD
             function appState() {
                 return {
                     sidebarOpen: true,
@@ -174,6 +178,19 @@
                         if (savedSidebarState !== null) {
                             this.sidebarOpen = savedSidebarState === 'true';
                         }
+=======
+            // Initialize theme immediately to prevent flash
+            (function() {
+                const savedTheme = localStorage.getItem('theme');
+
+                // Default to light mode, only use dark if explicitly saved
+                if (savedTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            })();
+>>>>>>> d495afb1c6251dddf501f93e05fce3c8006270e2
 
                         // Make instance globally available
                         window.appState = this;
@@ -212,5 +229,8 @@
                 window.location.href = '/no-internet-found';
             }
         </script>
+
+        <!-- Additional scripts from pages -->
+        @stack('scripts')
     </body>
 </html>

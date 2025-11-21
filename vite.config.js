@@ -1,9 +1,10 @@
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
+import { defineConfig } from "vite";
+import laravel from "laravel-vite-plugin";
 
 export default defineConfig({
     plugins: [
         laravel({
+<<<<<<< HEAD
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
@@ -23,7 +24,20 @@ export default defineConfig({
                 'resources/js/data/consumer/consumer.js',
                 'resources/js/unified-print.js',
             ],
+=======
+            input: ["resources/css/app.css", "resources/js/app.js"],
+>>>>>>> d495afb1c6251dddf501f93e05fce3c8006270e2
             refresh: true,
         }),
     ],
+    server: {
+        host: "0.0.0.0", // accessible inside Docker network
+        port: 5173,
+        hmr: {
+            host: "localhost", // where your browser connects (host machine)
+        },
+        watch: {
+            usePolling: true, // ensures HMR works on mounted volumes
+        },
+    },
 });
