@@ -8,23 +8,135 @@
         <title>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 
+        <!-- Theme initialization - MUST run before vite scripts -->
+        <script>
+            (function() {
+                try {
+                    const theme = localStorage.getItem('theme-preference');
+                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                    // Determine if dark mode should be active
+                    const shouldBeDark = theme === 'dark' || (theme === null && prefersDark);
+
+                    // Apply immediately to prevent flash
+                    if (shouldBeDark) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {
+                    console.error('Theme init error:', e);
+                }
+            })();
+        </script>
+
+        <!-- Export Libraries -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/network-detector.js'])
 
         <style>
             [x-cloak] {
                 display: none !important;
             }
+
+            /* Toast animations */
+            @keyframes slide-in {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            .animate-slide-in {
+                animation: slide-in 0.3s ease-out;
+                transition: all 0.3s ease-out;
+            }
+
+            /* Smooth transitions for sidebar */
+            .sidebar-transition {
+                transition: all 0.3s ease-in-out;
+            }
+
+            /* Fix scroll issues */
+            body, html {
+                overflow-x: hidden;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Ensure main container doesn't cause overflow */
+            .min-h-screen {
+                min-height: 100vh;
+            }
+
+            /* Custom scrollbar for sidebar */
+            .sidebar-scroll {
+                scrollbar-width: thin;
+                scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+            }
+
+            .sidebar-scroll::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .sidebar-scroll::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .sidebar-scroll::-webkit-scrollbar-thumb {
+                background-color: rgba(156, 163, 175, 0.5);
+                border-radius: 20px;
+            }
+
+            .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+                background-color: rgba(156, 163, 175, 0.7);
+            }
+
+            /* Mobile sidebar overlay */
+            @media (max-width: 1023px) {
+                aside {
+                    z-index: 50 !important;
+                }
+
+                nav {
+                    z-index: 40 !important;
+                    position: relative;
+                }
+
+                .sidebar-transition {
+                    margin-left: 0 !important;
+                    padding-left: 0 !important;
+                }
+            }
         </style>
     </head>
     <body class="font-sans antialiased h-full">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            @include('components.sidebar')
+        <div class="min-h-screen bg-gray-100 dark:bg-gray-900" x-data="appState()">
+            @include('components.sidebar-revamped')
 
-            <div class="ml-0 lg:ml-72">
+            <!-- Main Content Area -->
+            <div class="sidebar-transition"
+                 :class="sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'"
+                 x-init="$watch('sidebarOpen', value => {
+                    localStorage.setItem('sidebarOpen', value);
+                 })">
+
                 @include('layouts.navigation')
 
                 @isset($header)
@@ -35,73 +147,70 @@
                     </header>
                 @endisset
 
-                <main>
-                    {{ $slot }}
+                <main class="p-4 sm:p-6">
+                    {{-- Support both component and section syntax --}}
+                    @if(isset($slot))
+                        {{ $slot }}
+                    @else
+                        @yield('content')
+                    @endif
                 </main>
+
+                <x-footer />
             </div>
         </div>
 
         <!-- AlpineJS -->
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
-        <!-- Theme Management Script -->
         <script>
-            // Initialize theme immediately to prevent flash
-            (function() {
-                const savedTheme = localStorage.getItem('theme');
-                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            function appState() {
+                return {
+                    sidebarOpen: true,
 
-                if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            })();
+                    init() {
+                        // Get sidebar state from localStorage
+                        const savedSidebarState = localStorage.getItem('sidebarOpen');
+                        if (savedSidebarState !== null) {
+                            this.sidebarOpen = savedSidebarState === 'true';
+                        }
 
-            // Theme management functions
-            function toggleTheme() {
-                const html = document.documentElement;
+                        // Make instance globally available
+                        window.appState = this;
+                    },
 
-                if (html.classList.contains('dark')) {
-                    html.classList.remove('dark');
-                    localStorage.setItem('theme', 'light');
-                    return 'light';
-                } else {
-                    html.classList.add('dark');
-                    localStorage.setItem('theme', 'dark');
-                    return 'dark';
+                    toggleSidebar() {
+                        this.sidebarOpen = !this.sidebarOpen;
+                        localStorage.setItem('sidebarOpen', this.sidebarOpen);
+                    }
                 }
             }
+        </script>
 
-            // Alpine.js theme component
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('themeToggle', () => {
-                    return {
-                        isDark: document.documentElement.classList.contains('dark'),
+        @include('components.page-loader')
 
-                        init() {
-                            // Watch for class changes on html element
-                            const observer = new MutationObserver((mutations) => {
-                                mutations.forEach((mutation) => {
-                                    if (mutation.attributeName === 'class') {
-                                        this.isDark = document.documentElement.classList.contains('dark');
-                                    }
-                                });
-                            });
+        @stack('scripts')
 
-                            observer.observe(document.documentElement, {
-                                attributes: true,
-                                attributeFilter: ['class']
-                            });
-                        },
-
-                        toggle() {
-                            const newTheme = toggleTheme();
-                            this.isDark = newTheme === 'dark';
-                        }
-                    }
-                });
+        <!-- Global Error Handling -->
+        <script>
+            // Handle offline/online events
+            window.addEventListener('offline', function() {
+                if (!window.location.pathname.includes('/no-internet')) {
+                    window.location.href = '/no-internet-found';
+                }
             });
+
+            // Handle 404 errors from fetch/axios
+            window.addEventListener('unhandledrejection', function(event) {
+                if (event.reason && event.reason.response && event.reason.response.status === 404) {
+                    console.warn('404 error detected:', event.reason);
+                }
+            });
+
+            // Check connection status on load
+            if (!navigator.onLine && !window.location.pathname.includes('/no-internet')) {
+                window.location.href = '/no-internet-found';
+            }
         </script>
     </body>
 </html>

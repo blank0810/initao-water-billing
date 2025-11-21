@@ -15,8 +15,15 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
-    <div class="flex h-screen w-screen items-center justify-center">
-        {{ $slot }}
+    <div class="flex flex-col h-screen w-screen">
+        <div class="flex-1 flex items-center justify-center">
+            {{ $slot }}
+        </div>
+        <x-footer />
     </div>
+
+    @include('components.page-loader')
+
+    @stack('scripts')
 </body>
 </html>

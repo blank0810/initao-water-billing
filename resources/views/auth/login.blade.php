@@ -18,7 +18,7 @@
                 <x-auth-session-status class="mb-4" :status="session('status')" />
 
                 <!-- Login Form -->
-                <form id="loginForm" class="space-y-6">
+                <form method="POST" action="{{ route('login') }}" class="space-y-6">
                     @csrf
 
                     <!-- Email -->
@@ -33,14 +33,14 @@
                     <!-- Password with toggle -->
                     <div class="relative">
                         <x-input-label for="password" :value="__('Password')" />
-                        <div class="relative flex items-center">
+                        <div class="relative">
                             <x-text-input id="password" type="password" name="password" required
                                 autocomplete="current-password"
                                 class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white pr-10"
                                 placeholder="••••••••" />
                             <!-- Eye icon -->
                             <button type="button" id="togglePassword"
-                                class="absolute right-3 flex items-center h-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                                 <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -117,11 +117,6 @@
             eyeClosed.classList.toggle('hidden');
         });
 
-        // Fake login redirect for frontend only
-        const loginForm = document.getElementById('loginForm');
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // prevent POST to backend
-            window.location.href = '/dashboard'; // redirect to dashboard
-        });
+
     </script>
 </x-guest-layout>
