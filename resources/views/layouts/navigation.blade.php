@@ -13,12 +13,16 @@ $pageTitles = [
     'customer-list' => 'Customer List',
     'payment-management' => 'Payment Management',
     'approve-customer' => 'Customer Approval',
+    'service-application' => 'Service Application',
+    'service-connection' => 'Service Connection',
     'consumer-list' => 'Consumer List',
     'billing-management' => 'Billing Management',
     'meter-management' => 'Meter Management',
     'rate-management' => 'Rate Management',
     'ledger-management' => 'Ledger Management',
     'analytics' => 'Analytics',
+    'settings' => 'Settings',
+    'report' => 'Report',
 ];
 
 // Get current active menu from session or default to dashboard
@@ -34,41 +38,56 @@ $breadcrumbs = [
     'customer-list' => ['Customer Application', 'Customer List'],
     'payment-management' => ['Customer Application', 'Payment Management'],
     'approve-customer' => ['Customer Application', 'Customer Approval'],
+    'service-application' => ['Service Application'],
+    'service-connection' => ['Service Connection'],
     'consumer-list' => ['Consumer List'],
     'billing-management' => ['Billing Management'],
     'meter-management' => ['Meter Management'],
     'rate-management' => ['Rate Management'],
     'ledger-management' => ['Ledger Management'],
     'analytics' => ['Analytics'],
+    'settings' => ['Settings'],
+    'report' => ['Report'],
 ];
 
 $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Dashboard'];
 @endphp
 
-<nav x-data="{ notifOpen: false, userOpen: false }" class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+<nav x-data="{ notifOpen: false, userOpen: false }" class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm z-30 relative sticky top-0">
     <div class="max-w-full mx-auto px-6 sm:px-8 lg:px-10">
         <div class="flex justify-between h-24 items-center">
 
-            <!-- Breadcrumb & Title -->
-            <div class="flex flex-col justify-center">
-                <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
-                    <li class="flex items-center">
-                        <span class="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Pages</span>
-                        @if(count($currentBreadcrumbs) > 1)
+            <!-- Left: Mobile menu button and breadcrumb -->
+            <div class="flex items-center space-x-4">
+                <!-- Mobile menu button -->
+                <button @click="window.appState?.toggleSidebar()" data-sidebar-toggle
+                    class="lg:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+
+                <!-- Breadcrumb & Title -->
+                <div class="flex flex-col justify-center">
+                    <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
+                        <li class="flex items-center">
+                            <span class="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Pages</span>
+                            @if(count($currentBreadcrumbs) > 1)
+                                <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                                <a href="#" class="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                                    {{ $currentBreadcrumbs[0] }}
+                                </a>
+                            @endif
                             <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
-                            <a href="#" class="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                                {{ $currentBreadcrumbs[0] }}
-                            </a>
-                        @endif
-                        <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </li>
-                    <li class="font-medium text-gray-700 dark:text-gray-300">{{ end($currentBreadcrumbs) }}</li>
-                </ol>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $pageTitle }}</h1>
+                        </li>
+                        <li class="font-medium text-gray-700 dark:text-gray-300">{{ end($currentBreadcrumbs) }}</li>
+                    </ol>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $pageTitle }}</h1>
+                </div>
             </div>
 
             <!-- Right: Controls -->
@@ -88,24 +107,36 @@ $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Dashboard'];
                     >
                 </div>
 
-<!-- Theme Toggle - UPDATED -->
-<button x-data="themeToggle()"
-        @click="toggle()"
-        class="p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300"
-        title="Toggle theme">
-    <!-- Sun for Light Mode -->
-    <svg x-show="!isDark" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-    </svg>
-    <!-- Moon for Dark Mode -->
-    <svg x-show="isDark" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-    </svg>
-</button>
-                <!-- Rest of your navbar code remains the same -->
+                <!-- Theme Toggle -->
+                <button x-data="{
+                    isDark: document.documentElement.classList.contains('dark'),
+                    init() {
+                        // Listen for external theme changes
+                        window.addEventListener('theme-changed', (e) => {
+                            this.isDark = e.detail.isDark;
+                        });
+                    },
+                    toggle() {
+                        window.toggleTheme();
+                        this.isDark = window.isDarkTheme();
+                    }
+                }"
+                @click="toggle()"
+                class="p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300"
+                title="Toggle theme">
+                    <!-- Sun for Light Mode -->
+                    <svg x-show="!isDark" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <!-- Moon for Dark Mode -->
+                    <svg x-show="isDark" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+
                 <!-- Notifications -->
-                <div class="relative" x-data="{ open: notifOpen }">
-                    <button @click="notifOpen = !notifOpen"
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open; $event.stopPropagation()"
                             class="relative p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300">
                         <!-- Bell Icon -->
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,14 +146,14 @@ $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Dashboard'];
                     </button>
 
                     <!-- Notification Dropdown -->
-                    <div x-show="notifOpen"
+                    <div x-show="open"
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
                          x-transition:leave="transition ease-in duration-150"
                          x-transition:leave-start="opacity-100 scale-100"
                          x-transition:leave-end="opacity-0 scale-95"
-                         @click.away="notifOpen = false"
+                         @click.away="open = false"
                          class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
 
                         <!-- Header -->
@@ -154,8 +185,8 @@ $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Dashboard'];
                 </div>
 
                 <!-- User Dropdown -->
-                <div class="relative" x-data="{ open: userOpen }">
-                    <button @click="userOpen = !userOpen"
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open; $event.stopPropagation()"
                             class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
                         <div class="h-8 w-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                             {{ strtoupper(substr($user->name, 0, 1)) }}
@@ -170,14 +201,14 @@ $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Dashboard'];
                     </button>
 
                     <!-- User Dropdown Menu -->
-                    <div x-show="userOpen"
+                    <div x-show="open"
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
                          x-transition:leave="transition ease-in duration-150"
                          x-transition:leave-start="opacity-100 scale-100"
                          x-transition:leave-end="opacity-0 scale-95"
-                         @click.away="userOpen = false"
+                         @click.away="open = false"
                          class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
 
                         <!-- User Info -->
@@ -188,17 +219,38 @@ $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Dashboard'];
 
                         <!-- Menu Items -->
                         <div class="p-2">
+                            <a href="{{ route('user.add') }}" class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition duration-200">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9a3 3 0 11-6 0 3 3 0 016 0zM6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
+                                </svg>
+                                <span>Add User</span>
+                            </a>
+
+                            <a href="{{ route('customer.add') }}" class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition duration-200">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.61 0 5.05.77 6.879 2.087M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span>Add Customer</span>
+                            </a>
+
                             <a href="{{ route('profile.edit') }}" class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition duration-200">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                                 <span>Profile</span>
                             </a>
-                            <a href="#" class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition duration-200">
+                            <a href="{{ route('settings') }}" class="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition duration-200">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                 </svg>
                                 <span>Settings</span>
+                            </a>
+
+                            <a href="{{ route('report') }}" class="flex items-center space-x-2 mt-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition duration-200">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7 7h10M7 7v10M17 7v10" />
+                                </svg>
+                                <span>Report</span>
                             </a>
                         </div>
 
