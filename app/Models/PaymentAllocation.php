@@ -6,68 +6,42 @@ use Illuminate\Database\Eloquent\Model;
 
 class PaymentAllocation extends Model
 {
-    protected $table = 'PaymentAllocation';
-    protected $primaryKey = 'payment_allocation_id';
-    public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $table = 'payment_allocations';
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
         'payment_id',
-        'target_type',
-        'target_id',
-        'amount_applied',
-        'period_id',
-        'connection_id'
+        'bill_id',
+        'charge_id',
+        'amount',
+        'type',
+        'status_id'
     ];
 
     protected $casts = [
-        'amount_applied' => 'decimal:2',
+        'amount' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the payment that owns the payment allocation
-     */
     public function payment()
     {
-        return $this->belongsTo(Payment::class, 'payment_id', 'payment_id');
+        return $this->belongsTo(Payment::class);
     }
 
-    /**
-     * Get the period that owns the payment allocation
-     */
-    public function period()
+    public function bill()
     {
-        return $this->belongsTo(Period::class, 'period_id', 'per_id');
+        return $this->belongsTo(WaterBill::class);
     }
 
-    /**
-     * Get the service connection that owns the payment allocation
-     */
-    public function serviceConnection()
+    public function charge()
     {
-        return $this->belongsTo(ServiceConnection::class, 'connection_id', 'connection_id');
+        return $this->belongsTo(CustomerCharge::class);
     }
 
-    /**
-     * Get the target bill (polymorphic relationship)
-     */
-    public function targetBill()
+    public function status()
     {
-        if ($this->target_type === 'BILL') {
-            return $this->belongsTo(WaterBillHistory::class, 'target_id', 'bill_id');
-        }
-        return null;
-    }
-
-    /**
-     * Get the target charge (polymorphic relationship)
-     */
-    public function targetCharge()
-    {
-        if ($this->target_type === 'CHARGE') {
-            return $this->belongsTo(CustomerCharge::class, 'target_id', 'charge_id');
-        }
-        return null;
+        return $this->belongsTo(Status::class);
     }
 }

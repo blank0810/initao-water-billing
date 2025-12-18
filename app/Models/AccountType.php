@@ -6,30 +6,35 @@ use Illuminate\Database\Eloquent\Model;
 
 class AccountType extends Model
 {
-    protected $table = 'account_type';
-    protected $primaryKey = 'at_id';
+    protected $table = 'account_types';
+    protected $primaryKey = 'id';
     public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
 
     protected $fillable = [
-        'at_desc',
-        'stat_id'
+        'code',
+        'name',
+        'rate_category',
+        'description',
+        'status_id'
     ];
 
-    /**
-     * Get the status associated with the account type
-     */
     public function status()
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Get the service connections for the account type
-     */
+    public function serviceApplications()
+    {
+        return $this->hasMany(ServiceApplication::class);
+    }
+
     public function serviceConnections()
     {
-        return $this->hasMany(ServiceConnection::class, 'account_type_id', 'at_id');
+        return $this->hasMany(ServiceConnection::class);
+    }
+
+    public function waterRates()
+    {
+        return $this->hasMany(WaterRate::class);
     }
 }

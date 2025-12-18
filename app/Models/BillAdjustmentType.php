@@ -6,31 +6,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class BillAdjustmentType extends Model
 {
-    protected $table = 'BillAdjustmentType';
-    protected $primaryKey = 'bill_adjustment_type_id';
+    protected $table = 'bill_adjustment_types';
+    protected $primaryKey = 'id';
     public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
 
     protected $fillable = [
         'name',
         'direction',
-        'stat_id'
+        'description',
+        'status_id'
     ];
 
-    /**
-     * Get the status associated with the bill adjustment type
-     */
     public function status()
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Get the bill adjustments for the bill adjustment type
-     */
-    public function billAdjustments()
+    public function adjustments()
     {
-        return $this->hasMany(BillAdjustment::class, 'bill_adjustment_type_id', 'bill_adjustment_type_id');
+        return $this->hasMany(BillAdjustment::class, 'adjustment_type_id');
     }
 }

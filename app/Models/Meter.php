@@ -6,31 +6,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class Meter extends Model
 {
-    protected $table = 'meter';
-    protected $primaryKey = 'mtr_id';
+    protected $table = 'meters';
+    protected $primaryKey = 'id';
     public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
 
     protected $fillable = [
-        'mtr_serial',
-        'mtr_brand',
-        'stat_id'
+        'serial_number',
+        'brand',
+        'size',
+        'status_id'
     ];
 
-    /**
-     * Get the status associated with the meter
-     */
     public function status()
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Get the meter assignments for the meter
-     */
-    public function meterAssignments()
+    public function assignments()
     {
-        return $this->hasMany(MeterAssignment::class, 'meter_id', 'mtr_id');
+        return $this->hasMany(MeterAssignment::class);
     }
 }

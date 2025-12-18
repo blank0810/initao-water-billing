@@ -7,29 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 class Role extends Model
 {
     protected $table = 'roles';
-    protected $primaryKey = 'role_id';
+    protected $primaryKey = 'id';
     public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
 
     protected $fillable = [
-        'role_name',
+        'code',
+        'name',
         'description'
     ];
 
-    /**
-     * Get the users for the role
-     */
     public function users()
     {
-        return $this->belongsToMany(User::class, 'user_roles', 'role_id', 'user_id');
+        return $this->belongsToMany(User::class, 'role_user')
+                    ->withPivot('assigned_at');
     }
 
-    /**
-     * Get the permissions for the role
-     */
     public function permissions()
     {
-        return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id');
+        return $this->belongsToMany(Permission::class, 'permission_role');
     }
 }

@@ -247,7 +247,7 @@ CREATE TABLE `serviceconnection` (
   `service_address_id` bigint(20) NOT NULL,
   `account_type_id` bigint(20) NOT NULL,
   `zone_id` bigint(11) NOT NULL,
-  `started_at` date NOT NULL DEFAULT curdate(),
+  `started_at` date NOT NULL,
   `ended_at` date,
   `stat_id` int(11) DEFAULT 1,
   PRIMARY KEY (`connection_id`),

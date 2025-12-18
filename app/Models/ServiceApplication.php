@@ -6,53 +6,54 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceApplication extends Model
 {
-    protected $table = 'ServiceApplication';
-    protected $primaryKey = 'application_id';
-    public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $table = 'service_applications';
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
         'customer_id',
-        'address_id',
-        'application_number',
+        'service_address_id',
+        'account_type_id',
+        'zone_id',
         'submitted_at',
-        'stat_id'
+        'is_printed',
+        'status_id'
     ];
 
     protected $casts = [
         'submitted_at' => 'datetime',
+        'is_printed' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the customer that owns the service application
-     */
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'customer_id', 'cust_id');
+        return $this->belongsTo(Customer::class);
     }
 
-    /**
-     * Get the address that owns the service application
-     */
-    public function address()
+    public function serviceAddress()
     {
-        return $this->belongsTo(ConsumerAddress::class, 'address_id', 'ca_id');
+        return $this->belongsTo(ConsumerAddress::class, 'service_address_id');
     }
 
-    /**
-     * Get the status associated with the service application
-     */
+    public function accountType()
+    {
+        return $this->belongsTo(AccountType::class);
+    }
+
+    public function zone()
+    {
+        return $this->belongsTo(ReadingZone::class, 'zone_id');
+    }
+
     public function status()
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Get the customer charges for the service application
-     */
-    public function customerCharges()
+    public function connection()
     {
-        return $this->hasMany(CustomerCharge::class, 'application_id', 'application_id');
+        return $this->hasOne(ServiceConnection::class, 'application_id');
     }
 }

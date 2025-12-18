@@ -6,66 +6,50 @@ use Illuminate\Database\Eloquent\Model;
 
 class MeterReading extends Model
 {
-    protected $table = 'MeterReading';
-    protected $primaryKey = 'reading_id';
-    public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $table = 'meter_readings';
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
-        'assignment_id',
-        'period_id',
+        'meter_assignment_id',
+        'billing_period_id',
         'reading_date',
         'reading_value',
+        'previous_reading',
         'is_estimated',
-        'meter_reader_id',
-        'created_at'
+        'estimated_reason',
+        'reader_employee_id',
+        'photo_url',
+        'remarks'
     ];
 
     protected $casts = [
         'reading_date' => 'date',
         'reading_value' => 'decimal:3',
+        'previous_reading' => 'decimal:3',
+        'consumption' => 'decimal:3', // Generated column
         'is_estimated' => 'boolean',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the meter assignment that owns the meter reading
-     */
-    public function meterAssignment()
+    public function assignment()
     {
-        return $this->belongsTo(MeterAssignment::class, 'assignment_id', 'assignment_id');
+        return $this->belongsTo(MeterAssignment::class, 'meter_assignment_id');
     }
 
-    /**
-     * Get the period that owns the meter reading
-     */
-    public function period()
+    public function billingPeriod()
     {
-        return $this->belongsTo(Period::class, 'period_id', 'per_id');
+        return $this->belongsTo(BillingPeriod::class);
     }
 
-    /**
-     * Get the meter reader that owns the meter reading
-     */
-    public function meterReader()
+    public function reader()
     {
-        return $this->belongsTo(MeterReader::class, 'meter_reader_id', 'mr_id');
+        return $this->belongsTo(Employee::class, 'reader_employee_id');
     }
 
-    /**
-     * Get the water bill history as previous reading
-     */
-    public function waterBillHistoryAsPrevious()
+    public function bill()
     {
-        return $this->hasMany(WaterBillHistory::class, 'prev_reading_id', 'reading_id');
-    }
-
-    /**
-     * Get the water bill history as current reading
-     */
-    public function waterBillHistoryAsCurrent()
-    {
-        return $this->hasMany(WaterBillHistory::class, 'curr_reading_id', 'reading_id');
+        return $this->hasOne(WaterBill::class, 'current_reading_id');
     }
 }

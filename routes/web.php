@@ -53,17 +53,11 @@ Route::get('/customer/add', function () {
     return view('pages.customer.add-customer');
 })->name('customer.add');
 
-<<<<<<< HEAD
 // Customer List with 3-Phase Workflow
 Route::get('/customer/list', function () {
     session(['active_menu' => 'customer-list']);
     return view('pages.customer.enhanced-customer-list');
 })->name('customer.list');
-=======
-Route::post('/customer/store', [CustomerController::class, 'store'])->name('customer.store');
-
-Route::get('/customer/list', [CustomerController::class, 'index'])->name('customer.list');
->>>>>>> d495afb1c6251dddf501f93e05fce3c8006270e2
 
 // Application Process Page
 Route::get('/customer/application-process', function () {

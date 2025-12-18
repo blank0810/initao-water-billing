@@ -6,21 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceConnection extends Model
 {
-    protected $table = 'ServiceConnection';
-    protected $primaryKey = 'connection_id';
+    protected $table = 'service_connections';
+    protected $primaryKey = 'id';
     public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
 
     protected $fillable = [
-        'account_no',
+        'account_number',
+        'application_id',
         'customer_id',
-        'address_id',
+        'service_address_id',
         'account_type_id',
-        'rate_id',
+        'zone_id',
         'started_at',
         'ended_at',
-        'stat_id'
+        'status_id'
     ];
 
     protected $casts = [
@@ -28,75 +27,43 @@ class ServiceConnection extends Model
         'ended_at' => 'date',
     ];
 
-    /**
-     * Get the customer that owns the service connection
-     */
+    public function application()
+    {
+        return $this->belongsTo(ServiceApplication::class);
+    }
+
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'customer_id', 'cust_id');
+        return $this->belongsTo(Customer::class);
     }
 
-    /**
-     * Get the address that owns the service connection
-     */
-    public function address()
+    public function serviceAddress()
     {
-        return $this->belongsTo(ConsumerAddress::class, 'address_id', 'ca_id');
+        return $this->belongsTo(ConsumerAddress::class, 'service_address_id');
     }
 
-    /**
-     * Get the account type that owns the service connection
-     */
     public function accountType()
     {
-        return $this->belongsTo(AccountType::class, 'account_type_id', 'at_id');
+        return $this->belongsTo(AccountType::class);
     }
 
-    /**
-     * Get the status associated with the service connection
-     */
+    public function zone()
+    {
+        return $this->belongsTo(ReadingZone::class, 'zone_id');
+    }
+
     public function status()
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Get the meter assignments for the service connection
-     */
     public function meterAssignments()
     {
-        return $this->hasMany(MeterAssignment::class, 'connection_id', 'connection_id');
+        return $this->hasMany(MeterAssignment::class, 'connection_id');
     }
 
-    /**
-     * Get the water bill history for the service connection
-     */
-    public function waterBillHistory()
+    public function waterBills()
     {
-        return $this->hasMany(WaterBillHistory::class, 'connection_id', 'connection_id');
-    }
-
-    /**
-     * Get the customer charges for the service connection
-     */
-    public function customerCharges()
-    {
-        return $this->hasMany(CustomerCharge::class, 'connection_id', 'connection_id');
-    }
-
-    /**
-     * Get the customer ledger entries for the service connection
-     */
-    public function customerLedgerEntries()
-    {
-        return $this->hasMany(CustomerLedger::class, 'connection_id', 'connection_id');
-    }
-
-    /**
-     * Get the payment allocations for the service connection
-     */
-    public function paymentAllocations()
-    {
-        return $this->hasMany(PaymentAllocation::class, 'connection_id', 'connection_id');
+        return $this->hasMany(WaterBill::class, 'connection_id');
     }
 }

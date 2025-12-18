@@ -6,38 +6,28 @@ use Illuminate\Database\Eloquent\Model;
 
 class Barangay extends Model
 {
-    protected $table = 'barangay';
-    protected $primaryKey = 'b_id';
+    protected $table = 'barangays';
+    protected $primaryKey = 'id';
     public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
 
     protected $fillable = [
-        'b_desc',
-        'stat_id'
+        'code',
+        'name',
+        'status_id'
     ];
 
-    /**
-     * Get the puroks for the barangay
-     */
-    public function puroks()
-    {
-        return $this->hasMany(Purok::class, 'b_id', 'b_id');
-    }
-
-    /**
-     * Get the status associated with the barangay
-     */
     public function status()
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Get the consumer addresses for the barangay
-     */
-    public function consumerAddresses()
+    public function puroks()
     {
-        return $this->hasMany(ConsumerAddress::class, 'b_id', 'b_id');
+        return $this->hasMany(Purok::class);
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(ConsumerAddress::class);
     }
 }

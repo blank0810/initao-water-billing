@@ -4,22 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ChargeItem extends Model
+class Position extends Model
 {
-    protected $table = 'charge_items';
+    protected $table = 'positions';
     protected $primaryKey = 'id';
     public $timestamps = false;
 
     protected $fillable = [
-        'code',
         'name',
-        'default_amount',
         'description',
         'status_id'
-    ];
-
-    protected $casts = [
-        'default_amount' => 'decimal:2',
     ];
 
     public function status()
@@ -27,8 +21,8 @@ class ChargeItem extends Model
         return $this->belongsTo(Status::class);
     }
 
-    public function customerCharges()
+    public function employees()
     {
-        return $this->hasMany(CustomerCharge::class);
+        return $this->hasMany(Employee::class);
     }
 }

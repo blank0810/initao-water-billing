@@ -6,54 +6,64 @@ use Illuminate\Database\Eloquent\Model;
 
 class WaterBill extends Model
 {
-    protected $table = 'water_bill';
-    protected $primaryKey = 'wb_id';
-    public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $table = 'water_bills';
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
-        'cl_id',
-        'per_id',
-        'create_date',
+        'connection_id',
+        'billing_period_id',
+        'previous_reading_id',
+        'current_reading_id',
+        'consumption',
         'amount',
-        'stat_id'
+        'due_date',
+        'adjustment_amount',
+        'status_id'
     ];
 
     protected $casts = [
-        'create_date' => 'datetime',
+        'consumption' => 'decimal:3',
         'amount' => 'decimal:2',
+        'adjustment_amount' => 'decimal:2',
+        'total_amount' => 'decimal:2', // Generated column
+        'due_date' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the consumer ledger that owns the water bill
-     */
-    public function consumerLedger()
+    public function connection()
     {
-        return $this->belongsTo(ConsumerLedger::class, 'cl_id', 'cl_id');
+        return $this->belongsTo(ServiceConnection::class, 'connection_id');
     }
 
-    /**
-     * Get the period that owns the water bill
-     */
-    public function period()
+    public function billingPeriod()
     {
-        return $this->belongsTo(Period::class, 'per_id', 'per_id');
+        return $this->belongsTo(BillingPeriod::class);
     }
 
-    /**
-     * Get the status associated with the water bill
-     */
+    public function previousReading()
+    {
+        return $this->belongsTo(MeterReading::class, 'previous_reading_id');
+    }
+
+    public function currentReading()
+    {
+        return $this->belongsTo(MeterReading::class, 'current_reading_id');
+    }
+
     public function status()
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Get the meter readings for the water bill
-     */
-    public function meterReadings()
+    public function adjustments()
     {
-        return $this->hasMany(MeterReadingOld::class, 'wb_id', 'wb_id');
+        return $this->hasMany(BillAdjustment::class, 'bill_id');
+    }
+
+    public function paymentAllocations()
+    {
+        return $this->hasMany(PaymentAllocation::class, 'bill_id');
     }
 }

@@ -6,77 +6,56 @@ use Illuminate\Database\Eloquent\Model;
 
 class CustomerCharge extends Model
 {
-    protected $table = 'CustomerCharge';
-    protected $primaryKey = 'charge_id';
-    public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $table = 'customer_charges';
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
         'customer_id',
         'application_id',
         'connection_id',
         'charge_item_id',
-        'description',
         'quantity',
-        'unit_amount',
-        'created_at',
+        'amount',
         'due_date',
-        'stat_id'
+        'status_id'
     ];
 
     protected $casts = [
         'quantity' => 'decimal:3',
-        'unit_amount' => 'decimal:2',
-        'created_at' => 'datetime',
+        'amount' => 'decimal:2',
         'due_date' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the customer that owns the customer charge
-     */
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'customer_id', 'cust_id');
+        return $this->belongsTo(Customer::class);
     }
 
-    /**
-     * Get the service application that owns the customer charge
-     */
-    public function serviceApplication()
+    public function application()
     {
-        return $this->belongsTo(ServiceApplication::class, 'application_id', 'application_id');
+        return $this->belongsTo(ServiceApplication::class);
     }
 
-    /**
-     * Get the service connection that owns the customer charge
-     */
-    public function serviceConnection()
+    public function connection()
     {
-        return $this->belongsTo(ServiceConnection::class, 'connection_id', 'connection_id');
+        return $this->belongsTo(ServiceConnection::class);
     }
 
-    /**
-     * Get the charge item that owns the customer charge
-     */
     public function chargeItem()
     {
-        return $this->belongsTo(ChargeItem::class, 'charge_item_id', 'charge_item_id');
+        return $this->belongsTo(ChargeItem::class);
     }
 
-    /**
-     * Get the status associated with the customer charge
-     */
     public function status()
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Accessor for total amount (computed column)
-     */
-    public function getTotalAmountAttribute()
+    public function paymentAllocations()
     {
-        return $this->quantity * $this->unit_amount;
+        return $this->hasMany(PaymentAllocation::class, 'charge_id');
     }
 }

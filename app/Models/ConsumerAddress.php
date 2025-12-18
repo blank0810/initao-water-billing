@@ -6,81 +6,57 @@ use Illuminate\Database\Eloquent\Model;
 
 class ConsumerAddress extends Model
 {
-    protected $table = 'consumer_address';
-    protected $primaryKey = 'ca_id';
-    public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'integer';
+    protected $table = 'consumer_addresses';
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
-        'p_id',
-        'b_id',
-        't_id',
-        'prov_id',
-        'stat_id'
+        'house_number',
+        'street_name',
+        'subdivision_name',
+        'barangay_id',
+        'purok_id',
+        'landmark',
+        'zip_code',
+        'latitude',
+        'longitude',
+        'status_id'
     ];
 
-    /**
-     * Get the status associated with the consumer address
-     */
-    public function status()
-    {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
-    }
+    protected $casts = [
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
-    /**
-     * Get the province that owns the consumer address
-     */
-    public function province()
-    {
-        return $this->belongsTo(Province::class, 'prov_id', 'prov_id');
-    }
-
-    /**
-     * Get the town that owns the consumer address
-     */
-    public function town()
-    {
-        return $this->belongsTo(Town::class, 't_id', 't_id');
-    }
-
-    /**
-     * Get the barangay that owns the consumer address
-     */
     public function barangay()
     {
-        return $this->belongsTo(Barangay::class, 'b_id', 'b_id');
+        return $this->belongsTo(Barangay::class);
     }
 
-    /**
-     * Get the purok that owns the consumer address
-     */
     public function purok()
     {
-        return $this->belongsTo(Purok::class, 'p_id', 'p_id');
+        return $this->belongsTo(Purok::class);
     }
 
-    /**
-     * Get the customers for the consumer address
-     */
-    public function customers()
+    public function status()
     {
-        return $this->hasMany(Customer::class, 'ca_id', 'ca_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Get the service applications for the consumer address
-     */
+    public function customersWithBillingAddress()
+    {
+        return $this->hasMany(Customer::class, 'billing_address_id');
+    }
+
     public function serviceApplications()
     {
-        return $this->hasMany(ServiceApplication::class, 'address_id', 'ca_id');
+        return $this->hasMany(ServiceApplication::class, 'service_address_id');
     }
 
-    /**
-     * Get the service connections for the consumer address
-     */
     public function serviceConnections()
     {
-        return $this->hasMany(ServiceConnection::class, 'address_id', 'ca_id');
+        return $this->hasMany(ServiceConnection::class, 'service_address_id');
     }
 }

@@ -6,47 +6,40 @@ use Illuminate\Database\Eloquent\Model;
 
 class BillAdjustment extends Model
 {
-    protected $table = 'BillAdjustment';
-    protected $primaryKey = 'bill_adjustment_id';
-    public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $table = 'bill_adjustments';
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
         'bill_id',
-        'bill_adjustment_type_id',
+        'adjustment_type_id',
+        'old_reading',
+        'new_reading',
         'amount',
         'remarks',
-        'created_at',
         'user_id'
     ];
 
     protected $casts = [
+        'old_reading' => 'decimal:3',
+        'new_reading' => 'decimal:3',
         'amount' => 'decimal:2',
         'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the water bill history that owns the bill adjustment
-     */
-    public function waterBillHistory()
+    public function bill()
     {
-        return $this->belongsTo(WaterBillHistory::class, 'bill_id', 'bill_id');
+        return $this->belongsTo(WaterBill::class, 'bill_id');
     }
 
-    /**
-     * Get the bill adjustment type that owns the bill adjustment
-     */
-    public function billAdjustmentType()
+    public function adjustmentType()
     {
-        return $this->belongsTo(BillAdjustmentType::class, 'bill_adjustment_type_id', 'bill_adjustment_type_id');
+        return $this->belongsTo(BillAdjustmentType::class, 'adjustment_type_id');
     }
 
-    /**
-     * Get the user that created the bill adjustment
-     */
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
+        return $this->belongsTo(User::class);
     }
 }

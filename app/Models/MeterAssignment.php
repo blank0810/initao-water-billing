@@ -6,49 +6,38 @@ use Illuminate\Database\Eloquent\Model;
 
 class MeterAssignment extends Model
 {
-    protected $table = 'MeterAssignment';
-    protected $primaryKey = 'assignment_id';
+    protected $table = 'meter_assignments';
+    protected $primaryKey = 'id';
     public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
 
     protected $fillable = [
         'connection_id',
         'meter_id',
         'installed_at',
         'removed_at',
-        'install_read',
-        'removal_read'
+        'install_reading',
+        'removal_reading'
     ];
 
     protected $casts = [
         'installed_at' => 'date',
         'removed_at' => 'date',
-        'install_read' => 'decimal:3',
-        'removal_read' => 'decimal:3',
+        'install_reading' => 'decimal:3',
+        'removal_reading' => 'decimal:3',
     ];
 
-    /**
-     * Get the service connection that owns the meter assignment
-     */
-    public function serviceConnection()
+    public function connection()
     {
-        return $this->belongsTo(ServiceConnection::class, 'connection_id', 'connection_id');
+        return $this->belongsTo(ServiceConnection::class, 'connection_id');
     }
 
-    /**
-     * Get the meter that owns the meter assignment
-     */
     public function meter()
     {
-        return $this->belongsTo(Meter::class, 'meter_id', 'mtr_id');
+        return $this->belongsTo(Meter::class);
     }
 
-    /**
-     * Get the meter readings for the meter assignment
-     */
-    public function meterReadings()
+    public function readings()
     {
-        return $this->hasMany(MeterReading::class, 'assignment_id', 'assignment_id');
+        return $this->hasMany(MeterReading::class, 'meter_assignment_id');
     }
 }

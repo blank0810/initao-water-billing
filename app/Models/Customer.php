@@ -6,89 +6,63 @@ use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
-    protected $table = 'customer';
-    protected $primaryKey = 'cust_id';
-    public $timestamps = false;
-    public $incrementing = true;
-    protected $keyType = 'int';
+    protected $table = 'customers';
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
-        'create_date',
-        'cust_last_name',
-        'cust_first_name',
-        'cust_middle_name',
-        'ca_id',
-        'land_mark',
-        'stat_id',
-        'c_type',
-        'resolution_no'
+        'first_name',
+        'middle_name',
+        'last_name',
+        'contact_number',
+        'email',
+        'billing_address_id',
+        'status_id',
+        'user_id'
     ];
 
     protected $casts = [
-        'create_date' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    /**
-     * Get the status associated with the customer
-     */
+    public function billingAddress()
+    {
+        return $this->belongsTo(ConsumerAddress::class, 'billing_address_id');
+    }
+
     public function status()
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Status::class);
     }
 
-    /**
-     * Get the address associated with the customer
-     */
-    public function address()
+    public function user()
     {
-        return $this->belongsTo(ConsumerAddress::class, 'ca_id', 'ca_id');
+        return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the consumers for the customer
-     */
-    public function consumers()
-    {
-        return $this->hasMany(Consumer::class, 'cust_id', 'cust_id');
-    }
-
-    /**
-     * Get the service applications for the customer
-     */
     public function serviceApplications()
     {
-        return $this->hasMany(ServiceApplication::class, 'customer_id', 'cust_id');
+        return $this->hasMany(ServiceApplication::class);
     }
 
-    /**
-     * Get the service connections for the customer
-     */
     public function serviceConnections()
     {
-        return $this->hasMany(ServiceConnection::class, 'customer_id', 'cust_id');
+        return $this->hasMany(ServiceConnection::class);
     }
 
-    /**
-     * Get the customer charges for the customer
-     */
     public function customerCharges()
     {
-        return $this->hasMany(CustomerCharge::class, 'customer_id', 'cust_id');
+        return $this->hasMany(CustomerCharge::class);
     }
 
-    /**
-     * Get the customer ledger entries for the customer
-     */
-    public function customerLedgerEntries()
+    public function ledgerEntries()
     {
-        return $this->hasMany(CustomerLedger::class, 'customer_id', 'cust_id');
+        return $this->hasMany(CustomerLedger::class);
     }
 
-    /**
-     * Get the payments made by the customer
-     */
     public function payments()
     {
-        return $this->hasMany(Payment::class, 'payer_id', 'cust_id');
+        return $this->hasMany(Payment::class);
     }
 }
