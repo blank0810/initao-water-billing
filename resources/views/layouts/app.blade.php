@@ -167,18 +167,6 @@
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
         <script>
-<<<<<<< HEAD
-            function appState() {
-                return {
-                    sidebarOpen: true,
-
-                    init() {
-                        // Get sidebar state from localStorage
-                        const savedSidebarState = localStorage.getItem('sidebarOpen');
-                        if (savedSidebarState !== null) {
-                            this.sidebarOpen = savedSidebarState === 'true';
-                        }
-=======
             // Initialize theme immediately to prevent flash
             (function() {
                 const savedTheme = localStorage.getItem('theme');
@@ -190,18 +178,6 @@
                     document.documentElement.classList.remove('dark');
                 }
             })();
->>>>>>> d495afb1c6251dddf501f93e05fce3c8006270e2
-
-                        // Make instance globally available
-                        window.appState = this;
-                    },
-
-                    toggleSidebar() {
-                        this.sidebarOpen = !this.sidebarOpen;
-                        localStorage.setItem('sidebarOpen', this.sidebarOpen);
-                    }
-                }
-            }
         </script>
 
         @include('components.page-loader')

@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import './bootstrap';
-import './theme.js';
-import Alpine from 'alpinejs';
-=======
 import "./bootstrap";
 import Chart from "chart.js/auto";
 import { customerAllData } from "./data/all-dummy.js";
@@ -10,7 +5,6 @@ import Alpine from "alpinejs";
 import { printCustomerForm } from "./print.js";
 import "flowbite";
 import { Modal } from "flowbite";
->>>>>>> d495afb1c6251dddf501f93e05fce3c8006270e2
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -21,19 +15,13 @@ window.Modal = Modal;
 // Initialize charts
 document.addEventListener("DOMContentLoaded", () => {
     initializeCharts();
-<<<<<<< HEAD
-    // Customer-list specific script was moved to `resources/js/data/customer/customer.js`.
-=======
     // renderCustomerTable(); // <-- COMMENTED OUT: Now using DataTables instead of custom table
->>>>>>> d495afb1c6251dddf501f93e05fce3c8006270e2
 });
 
 // --- Chart initialization (placeholder) ---
 function initializeCharts() {
     // Dashboard chart initialization lives here (keep dashboard-specific code only).
 }
-<<<<<<< HEAD
-=======
 
 // --- Customer Table ---
 // DEPRECATED: This custom table implementation has been replaced with DataTables
@@ -155,4 +143,3 @@ window.goToPayment = function(customerId, customerName) {
     renderTable();
 };
 */
->>>>>>> d495afb1c6251dddf501f93e05fce3c8006270e2
