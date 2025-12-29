@@ -105,7 +105,7 @@ function rateManagementData(){return{searchQuery:'',accountTypeFilter:'all',page
     </div>
 </x-app-layout>
 
-@vite(['resources/js/data/rate/rate-data.js'])
+@vite(['resources/js/rate.js'])
 
 <script>
 let currentTab = 'consumers';

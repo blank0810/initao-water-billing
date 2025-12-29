@@ -4,11 +4,12 @@
     'searchable' => true,
     'paginated' => true,
     'pageSize' => 10,
-    'actions' => true
+    'actions' => true,
+    'id' => null
 ])
 
 @php
-$tableId = 'table-' . uniqid();
+$tableId = $id ?: ('table-' . uniqid());
 @endphp
 
 <div x-data="tableData('{{ $tableId }}', {{ json_encode($data) }}, {{ $pageSize }})" x-init="init()">
@@ -45,7 +46,11 @@ $tableId = 'table-' . uniqid();
                         <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-all duration-150">
                             @foreach($headers as $header)
                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                                    <span x-text="item.{{ $header['key'] }}"></span>
+                                    @if(($header['html'] ?? false) === true)
+                                        <span x-html="item.{{ $header['key'] }}"></span>
+                                    @else
+                                        <span x-text="item.{{ $header['key'] }}"></span>
+                                    @endif
                                 </td>
                             @endforeach
                             @if($actions)
@@ -131,6 +136,9 @@ function tableData(tableId, initialData, initialPageSize) {
         
         init() {
             this.pageSize = parseInt(initialPageSize) || 10;
+            window.tableInstances = window.tableInstances || {};
+            window.tableInstances[tableId] = this;
+            window.tableHooks = window.tableHooks || {};
             this.$watch('searchQuery', () => {
                 this.currentPage = 1;
             });
@@ -191,14 +199,29 @@ function tableData(tableId, initialData, initialPageSize) {
         },
         
         viewItem(item) {
-            console.log('View item:', item);
+            const hook = window.tableHooks[tableId];
+            if (hook && hook.disableDefault && typeof hook.onView === 'function') {
+                hook.onView(item);
+                return;
+            }
+            window.dispatchEvent(new CustomEvent(tableId + '-view', { detail: item }));
         },
         
         editItem(item) {
-            console.log('Edit item:', item);
+            const hook = window.tableHooks[tableId];
+            if (hook && hook.disableDefault && typeof hook.onEdit === 'function') {
+                hook.onEdit(item);
+                return;
+            }
+            window.dispatchEvent(new CustomEvent(tableId + '-edit', { detail: item }));
         },
         
         deleteItem(item) {
+            const hook = window.tableHooks[tableId];
+            if (hook && hook.disableDefault && typeof hook.onDelete === 'function') {
+                hook.onDelete(item);
+                return;
+            }
             if (confirm('Are you sure you want to delete this item?')) {
                 this.data = this.data.filter(d => d.id !== item.id);
                 if (this.currentPage > this.totalPages && this.totalPages > 0) {

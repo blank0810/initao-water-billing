@@ -16,28 +16,24 @@
                     title="Active Rate Plans" 
                     value="0" 
                     icon="fas fa-tags" 
-                    color="blue"
                     id="activeRatePlans"
                 />
                 <x-ui.stat-card 
                     title="Avg Rate per m³" 
                     value="₱ 0.00" 
                     icon="fas fa-dollar-sign" 
-                    color="green"
                     id="avgRate"
                 />
                 <x-ui.stat-card 
                     title="Total Customers" 
                     value="0" 
                     icon="fas fa-users" 
-                    color="purple"
                     id="totalCustomers"
                 />
                 <x-ui.stat-card 
                     title="Revenue Impact" 
                     value="₱ 0.00" 
                     icon="fas fa-chart-line" 
-                    color="yellow"
                     id="revenueImpact"
                 />
             </div>

@@ -3,7 +3,14 @@ import './theme.js';
 import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
-Alpine.start();
+if (!window.__alpineStarted) {
+    window.__alpineStarted = true;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => Alpine.start());
+    } else {
+        Alpine.start();
+    }
+}
 
 // Initialize charts
 document.addEventListener('DOMContentLoaded', () => {

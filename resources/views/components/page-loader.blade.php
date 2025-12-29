@@ -3,43 +3,30 @@
 
 	<div class="flex items-center justify-center min-h-screen px-4 relative z-10">
 		<div id="globalPageLoaderCard" class="pointer-events-auto bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 max-w-sm w-full text-center flex flex-col items-center gap-4">
-			<!-- Water Wave Loader -->
-			<div class="flex items-center justify-center">
-				<div class="relative w-20 h-20">
-					<svg class="w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-						<defs>
-							<linearGradient id="waveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-								<stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.8" />
-								<stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
-							</linearGradient>
-						</defs>
-						<circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="3" class="dark:stroke-gray-700"/>
-						<path id="wave1" d="M 0 50 Q 12.5 40, 25 50 T 50 50 T 75 50 T 100 50 L 100 100 L 0 100 Z" fill="url(#waveGradient)" opacity="0.6">
-							<animateTransform attributeName="transform" type="translate" from="-25 0" to="0 0" dur="1.5s" repeatCount="indefinite"/>
-						</path>
-						<path id="wave2" d="M 0 50 Q 12.5 45, 25 50 T 50 50 T 75 50 T 100 50 L 100 100 L 0 100 Z" fill="url(#waveGradient)" opacity="0.4">
-							<animateTransform attributeName="transform" type="translate" from="-25 0" to="0 0" dur="2s" repeatCount="indefinite"/>
-						</path>
-						<path id="wave3" d="M 0 50 Q 12.5 48, 25 50 T 50 50 T 75 50 T 100 50 L 100 100 L 0 100 Z" fill="url(#waveGradient)" opacity="0.3">
-							<animateTransform attributeName="transform" type="translate" from="-25 0" to="0 0" dur="2.5s" repeatCount="indefinite"/>
-						</path>
-					</svg>
-					<div class="absolute inset-0 flex items-center justify-center">
-						<i class="fas fa-tint text-blue-500 text-2xl animate-pulse"></i>
+			<style>
+				@keyframes forwardStripe {
+					0% { background-position: 0 0; }
+					100% { background-position: 40px 0; }
+				}
+			</style>
+			<div class="w-full">
+				<div class="relative w-full h-10 overflow-hidden rounded-xl bg-blue-50 dark:bg-gray-900 border border-blue-100 dark:border-gray-700">
+					<div class="absolute inset-0">
+						<div class="absolute top-3 left-3 right-3 h-3 rounded-full overflow-hidden bg-white/30 dark:bg-white/10 border border-blue-200/50">
+							<div class="h-full w-3/4 rounded-full bg-gradient-to-r from-blue-500 to-emerald-500"
+								style="background-image: linear-gradient(45deg, rgba(255,255,255,0.35) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.35) 75%, transparent 75%, transparent);
+									background-size: 40px 20px; animation: forwardStripe 0.8s linear infinite;">
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- Status text -->
 			<div>
-				<p id="globalLoaderMessage" class="text-sm text-gray-700 dark:text-gray-200">This will take a moment...</p>
-				<p id="globalLoaderSub" class="text-xs text-gray-500 dark:text-gray-400 mt-1 hidden"></p>
+				<p id="globalLoaderMessage" class="text-sm text-gray-700 dark:text-gray-200">Loading...</p>
 			</div>
 
-			<!-- Error / Retry -->
-			<div id="globalLoaderActions" class="mt-2 hidden">
-				<button id="globalLoaderRetry" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">Retry</button>
-			</div>
+			
 		</div>
 	</div>
 </div>
@@ -129,6 +116,12 @@
 			tError = setTimeout(()=>{
 				enterErrorState();
 			}, 8000);
+			
+			// animate progress label
+			try {
+				const label = document.getElementById('paymentStepLabel');
+				if(label){ label.textContent = 'Loading...'; }
+			} catch(e){}
 		}, showDelay);
 	}
 
@@ -242,4 +235,3 @@
 </script>
 @endpush
 @endonce
-

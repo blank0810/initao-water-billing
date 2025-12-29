@@ -127,7 +127,7 @@
         </style>
     </head>
     <body class="font-sans antialiased h-full">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900" x-data="appState()">
+        <div class="min-h-screen bg-gray-50 dark:bg-gray-900" x-data="appState()">
             @include('components.sidebar-revamped')
 
             <!-- Main Content Area -->
@@ -160,9 +160,6 @@
             </div>
         </div>
 
-        <!-- AlpineJS -->
-        <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
         <script>
             function appState() {
                 return {
@@ -187,7 +184,8 @@
             }
         </script>
 
-        @include('components.page-loader')
+    <!--@ include('components.page-loader')-->
+   
 
         @stack('scripts')
 
@@ -195,7 +193,7 @@
         <script>
             // Handle offline/online events
             window.addEventListener('offline', function() {
-                if (!window.location.pathname.includes('/no-internet')) {
+                if (!window.location.pathname.includes('/no-internet-found')) {
                     window.location.href = '/no-internet-found';
                 }
             });
@@ -208,7 +206,7 @@
             });
 
             // Check connection status on load
-            if (!navigator.onLine && !window.location.pathname.includes('/no-internet')) {
+            if (!navigator.onLine && !window.location.pathname.includes('/no-internet-found')) {
                 window.location.href = '/no-internet-found';
             }
         </script>
