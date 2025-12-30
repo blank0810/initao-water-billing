@@ -15,6 +15,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Initao Water Billing System** - A Laravel 12 water utility billing application for managing water service connections, meter readings, billing, and payments in Initao, Philippines.
 
+**Tech Stack:**
+- **Backend:** Laravel 12 (PHP 8.2+)
+- **Frontend:** Blade templates, Alpine.js, Tailwind CSS 3, Flowbite
+- **Build:** Vite 7
+- **Database:** MySQL 8
+- **Testing:** Pest PHP
+- **Code Quality:** Laravel Pint (PSR-12)
+- **UI Libraries:** Chart.js, DataTables (responsive)
+
 **Development Philosophy:**
 - Build fast, maintain clean
 - Organize by **feature** (Billing, Auth, Payments, Consumers)
@@ -42,21 +51,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Setup & Start
-composer setup                   # Full setup
-composer dev                     # Start dev server (concurrent services)
+composer setup                   # Full setup (install deps, migrate, build assets)
+composer dev                     # Start dev server (concurrent: Laravel, queue, logs, Vite)
 
 # Development
 php artisan serve               # Laravel server (port 8000)
 php artisan test                # Run tests (Pest)
-./vendor/bin/pint               # Format code
+php artisan test --filter=ClassName  # Run specific test
+./vendor/bin/pint               # Format code (PSR-12)
+
+# Frontend
+npm run dev                     # Start Vite dev server
+npm run build                   # Build production assets
 
 # Docker
 docker-compose up -d            # Start all services
 docker-compose logs -f          # View logs
+docker-compose exec water_billing_app php artisan migrate
 
 # Database
 php artisan migrate             # Run migrations
 php artisan migrate:fresh --seed # Fresh start with data
+php artisan migrate:status      # Check migration status
 ```
 
 **See [`.claude/SETUP.md`](.claude/SETUP.md) for complete command reference.**
@@ -87,20 +103,21 @@ app/
     Controllers/
       Auth/              # Authentication controllers
       Admin/             # Admin features
-      Billing/           # Billing management
-      Payments/          # Payment processing
-      Consumers/         # Consumer management
+      Api/               # API endpoints
+      Address/           # Address management
   Services/              # Business logic (NO repositories!)
-      Auth/
-      Billing/
-      Payments/
-      Consumers/
+      Address/
+      Customers/
   Models/                # Eloquent models
   Rules/                 # Custom validation rules
   Traits/                # Reusable model traits
   Events/                # Domain events
   Listeners/             # Event handlers
   Helpers/               # Helper utilities
+resources/
+  views/                 # Blade templates
+  js/                    # Alpine.js components
+  css/                   # Tailwind styles
 ```
 
 **Organization:** Feature-based, not layer-based. See [`.claude/FEATURES.md`](.claude/FEATURES.md) for details.
@@ -135,6 +152,7 @@ feat(billing): add billing generation logic
 fix(payments): correct rounding issue
 chore: update composer dependencies
 refactor(consumers): extract service logic
+docs: update CLAUDE.md
 ```
 
 ---
@@ -199,6 +217,33 @@ $statusId = Status::getIdByDescription(Status::ACTIVE);
 
 ---
 
-_Last updated: 2025-11-05_
-_Stack: Laravel 12, MySQL, Docker, Pest PHP_
+## 🔧 Common Development Tasks
+
+**Adding a new feature:**
+1. Create Service in `app/Services/FeatureName/`
+2. Create Controller in `app/Http/Controllers/FeatureName/`
+3. Create Request validation in `app/Http/Requests/`
+4. Add routes in `routes/web.php` or `routes/api.php`
+5. Create Blade views in `resources/views/feature-name/`
+6. Write tests in `tests/Feature/`
+
+**Working with the database:**
+1. Create migration: `php artisan make:migration create_table_name`
+2. Define schema in migration file
+3. Run migration: `php artisan migrate`
+4. Create model: `php artisan make:model ModelName`
+5. Define relationships and casts in model
+6. Create seeder if needed: `php artisan make:seeder TableSeeder`
+
+**Frontend development:**
+1. Edit Blade templates in `resources/views/`
+2. Add Alpine.js components in `resources/js/`
+3. Style with Tailwind classes (Flowbite components available)
+4. Run `npm run dev` for hot reload
+5. DataTables and Chart.js are available for data visualization
+
+---
+
+_Last updated: 2025-12-24_
+_Stack: Laravel 12, MySQL, Docker, Pest PHP, Alpine.js, Tailwind CSS, Vite_
 _Project: Initao Water Billing System_

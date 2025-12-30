@@ -29,78 +29,6 @@
 @endpush
 
 <x-app-layout>
-<<<<<<< HEAD
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-5xl mx-auto">
-            <x-ui.page-header
-                title="New Customer Application"
-                subtitle="Register a new customer for water service connection"
-                icon="fas fa-user-plus">
-                <x-slot name="actions">
-                    <x-ui.button variant="outline" href="{{ route('customer.list') }}">
-                        <i class="fas fa-arrow-left mr-2"></i>Back to List
-                    </x-ui.button>
-                </x-slot>
-            </x-ui.page-header>
-
-            <form id="customerApplicationForm" class="space-y-6">
-                @csrf
-
-                <!-- Personal Information Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                        <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Personal Information</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Customer's basic details</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                First Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="cust_first_name" required placeholder="Juan"
-                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Middle Name</label>
-                            <input type="text" name="cust_middle_name" placeholder="Santos"
-                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Last Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" name="cust_last_name" required placeholder="Dela Cruz"
-                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Phone Number <span class="text-red-500">*</span>
-                            </label>
-                            <input type="tel" name="phone" required placeholder="09XX XXX XXXX" pattern="[0-9]{11}"
-                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">For SMS notifications</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Registration Type <span class="text-red-500">*</span>
-                            </label>
-                            <select name="registration_type" required 
-                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="">Select Type</option>
-                                <option value="RESIDENTIAL">Residential</option>
-                                <option value="COMMERCIAL">Commercial</option>
-                                <option value="INDUSTRIAL">Industrial</option>
-                            </select>
-=======
     <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
         <div class="flex-1 flex flex-col overflow-auto">
             <main class="flex-1 p-6 overflow-auto">
@@ -419,7 +347,6 @@
                                     Submit Application
                                 </button>
                             </div>
->>>>>>> d495afb1c6251dddf501f93e05fce3c8006270e2
                         </div>
                         <!-- End STEP 4 -->
                     </form>
@@ -615,12 +542,6 @@
         </div>
     </div>
 
-<<<<<<< HEAD
-    <!-- Toast Notification Container -->
-    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
-
-    @vite('resources/js/data/customer/add-customer.js')
-=======
     @push('scripts')
     <script>
         // ============================================
@@ -1149,5 +1070,4 @@
         }
     </script>
     @endpush
->>>>>>> d495afb1c6251dddf501f93e05fce3c8006270e2
 </x-app-layout>
