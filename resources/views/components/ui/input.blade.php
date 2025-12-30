@@ -8,15 +8,8 @@
 ])
 
 @php
-$inputClasses = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors';
-
-if ($error) {
-    $inputClasses = 'w-full px-3 py-2 border border-red-300 dark:border-red-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors';
-}
-
-if ($icon) {
-    $inputClasses .= ' pl-10';
-}
+$inputClasses = $error ? 'ui-input-error' : 'ui-input';
+if ($icon) { $inputClasses .= ' pl-10'; }
 @endphp
 
 <div class="space-y-1">

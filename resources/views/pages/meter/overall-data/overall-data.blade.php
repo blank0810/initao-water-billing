@@ -16,28 +16,24 @@
                     title="Active Meters" 
                     value="0" 
                     icon="fas fa-tachometer-alt" 
-                    color="blue"
                     id="activeMeters"
                 />
                 <x-ui.stat-card 
                     title="Total Consumption" 
                     value="0 m³" 
                     icon="fas fa-droplet" 
-                    color="green"
                     id="totalConsumption"
                 />
                 <x-ui.stat-card 
                     title="Avg Consumption" 
                     value="0 m³" 
                     icon="fas fa-chart-line" 
-                    color="purple"
                     id="avgConsumption"
                 />
                 <x-ui.stat-card 
                     title="Overdue Readings" 
                     value="0" 
                     icon="fas fa-exclamation-triangle" 
-                    color="red"
                     id="overdueReadings"
                 />
             </div>

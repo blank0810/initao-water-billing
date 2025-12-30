@@ -12,6 +12,7 @@ class ApplicationProcessManager {
         this.filteredApplications = [];
         this.currentPage = 1;
         this.rowsPerPage = 10;
+        this.config = Object.assign({ processPayment: true, printForm: false }, window.AppProcessConfig || {});
         
         this.init();
     }
@@ -25,8 +26,16 @@ class ApplicationProcessManager {
     }
 
     loadApplications() {
-        // Only customers with printed docs
-        this.applications = this.allCustomers.filter(c => c.documents_printed_at);
+        // Load all applicants (include newly added from localStorage)
+        let base = [...this.allCustomers];
+        try {
+            const added = JSON.parse(localStorage.getItem('addedApplicants') || '[]');
+            if (Array.isArray(added) && added.length) {
+                const existingCodes = new Set(base.map(c => c.customer_code));
+                added.forEach(a => { if (!existingCodes.has(a.customer_code)) base.unshift(a); });
+            }
+        } catch(e){}
+        this.applications = base;
         this.filteredApplications = [...this.applications];
     }
 
@@ -95,7 +104,7 @@ class ApplicationProcessManager {
             const statusConfig = ALL_STATUSES[customer.workflow_status];
             const progress = calculateProgress(customer.workflow_status);
 
-            return `
+            const nameCell = `
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-3">
@@ -109,38 +118,37 @@ class ApplicationProcessManager {
                                 <div class="text-xs text-gray-500 dark:text-gray-400">${customer.customer_code}</div>
                             </div>
                         </div>
-                    </td>
-                    <td class="px-4 py-3">
-                        <div class="text-sm text-gray-900 dark:text-gray-100">${customer.address}</div>
+                    </td>`;
+
+            let cells = '';
+            if (this.config.processPayment) {
+                cells = `
+                    <td class="px-4 py-4">
+                        <div class="text-sm text-gray-900 dark:text-gray-100">${customer.address || 'N/A'}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            <i class="fas fa-${customer.registration_type === 'RESIDENTIAL' ? 'home' : 'building'} mr-1"></i>
-                            ${customer.registration_type}
+                            ${customer.registration_type || 'N/A'}
                         </div>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-4">
                         <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            <i class="fas fa-user-tie mr-1 text-blue-600"></i>${customer.meterReader || 'N/A'}
+                            ${customer.meterReader || 'N/A'}
                         </div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            <i class="fas fa-map-marker-alt mr-1"></i>${customer.area || 'N/A'}
+                            ${customer.area || 'N/A'}
                         </div>
                     </td>
                     <td class="px-4 py-3">
-                        <div class="flex flex-col gap-2">
-                            <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full ${statusConfig.color}">
-                                <i class="fas ${statusConfig.icon}"></i>
-                                ${statusConfig.label}
-                            </span>
-                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                                <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: ${progress}%"></div>
-                            </div>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">${progress}% Complete</span>
+                        <div class="text-sm text-gray-900 dark:text-gray-100">
+                             ${new Date(customer.create_date).toLocaleDateString()}
+                        </div>
+                         <div class="text-xs text-gray-500 dark:text-gray-400">
+                            ${new Date(customer.create_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-center">
+                    <td class="px-4 py-4 text-center">
                         <button onclick="window.applicationManager.processPayment('${customer.customer_code}')" 
                                 class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors">
-                            <i class="fas fa-credit-card mr-1"></i>Payment
+                            <i class="fas fa-credit-card mr-1"></i>Process Payment
                         </button>
                     </td>
                     <td class="px-4 py-3 text-center">
@@ -155,15 +163,50 @@ class ApplicationProcessManager {
                                     title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="window.applicationManager.deleteCustomer('${customer.customer_code}')" 
+                        </div>
+                    </td>`;
+            } else {
+                cells = `
+                    <td class="px-4 py-4">
+                        <div class="text-sm text-gray-900 dark:text-gray-100">${customer.address || 'N/A'}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">${customer.registration_type || 'N/A'}</div>
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">${customer.meterReader || 'N/A'}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">${customer.area || 'N/A'}</div>
+                    </td>
+                    <td class="px-4 py-4">
+                        <div class="text-sm text-gray-900 dark:text-gray-100">${customer.id_type || 'N/A'}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">${customer.id_number || 'N/A'}</div>
+                    </td>
+                    <td class="px-4 py-4 text-center">
+                        <button onclick="window.applicationManager.printApplication('${customer.customer_code}')"
+                                class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors">
+                            <i class="fas fa-print mr-1"></i>Print Form
+                        </button>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="window.applicationManager.viewCustomer('${customer.customer_code}')"
+                                    class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                                    title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="window.applicationManager.editCustomer('${customer.customer_code}')"
+                                    class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                                    title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="window.applicationManager.deleteCustomer('${customer.customer_code}')"
                                     class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                                     title="Delete">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
-                    </td>
-                </tr>
-            `;
+                    </td>`;
+            }
+
+            return nameCell + cells + `</tr>`;
         }).join('');
 
         this.updatePagination(this.filteredApplications.length);
@@ -193,6 +236,26 @@ class ApplicationProcessManager {
         sessionStorage.setItem('selectedCustomer', JSON.stringify(customer));
         sessionStorage.setItem('paymentCustomerCode', customerCode);
         window.location.href = `/customer/payment/${encodeURIComponent(customerCode)}`;
+    }
+
+    printApplication(customerCode) {
+        const customer = this.allCustomers.find(c => c.customer_code === customerCode);
+        if (!customer) return;
+        const payload = {
+            id: customer.customer_code,
+            CustomerName: `${customer.cust_first_name} ${customer.cust_last_name}`,
+            Email: customer.email || '',
+            Phone: customer.phone || '',
+            AreaCode: customer.address,
+            DateApplied: customer.create_date,
+            registration_type: customer.registration_type,
+            workflow_status: customer.workflow_status
+        };
+        if (window.UnifiedPrintSystem && window.UnifiedPrintSystem.printServiceApplicationForm) {
+            window.UnifiedPrintSystem.printServiceApplicationForm(payload);
+        } else if (window.printServiceApplicationForm) {
+            window.printServiceApplicationForm(payload);
+        }
     }
 
     viewCustomer(customerCode) {

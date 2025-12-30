@@ -37,8 +37,10 @@ export const enhancedCustomerData = [
         payment_completed_at: null,
         approved_at: null,
         connected_at: null,
-        account_no: null,
-        meter_no: null,
+        account_no: 'ACC-2024-5101',
+        meter_no: 'MTR-2001',
+        meter_installed_date: '2024-01-22 10:00:00',
+        initial_reading: 0,
         stat_id: 1
     },
     {
@@ -66,8 +68,10 @@ export const enhancedCustomerData = [
         payment_completed_at: null,
         approved_at: null,
         connected_at: null,
-        account_no: null,
-        meter_no: null,
+        account_no: 'ACC-2024-5102',
+        meter_no: 'MTR-2002',
+        meter_installed_date: '2024-01-21 14:30:00',
+        initial_reading: 0,
         stat_id: 1
     },
     {
@@ -95,8 +99,10 @@ export const enhancedCustomerData = [
         payment_completed_at: null,
         approved_at: null,
         connected_at: null,
-        account_no: null,
-        meter_no: null,
+        account_no: 'ACC-2024-5103',
+        meter_no: 'MTR-2003',
+        meter_installed_date: '2024-01-20 09:15:00',
+        initial_reading: 0,
         stat_id: 1
     },
     {
@@ -124,8 +130,10 @@ export const enhancedCustomerData = [
         payment_completed_at: null,
         approved_at: null,
         connected_at: null,
-        account_no: null,
-        meter_no: null,
+        account_no: 'ACC-2024-5104',
+        meter_no: 'MTR-2004',
+        meter_installed_date: '2024-01-21 11:00:00',
+        initial_reading: 0,
         stat_id: 1
     },
 
@@ -155,8 +163,10 @@ export const enhancedCustomerData = [
         payment_completed_at: null,
         approved_at: null,
         connected_at: null,
-        account_no: null,
-        meter_no: null,
+        account_no: 'ACC-2024-5105',
+        meter_no: 'MTR-2005',
+        meter_installed_date: '2024-01-19 08:30:00',
+        initial_reading: 0,
         stat_id: 1
     },
     {
@@ -184,8 +194,10 @@ export const enhancedCustomerData = [
         payment_completed_at: null,
         approved_at: null,
         connected_at: null,
-        account_no: null,
-        meter_no: null,
+        account_no: 'ACC-2024-5106',
+        meter_no: 'MTR-2006',
+        meter_installed_date: '2024-01-18 13:45:00',
+        initial_reading: 0,
         stat_id: 1
     },
     {
@@ -213,8 +225,10 @@ export const enhancedCustomerData = [
         payment_completed_at: '2024-01-20 14:30:00',
         approved_at: null,
         connected_at: null,
-        account_no: null,
-        meter_no: null,
+        account_no: 'ACC-2024-5107',
+        meter_no: 'MTR-2007',
+        meter_installed_date: '2024-01-21 10:15:00',
+        initial_reading: 0,
         stat_id: 1
     },
 
@@ -244,8 +258,10 @@ export const enhancedCustomerData = [
         payment_completed_at: '2024-01-19 15:00:00',
         approved_at: null,
         connected_at: null,
-        account_no: null,
-        meter_no: null,
+        account_no: 'ACC-2024-5108',
+        meter_no: 'MTR-2008',
+        meter_installed_date: '2024-01-20 14:00:00',
+        initial_reading: 0,
         stat_id: 1
     },
     {
@@ -304,6 +320,8 @@ export const enhancedCustomerData = [
         connected_at: null,
         account_no: 'ACC-2024-5002',
         meter_no: null,
+        meter_installed_date: null,
+        initial_reading: null,
         stat_id: 1
     },
     {
@@ -333,6 +351,8 @@ export const enhancedCustomerData = [
         connected_at: null,
         account_no: 'ACC-2024-5003',
         meter_no: 'MTR-1001',
+        meter_installed_date: null,
+        initial_reading: null,
         stat_id: 1
     },
     {
@@ -362,6 +382,8 @@ export const enhancedCustomerData = [
         connected_at: '2024-01-20 09:00:00',
         account_no: 'ACC-2024-5004',
         meter_no: 'MTR-1002',
+        meter_installed_date: '2024-01-20 09:00:00',
+        initial_reading: 0,
         stat_id: 1
     },
 
