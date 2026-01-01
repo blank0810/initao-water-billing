@@ -106,7 +106,7 @@ function ledgerManagementData(){return{searchQuery:'',sourceTypeFilter:'all',pag
     </div>
 </x-app-layout>
 
-@vite(['resources/js/data/ledger/ledger-data.js'])
+@vite(['resources/js/ledger.js'])
 
 <script>
 let currentLedgerTab = 'consumers';

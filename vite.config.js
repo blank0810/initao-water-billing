@@ -1,21 +1,17 @@
-import { defineConfig } from "vite";
-import laravel from "laravel-vite-plugin";
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
 
 export default defineConfig({
     plugins: [
         laravel({
-            input: ["resources/css/app.css", "resources/js/app.js"],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                'resources/js/chart-dash.js',
+                'resources/js/utils/print-form.js',
+                'resources/js/payment.js',
+            ],
             refresh: true,
         }),
     ],
-    server: {
-        host: "0.0.0.0", // accessible inside Docker network
-        port: 5173,
-        hmr: {
-            host: "localhost", // where your browser connects (host machine)
-        },
-        watch: {
-            usePolling: true, // ensures HMR works on mounted volumes
-        },
-    },
 });

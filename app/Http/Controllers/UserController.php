@@ -9,6 +9,7 @@ class UserController extends Controller
     public function index()
     {
         session(['active_menu' => 'user-list']);
+
         return view('pages.user.user-list');
     }
 

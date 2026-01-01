@@ -115,22 +115,21 @@ class SimpleCustomerList {
                         <div class="text-sm text-gray-900 dark:text-gray-100">${customer.id_type || 'N/A'}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">${customer.id_number || 'N/A'}</div>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-4">
                         <div class="text-sm text-gray-900 dark:text-gray-100">${customer.address}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            <i class="fas fa-${customer.registration_type === 'RESIDENTIAL' ? 'home' : 'building'} mr-1"></i>
                             ${customer.registration_type}
                         </div>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-4 py-4">
                         <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            <i class="fas fa-user-tie mr-1 text-blue-600"></i>${customer.meterReader || 'N/A'}
+                            ${customer.meterReader || 'N/A'}
                         </div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            <i class="fas fa-map-marker-alt mr-1"></i>${customer.area || 'N/A'}
+                            ${customer.area || 'N/A'}
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                    <td class="px-4 py-4 text-sm text-gray-900 dark:text-gray-100">
                         ${new Date(customer.create_date).toLocaleDateString()}
                     </td>
                     <td class="px-4 py-3 text-center">
@@ -152,10 +151,10 @@ class SimpleCustomerList {
                                     title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="window.customerList.deleteCustomer('${customer.customer_code}')" 
-                                    class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                                    title="Delete">
-                                <i class="fas fa-trash"></i>
+                            <button onclick="window.location.href='/customer/list'" 
+                                    class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
+                                    title="Return to Customer List">
+                                <i class="fas fa-undo"></i>
                             </button>
                         </div>
                     </td>

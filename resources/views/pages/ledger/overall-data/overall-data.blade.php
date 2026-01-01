@@ -16,28 +16,24 @@
                     title="Total Income" 
                     value="₱ 0.00" 
                     icon="fas fa-arrow-up" 
-                    color="green"
                     id="totalIncome"
                 />
                 <x-ui.stat-card 
                     title="Total Expenses" 
                     value="₱ 0.00" 
                     icon="fas fa-arrow-down" 
-                    color="red"
                     id="totalExpenses"
                 />
                 <x-ui.stat-card 
                     title="Net Balance" 
                     value="₱ 0.00" 
                     icon="fas fa-balance-scale" 
-                    color="blue"
                     id="netBalance"
                 />
                 <x-ui.stat-card 
                     title="Total Transactions" 
                     value="0" 
                     icon="fas fa-receipt" 
-                    color="purple"
                     id="totalTransactions"
                 />
             </div>

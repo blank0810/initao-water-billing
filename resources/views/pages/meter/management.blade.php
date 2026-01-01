@@ -358,7 +358,7 @@ function meterManagementData() {
 
 </x-app-layout>
 
-@vite(['resources/js/data/meter/meter-data.js'])
+@vite(['resources/js/meter.js'])
 
 <script>
 function showTab(tab) {

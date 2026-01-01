@@ -9,7 +9,7 @@ class CustomerApprovalController extends Controller
     public function index()
     {
         session(['active_menu' => 'approve-customer']);
-        return view('pages.customer.approve-customer');
+        return view('pages.application.approve-customer');
     }
 
     public function approve(Request $request)

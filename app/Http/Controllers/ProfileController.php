@@ -17,6 +17,7 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         session(['active_menu' => 'profile']);
+
         return view('profile.edit', [
             'user' => $request->user(),
         ]);
