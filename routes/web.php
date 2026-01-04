@@ -149,7 +149,7 @@ Route::middleware('auth')->group(function () {
     // -------------------------------------------------------------------------
     Route::middleware(['permission:payments.view'])->group(function () {
         Route::get('/customer/payment-management', function () {
-            return view('pages.customer.payment-management');
+            return view('pages.payment.payment-management');
         })->name('payment.management');
     });
 
