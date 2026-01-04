@@ -22,3 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeCharts() {
     // Dashboard chart initialization lives here (keep dashboard-specific code only).
 }
+
+
+//Hello
