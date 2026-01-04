@@ -29,7 +29,7 @@ class RolePermissionService
     {
         $this->guardSuperAdmin($role);
 
-        $permission = Permission::where('permission_name', $permissionName)->first();
+        $permission = Permission::where('permission_name', $permissionName)->firstOrFail();
 
         if ($enabled) {
             $role->permissions()->syncWithoutDetaching([$permission->permission_id]);
@@ -43,7 +43,7 @@ class RolePermissionService
      */
     public function bulkUpdatePermission(string $permissionName, array $roleIds, string $action): void
     {
-        $permission = Permission::where('permission_name', $permissionName)->first();
+        $permission = Permission::where('permission_name', $permissionName)->firstOrFail();
         $roles = Role::whereIn('role_id', $roleIds)
             ->where('role_name', '!=', Role::SUPER_ADMIN)
             ->get();

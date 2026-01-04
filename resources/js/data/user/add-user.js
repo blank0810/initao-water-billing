@@ -212,24 +212,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const lastName = formData.get('last_name') || '';
             const fullName = formData.get('name') || `${firstName} ${lastName}`.trim();
 
-            // Get status_id from select, or convert status string to ID
-            let statusId = formData.get('status_id');
-            if (!statusId) {
-                // Fallback: if status field exists with 'active'/'inactive' values
-                const statusValue = formData.get('status');
-                if (statusValue) {
-                    // This requires fetching status IDs - for now use the select value directly
-                    statusId = statusValue;
-                }
-            }
-
             const data = {
                 name: fullName,
                 email: formData.get('email'),
                 password: formData.get('password'),
                 password_confirmation: formData.get('password_confirmation'),
-                role_id: formData.get('role_id') || formData.get('role'),
-                status_id: statusId,
+                role_id: formData.get('role_id'),
+                status_id: formData.get('status_id'),
             };
 
             // Show loading state
@@ -265,11 +254,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.dispatchEvent(new CustomEvent('show-alert', {
                     detail: { type: 'error', message: result.message }
                 }));
-
-                // Fallback alert if no alert system
-                if (!window.hasEventListener?.('show-alert')) {
-                    alert('Error: ' + result.message);
-                }
             }
         });
     }
