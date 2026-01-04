@@ -131,14 +131,6 @@ $user = Auth::user() ?? (object) [
                     <i class="fas fa-list w-4 text-xs mr-2.5"></i>
                     <span>Customer List</span>
                 </a>
-                @can('payments.view')
-                <a href="{{ route('payment.management') }}" @click="setActiveMenu('payment-management')"
-                    :class="activeMenu === 'payment-management' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-credit-card w-4 text-xs mr-2.5"></i>
-                    <span>Payment</span>
-                </a>
-                @endcan
                 @can('customers.manage')
                 <a href="{{ route('approve.customer') }}" @click="setActiveMenu('approve-customer')"
                     :class="activeMenu === 'approve-customer' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
@@ -174,6 +166,19 @@ $user = Auth::user() ?? (object) [
                 <i class="fas fa-file-alt text-sm" :class="activeMenu === 'consumer-list' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Consumer List</span>
+        </a>
+        @endcan
+
+        <!-- Payment Management -->
+        @can('payments.view')
+        <a href="{{ route('payment.management') }}" @click="setActiveMenu('payment-management')"
+            :class="activeMenu === 'payment-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
+            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                :class="activeMenu === 'payment-management' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                <i class="fas fa-credit-card text-sm" :class="activeMenu === 'payment-management' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            </div>
+            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Payment Management</span>
         </a>
         @endcan
 
@@ -284,7 +289,7 @@ $user = Auth::user() ?? (object) [
             activeMenu: '{{ session('active_menu', 'dashboard') }}',
             openSubmenus: {
                 userManagement: {{ session('active_menu') && str_starts_with(session('active_menu'), 'user-') ? 'true' : 'false' }},
-                customerApplication: {{ session('active_menu') && (str_starts_with(session('active_menu'), 'customer-') || in_array(session('active_menu'), ['payment-management', 'approve-customer', 'invoice-list', 'declined-customer'])) ? 'true' : 'false' }}
+                customerApplication: {{ session('active_menu') && (str_starts_with(session('active_menu'), 'customer-') || in_array(session('active_menu'), ['approve-customer', 'invoice-list', 'declined-customer'])) ? 'true' : 'false' }}
             },
 
             init() {
@@ -326,7 +331,7 @@ $user = Auth::user() ?? (object) [
 
                 if (this.activeMenu.startsWith('user-')) {
                     this.openSubmenus.userManagement = true;
-                } else if (this.activeMenu.startsWith('customer-') || ['payment-management', 'approve-customer', 'invoice-list', 'declined-customer'].includes(this.activeMenu)) {
+                } else if (this.activeMenu.startsWith('customer-') || ['approve-customer', 'invoice-list', 'declined-customer'].includes(this.activeMenu)) {
                     this.openSubmenus.customerApplication = true;
                 }
 
@@ -366,7 +371,7 @@ $user = Auth::user() ?? (object) [
                 if (menu.startsWith('user-')) {
                     this.openSubmenus.userManagement = true;
                     this.openSubmenus.customerApplication = false;
-                } else if (menu.startsWith('customer-') || ['payment-management', 'approve-customer', 'invoice-list', 'declined-customer'].includes(menu)) {
+                } else if (menu.startsWith('customer-') || ['approve-customer', 'invoice-list', 'declined-customer'].includes(menu)) {
                     this.openSubmenus.customerApplication = true;
                     this.openSubmenus.userManagement = false;
                 } else {
