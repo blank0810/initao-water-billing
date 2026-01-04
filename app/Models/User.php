@@ -101,15 +101,30 @@ class User extends Authenticatable
     // =========================================================================
 
     /**
+     * Get loaded roles with permissions, loading once if needed.
+     * Prevents N+1 queries by ensuring roles.permissions is loaded only once.
+     */
+    protected function getLoadedRoles(): Collection
+    {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles.permissions');
+        }
+
+        return $this->roles;
+    }
+
+    /**
      * Check if user has a specific role
      */
     public function hasRole(string|array $roles): bool
     {
+        $roleNames = $this->getLoadedRoles()->pluck('role_name');
+
         if (is_string($roles)) {
-            return $this->roles()->where('role_name', $roles)->exists();
+            return $roleNames->contains($roles);
         }
 
-        return $this->roles()->whereIn('role_name', $roles)->exists();
+        return $roleNames->intersect($roles)->isNotEmpty();
     }
 
     /**
@@ -125,7 +140,8 @@ class User extends Authenticatable
      */
     public function hasAllRoles(array $roles): bool
     {
-        $userRoleNames = $this->roles()->pluck('role_name')->toArray();
+        $userRoleNames = $this->getLoadedRoles()->pluck('role_name')->toArray();
+
         return empty(array_diff($roles, $userRoleNames));
     }
 
@@ -139,11 +155,10 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->roles()
-            ->whereHas('permissions', function ($query) use ($permission) {
-                $query->where('permission_name', $permission);
-            })
-            ->exists();
+        return $this->getLoadedRoles()
+            ->flatMap(fn ($role) => $role->permissions)
+            ->pluck('permission_name')
+            ->contains($permission);
     }
 
     /**
@@ -155,11 +170,11 @@ class User extends Authenticatable
             return true;
         }
 
-        return $this->roles()
-            ->whereHas('permissions', function ($query) use ($permissions) {
-                $query->whereIn('permission_name', $permissions);
-            })
-            ->exists();
+        return $this->getLoadedRoles()
+            ->flatMap(fn ($role) => $role->permissions)
+            ->pluck('permission_name')
+            ->intersect($permissions)
+            ->isNotEmpty();
     }
 
     /**
@@ -171,13 +186,13 @@ class User extends Authenticatable
             return Permission::all();
         }
 
-        return Permission::whereHas('roles', function ($query) {
-            $query->whereIn('role_id', $this->roles()->pluck('role_id'));
-        })->get();
+        return $this->getLoadedRoles()
+            ->flatMap(fn ($role) => $role->permissions)
+            ->unique('permission_id');
     }
 
     /**
-     * Assign a role to the user
+     * Assign a role to the user (atomic and idempotent)
      */
     public function assignRole(string|Role $role): void
     {
@@ -185,8 +200,10 @@ class User extends Authenticatable
             $role = Role::findByName($role);
         }
 
-        if ($role && !$this->hasRole($role->role_name)) {
-            $this->roles()->attach($role->role_id);
+        if ($role) {
+            $this->roles()->syncWithoutDetaching([$role->role_id]);
+            // Refresh loaded relationship
+            $this->load('roles.permissions');
         }
     }
 
@@ -201,6 +218,8 @@ class User extends Authenticatable
 
         if ($role) {
             $this->roles()->detach($role->role_id);
+            // Refresh loaded relationship
+            $this->load('roles.permissions');
         }
     }
 
@@ -211,6 +230,8 @@ class User extends Authenticatable
     {
         $roleIds = Role::whereIn('role_name', $roleNames)->pluck('role_id')->toArray();
         $this->roles()->sync($roleIds);
+        // Refresh loaded relationship
+        $this->load('roles.permissions');
     }
 
     /**

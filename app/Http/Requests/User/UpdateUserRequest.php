@@ -38,7 +38,7 @@ class UpdateUserRequest extends FormRequest
             ],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role_id' => ['required', 'exists:roles,role_id'],
-            'status' => ['required', 'in:active,inactive'],
+            'status_id' => ['required', 'exists:statuses,stat_id'],
         ];
     }
 
@@ -57,8 +57,8 @@ class UpdateUserRequest extends FormRequest
             'password.confirmed' => 'The password confirmation does not match.',
             'role_id.required' => 'Please select a role.',
             'role_id.exists' => 'The selected role is invalid.',
-            'status.required' => 'Please select a status.',
-            'status.in' => 'The status must be either active or inactive.',
+            'status_id.required' => 'Please select a status.',
+            'status_id.exists' => 'The selected status is invalid.',
         ];
     }
 }

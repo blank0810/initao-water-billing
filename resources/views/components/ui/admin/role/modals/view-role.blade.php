@@ -118,17 +118,29 @@
         if (roleData.users && roleData.users.length > 0) {
             noUsers.classList.add('hidden');
             roleData.users.forEach(user => {
-                usersList.innerHTML += `
-                    <div class="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                            <i class="fas fa-user text-blue-600 dark:text-blue-400 text-sm"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">${user.name}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">${user.email}</p>
-                        </div>
-                    </div>
-                `;
+                // Safe DOM construction to prevent XSS
+                const userItem = document.createElement('div');
+                userItem.className = 'flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg';
+
+                const avatarContainer = document.createElement('div');
+                avatarContainer.className = 'w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center';
+                const avatarIcon = document.createElement('i');
+                avatarIcon.className = 'fas fa-user text-blue-600 dark:text-blue-400 text-sm';
+                avatarContainer.appendChild(avatarIcon);
+
+                const infoContainer = document.createElement('div');
+                const nameEl = document.createElement('p');
+                nameEl.className = 'text-sm font-medium text-gray-900 dark:text-white';
+                nameEl.textContent = user.name;
+                const emailEl = document.createElement('p');
+                emailEl.className = 'text-xs text-gray-500 dark:text-gray-400';
+                emailEl.textContent = user.email;
+                infoContainer.appendChild(nameEl);
+                infoContainer.appendChild(emailEl);
+
+                userItem.appendChild(avatarContainer);
+                userItem.appendChild(infoContainer);
+                usersList.appendChild(userItem);
             });
         } else {
             noUsers.classList.remove('hidden');
@@ -153,12 +165,20 @@
         } else if (roleData.permissions && roleData.permissions.length > 0) {
             noPermissions.classList.add('hidden');
             roleData.permissions.forEach(perm => {
-                permissionsList.innerHTML += `
-                    <div class="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
-                        <span class="text-sm text-gray-700 dark:text-gray-300">${perm.permission_name}</span>
-                    </div>
-                `;
+                // Safe DOM construction to prevent XSS
+                const permItem = document.createElement('div');
+                permItem.className = 'flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800';
+
+                const checkIcon = document.createElement('i');
+                checkIcon.className = 'fas fa-check-circle text-green-600 dark:text-green-400';
+
+                const permName = document.createElement('span');
+                permName.className = 'text-sm text-gray-700 dark:text-gray-300';
+                permName.textContent = perm.permission_name;
+
+                permItem.appendChild(checkIcon);
+                permItem.appendChild(permName);
+                permissionsList.appendChild(permItem);
             });
         } else {
             noPermissions.classList.remove('hidden');

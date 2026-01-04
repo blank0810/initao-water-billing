@@ -16,11 +16,18 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!$request->user()) {
+        $user = $request->user();
+
+        if (! $user) {
             return redirect()->route('login');
         }
 
-        if (!$request->user()->hasAnyRole($roles)) {
+        // Eager-load roles.permissions once for all RBAC checks in this request
+        if (! $user->relationLoaded('roles')) {
+            $user->load('roles.permissions');
+        }
+
+        if (! $user->hasAnyRole($roles)) {
             abort(403, 'Unauthorized. You do not have the required role.');
         }
 

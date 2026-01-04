@@ -28,6 +28,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Eager-load roles.permissions for RBAC checks throughout the session
+        Auth::user()->load('roles.permissions');
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

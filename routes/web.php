@@ -1,25 +1,17 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Admin\CustomerController;
-use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\ActivityLogController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\CustomerApprovalController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ConsumerController;
-use App\Http\Controllers\BillingController;
-use App\Http\Controllers\MeterController;
-use App\Http\Controllers\RateController;
-use App\Http\Controllers\LedgerController;
-use App\Http\Controllers\AnalyticsController;
-use Illuminate\Support\Facades\Route;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 
 // ============================================================================
 // PUBLIC ROUTES (No authentication required)
@@ -32,7 +24,7 @@ Route::get('/', function () {
 
 // DEV-ONLY: Simulate login for frontend testing (only works in local environment)
 Route::get('/dev-login', function () {
-    if (!app()->environment('local')) {
+    if (! app()->environment('local')) {
         abort(403);
     }
 
@@ -77,6 +69,7 @@ Route::middleware('auth')->group(function () {
     // Dashboard - All authenticated users can access
     Route::get('/dashboard', function () {
         session(['active_menu' => 'dashboard']);
+
         return view('dashboard');
     })->name('dashboard');
 
@@ -95,6 +88,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/{id}/print-count', [CustomerController::class, 'printCount'])->name('customer.print-count');
         Route::get('/customer/invoice-list', function () {
             session(['active_menu' => 'invoice-list']);
+
             return view('pages.customer.invoice-list');
         })->name('invoice.list');
     });
@@ -103,6 +97,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['permission:customers.manage'])->group(function () {
         Route::get('/customer/add', function () {
             session(['active_menu' => 'customer-add']);
+
             return view('pages.customer.add-customer');
         })->name('customer.add');
 
@@ -114,17 +109,20 @@ Route::middleware('auth')->group(function () {
         // Application Process
         Route::get('/customer/application-process', function () {
             session(['active_menu' => 'application-process']);
+
             return view('pages.customer.application-process');
         })->name('application.process');
 
         // Customer Approval
         Route::get('/customer/approve-customer', function () {
             session(['active_menu' => 'approve-customer']);
+
             return view('pages.customer.approve-customer');
         })->name('approve.customer');
 
         Route::get('/customer/declined-customer', function () {
             session(['active_menu' => 'declined-customer']);
+
             return view('pages.customer.declined-customer');
         })->name('declined.customer');
 
@@ -135,11 +133,13 @@ Route::middleware('auth')->group(function () {
         // Service Connection
         Route::get('/connection/service-application', function () {
             session(['active_menu' => 'service-application']);
+
             return view('pages.connection.service-application');
         })->name('service.application');
 
         Route::get('/customer/service-connection', function () {
             session(['active_menu' => 'service-connection']);
+
             return view('pages.connection.service-connection');
         })->name('service.connection');
     });
@@ -157,6 +157,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['permission:payments.process'])->group(function () {
         Route::get('/customer/payment/{customerCode}', function ($customerCode) {
             session(['active_menu' => 'customer-list']);
+
             return view('pages.customer.payment-management', ['customerCode' => $customerCode]);
         })->name('customer.payment');
     });
@@ -167,27 +168,32 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['permission:billing.view'])->group(function () {
         Route::get('/billing/management', function () {
             session(['active_menu' => 'billing-management']);
+
             return view('pages.billing.billing-index');
         })->name('billing.management');
 
         Route::get('/billing/consumer/{id}', function ($id) {
             session(['active_menu' => 'billing-management']);
+
             return view('pages.billing.consumer-view', ['connectionId' => $id]);
         })->name('billing.consumer');
 
         Route::get('/billing/overall-data', function () {
             session(['active_menu' => 'billing-management']);
+
             return view('pages.billing.overall-data.overall-data');
         })->name('billing.overall-data');
 
         // Ledger Management (part of billing)
         Route::get('/ledger/management', function () {
             session(['active_menu' => 'ledger-management']);
+
             return view('pages.ledger.management');
         })->name('ledger.management');
 
         Route::get('/ledger/overall-data', function () {
             session(['active_menu' => 'ledger-management']);
+
             return view('pages.ledger.overall-data.overall-data');
         })->name('ledger.overall-data');
     });
@@ -201,10 +207,7 @@ Route::middleware('auth')->group(function () {
 
     // User Management - Manage (users.manage permission)
     Route::middleware(['permission:users.manage'])->group(function () {
-        Route::get('/user/add', function () {
-            session(['active_menu' => 'user-add']);
-            return view('pages.user.add-user');
-        })->name('user.add');
+        Route::get('/user/add', [UserController::class, 'create'])->name('user.add');
 
         Route::post('/user', [UserController::class, 'store'])->name('user.store');
         Route::put('/user/{id}', [UserController::class, 'update'])->name('user.update');
@@ -217,11 +220,13 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['permission:customers.view'])->group(function () {
         Route::get('/consumer/list', function () {
             session(['active_menu' => 'consumer-list']);
+
             return view('pages.consumer.consumer-list');
         })->name('consumer.list');
 
         Route::get('/consumer/details/{id}', function ($id) {
             session(['active_menu' => 'consumer-list']);
+
             return view('pages.consumer.consumer-details', ['consumer_id' => $id]);
         })->name('consumer.details');
     });
@@ -232,11 +237,13 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['permission:meters.view'])->group(function () {
         Route::get('/meter/management', function () {
             session(['active_menu' => 'meter-management']);
+
             return view('pages.meter.management');
         })->name('meter.management');
 
         Route::get('/meter/overall-data', function () {
             session(['active_menu' => 'meter-management']);
+
             return view('pages.meter.overall-data.overall-data');
         })->name('meter.overall-data');
     });
@@ -254,16 +261,19 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['permission:settings.manage'])->group(function () {
         Route::get('/rate/management', function () {
             session(['active_menu' => 'rate-management']);
+
             return view('pages.rate.management');
         })->name('rate.management');
 
         Route::get('/rate/overall-data', function () {
             session(['active_menu' => 'rate-management']);
+
             return view('pages.rate.overall-data.overall-data');
         })->name('rate.overall-data');
 
         Route::get('/settings', function () {
             session(['active_menu' => 'settings']);
+
             return view('pages.info-pages.settings');
         })->name('settings');
     });
@@ -274,11 +284,13 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['permission:reports.view'])->group(function () {
         Route::get('/analytics', function () {
             session(['active_menu' => 'analytics']);
+
             return view('pages.analytics.analytics');
         })->name('analytics');
 
         Route::get('/report', function () {
             session(['active_menu' => 'report']);
+
             return view('pages.info-pages.report');
         })->name('report');
     });

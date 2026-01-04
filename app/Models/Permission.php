@@ -8,41 +8,59 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Permission extends Model
 {
     protected $table = 'permissions';
+
     protected $primaryKey = 'permission_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'permission_name',
-        'description'
+        'description',
     ];
 
     // Users Module
     public const USERS_VIEW = 'users.view';
+
     public const USERS_MANAGE = 'users.manage';
+
+    // Roles Module
+    public const ROLES_VIEW = 'roles.view';
+
+    public const ROLES_MANAGE = 'roles.manage';
 
     // Customers Module
     public const CUSTOMERS_VIEW = 'customers.view';
+
     public const CUSTOMERS_MANAGE = 'customers.manage';
 
     // Billing Module
     public const BILLING_VIEW = 'billing.view';
+
     public const BILLING_GENERATE = 'billing.generate';
+
     public const BILLING_ADJUST = 'billing.adjust';
 
     // Payments Module
     public const PAYMENTS_VIEW = 'payments.view';
+
     public const PAYMENTS_PROCESS = 'payments.process';
+
     public const PAYMENTS_VOID = 'payments.void';
 
     // Meters Module
     public const METERS_VIEW = 'meters.view';
+
     public const METERS_READ = 'meters.read';
+
     public const METERS_MANAGE = 'meters.manage';
 
     // Reports Module
     public const REPORTS_VIEW = 'reports.view';
+
     public const REPORTS_EXPORT = 'reports.export';
 
     // Settings Module
@@ -71,6 +89,7 @@ class Permission extends Model
     {
         return [
             'users' => [self::USERS_VIEW, self::USERS_MANAGE],
+            'roles' => [self::ROLES_VIEW, self::ROLES_MANAGE],
             'customers' => [self::CUSTOMERS_VIEW, self::CUSTOMERS_MANAGE],
             'billing' => [self::BILLING_VIEW, self::BILLING_GENERATE, self::BILLING_ADJUST],
             'payments' => [self::PAYMENTS_VIEW, self::PAYMENTS_PROCESS, self::PAYMENTS_VOID],
@@ -88,6 +107,8 @@ class Permission extends Model
         return [
             self::USERS_VIEW,
             self::USERS_MANAGE,
+            self::ROLES_VIEW,
+            self::ROLES_MANAGE,
             self::CUSTOMERS_VIEW,
             self::CUSTOMERS_MANAGE,
             self::BILLING_VIEW,
@@ -117,7 +138,7 @@ class Permission extends Model
             $parts = explode('.', $permission->permission_name);
             $module = ucfirst($parts[0] ?? 'other');
 
-            if (!isset($grouped[$module])) {
+            if (! isset($grouped[$module])) {
                 $grouped[$module] = [];
             }
 

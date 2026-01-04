@@ -82,7 +82,7 @@ class AddUserManager {
             errors.push('Please select a role');
         }
 
-        if (!formData.status) {
+        if (!formData.status_id) {
             errors.push('Please select a status');
         }
 
@@ -120,7 +120,7 @@ class AddUserManager {
                     password: formData.password,
                     password_confirmation: formData.password_confirmation,
                     role_id: parseInt(formData.role_id),
-                    status: formData.status,
+                    status_id: parseInt(formData.status_id),
                 }),
             });
 
@@ -190,26 +190,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const manager = new AddUserManager();
     window.addUserManager = manager;
 
-    // Populate role dropdown if it exists
-    const roleSelect = document.getElementById('role') || document.querySelector('[name="role_id"]');
+    // Populate role dropdown if it exists (check multiple possible IDs)
+    const roleSelect = document.getElementById('roleSelect')
+        || document.getElementById('role')
+        || document.querySelector('[name="role_id"]');
     if (roleSelect) {
         manager.populateRoleDropdown(roleSelect);
     }
 
-    // Handle form submission
-    const addUserForm = document.getElementById('addUserForm');
+    // Handle form submission (check multiple possible form IDs)
+    const addUserForm = document.getElementById('userRegistrationForm')
+        || document.getElementById('addUserForm');
     if (addUserForm) {
         addUserForm.addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const formData = new FormData(addUserForm);
+
+            // Build name from first_name + last_name or use name directly
+            const firstName = formData.get('first_name') || '';
+            const lastName = formData.get('last_name') || '';
+            const fullName = formData.get('name') || `${firstName} ${lastName}`.trim();
+
+            // Get status_id from select, or convert status string to ID
+            let statusId = formData.get('status_id');
+            if (!statusId) {
+                // Fallback: if status field exists with 'active'/'inactive' values
+                const statusValue = formData.get('status');
+                if (statusValue) {
+                    // This requires fetching status IDs - for now use the select value directly
+                    statusId = statusValue;
+                }
+            }
+
             const data = {
-                name: formData.get('name') || `${formData.get('first_name') || ''} ${formData.get('last_name') || ''}`.trim(),
+                name: fullName,
                 email: formData.get('email'),
                 password: formData.get('password'),
-                password_confirmation: formData.get('password_confirmation') || formData.get('confirm_password'),
+                password_confirmation: formData.get('password_confirmation'),
                 role_id: formData.get('role_id') || formData.get('role'),
-                status: formData.get('status'),
+                status_id: statusId,
             };
 
             // Show loading state
@@ -236,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Reset form
                 addUserForm.reset();
 
-                // Optionally redirect to user list
+                // Redirect to user list
                 setTimeout(() => {
                     window.location.href = '/user/list';
                 }, 1500);
@@ -245,6 +265,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.dispatchEvent(new CustomEvent('show-alert', {
                     detail: { type: 'error', message: result.message }
                 }));
+
+                // Fallback alert if no alert system
+                if (!window.hasEventListener?.('show-alert')) {
+                    alert('Error: ' + result.message);
+                }
             }
         });
     }

@@ -9,12 +9,13 @@ class UpdateRoleRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user() && $this->user()->hasPermission('roles.manage');
     }
 
     public function rules(): array
     {
-        $roleId = $this->route('role')->role_id ?? null;
+        $role = $this->route('role');
+        $roleId = $role instanceof \App\Models\Role ? $role->role_id : $role;
 
         return [
             'role_name' => [

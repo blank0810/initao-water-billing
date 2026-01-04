@@ -242,14 +242,15 @@
             row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
 
             const actionBadge = getActionBadge(activity.description);
-            const truncatedUserAgent = activity.user_agent.length > 60
-                ? activity.user_agent.substring(0, 60) + '...'
-                : activity.user_agent;
+            const userAgent = activity.user_agent || '';
+            const truncatedUserAgent = userAgent.length > 60
+                ? userAgent.substring(0, 60) + '...'
+                : userAgent;
 
             row.innerHTML = `
                 <td class="px-6 py-4">
-                    <div class="text-sm font-medium text-gray-900 dark:text-white">${activity.created_at}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">${activity.created_at_human}</div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(activity.created_at)}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">${escapeHtml(activity.created_at_human)}</div>
                 </td>
                 <td class="px-6 py-4">
                     <div class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(activity.causer_name)}</div>
@@ -259,7 +260,7 @@
                 <td class="px-6 py-4">
                     <code class="text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-mono">${escapeHtml(activity.ip_address)}</code>
                 </td>
-                <td class="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate" title="${escapeHtml(activity.user_agent)}">
+                <td class="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate" title="${escapeHtml(userAgent)}">
                     ${escapeHtml(truncatedUserAgent)}
                 </td>
             `;

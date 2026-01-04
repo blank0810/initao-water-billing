@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
-use App\Models\User;
+use App\Models\Status;
 use App\Services\Users\UserService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -31,7 +30,13 @@ class UserController extends Controller
     public function create()
     {
         session(['active_menu' => 'user-add']);
-        return view('pages.user.add-user');
+
+        $statuses = [
+            ['stat_id' => Status::getIdByDescription(Status::ACTIVE), 'stat_desc' => 'Active'],
+            ['stat_id' => Status::getIdByDescription(Status::INACTIVE), 'stat_desc' => 'Inactive'],
+        ];
+
+        return view('user.add', compact('statuses'));
     }
 
     /**
@@ -68,7 +73,7 @@ class UserController extends Controller
     {
         $user = $this->userService->getUserById($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'User not found',
@@ -86,9 +91,9 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, int $id): JsonResponse
     {
-        $user = User::find($id);
+        $user = $this->userService->getUserById($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'User not found',
@@ -109,9 +114,9 @@ class UserController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $user = User::find($id);
+        $user = $this->userService->getUserById($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'User not found',
@@ -120,7 +125,7 @@ class UserController extends Controller
 
         $result = $this->userService->deleteUser($user);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return response()->json([
                 'success' => false,
                 'message' => $result['message'],

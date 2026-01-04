@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Role;
 use App\Models\Permission;
+use App\Models\Role;
+use Illuminate\Database\Seeder;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -20,6 +20,7 @@ class RolePermissionSeeder extends Seeder
 
             Role::ADMIN => [
                 Permission::USERS_VIEW, Permission::USERS_MANAGE,
+                Permission::ROLES_VIEW, Permission::ROLES_MANAGE,
                 Permission::CUSTOMERS_VIEW, Permission::CUSTOMERS_MANAGE,
                 Permission::BILLING_VIEW, Permission::BILLING_GENERATE, Permission::BILLING_ADJUST,
                 Permission::PAYMENTS_VIEW, Permission::PAYMENTS_PROCESS, Permission::PAYMENTS_VOID,
@@ -49,6 +50,7 @@ class RolePermissionSeeder extends Seeder
 
             Role::VIEWER => [
                 Permission::USERS_VIEW,
+                Permission::ROLES_VIEW,
                 Permission::CUSTOMERS_VIEW,
                 Permission::BILLING_VIEW,
                 Permission::PAYMENTS_VIEW,
@@ -59,13 +61,15 @@ class RolePermissionSeeder extends Seeder
 
         foreach ($rolePermissions as $roleName => $permissionNames) {
             $role = Role::findByName($roleName);
-            if (!$role) {
+            if (! $role) {
                 $this->command->warn("Role not found: {$roleName}");
+
                 continue;
             }
 
             if (empty($permissionNames)) {
                 $this->command->info("Skipping {$role->role_name} (super admin - bypasses permission checks)");
+
                 continue;
             }
 
@@ -73,8 +77,8 @@ class RolePermissionSeeder extends Seeder
                 ->pluck('permission_id')
                 ->toArray();
 
-            $role->permissions()->sync($permissionIds);
-            $this->command->info("Assigned " . count($permissionIds) . " permissions to {$role->role_name}");
+            $role->permissions()->syncWithoutDetaching($permissionIds);
+            $this->command->info('Synced '.count($permissionIds)." permissions to {$role->role_name} (existing preserved)");
         }
     }
 }

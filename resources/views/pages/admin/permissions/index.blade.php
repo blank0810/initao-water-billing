@@ -22,8 +22,9 @@
                         <div class="flex items-center gap-3">
                             <div class="relative">
                                 <input type="text" id="permissionSearchInput" placeholder="Search permissions..."
+                                    aria-label="Search permissions"
                                     class="pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64">
-                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true"></i>
                             </div>
                             <a href="{{ route('admin.role-permissions.matrix') }}"
                                 class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors">

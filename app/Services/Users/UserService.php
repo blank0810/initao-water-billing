@@ -67,9 +67,7 @@ class UserService
             'email' => $data['email'],
             'username' => $data['username'] ?? $this->generateUsername($data['email']),
             'password' => Hash::make($data['password']),
-            'stat_id' => $data['status'] === 'active'
-                ? Status::getIdByDescription(Status::ACTIVE)
-                : Status::getIdByDescription(Status::INACTIVE),
+            'stat_id' => $data['status_id'],
             'u_type' => $data['u_type'] ?? 1, // Default user type
         ]);
 
@@ -96,15 +94,13 @@ class UserService
         }
 
         // Only update password if provided
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $updateData['password'] = Hash::make($data['password']);
         }
 
         // Update status
-        if (isset($data['status'])) {
-            $updateData['stat_id'] = $data['status'] === 'active'
-                ? Status::getIdByDescription(Status::ACTIVE)
-                : Status::getIdByDescription(Status::INACTIVE);
+        if (isset($data['status_id'])) {
+            $updateData['stat_id'] = $data['status_id'];
         }
 
         $user->update($updateData);
@@ -181,7 +177,7 @@ class UserService
         $counter = 1;
 
         while (User::where('username', $username)->exists()) {
-            $username = $base . $counter;
+            $username = $base.$counter;
             $counter++;
         }
 

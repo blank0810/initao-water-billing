@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Permission;
 
 class PermissionSeeder extends Seeder
 {
@@ -17,6 +17,10 @@ class PermissionSeeder extends Seeder
             // Users Module
             ['permission_name' => Permission::USERS_VIEW, 'description' => 'View user list and details'],
             ['permission_name' => Permission::USERS_MANAGE, 'description' => 'Create, edit, and delete users'],
+
+            // Roles Module
+            ['permission_name' => Permission::ROLES_VIEW, 'description' => 'View roles and permissions'],
+            ['permission_name' => Permission::ROLES_MANAGE, 'description' => 'Create, edit, and delete roles'],
 
             // Customers Module
             ['permission_name' => Permission::CUSTOMERS_VIEW, 'description' => 'View customer list and details'],
@@ -52,6 +56,6 @@ class PermissionSeeder extends Seeder
             );
         }
 
-        $this->command->info('Permissions seeded: ' . count($permissions) . ' permissions');
+        $this->command->info('Permissions seeded: '.count($permissions).' permissions');
     }
 }

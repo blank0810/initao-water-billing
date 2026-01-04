@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
 
             // RBAC seeders
             RoleSeeder::class,            // Roles (Super Admin, Admin, Billing Officer, etc.)
-            PermissionSeeder::class,      // Permissions (16 permissions across 7 modules)
+            PermissionSeeder::class,      // Permissions (18 permissions across 8 modules)
         ]);
 
         // Create default test user
@@ -60,7 +60,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- Periods: 12 billing periods');
         $this->command->info('- Misc References: 3 reference types');
         $this->command->info('- Roles: 6 roles (Super Admin, Admin, Billing Officer, Meter Reader, Cashier, Viewer)');
-        $this->command->info('- Permissions: 16 permissions across 7 modules');
+        $this->command->info('- Permissions: 18 permissions across 8 modules');
         $this->command->info('- Test Users: 6 users (1 per role) - Password: "password"');
     }
 }

@@ -8,22 +8,39 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Role extends Model
 {
     protected $table = 'roles';
+
     protected $primaryKey = 'role_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'role_name',
-        'description'
+        'description',
     ];
+
+    /**
+     * Get the route key for the model (for route model binding)
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'role_id';
+    }
 
     // Role name constants
     public const SUPER_ADMIN = 'super_admin';
+
     public const ADMIN = 'admin';
+
     public const BILLING_OFFICER = 'billing_officer';
+
     public const METER_READER = 'meter_reader';
+
     public const CASHIER = 'cashier';
+
     public const VIEWER = 'viewer';
 
     /**

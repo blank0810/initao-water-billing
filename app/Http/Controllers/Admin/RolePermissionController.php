@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
 use App\Models\Permission;
+use App\Models\Role;
+use App\Services\Admin\RolePermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RolePermissionController extends Controller
 {
+    public function __construct(
+        private RolePermissionService $rolePermissionService
+    ) {}
+
     /**
      * Display role-permission matrix page
      */
@@ -29,29 +34,18 @@ class RolePermissionController extends Controller
      */
     public function updateRolePermissions(Request $request, Role $role): JsonResponse
     {
-        // Prevent modifying super_admin
-        if ($role->role_name === Role::SUPER_ADMIN) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot modify super admin permissions'
-            ], 422);
-        }
-
         $request->validate([
             'permissions' => 'nullable|array',
             'permissions.*' => 'string|exists:permissions,permission_name',
         ]);
 
-        $permissionIds = Permission::whereIn('permission_name', $request->permissions ?? [])
-            ->pluck('permission_id')
-            ->toArray();
+        try {
+            $this->rolePermissionService->updateRolePermissions($role, $request->permissions ?? []);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
 
-        $role->permissions()->sync($permissionIds);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Role permissions updated successfully'
-        ]);
+        return response()->json(['success' => true, 'message' => 'Role permissions updated successfully']);
     }
 
     /**
@@ -67,26 +61,13 @@ class RolePermissionController extends Controller
 
         $role = Role::find($request->role_id);
 
-        // Prevent modifying super_admin
-        if ($role->role_name === Role::SUPER_ADMIN) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot modify super admin permissions'
-            ], 422);
+        try {
+            $this->rolePermissionService->togglePermission($role, $request->permission_name, $request->enabled);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
 
-        $permission = Permission::where('permission_name', $request->permission_name)->first();
-
-        if ($request->enabled) {
-            $role->permissions()->syncWithoutDetaching([$permission->permission_id]);
-        } else {
-            $role->permissions()->detach($permission->permission_id);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Permission updated successfully'
-        ]);
+        return response()->json(['success' => true, 'message' => 'Permission updated successfully']);
     }
 
     /**
@@ -98,26 +79,16 @@ class RolePermissionController extends Controller
             'permission_name' => 'required|string|exists:permissions,permission_name',
             'role_ids' => 'required|array',
             'role_ids.*' => 'exists:roles,role_id',
-            'action' => 'required|in:add,remove'
+            'action' => 'required|in:add,remove',
         ]);
 
-        $permission = Permission::where('permission_name', $request->permission_name)->first();
-        $roles = Role::whereIn('role_id', $request->role_ids)
-            ->where('role_name', '!=', Role::SUPER_ADMIN)
-            ->get();
+        $this->rolePermissionService->bulkUpdatePermission(
+            $request->permission_name,
+            $request->role_ids,
+            $request->action
+        );
 
-        foreach ($roles as $role) {
-            if ($request->action === 'add') {
-                $role->permissions()->syncWithoutDetaching([$permission->permission_id]);
-            } else {
-                $role->permissions()->detach($permission->permission_id);
-            }
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Permissions updated successfully'
-        ]);
+        return response()->json(['success' => true, 'message' => 'Permissions updated successfully']);
     }
 
     /**
