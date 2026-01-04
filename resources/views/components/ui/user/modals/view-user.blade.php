@@ -54,18 +54,20 @@
 <script>
 function showViewUserModal(user) {
     document.getElementById('viewUserId').textContent = user.id;
-    document.getElementById('viewUserName').textContent = user.UserName;
-    document.getElementById('viewUserEmail').textContent = user.Email;
-    document.getElementById('viewUserRole').textContent = user.Role;
-    document.getElementById('viewUserDate').textContent = new Date(user.DateCreated).toLocaleDateString();
-    
+    document.getElementById('viewUserName').textContent = user.name || 'N/A';
+    document.getElementById('viewUserEmail').textContent = user.email || 'N/A';
+    document.getElementById('viewUserRole').textContent = user.role?.display_name || user.role?.role_name || 'No Role';
+    document.getElementById('viewUserDate').textContent = user.created_at_formatted || 'N/A';
+
     const statusElement = document.getElementById('viewUserStatus');
-    statusElement.textContent = user.Status;
+    const status = (user.status || '').toLowerCase();
+    const isActive = status === 'active';
+    statusElement.textContent = isActive ? 'Active' : 'Inactive';
     statusElement.className = `inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-        user.Status === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+        isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
         'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
     }`;
-    
+
     document.getElementById('viewUserModal').classList.remove('hidden');
 }
 

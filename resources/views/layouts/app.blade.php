@@ -180,7 +180,8 @@
             })();
         </script>
 
-        @include('components.page-loader')
+        {{-- Disabled: Global page loader - uncomment to re-enable --}}
+        {{-- @include('components.page-loader') --}}
 
         @stack('scripts')
 

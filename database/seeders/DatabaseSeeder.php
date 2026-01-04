@@ -25,6 +25,10 @@ class DatabaseSeeder extends Seeder
             WaterRateSeeder::class,       // Water rates (Residential, Commercial, etc.)
             ChargeItemSeeder::class,      // Charge items (Connection Fee, Deposits, etc.)
             BillAdjustmentTypeSeeder::class, // Bill adjustment types (Meter Error, Penalty Waiver, etc.)
+
+            // RBAC seeders
+            RoleSeeder::class,            // Roles (Super Admin, Admin, Billing Officer, etc.)
+            PermissionSeeder::class,      // Permissions (16 permissions across 7 modules)
         ]);
 
         // Create default admin user (optional)
@@ -38,6 +42,9 @@ class DatabaseSeeder extends Seeder
 
         // Seed tables that depend on users (must come after user creation)
         $this->call([
+            RolePermissionSeeder::class,  // Assign permissions to roles
+            AdminUserRoleSeeder::class,   // Assign Super Admin role to admin user
+            TestUsersSeeder::class,       // Create test users for each role
             PeriodSeeder::class,          // Billing periods (12 months)
             MiscReferenceSeeder::class,   // Misc references (penalties, discounts, surcharges)
         ]);
@@ -56,5 +63,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- Bill Adjustment Types: 5 types');
         $this->command->info('- Periods: 12 billing periods');
         $this->command->info('- Misc References: 3 reference types');
+        $this->command->info('- Roles: 6 roles (Super Admin, Admin, Billing Officer, Meter Reader, Cashier, Viewer)');
+        $this->command->info('- Permissions: 16 permissions across 7 modules');
+        $this->command->info('- Test Users: 6 users (1 per role) - Password: "password"');
     }
 }

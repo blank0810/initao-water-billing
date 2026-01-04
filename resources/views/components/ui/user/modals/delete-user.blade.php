@@ -32,7 +32,7 @@
             <button onclick="closeDeleteUserModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                 Cancel
             </button>
-            <button onclick="confirmDeleteUser()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
+            <button id="confirmDeleteBtn" onclick="confirmDeleteUser()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
                 <i class="fas fa-trash mr-2"></i>Delete User
             </button>
         </div>
@@ -42,12 +42,21 @@
 <script>
 let userToDelete = null;
 
-function showDeleteUserModal(userId) {
-    userToDelete = userId;
-    document.getElementById('deleteUserName').textContent = `User ${userId}`;
-    document.getElementById('deleteUserId').textContent = userId;
-    document.getElementById('deleteUserEmail').textContent = 'user@example.com';
-    document.getElementById('deleteUserRole').textContent = 'User';
+function showDeleteUserModal(user) {
+    // Handle both user object and user ID
+    if (typeof user === 'object') {
+        userToDelete = user;
+        document.getElementById('deleteUserName').textContent = user.name || user.UserName || 'this user';
+        document.getElementById('deleteUserId').textContent = user.id;
+        document.getElementById('deleteUserEmail').textContent = user.email || user.Email || 'N/A';
+        document.getElementById('deleteUserRole').textContent = user.role?.display_name || user.role?.role_name || user.Role || 'N/A';
+    } else {
+        userToDelete = { id: user };
+        document.getElementById('deleteUserName').textContent = `User ${user}`;
+        document.getElementById('deleteUserId').textContent = user;
+        document.getElementById('deleteUserEmail').textContent = 'N/A';
+        document.getElementById('deleteUserRole').textContent = 'N/A';
+    }
     document.getElementById('deleteUserModal').classList.remove('hidden');
 }
 
@@ -56,10 +65,50 @@ function closeDeleteUserModal() {
     userToDelete = null;
 }
 
-function confirmDeleteUser() {
-    if (userToDelete) {
-        window.dispatchEvent(new CustomEvent('confirm-delete-user', { detail: userToDelete }));
-        closeDeleteUserModal();
+async function confirmDeleteUser() {
+    if (!userToDelete) return;
+
+    const userId = userToDelete.id || userToDelete;
+    const deleteBtn = document.getElementById('confirmDeleteBtn');
+    const originalText = deleteBtn.innerHTML;
+
+    // Show loading state
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
+    deleteBtn.disabled = true;
+
+    try {
+        const response = await fetch(`/user/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            },
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            closeDeleteUserModal();
+            window.dispatchEvent(new CustomEvent('show-alert', {
+                detail: { type: 'success', message: result.message || 'User deleted successfully' }
+            }));
+            // Refresh user list
+            if (window.userManager?.refresh) {
+                window.userManager.refresh();
+            }
+        } else {
+            window.dispatchEvent(new CustomEvent('show-alert', {
+                detail: { type: 'error', message: result.message || 'Failed to delete user' }
+            }));
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        window.dispatchEvent(new CustomEvent('show-alert', {
+            detail: { type: 'error', message: 'Network error. Please try again.' }
+        }));
+    } finally {
+        deleteBtn.innerHTML = originalText;
+        deleteBtn.disabled = false;
     }
 }
 

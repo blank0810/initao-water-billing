@@ -97,11 +97,9 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">User Role *</label>
-                                <select name="role" required 
+                                <select name="role_id" id="roleSelect" required
                                     class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                                    <option value="">Select Role</option>
-                                    <option value="admin">Administrator</option>
-                                    <option value="user">User</option>
+                                    <option value="">Loading roles...</option>
                                 </select>
                             </div>
                             <div>
@@ -132,6 +130,85 @@
         </div>
     </div>
 
-    <script src="{{ asset('resources/js/data/user/add-user.js') }}"></script>
-    <script src="{{ asset('resources/js/data/user/add-user-form.js') }}"></script>
+    @vite('resources/js/data/user/add-user.js')
+
+    <script>
+        // Fetch roles and populate dropdown
+        document.addEventListener('DOMContentLoaded', async function() {
+            const roleSelect = document.getElementById('roleSelect');
+            try {
+                const response = await fetch('/api/roles/available', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                    },
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    roleSelect.innerHTML = '<option value="">Select Role</option>';
+                    (result.data || []).forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role.role_id;
+                        option.textContent = role.role_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        roleSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching roles:', error);
+                roleSelect.innerHTML = '<option value="">Failed to load roles</option>';
+            }
+
+            // Handle form submission
+            const form = document.getElementById('userRegistrationForm');
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const firstName = formData.get('first_name') || '';
+                const lastName = formData.get('last_name') || '';
+
+                const data = {
+                    name: `${firstName} ${lastName}`.trim(),
+                    email: formData.get('email'),
+                    password: formData.get('password'),
+                    password_confirmation: formData.get('password'),
+                    role_id: parseInt(formData.get('role_id')),
+                    status: formData.get('status'),
+                };
+
+                const submitBtn = form.querySelector('[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+                submitBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('User created successfully!');
+                        window.location.href = '/user/list';
+                    } else {
+                        const errors = result.errors ? Object.values(result.errors).flat().join(', ') : result.message;
+                        alert('Error: ' + errors);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Network error. Please try again.');
+                } finally {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
+        });
+    </script>
 </x-app-layout>

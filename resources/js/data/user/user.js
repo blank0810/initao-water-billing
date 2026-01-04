@@ -1,234 +1,164 @@
-// User management list script. Initializes when #userTable exists on the page.
+/**
+ * User Management List
+ * Fetches users from API and handles CRUD operations
+ */
 (function () {
+    'use strict';
+
     if (!document.getElementById('userTable')) return;
 
-    // Import or define dummy user data
-    const userAllData = [
-        {
-            id: 'USR001',
-            UserName: 'John Administrator',
-            Email: 'john.admin@example.com',
-            Role: 'Admin',
-            Status: 'Active',
-            DateCreated: '2024-01-15'
-        },
-        {
-            id: 'USR002',
-            UserName: 'Maria Rodriguez',
-            Email: 'maria.rodriguez@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-02-10'
-        },
-        {
-            id: 'USR003',
-            UserName: 'Carlos Santos',
-            Email: 'carlos.santos@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-03-05'
-        },
-        {
-            id: 'USR004',
-            UserName: 'Anna Thompson',
-            Email: 'anna.thompson@example.com',
-            Role: 'Admin',
-            Status: 'Active',
-            DateCreated: '2024-01-20'
-        },
-        {
-            id: 'USR005',
-            UserName: 'David Garcia',
-            Email: 'david.garcia@example.com',
-            Role: 'User',
-            Status: 'Inactive',
-            DateCreated: '2024-04-12'
-        },
-        {
-            id: 'USR006',
-            UserName: 'Sofia Martinez',
-            Email: 'sofia.martinez@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-05-08'
-        },
-        {
-            id: 'USR007',
-            UserName: 'Robert Lee',
-            Email: 'robert.lee@example.com',
-            Role: 'Admin',
-            Status: 'Active',
-            DateCreated: '2024-02-25'
-        },
-        {
-            id: 'USR008',
-            UserName: 'Elena Vasquez',
-            Email: 'elena.vasquez@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-06-01'
-        },
-        {
-            id: 'USR009',
-            UserName: 'Michael Chen',
-            Email: 'michael.chen@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-03-18'
-        },
-        {
-            id: 'USR010',
-            UserName: 'Patricia Johnson',
-            Email: 'patricia.johnson@example.com',
-            Role: 'User',
-            Status: 'Inactive',
-            DateCreated: '2024-04-30'
-        },
-        {
-            id: 'USR011',
-            UserName: 'James Wilson',
-            Email: 'james.wilson@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-05-22'
-        },
-        {
-            id: 'USR012',
-            UserName: 'Linda Brown',
-            Email: 'linda.brown@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-06-15'
-        }
-    ];
-    
-    // Make data globally available
-    window.userAllData = userAllData;
-    
-    const userData = [
-        {
-            id: 'USR001',
-            UserName: 'John Administrator',
-            Email: 'john.admin@example.com',
-            Role: 'Admin',
-            Status: 'Active',
-            DateCreated: '2024-01-15'
-        },
-        {
-            id: 'USR002',
-            UserName: 'Maria Rodriguez',
-            Email: 'maria.rodriguez@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-02-10'
-        },
-        {
-            id: 'USR003',
-            UserName: 'Carlos Santos',
-            Email: 'carlos.santos@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-03-05'
-        },
-        {
-            id: 'USR004',
-            UserName: 'Anna Thompson',
-            Email: 'anna.thompson@example.com',
-            Role: 'Admin',
-            Status: 'Active',
-            DateCreated: '2024-01-20'
-        },
-        {
-            id: 'USR005',
-            UserName: 'David Garcia',
-            Email: 'david.garcia@example.com',
-            Role: 'User',
-            Status: 'Inactive',
-            DateCreated: '2024-04-12'
-        },
-        {
-            id: 'USR006',
-            UserName: 'Sofia Martinez',
-            Email: 'sofia.martinez@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-05-08'
-        },
-        {
-            id: 'USR007',
-            UserName: 'Robert Lee',
-            Email: 'robert.lee@example.com',
-            Role: 'Admin',
-            Status: 'Active',
-            DateCreated: '2024-02-25'
-        },
-        {
-            id: 'USR008',
-            UserName: 'Elena Vasquez',
-            Email: 'elena.vasquez@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-06-01'
-        },
-        {
-            id: 'USR009',
-            UserName: 'Michael Chen',
-            Email: 'michael.chen@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-03-18'
-        },
-        {
-            id: 'USR010',
-            UserName: 'Patricia Johnson',
-            Email: 'patricia.johnson@example.com',
-            Role: 'User',
-            Status: 'Inactive',
-            DateCreated: '2024-04-30'
-        },
-        {
-            id: 'USR011',
-            UserName: 'James Wilson',
-            Email: 'james.wilson@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-05-22'
-        },
-        {
-            id: 'USR012',
-            UserName: 'Linda Brown',
-            Email: 'linda.brown@example.com',
-            Role: 'User',
-            Status: 'Active',
-            DateCreated: '2024-06-15'
-        }
-    ];
-
-    const tableBody = document.getElementById('userTable');
+    // State
+    let users = [];
+    let filteredUsers = [];
+    let roles = [];
     let rowsPerPage = 10;
     let currentPage = 1;
-    let filteredUsers = [...userAllData];
+    let isLoading = false;
 
+    // DOM Elements
+    const tableBody = document.getElementById('userTable');
     const searchInput = document.getElementById('searchInput');
-    const pageSizeSelect = document.getElementById('userPageSize');
+    const roleFilter = document.getElementById('roleFilter');
     const prevPageBtn = document.getElementById('userPrevBtn');
     const nextPageBtn = document.getElementById('userNextBtn');
     const currentPageSpan = document.getElementById('userCurrentPage');
     const totalPagesSpan = document.getElementById('userTotalPages');
     const totalRecordsSpan = document.getElementById('userTotalRecords');
 
+    // CSRF token
+    function getCsrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.content || '';
+    }
+
+    // Show loading state
+    function showLoading() {
+        isLoading = true;
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-8 text-center">
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-spinner fa-spin text-3xl text-blue-500 mb-3"></i>
+                        <span class="text-gray-500 dark:text-gray-400">Loading users...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    // Show error state
+    function showError(message) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-8 text-center">
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-exclamation-circle text-3xl text-red-500 mb-3"></i>
+                        <span class="text-red-600 dark:text-red-400">${message}</span>
+                        <button onclick="window.userManager.refresh()" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                            <i class="fas fa-redo mr-2"></i>Retry
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    // Show empty state
+    function showEmpty() {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-8 text-center">
+                    <div class="flex flex-col items-center">
+                        <i class="fas fa-users text-3xl text-gray-300 dark:text-gray-600 mb-3"></i>
+                        <span class="text-gray-500 dark:text-gray-400">No users found</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    // Fetch users from API
+    async function fetchUsers() {
+        showLoading();
+        try {
+            const response = await fetch('/api/users', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch users');
+            }
+
+            const result = await response.json();
+            users = result.data || [];
+            filteredUsers = [...users];
+            renderTable();
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            showError('Failed to load users. Please try again.');
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    // Fetch roles for filter dropdown
+    async function fetchRoles() {
+        try {
+            const response = await fetch('/api/roles/available', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                },
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                roles = result.data || [];
+                populateRoleFilter();
+            }
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+        }
+    }
+
+    // Populate role filter dropdown
+    function populateRoleFilter() {
+        if (!roleFilter) return;
+
+        // Keep the "All Roles" option
+        roleFilter.innerHTML = '<option value="">All Roles</option>';
+
+        roles.forEach(role => {
+            const option = document.createElement('option');
+            option.value = role.role_name;
+            option.textContent = role.role_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            roleFilter.appendChild(option);
+        });
+    }
+
+    // Render table
     function renderTable() {
+        if (filteredUsers.length === 0) {
+            showEmpty();
+            updatePagination();
+            return;
+        }
+
         tableBody.innerHTML = '';
         const start = (currentPage - 1) * rowsPerPage;
         const end = start + rowsPerPage;
         const pageUsers = filteredUsers.slice(start, end);
 
         const template = document.getElementById('user-row-template');
+
         pageUsers.forEach(user => {
             const clone = template.content.firstElementChild.cloneNode(true);
 
+            // ID
             clone.querySelector('[data-col="id"]').textContent = user.id;
-            
+
             // Name with avatar
             const nameCell = clone.querySelector('[data-col="name"]');
             nameCell.innerHTML = `
@@ -237,189 +167,275 @@
                         <i class="fas fa-user text-purple-600 dark:text-purple-400"></i>
                     </div>
                     <div class="ml-3">
-                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">${user.UserName || user.name || 'N/A'}</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">${user.Email || 'N/A'}</div>
+                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">${user.name || 'N/A'}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">${user.email || 'N/A'}</div>
                     </div>
                 </div>
             `;
-            
-            clone.querySelector('[data-col="email"]').textContent = user.Email || 'N/A';
-            // Role badge with icon
+
+            // Email
+            clone.querySelector('[data-col="email"]').textContent = user.email || 'N/A';
+
+            // Role badge
             const roleCell = clone.querySelector('[data-col="role"]');
-            const roleIcon = user.Role === 'Admin' ? 'user-shield' : 'user';
+            const roleName = user.role?.display_name || user.role?.role_name || 'No Role';
+            const isAdmin = user.role?.role_name?.includes('admin');
+            const roleIcon = isAdmin ? 'user-shield' : 'user';
             roleCell.innerHTML = `
                 <span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                     <i class="fas fa-${roleIcon} mr-1"></i>
-                    ${user.Role}
+                    ${roleName}
                 </span>
             `;
-            clone.querySelector('[data-col="date"]').textContent = new Date(user.DateCreated).toLocaleDateString();
 
-            // Status badge with icon
+            // Date
+            clone.querySelector('[data-col="date"]').textContent = user.created_at_formatted || 'N/A';
+
+            // Status badge
             const statusCell = clone.querySelector('[data-col="status"]');
-            const statusIcon = user.Status === 'Active' ? 'check-circle' : 'times-circle';
-            const statusClass = user.Status === 'Active'
+            const isActive = user.status?.toLowerCase() === 'active';
+            const statusIcon = isActive ? 'check-circle' : 'times-circle';
+            const statusClass = isActive
                 ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                 : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200';
             statusCell.innerHTML = `
                 <span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
                     <i class="fas fa-${statusIcon} mr-1"></i>
-                    ${user.Status}
+                    ${user.status || 'Unknown'}
                 </span>
             `;
 
             // Actions
             const actionsCell = clone.querySelector('[data-col="actions"]');
-            actionsCell.innerHTML = '';
-
-            const editBtn = document.createElement('button');
-            editBtn.className = 'text-blue-600 hover:text-blue-900 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded transition-colors';
-            editBtn.title = 'Edit';
-            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-            editBtn.addEventListener('click', () => {
-                window.dispatchEvent(new CustomEvent('show-edit-user', { detail: user }));
-                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'edit-user' }));
-            });
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'text-red-600 hover:text-red-900 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded transition-colors ml-1';
-            deleteBtn.title = 'Delete';
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.addEventListener('click', () => {
-                window.dispatchEvent(new CustomEvent('show-delete-user', { detail: user.id }));
-                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'delete-user' }));
-            });
-
-            const viewBtn = document.createElement('button');
-            viewBtn.className = 'text-gray-600 hover:text-gray-900 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900/20 p-2 rounded transition-colors ml-1';
-            viewBtn.title = 'View Details';
-            viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
-            viewBtn.addEventListener('click', () => {
-                window.dispatchEvent(new CustomEvent('show-view-user', { detail: user }));
-                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'view-user' }));
-            });
-
-            actionsCell.appendChild(editBtn);
-            actionsCell.appendChild(deleteBtn);
-            actionsCell.appendChild(viewBtn);
+            actionsCell.innerHTML = buildActionButtons(user);
 
             tableBody.appendChild(clone);
         });
 
+        // Attach event listeners to action buttons
+        attachActionListeners();
         updatePagination();
     }
 
-    // --- Search ---
-    if (searchInput) {
-        searchInput.addEventListener('input', e => {
-            const query = e.target.value.toLowerCase();
-            const roleFilter = document.getElementById('roleFilter')?.value || '';
-            filteredUsers = userAllData.filter(u => {
-                const matchesSearch = u.id.toLowerCase().includes(query) ||
-                    u.UserName.toLowerCase().includes(query) ||
-                    u.Email.toLowerCase().includes(query) ||
-                    u.Role.toLowerCase().includes(query);
-                const matchesRole = !roleFilter || u.Role === roleFilter;
-                return matchesSearch && matchesRole;
+    // Build action buttons HTML
+    function buildActionButtons(user) {
+        return `
+            <button class="view-btn text-gray-600 hover:text-gray-900 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900/20 p-2 rounded transition-colors"
+                title="View Details" data-user-id="${user.id}">
+                <i class="fas fa-eye"></i>
+            </button>
+            <button class="edit-btn text-blue-600 hover:text-blue-900 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded transition-colors"
+                title="Edit" data-user-id="${user.id}">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="delete-btn text-red-600 hover:text-red-900 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded transition-colors"
+                title="Delete" data-user-id="${user.id}">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+    }
+
+    // Attach event listeners to action buttons
+    function attachActionListeners() {
+        // View buttons
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const userId = btn.dataset.userId;
+                const user = users.find(u => u.id == userId);
+                if (user) {
+                    window.dispatchEvent(new CustomEvent('show-view-user', { detail: user }));
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'view-user' }));
+                }
             });
-            currentPage = 1;
-            renderTable();
+        });
+
+        // Edit buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const userId = btn.dataset.userId;
+                const user = users.find(u => u.id == userId);
+                if (user) {
+                    window.dispatchEvent(new CustomEvent('show-edit-user', { detail: user }));
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'edit-user' }));
+                }
+            });
+        });
+
+        // Delete buttons
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const userId = btn.dataset.userId;
+                const user = users.find(u => u.id == userId);
+                if (user) {
+                    window.dispatchEvent(new CustomEvent('show-delete-user', { detail: user }));
+                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'delete-user' }));
+                }
+            });
         });
     }
-    
-    // --- Role Filter ---
-    window.filterUsers = function() {
+
+    // Filter users
+    function filterUsers() {
         const query = searchInput?.value.toLowerCase() || '';
-        const roleFilter = document.getElementById('roleFilter')?.value || '';
-        filteredUsers = userAllData.filter(u => {
-            const matchesSearch = u.id.toLowerCase().includes(query) ||
-                u.UserName.toLowerCase().includes(query) ||
-                u.Email.toLowerCase().includes(query) ||
-                u.Role.toLowerCase().includes(query);
-            const matchesRole = !roleFilter || u.Role === roleFilter;
+        const roleValue = roleFilter?.value || '';
+
+        filteredUsers = users.filter(u => {
+            const matchesSearch =
+                String(u.id).toLowerCase().includes(query) ||
+                (u.name || '').toLowerCase().includes(query) ||
+                (u.email || '').toLowerCase().includes(query) ||
+                (u.role?.role_name || '').toLowerCase().includes(query);
+
+            const matchesRole = !roleValue || u.role?.role_name === roleValue;
+
             return matchesSearch && matchesRole;
         });
+
         currentPage = 1;
         renderTable();
-    };
-    
-    // --- Export Functions ---
-    window.exportPDF = function() {
-        console.log('Exporting to PDF...');
-        alert('PDF export functionality - Coming soon!');
-    };
-    
-    window.exportExcel = function() {
-        console.log('Exporting to Excel...');
-        alert('Excel export functionality - Coming soon!');
-    };
+    }
 
+    // Update pagination
     function updatePagination() {
         const totalPages = Math.ceil(filteredUsers.length / rowsPerPage) || 1;
-        const start = Math.min((currentPage - 1) * rowsPerPage + 1, filteredUsers.length);
+        const start = filteredUsers.length > 0 ? (currentPage - 1) * rowsPerPage + 1 : 0;
         const end = Math.min(currentPage * rowsPerPage, filteredUsers.length);
-        
+
         if (currentPageSpan) currentPageSpan.textContent = currentPage;
         if (totalPagesSpan) totalPagesSpan.textContent = totalPages;
         if (totalRecordsSpan) totalRecordsSpan.textContent = `${start} to ${end} of ${filteredUsers.length}`;
-        
-        if (prevPageBtn) {
-            prevPageBtn.disabled = currentPage === 1;
-        }
-        if (nextPageBtn) {
-            nextPageBtn.disabled = currentPage >= totalPages;
+
+        if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
+        if (nextPageBtn) nextPageBtn.disabled = currentPage >= totalPages;
+    }
+
+    // Save user (update)
+    async function saveUser(userData) {
+        try {
+            const response = await fetch(`/user/${userData.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                },
+                body: JSON.stringify(userData),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                await fetchUsers(); // Refresh the list
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'edit-user' }));
+                window.dispatchEvent(new CustomEvent('show-alert', {
+                    detail: { type: 'success', message: result.message || 'User updated successfully' }
+                }));
+            } else {
+                throw new Error(result.message || 'Failed to update user');
+            }
+        } catch (error) {
+            console.error('Error saving user:', error);
+            window.dispatchEvent(new CustomEvent('show-alert', {
+                detail: { type: 'error', message: error.message || 'Failed to update user' }
+            }));
         }
     }
-    
-    // Create pagination object
+
+    // Delete user
+    async function deleteUser(userId) {
+        try {
+            const response = await fetch(`/user/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                await fetchUsers(); // Refresh the list
+                window.dispatchEvent(new CustomEvent('close-modal', { detail: 'delete-user' }));
+                window.dispatchEvent(new CustomEvent('show-alert', {
+                    detail: { type: 'success', message: result.message || 'User deleted successfully' }
+                }));
+            } else {
+                throw new Error(result.message || 'Failed to delete user');
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            window.dispatchEvent(new CustomEvent('show-alert', {
+                detail: { type: 'error', message: error.message || 'Failed to delete user' }
+            }));
+        }
+    }
+
+    // Event Listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', filterUsers);
+    }
+
+    if (roleFilter) {
+        roleFilter.addEventListener('change', filterUsers);
+    }
+
+    // Global event handlers
+    window.addEventListener('save-user', e => {
+        if (e.detail) saveUser(e.detail);
+    });
+
+    window.addEventListener('confirm-delete-user', e => {
+        if (e.detail) deleteUser(e.detail.id || e.detail);
+    });
+
+    // Expose functions globally
+    window.userManager = {
+        refresh: fetchUsers,
+        filter: filterUsers,
+    };
+
+    window.filterUsers = filterUsers;
+
     window.userPagination = {
-        prevPage: function() {
+        prevPage: function () {
             if (currentPage > 1) {
                 currentPage--;
                 renderTable();
             }
         },
-        nextPage: function() {
+        nextPage: function () {
             const totalPages = Math.ceil(filteredUsers.length / rowsPerPage);
             if (currentPage < totalPages) {
                 currentPage++;
                 renderTable();
             }
         },
-        updatePageSize: function(newSize) {
+        updatePageSize: function (newSize) {
             rowsPerPage = parseInt(newSize) || 10;
             currentPage = 1;
             renderTable();
-        }
+        },
     };
 
-    // --- Initial render ---
-    renderTable();
+    // Export functions (placeholders)
+    window.exportPDF = function () {
+        alert('PDF export functionality - Coming soon!');
+    };
 
-    // --- Global event handlers for save/delete ---
-    window.addEventListener('save-user', e => {
-        const updated = e.detail;
-        if (!updated || !updated.id) return;
-        const idx = userAllData.findIndex(u => u.id === updated.id);
-        if (idx > -1) {
-            userAllData[idx] = { ...userAllData[idx], ...updated };
-        } else {
-            userAllData.unshift(updated);
-        }
-        // refresh table
-        try { renderTable(); } catch (err) { /* ignore */ }
-        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'edit-user' }));
-        window.dispatchEvent(new CustomEvent('show-alert', { detail: { type: 'success', message: 'User updated successfully' } }));
+    window.exportExcel = function () {
+        alert('Excel export functionality - Coming soon!');
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchUsers();
+        fetchRoles();
     });
 
-    window.addEventListener('confirm-delete-user', e => {
-        const id = e.detail;
-        if (!id) return;
-        const idx = userAllData.findIndex(u => u.id === id);
-        if (idx > -1) userAllData.splice(idx, 1);
-        try { renderTable(); } catch (err) { /* ignore */ }
-        window.dispatchEvent(new CustomEvent('close-modal', { detail: 'delete-user' }));
-        window.dispatchEvent(new CustomEvent('show-alert', { detail: { type: 'success', message: 'User deleted successfully' } }));
-    });
-
+    // Also run immediately if DOM is already loaded
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        fetchUsers();
+        fetchRoles();
+    }
 })();
