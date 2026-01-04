@@ -1,4 +1,4 @@
-<div id="billingSummaryCards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+<div id="billingSummaryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
     <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-xl p-6 text-white shadow-lg">
         <div class="flex items-center justify-between">
             <div>
@@ -43,18 +43,6 @@
             </div>
             <div class="bg-white/20 p-3 rounded-lg">
                 <i class="fas fa-edit text-2xl"></i>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-purple-100 text-sm font-medium">Active Consumers</p>
-                <p id="card-active-consumers" class="text-3xl font-bold mt-2">0</p>
-            </div>
-            <div class="bg-white/20 p-3 rounded-lg">
-                <i class="fas fa-users text-2xl"></i>
             </div>
         </div>
     </div>

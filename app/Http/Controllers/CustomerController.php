@@ -9,7 +9,8 @@ class CustomerController extends Controller
     public function index()
     {
         session(['active_menu' => 'customer-list']);
-        return view('pages.customer.customer-list');
+
+        return view('pages.customer.enhanced-customer-list');
     }
 
     public function store(Request $request)
@@ -22,10 +23,10 @@ class CustomerController extends Controller
 
         // Here you would typically save to database
         // For now, just return success response
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Customer created successfully.'
+            'message' => 'Customer created successfully.',
         ]);
     }
 
@@ -39,10 +40,10 @@ class CustomerController extends Controller
 
         // Here you would typically update in database
         // For now, just return success response
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Customer updated successfully.'
+            'message' => 'Customer updated successfully.',
         ]);
     }
 
@@ -50,10 +51,10 @@ class CustomerController extends Controller
     {
         // Here you would typically delete from database
         // For now, just return success response
-        
+
         return response()->json([
             'success' => true,
-            'message' => 'Customer deleted successfully.'
+            'message' => 'Customer deleted successfully.',
         ]);
     }
 
@@ -61,10 +62,10 @@ class CustomerController extends Controller
     {
         // Here you would typically get print count from database
         // For now, return mock data
-        
+
         return response()->json([
             'success' => true,
-            'print_count' => rand(0, 10)
+            'print_count' => rand(0, 10),
         ]);
     }
 }

@@ -16,28 +16,24 @@
                     title="Total Consumers" 
                     value="0" 
                     icon="fas fa-users" 
-                    color="blue"
                     id="totalConsumers"
                 />
                 <x-ui.stat-card 
                     title="Total Amount Due" 
                     value="₱ 0.00" 
                     icon="fas fa-exclamation-triangle" 
-                    color="red"
                     id="totalAmountDue"
                 />
                 <x-ui.stat-card 
                     title="Total Paid" 
                     value="₱ 0.00" 
                     icon="fas fa-check-circle" 
-                    color="green"
                     id="totalPaid"
                 />
                 <x-ui.stat-card 
                     title="Outstanding Balance" 
                     value="₱ 0.00" 
                     icon="fas fa-clock" 
-                    color="yellow"
                     id="outstandingBalance"
                 />
             </div>
@@ -118,7 +114,7 @@
 </x-app-layout>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-@vite(['resources/js/data/billing/bill-data.js', 'resources/js/export-print.js'])
+@vite(['resources/js/billing.js'])
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

@@ -326,6 +326,16 @@ function handleFormSubmit() {
                 // Show success modal
                 showSuccessModal(result);
                 
+                // Append to global dataset and persist for Application List
+                try {
+                    if (window.enhancedCustomerData) {
+                        window.enhancedCustomerData.unshift(result.customer);
+                    }
+                    const added = JSON.parse(localStorage.getItem('addedApplicants') || '[]');
+                    added.unshift(result.customer);
+                    localStorage.setItem('addedApplicants', JSON.stringify(added));
+                } catch(e){}
+                
                 // Reset form
                 form.reset();
                 submitButton.innerHTML = originalHTML;

@@ -10,12 +10,16 @@ $pageTitles = [
     'user-add' => 'Add User',
     'user-list' => 'User List',
     'customer-add' => 'Add Customer',
-    'customer-list' => 'Customer List',
+    'customer-list' => 'Application List',
+    'application-list' => 'Application List',
     'payment-management' => 'Payment Management',
     'approve-customer' => 'Customer Approval',
+    // removed standalone application-process
+    'invoice-list' => 'Invoice List',
+    'declined-customer' => 'Declined Customers',
     'service-application' => 'Service Application',
     'service-connection' => 'Service Connection',
-    'consumer-list' => 'Consumer List',
+    'customer-details' => 'Customer Details',
     'billing-management' => 'Billing Management',
     'meter-management' => 'Meter Management',
     'rate-management' => 'Rate Management',
@@ -26,31 +30,57 @@ $pageTitles = [
 ];
 
 // Get current active menu from session or default to dashboard
-$activeMenu = session('active_menu', 'dashboard');
+    $routeToMenu = [
+        'dashboard' => 'dashboard',
+        'user.add' => 'user-add',
+        'user.list' => 'user-list',
+        'customer.add' => 'customer-add',
+        'customer.list' => 'customer-list',
+        'application.list' => 'application-list',
+        'payment.management' => 'payment-management',
+        'approve.customer' => 'approve-customer',
+        // removed application.process
+        'invoice.list' => 'approve-customer',
+        'declined.customer' => 'approve-customer',
+        'service.connection' => 'service-connection',
+        'customer.list' => 'customer-list',
+        'customer.details' => 'customer-details',
+        'billing.main' => 'billing-management',
+        'billing.management' => 'billing-management',
+        'meter.management' => 'meter-management',
+    'rate.management' => 'rate-management',
+    'ledger.management' => 'ledger-management',
+    'analytics' => 'analytics',
+];
+$activeMenu = $routeToMenu[Route::currentRouteName()] ?? session('active_menu', 'dashboard');
 $pageTitle = $pageTitles[$activeMenu] ?? 'Dashboard';
 
 // Define breadcrumb mapping
 $breadcrumbs = [
-    'dashboard' => ['Dashboard'],
-    'user-add' => ['User Management', 'Add User'],
-    'user-list' => ['User Management', 'User List'],
-    'customer-add' => ['Customer Application', 'Add Customer'],
-    'customer-list' => ['Customer Application', 'Customer List'],
-    'payment-management' => ['Customer Application', 'Payment Management'],
-    'approve-customer' => ['Customer Application', 'Customer Approval'],
-    'service-application' => ['Service Application'],
-    'service-connection' => ['Service Connection'],
-    'consumer-list' => ['Consumer List'],
-    'billing-management' => ['Billing Management'],
-    'meter-management' => ['Meter Management'],
-    'rate-management' => ['Rate Management'],
-    'ledger-management' => ['Ledger Management'],
-    'analytics' => ['Analytics'],
-    'settings' => ['Settings'],
-    'report' => ['Report'],
+    'dashboard' => ['Pages', 'Dashboard'],
+    'user-add' => ['Pages', 'User Management', 'Add User'],
+    'user-list' => ['Pages', 'User Management', 'User List'],
+    'customer-add' => ['Pages', 'Application Management', 'Add Customer'],
+    'application-list' => ['Pages', 'Application Management', 'Application List'],
+    'customer-list' => ['Pages', 'Customer Management', 'Customer List'],
+    'payment-management' => ['Pages', 'Payment Management'],
+    'approve-customer' => ['Pages', 'Application Management', 'Customer Approval'],
+    'invoice-list' => ['Pages', 'Application Management', 'Invoice List'],
+    'declined-customer' => ['Pages', 'Application Management', 'Declined Customers'],
+    'service-application' => ['Pages', 'Service Application'],
+    'service-connection' => ['Pages', 'Service Connection'],
+    'customer-details' => ['Pages', 'Customer Management', 'Customer Details'],
+    'billing-management' => ['Pages', 'Billing Management'],
+    'meter-management' => ['Pages', 'Meter Management'],
+    'rate-management' => ['Pages', 'Rate Management'],
+    'ledger-management' => ['Pages', 'Ledger Management'],
+    'analytics' => ['Pages', 'Analytics'],
+    'settings' => ['Pages', 'Settings'],
+    'report' => ['Pages', 'Report'],
 ];
 
-$currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Dashboard'];
+$currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Pages', 'Dashboard'];
+$hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
 @endphp
 
 <nav x-data="{ notifOpen: false, userOpen: false }" class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm z-30 relative sticky top-0">
@@ -69,23 +99,22 @@ $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Dashboard'];
 
                 <!-- Breadcrumb & Title -->
                 <div class="flex flex-col justify-center">
-                    <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
-                        <li class="flex items-center">
-                            <span class="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Pages</span>
-                            @if(count($currentBreadcrumbs) > 1)
-                                <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                                <a href="#" class="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
-                                    {{ $currentBreadcrumbs[0] }}
-                                </a>
-                            @endif
-                            <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </li>
-                        <li class="font-medium text-gray-700 dark:text-gray-300">{{ end($currentBreadcrumbs) }}</li>
-                    </ol>
+                    @if(!$hideBreadcrumb)
+                        <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
+                            @foreach($currentBreadcrumbs as $index => $crumb)
+                                @if($index < count($currentBreadcrumbs) - 1)
+                                    <li class="flex items-center">
+                                        <span class="hover:text-gray-700 dark:hover:text-gray-300 transition-colors">{{ $crumb }}</span>
+                                        <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </li>
+                                @else
+                                    <li class="font-medium text-gray-700 dark:text-gray-300">{{ $crumb }}</li>
+                                @endif
+                            @endforeach
+                        </ol>
+                    @endif
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $pageTitle }}</h1>
                 </div>
             </div>

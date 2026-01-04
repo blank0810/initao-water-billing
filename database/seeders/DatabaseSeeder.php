@@ -3,23 +3,22 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    use WithoutModelEvents;
+
     /**
      * Seed the application's database.
      */
     public function run(): void
     {
-        // Seed address hierarchy (must be in this order due to foreign keys)
-        $this->call([
-            ProvinceSeeder::class,       // 1. Province first (Misamis Oriental)
-            TownSeeder::class,            // 2. Town (Initao)
-            BarangaySeeder::class,        // 3. Barangays (16 barangays in Initao)
-            PurokSeeder::class,           // 4. Puroks (1-A through 12-B per barangay)
+        // User::factory(10)->create();
 
-            // Seed service-related tables
+        // Seed service-related tables
+        $this->call([
             UserTypeSeeder::class,        // User types (ADMIN, BILLING)
             AccountTypeSeeder::class,     // Account types (Individual, Corporation, etc.)
             WaterRateSeeder::class,       // Water rates (Residential, Commercial, etc.)
@@ -31,13 +30,10 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,      // Permissions (16 permissions across 7 modules)
         ]);
 
-        // Create default admin user (optional)
+        // Create default test user
         User::factory()->create([
-            'username' => 'admin',
-            'name' => 'Admin User',
-            'email' => 'admin@initao-water.gov.ph',
-            'u_type' => 3, // ADMIN user type
-            'stat_id' => 1, // ACTIVE status (column name is stat_id in database)
+            'name' => 'Test User',
+            'email' => 'test@example.com',
         ]);
 
         // Seed tables that depend on users (must come after user creation)
