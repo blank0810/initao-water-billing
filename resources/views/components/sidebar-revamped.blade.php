@@ -46,6 +46,7 @@ $user = Auth::user() ?? (object) [
         </a>
 
         <!-- User Management -->
+        @can('users.view')
         <div class="space-y-1">
             <button @click="toggleSubmenu('userManagement')"
                 :class="(activeMenu.startsWith('user-') || openSubmenus.userManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
@@ -61,100 +62,123 @@ $user = Auth::user() ?? (object) [
             </button>
 
             <div x-show="openSubmenus.userManagement && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
+                @can('users.manage')
                 <a href="{{ route('user.add') }}" @click="setActiveMenu('user-add')"
                     :class="activeMenu === 'user-add' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
                     class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
                     <i class="fas fa-user-plus w-4 text-xs mr-2.5"></i>
                     <span>Add User</span>
                 </a>
+                @endcan
                 <a href="{{ route('user.list') }}" @click="setActiveMenu('user-list')"
                     :class="activeMenu === 'user-list' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
                     class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
                     <i class="fas fa-list w-4 text-xs mr-2.5"></i>
                     <span>User List</span>
                 </a>
+                @can('settings.manage')
+                <a href="{{ route('admin.roles.index') }}" @click="setActiveMenu('user-roles')"
+                    :class="activeMenu === 'user-roles' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                    <i class="fas fa-user-shield w-4 text-xs mr-2.5"></i>
+                    <span>Roles</span>
+                </a>
+                <a href="{{ route('admin.permissions.index') }}" @click="setActiveMenu('user-permissions')"
+                    :class="activeMenu === 'user-permissions' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                    <i class="fas fa-key w-4 text-xs mr-2.5"></i>
+                    <span>Permissions</span>
+                </a>
+                <a href="{{ route('admin.role-permissions.matrix') }}" @click="setActiveMenu('user-matrix')"
+                    :class="activeMenu === 'user-matrix' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                    <i class="fas fa-th w-4 text-xs mr-2.5"></i>
+                    <span>Permission Matrix</span>
+                </a>
+                @endcan
             </div>
         </div>
+        @endcan
 
-        <!-- Application Management -->
+        <!-- Customer Application -->
+        @can('customers.view')
         <div class="space-y-1">
-            <button @click="toggleSubmenu('applicationManagement')"
-                :class="(openSubmenus.applicationManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+            <button @click="toggleSubmenu('customerApplication')"
+                :class="(activeMenu.startsWith('customer-') || openSubmenus.customerApplication) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
                 class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
                 <div class="flex items-center min-w-0">
                     <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                        :class="(openSubmenus.applicationManagement) ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                        <i class="fas fa-user-tie text-sm" :class="openSubmenus.applicationManagement ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+                        :class="(activeMenu.startsWith('customer-') || openSubmenus.customerApplication) ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                        <i class="fas fa-user-tie text-sm" :class="(activeMenu.startsWith('customer-') || openSubmenus.customerApplication) ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
                     </div>
-                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Application Management</span>
+                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Customer Application</span>
                 </div>
-                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.applicationManagement }" x-show="sidebarOpen" x-transition></i>
+                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.customerApplication }" x-show="sidebarOpen" x-transition></i>
             </button>
 
-            <div x-show="openSubmenus.applicationManagement && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
+            <div x-show="openSubmenus.customerApplication && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
+                @can('customers.manage')
                 <a href="{{ route('customer.add') }}" @click="setActiveMenu('customer-add')"
                     :class="activeMenu === 'customer-add' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
                     class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
                     <i class="fas fa-user-plus w-4 text-xs mr-2.5"></i>
                     <span>Add Customer</span>
                 </a>
-                <a href="{{ route('application.list') }}" @click="setActiveMenu('application-list')"
-                    :class="activeMenu === 'application-list' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                @endcan
+                <a href="{{ route('customer.list') }}" @click="setActiveMenu('customer-list')"
+                    :class="activeMenu === 'customer-list' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
                     class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
                     <i class="fas fa-list w-4 text-xs mr-2.5"></i>
-                    <span>Application List</span>
+                    <span>Customer List</span>
                 </a>
+                @can('payments.view')
+                <a href="{{ route('payment.management') }}" @click="setActiveMenu('payment-management')"
+                    :class="activeMenu === 'payment-management' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                    <i class="fas fa-credit-card w-4 text-xs mr-2.5"></i>
+                    <span>Payment</span>
+                </a>
+                @endcan
+                @can('customers.manage')
                 <a href="{{ route('approve.customer') }}" @click="setActiveMenu('approve-customer')"
                     :class="activeMenu === 'approve-customer' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
                     class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
                     <i class="fas fa-check-circle w-4 text-xs mr-2.5"></i>
                     <span>Approval</span>
                 </a>
+                @endcan
             </div>
         </div>
+        @endcan
 
-        <!-- Customer Management -->
-        <div class="space-y-1">
-            <button @click="toggleSubmenu('customerManagement')"
-                :class="(openSubmenus.customerManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
-                <div class="flex items-center min-w-0">
-                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                        :class="(openSubmenus.customerManagement) ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                        <i class="fas fa-users text-sm" :class="(openSubmenus.customerManagement) ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
-                    </div>
-                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Customer Management</span>
-                </div>
-                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.customerManagement }" x-show="sidebarOpen" x-transition></i>
-            </button>
-
-            <div x-show="openSubmenus.customerManagement && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
-                <a href="{{ route('customer.list') }}" @click="setActiveMenu('customer-list')"
-                    :class="activeMenu === 'customer-list' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-users w-4 text-xs mr-2.5"></i>
-                    <span>Customer List</span>
-                </a>
-                <a href="{{ route('service.connection') }}" @click="setActiveMenu('service-connection')"
-                    :class="activeMenu === 'service-connection' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-plug w-4 text-xs mr-2.5"></i>
-                    <span>Service Connections</span>
-                </a>
-            </div>
-        </div>
-
-        <a href="{{ route('payment.management') }}" @click="setActiveMenu('payment-management')"
-            :class="activeMenu === 'payment-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+        <!-- Connections -->
+        @can('customers.manage')
+        <a href="{{ route('service.connection') }}" @click="setActiveMenu('service-connection')"
+            :class="activeMenu === 'service-connection' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
             <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'payment-management' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-credit-card text-sm" :class="activeMenu === 'payment-management' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+                :class="activeMenu === 'service-connection' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                <i class="fas fa-plug text-sm" :class="activeMenu === 'service-connection' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
             </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Payment Management</span>
+            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Service Connections</span>
         </a>
+        @endcan
+
+        <!-- Consumer List -->
+        @can('customers.view')
+        <a href="{{ route('consumer.list') }}" @click="setActiveMenu('consumer-list')"
+            :class="activeMenu === 'consumer-list' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
+            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                :class="activeMenu === 'consumer-list' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                <i class="fas fa-file-alt text-sm" :class="activeMenu === 'consumer-list' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            </div>
+            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Consumer List</span>
+        </a>
+        @endcan
 
         <!-- Billing Management -->
+        @can('billing.view')
         <a href="{{ route('billing.management') }}" @click="setActiveMenu('billing-management')"
             :class="activeMenu === 'billing-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -164,8 +188,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Billing</span>
         </a>
+        @endcan
 
         <!-- Meter Management -->
+        @can('meters.view')
         <a href="{{ route('meter.management') }}" @click="setActiveMenu('meter-management')"
             :class="activeMenu === 'meter-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -175,8 +201,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Meter</span>
         </a>
+        @endcan
 
         <!-- Rate Management -->
+        @can('settings.manage')
         <a href="{{ route('rate.management') }}" @click="setActiveMenu('rate-management')"
             :class="activeMenu === 'rate-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -186,8 +214,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Rate</span>
         </a>
+        @endcan
 
         <!-- Ledger Management -->
+        @can('billing.view')
         <a href="{{ route('ledger.management') }}" @click="setActiveMenu('ledger-management')"
             :class="activeMenu === 'ledger-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -197,8 +227,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Ledger</span>
         </a>
+        @endcan
 
         <!-- Analytics -->
+        @can('reports.view')
         <a href="{{ route('analytics') }}" @click="setActiveMenu('analytics')"
             :class="activeMenu === 'analytics' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -208,6 +240,21 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Analytics</span>
         </a>
+        @endcan
+
+        <!-- Activity Log - Super Admin Only -->
+        @role('super_admin')
+        <a href="{{ route('admin.activity-log') }}" @click="setActiveMenu('activity-log')"
+            :class="activeMenu === 'activity-log' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
+            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                :class="activeMenu === 'activity-log' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                <i class="fas fa-history text-sm" :class="activeMenu === 'activity-log' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            </div>
+            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Activity Log</span>
+        </a>
+        @endrole
+
     </nav>
 
     <!-- Bottom Actions -->
@@ -216,12 +263,16 @@ $user = Auth::user() ?? (object) [
             <a href="{{ url('/profile') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Profile">
                 <i class="fas fa-user text-gray-600 dark:text-gray-400"></i>
             </a>
+            @can('settings.manage')
             <a href="{{ url('/settings') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Settings">
                 <i class="fas fa-cog text-gray-600 dark:text-gray-400"></i>
             </a>
+            @endcan
+            @can('reports.view')
             <a href="{{ url('/report') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Report">
                 <i class="fas fa-flag text-gray-600 dark:text-gray-400"></i>
             </a>
+            @endcan
         </div>
     </div>
 </aside>
@@ -233,8 +284,7 @@ $user = Auth::user() ?? (object) [
             activeMenu: '{{ session('active_menu', 'dashboard') }}',
             openSubmenus: {
                 userManagement: {{ session('active_menu') && str_starts_with(session('active_menu'), 'user-') ? 'true' : 'false' }},
-                applicationManagement: {{ session('active_menu') && (in_array(session('active_menu'), ['application-list','customer-add', 'approve-customer', 'invoice-list', 'declined-customer', 'payment-management'])) ? 'true' : 'false' }},
-                customerManagement: {{ session('active_menu') && (in_array(session('active_menu'), ['customer-list','service-connection'])) ? 'true' : 'false' }}
+                customerApplication: {{ session('active_menu') && (str_starts_with(session('active_menu'), 'customer-') || in_array(session('active_menu'), ['payment-management', 'approve-customer', 'invoice-list', 'declined-customer'])) ? 'true' : 'false' }}
             },
 
             init() {
@@ -248,24 +298,26 @@ $user = Auth::user() ?? (object) [
                     '/dashboard': 'dashboard',
                     '/customer/add': 'customer-add',
                     '/customer/list': 'customer-list',
-                    '/application/list': 'application-list',
                     '/customer/payment-management': 'payment-management',
                     '/customer/approve-customer': 'approve-customer',
-                    '/customer/invoice-list': 'approve-customer',
-                    '/customer/declined-customer': 'approve-customer',
+                    '/customer/invoice-list': 'invoice-list',
+                    '/customer/declined-customer': 'declined-customer',
                     '/user/add': 'user-add',
                     '/user/list': 'user-list',
+                    '/consumer/list': 'consumer-list',
                     '/billing/management': 'billing-management',
                     '/meter/management': 'meter-management',
                     '/rate/management': 'rate-management',
                     '/ledger/management': 'ledger-management',
-                    '/analytics': 'analytics'
+                    '/analytics': 'analytics',
+                    '/admin/roles': 'user-roles',
+                    '/admin/permissions': 'user-permissions',
+                    '/admin/role-permissions': 'user-matrix',
+                    '/admin/activity-log': 'activity-log'
                 };
 
                 if (path.startsWith('/customer/payment/')) {
                     this.activeMenu = 'payment-management';
-                } else if (path.startsWith('/customer/invoice-list') || path.startsWith('/customer/declined-customer')) {
-                    this.activeMenu = 'approve-customer';
                 } else {
                     this.activeMenu = routeMap[path] || '{{ session('active_menu', 'dashboard') }}';
                 }
@@ -274,10 +326,8 @@ $user = Auth::user() ?? (object) [
 
                 if (this.activeMenu.startsWith('user-')) {
                     this.openSubmenus.userManagement = true;
-                } else if (['application-list','customer-add', 'approve-customer', 'invoice-list', 'declined-customer', 'payment-management'].includes(this.activeMenu)) {
-                    this.openSubmenus.applicationManagement = true;
-                } else if (['customer-list', 'service-connection'].includes(this.activeMenu)) {
-                    this.openSubmenus.customerManagement = true;
+                } else if (this.activeMenu.startsWith('customer-') || ['payment-management', 'approve-customer', 'invoice-list', 'declined-customer'].includes(this.activeMenu)) {
+                    this.openSubmenus.customerApplication = true;
                 }
 
                 if (window.appState) {
@@ -315,20 +365,13 @@ $user = Auth::user() ?? (object) [
                 localStorage.setItem('activeMenu', menu);
                 if (menu.startsWith('user-')) {
                     this.openSubmenus.userManagement = true;
-                    this.openSubmenus.applicationManagement = false;
-                    this.openSubmenus.customerManagement = false;
-                } else if (['application-list','customer-add', 'approve-customer', 'invoice-list', 'declined-customer', 'payment-management'].includes(menu)) {
-                    this.openSubmenus.applicationManagement = true;
+                    this.openSubmenus.customerApplication = false;
+                } else if (menu.startsWith('customer-') || ['payment-management', 'approve-customer', 'invoice-list', 'declined-customer'].includes(menu)) {
+                    this.openSubmenus.customerApplication = true;
                     this.openSubmenus.userManagement = false;
-                    this.openSubmenus.customerManagement = false;
-                } else if (['customer-list','service-connection'].includes(menu)) {
-                    this.openSubmenus.customerManagement = true;
-                    this.openSubmenus.userManagement = false;
-                    this.openSubmenus.applicationManagement = false;
                 } else {
                     this.openSubmenus.userManagement = false;
-                    this.openSubmenus.applicationManagement = false;
-                    this.openSubmenus.customerManagement = false;
+                    this.openSubmenus.customerApplication = false;
                 }
             },
 

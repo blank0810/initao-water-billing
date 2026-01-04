@@ -79,6 +79,7 @@
                     <!-- Button -->
                     <div>
                         <x-primary-button
+                            type="submit"
                             class="w-full justify-center bg-indigo-600 hover:bg-indigo-500 focus:ring-4 focus:ring-indigo-300 text-white font-semibold py-3 rounded-lg transition-colors duration-300 shadow hover:shadow-md">
                             {{ __('Sign In') }}
                         </x-primary-button>

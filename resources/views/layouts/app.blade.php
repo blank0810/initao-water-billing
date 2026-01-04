@@ -38,10 +38,10 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-        
+
         <!-- Font Awesome -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-        
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/network-detector.js'])
 
@@ -61,7 +61,7 @@
                     opacity: 1;
                 }
             }
-            
+
             .animate-slide-in {
                 animation: slide-in 0.3s ease-out;
                 transition: all 0.3s ease-out;
@@ -184,8 +184,8 @@
             }
         </script>
 
-    <!--@ include('components.page-loader')-->
-   
+        {{-- Disabled: Global page loader - uncomment to re-enable --}}
+        {{-- @include('components.page-loader') --}}
 
         @stack('scripts')
 
