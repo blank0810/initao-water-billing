@@ -62,8 +62,8 @@ class ActivityLogService
             ->distinct()
             ->pluck('causer_id');
 
-        return User::whereIn('user_id', $userIds)
-            ->select('user_id', 'name', 'username', 'email')
+        return User::whereIn('id', $userIds)
+            ->select('id', 'name', 'username', 'email')
             ->orderBy('name')
             ->get();
     }
