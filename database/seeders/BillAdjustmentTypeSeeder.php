@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Status;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Status;
 
 class BillAdjustmentTypeSeeder extends Seeder
 {
@@ -56,6 +56,6 @@ class BillAdjustmentTypeSeeder extends Seeder
             ->whereNull('created_at')
             ->update(['created_at' => now()]);
 
-        $this->command->info('Bill Adjustment Types seeded: ' . count($adjustmentTypes) . ' adjustment types');
+        $this->command->info('Bill Adjustment Types seeded: '.count($adjustmentTypes).' adjustment types');
     }
 }

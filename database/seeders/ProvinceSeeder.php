@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Status;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Status;
 
 class ProvinceSeeder extends Seeder
 {
@@ -21,7 +21,7 @@ class ProvinceSeeder extends Seeder
             ->exists();
 
         // Only insert if it doesn't exist
-        if (!$existing) {
+        if (! $existing) {
             DB::table('province')->insert([
                 'prov_desc' => 'Misamis Oriental',
                 'stat_id' => $activeStatusId,

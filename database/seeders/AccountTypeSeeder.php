@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Status;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Status;
 
 class AccountTypeSeeder extends Seeder
 {
@@ -41,6 +41,6 @@ class AccountTypeSeeder extends Seeder
             ->whereNull('created_at')
             ->update(['created_at' => now()]);
 
-        $this->command->info('Account Types seeded: ' . count($accountTypes) . ' types');
+        $this->command->info('Account Types seeded: '.count($accountTypes).' types');
     }
 }

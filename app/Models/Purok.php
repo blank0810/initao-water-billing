@@ -7,14 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Purok extends Model
 {
     protected $table = 'purok';
+
     protected $primaryKey = 'p_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'p_desc',
-        'stat_id'
+        'stat_id',
     ];
 
     /**

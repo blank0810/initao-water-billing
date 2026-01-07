@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class ServiceApplication extends Model
 {
     protected $table = 'ServiceApplication';
+
     protected $primaryKey = 'application_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -17,7 +21,7 @@ class ServiceApplication extends Model
         'address_id',
         'application_number',
         'submitted_at',
-        'stat_id'
+        'stat_id',
     ];
 
     protected $casts = [

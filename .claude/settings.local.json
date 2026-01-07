@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(php artisan migrate:*)",
+      "Bash(php artisan db:seed:*)",
+      "Bash(php artisan route:list:*)",
+      "Bash(php artisan config:clear:*)",
+      "Bash(php artisan optimize:clear:*)",
+      "Bash(php artisan:*)"
+    ]
+  }
+}

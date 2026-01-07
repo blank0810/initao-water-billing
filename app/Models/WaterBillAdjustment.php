@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class WaterBillAdjustment extends Model
 {
     protected $table = 'water_bill_adjustments';
+
     protected $primaryKey = 'wba_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -19,7 +23,7 @@ class WaterBillAdjustment extends Model
         'new_amount',
         'remarks',
         'create_date',
-        'stat_id'
+        'stat_id',
     ];
 
     protected $casts = [

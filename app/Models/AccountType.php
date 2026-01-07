@@ -7,14 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class AccountType extends Model
 {
     protected $table = 'account_type';
+
     protected $primaryKey = 'at_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'at_desc',
-        'stat_id'
+        'stat_id',
     ];
 
     /**

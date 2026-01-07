@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -44,7 +43,7 @@ return new class extends Migration
             $indexes = [
                 'consumer_ledger_consumer_index',
                 'consumer_ledger_number_index',
-                'consumer_ledger_date_index'
+                'consumer_ledger_date_index',
             ];
 
             foreach ($indexes as $index) {

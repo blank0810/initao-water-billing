@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Status;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Status;
 
 class PurokSeeder extends Seeder
 {
@@ -28,7 +28,7 @@ class PurokSeeder extends Seeder
                     ->exists();
 
                 // Only insert if it doesn't exist
-                if (!$existing) {
+                if (! $existing) {
                     DB::table('purok')->insert([
                         'p_desc' => $purokDesc,
                         'stat_id' => $activeStatusId,
@@ -40,6 +40,6 @@ class PurokSeeder extends Seeder
             }
         }
 
-        $this->command->info('Puroks seeded: ' . $insertCount . ' new puroks (Purok 1-A through Purok 12-B)');
+        $this->command->info('Puroks seeded: '.$insertCount.' new puroks (Purok 1-A through Purok 12-B)');
     }
 }

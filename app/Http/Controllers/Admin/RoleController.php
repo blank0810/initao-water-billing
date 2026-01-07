@@ -21,6 +21,7 @@ class RoleController extends Controller
     public function index()
     {
         session(['active_menu' => 'user-roles']);
+
         return view('pages.admin.roles.index');
     }
 
@@ -30,6 +31,7 @@ class RoleController extends Controller
     public function apiIndex(): JsonResponse
     {
         $roles = $this->roleService->getAllRolesWithCounts();
+
         return response()->json(['data' => $roles]);
     }
 
@@ -39,6 +41,7 @@ class RoleController extends Controller
     public function getAvailableRoles(): JsonResponse
     {
         $roles = Role::select('role_id', 'role_name', 'description')->get();
+
         return response()->json(['data' => $roles]);
     }
 
@@ -48,10 +51,11 @@ class RoleController extends Controller
     public function store(StoreRoleRequest $request): JsonResponse
     {
         $role = $this->roleService->createRole($request->validated());
+
         return response()->json([
             'success' => true,
             'message' => 'Role created successfully',
-            'data' => $role
+            'data' => $role,
         ], 201);
     }
 
@@ -61,6 +65,7 @@ class RoleController extends Controller
     public function show(Role $role): JsonResponse
     {
         $roleData = $this->roleService->getRoleWithDetails($role);
+
         return response()->json(['data' => $roleData]);
     }
 
@@ -70,10 +75,11 @@ class RoleController extends Controller
     public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
         $updatedRole = $this->roleService->updateRole($role, $request->validated());
+
         return response()->json([
             'success' => true,
             'message' => 'Role updated successfully',
-            'data' => $updatedRole
+            'data' => $updatedRole,
         ]);
     }
 
@@ -84,16 +90,16 @@ class RoleController extends Controller
     {
         $result = $this->roleService->deleteRole($role);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return response()->json([
                 'success' => false,
-                'message' => $result['message']
+                'message' => $result['message'],
             ], 422);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Role deleted successfully'
+            'message' => 'Role deleted successfully',
         ]);
     }
 
@@ -103,6 +109,7 @@ class RoleController extends Controller
     public function getRoleUsers(Role $role): JsonResponse
     {
         $users = $role->users()->select('users.id', 'users.name', 'users.email')->get();
+
         return response()->json(['data' => $users]);
     }
 }

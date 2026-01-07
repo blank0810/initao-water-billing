@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentAllocation extends Model
 {
     protected $table = 'PaymentAllocation';
+
     protected $primaryKey = 'payment_allocation_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -18,7 +22,7 @@ class PaymentAllocation extends Model
         'target_id',
         'amount_applied',
         'period_id',
-        'connection_id'
+        'connection_id',
     ];
 
     protected $casts = [
@@ -57,6 +61,7 @@ class PaymentAllocation extends Model
         if ($this->target_type === 'BILL') {
             return $this->belongsTo(WaterBillHistory::class, 'target_id', 'bill_id');
         }
+
         return null;
     }
 
@@ -68,6 +73,7 @@ class PaymentAllocation extends Model
         if ($this->target_type === 'CHARGE') {
             return $this->belongsTo(CustomerCharge::class, 'target_id', 'charge_id');
         }
+
         return null;
     }
 }

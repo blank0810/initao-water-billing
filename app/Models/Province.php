@@ -7,14 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Province extends Model
 {
     protected $table = 'province';
+
     protected $primaryKey = 'prov_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'prov_desc',
-        'stat_id'
+        'stat_id',
     ];
 
     /**

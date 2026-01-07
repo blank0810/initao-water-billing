@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class MeterReadingOld extends Model
 {
     protected $table = 'meter_reading';
+
     protected $primaryKey = 'mrr_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -18,7 +22,7 @@ class MeterReadingOld extends Model
         'create_date',
         'read_date',
         'current_reading',
-        'stat_id'
+        'stat_id',
     ];
 
     protected $casts = [

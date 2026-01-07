@@ -7,14 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Barangay extends Model
 {
     protected $table = 'barangay';
+
     protected $primaryKey = 'b_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'b_desc',
-        'stat_id'
+        'stat_id',
     ];
 
     /**

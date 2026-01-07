@@ -14,20 +14,20 @@ return new class extends Migration
         Schema::create('user_roles', function (Blueprint $table) {
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('role_id');
-            
+
             // Composite primary key
             $table->primary(['user_id', 'role_id']);
-            
+
             // Foreign keys
             $table->foreign('user_id')
-                  ->references('id')
-                  ->on('users')
-                  ->onDelete('cascade');
-                  
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
+
             $table->foreign('role_id')
-                  ->references('role_id')
-                  ->on('roles')
-                  ->onDelete('cascade');
+                ->references('role_id')
+                ->on('roles')
+                ->onDelete('cascade');
         });
     }
 
@@ -40,7 +40,7 @@ return new class extends Migration
             $table->dropForeign(['user_id']);
             $table->dropForeign(['role_id']);
         });
-        
+
         Schema::dropIfExists('user_roles');
     }
 };

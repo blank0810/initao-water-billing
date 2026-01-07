@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Status;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Status;
 
 class BarangaySeeder extends Seeder
 {
@@ -43,7 +43,7 @@ class BarangaySeeder extends Seeder
                 ->exists();
 
             // Only insert if it doesn't exist
-            if (!$existing) {
+            if (! $existing) {
                 DB::table('barangay')->insert([
                     'b_desc' => $barangay,
                     'stat_id' => $activeStatusId,
@@ -54,6 +54,6 @@ class BarangaySeeder extends Seeder
             }
         }
 
-        $this->command->info('Barangays seeded: ' . $insertCount . ' new barangays in Initao');
+        $this->command->info('Barangays seeded: '.$insertCount.' new barangays in Initao');
     }
 }

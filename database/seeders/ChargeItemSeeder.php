@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Status;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Status;
 
 class ChargeItemSeeder extends Seeder
 {
@@ -124,6 +124,6 @@ class ChargeItemSeeder extends Seeder
             ->whereNull('created_at')
             ->update(['created_at' => now()]);
 
-        $this->command->info('Charge Items seeded: ' . count($chargeItems) . ' charge items');
+        $this->command->info('Charge Items seeded: '.count($chargeItems).' charge items');
     }
 }

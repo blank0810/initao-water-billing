@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -48,7 +47,7 @@ return new class extends Migration
                 'misc_bill_connection_index',
                 'misc_bill_number_index',
                 'misc_bill_billing_date_index',
-                'misc_bill_paid_index'
+                'misc_bill_paid_index',
             ];
 
             foreach ($indexes as $index) {

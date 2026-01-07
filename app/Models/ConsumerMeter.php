@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class ConsumerMeter extends Model
 {
     protected $table = 'consumer_meters';
+
     protected $primaryKey = 'cm_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -20,7 +24,7 @@ class ConsumerMeter extends Model
         'last_reading',
         'pulled_out_at',
         'stat_id',
-        'user_id'
+        'user_id',
     ];
 
     protected $casts = [
