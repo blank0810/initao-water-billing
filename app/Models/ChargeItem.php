@@ -7,14 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class ChargeItem extends Model
 {
     protected $table = 'ChargeItem';
+
     protected $primaryKey = 'charge_item_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'name',
-        'default_amount'
+        'default_amount',
     ];
 
     protected $casts = [

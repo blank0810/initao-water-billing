@@ -9,14 +9,16 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         session(['active_menu' => 'payment-management']);
+
         return view('pages.payment.payment-management');
     }
 
     public function create($customerCode = null)
     {
         session(['active_menu' => 'payment-management']);
+
         return view('pages.payment.create-payment', [
-            'customerCode' => $customerCode
+            'customerCode' => $customerCode,
         ]);
     }
 
@@ -33,15 +35,15 @@ class PaymentController extends Controller
         ];
 
         $totalBilled = array_sum(array_column($payments, 'amount'));
-        $totalPaid = array_sum(array_filter(array_column($payments, 'amount'), function($amount, $key) use ($payments) {
+        $totalPaid = array_sum(array_filter(array_column($payments, 'amount'), function ($amount, $key) use ($payments) {
             return $payments[$key]['status'] === 'Active / Connected';
         }, ARRAY_FILTER_USE_BOTH));
         $totalPending = $totalBilled - $totalPaid;
 
         return [
-            'totalBilled' => '₱ ' . number_format($totalBilled, 2),
-            'totalPaid' => '₱ ' . number_format($totalPaid, 2),
-            'totalPending' => '₱ ' . number_format($totalPending, 2),
+            'totalBilled' => '₱ '.number_format($totalBilled, 2),
+            'totalPaid' => '₱ '.number_format($totalPaid, 2),
+            'totalPending' => '₱ '.number_format($totalPending, 2),
             'totalTransactions' => count($payments),
         ];
     }

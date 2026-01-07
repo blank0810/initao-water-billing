@@ -7,20 +7,29 @@ use Illuminate\Database\Eloquent\Model;
 class Period extends Model
 {
     protected $table = 'period';
+
     protected $primaryKey = 'per_id';
-    public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
-        'per_start_date',
-        'create_date',
-        'stat_id'
+        'per_name',
+        'per_code',
+        'start_date',
+        'end_date',
+        'is_closed',
+        'closed_at',
+        'closed_by',
+        'stat_id',
     ];
 
     protected $casts = [
-        'per_start_date' => 'datetime',
-        'create_date' => 'datetime',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'is_closed' => 'boolean',
+        'closed_at' => 'datetime',
     ];
 
     /**
@@ -29,6 +38,14 @@ class Period extends Model
     public function status()
     {
         return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+    }
+
+    /**
+     * Get the user who closed this period
+     */
+    public function closedByUser()
+    {
+        return $this->belongsTo(User::class, 'closed_by', 'id');
     }
 
     /**
@@ -85,5 +102,21 @@ class Period extends Model
     public function readingSchedules()
     {
         return $this->hasMany(ReadingSchedule::class, 'per_id', 'per_id');
+    }
+
+    /**
+     * Get the water rates for this period
+     */
+    public function waterRates()
+    {
+        return $this->hasMany(WaterRate::class, 'period_id', 'per_id');
+    }
+
+    /**
+     * Check if this period has custom rates
+     */
+    public function hasCustomRates(): bool
+    {
+        return $this->waterRates()->exists();
     }
 }

@@ -246,6 +246,11 @@ Route::middleware('auth')->group(function () {
 
             return view('pages.meter.overall-data.overall-data');
         })->name('meter.overall-data');
+
+        // Meter Inventory API (read-only)
+        Route::get('/meters/list', [\App\Http\Controllers\MeterController::class, 'index'])->name('meters.list');
+        Route::get('/meters/stats', [\App\Http\Controllers\MeterController::class, 'stats'])->name('meters.stats');
+        Route::get('/meters/{meterId}', [\App\Http\Controllers\MeterController::class, 'show'])->name('meters.show');
     });
 
     // Meter Management - Manage (meters.manage permission)
@@ -253,6 +258,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/meter/assignment', function () {
             return view('pages.meter.meter-assignment');
         })->name('meter.assignment');
+
+        // Meter Inventory CRUD API
+        Route::post('/meters', [\App\Http\Controllers\MeterController::class, 'store'])->name('meters.store');
+        Route::put('/meters/{meterId}', [\App\Http\Controllers\MeterController::class, 'update'])->name('meters.update');
+        Route::delete('/meters/{meterId}', [\App\Http\Controllers\MeterController::class, 'destroy'])->name('meters.destroy');
+        Route::post('/meters/{meterId}/faulty', [\App\Http\Controllers\MeterController::class, 'markFaulty'])->name('meters.faulty');
     });
 
     // -------------------------------------------------------------------------
@@ -270,6 +281,25 @@ Route::middleware('auth')->group(function () {
 
             return view('pages.rate.overall-data.overall-data');
         })->name('rate.overall-data');
+
+        // Period Rates API
+        Route::get('/rate/periods', [\App\Http\Controllers\RateController::class, 'getPeriods'])->name('rate.periods');
+        Route::get('/rate/account-types', [\App\Http\Controllers\RateController::class, 'getAccountTypes'])->name('rate.account-types');
+        Route::get('/rate/periods/{periodId}/rates', [\App\Http\Controllers\RateController::class, 'getRatesForPeriod'])->name('rate.periods.rates');
+        Route::post('/rate/periods/{periodId}/rates/copy', [\App\Http\Controllers\RateController::class, 'copyRatesToPeriod'])->name('rate.periods.rates.copy');
+        Route::put('/rate/rates/{rateId}', [\App\Http\Controllers\RateController::class, 'updateRate'])->name('rate.rates.update');
+        Route::post('/rate/rates/upload', [\App\Http\Controllers\RateController::class, 'uploadRates'])->name('rate.rates.upload');
+        Route::get('/rate/template', [\App\Http\Controllers\RateController::class, 'downloadTemplate'])->name('rate.template');
+
+        // Period Management API
+        Route::get('/periods/list', [\App\Http\Controllers\PeriodController::class, 'index'])->name('periods.list');
+        Route::post('/periods', [\App\Http\Controllers\PeriodController::class, 'store'])->name('periods.store');
+        Route::get('/periods/{periodId}', [\App\Http\Controllers\PeriodController::class, 'show'])->name('periods.show');
+        Route::put('/periods/{periodId}', [\App\Http\Controllers\PeriodController::class, 'update'])->name('periods.update');
+        Route::delete('/periods/{periodId}', [\App\Http\Controllers\PeriodController::class, 'destroy'])->name('periods.destroy');
+        Route::post('/periods/{periodId}/close', [\App\Http\Controllers\PeriodController::class, 'closePeriod'])->name('periods.close');
+        Route::post('/periods/{periodId}/open', [\App\Http\Controllers\PeriodController::class, 'openPeriod'])->name('periods.open');
+        Route::post('/periods/generate-from-date', [\App\Http\Controllers\PeriodController::class, 'generateFromDate'])->name('periods.generate-from-date');
 
         Route::get('/settings', function () {
             session(['active_menu' => 'settings']);

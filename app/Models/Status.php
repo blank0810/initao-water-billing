@@ -7,12 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Status extends Model
 {
     protected $primaryKey = 'stat_id';
+
     protected $fillable = ['stat_desc'];
+
     public $timestamps = false;
 
     // Status constants
     public const PENDING = 'PENDING';
+
     public const ACTIVE = 'ACTIVE';
+
     public const INACTIVE = 'INACTIVE';
 
     /**

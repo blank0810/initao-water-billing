@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class ConsumerAddress extends Model
 {
     protected $table = 'consumer_address';
+
     protected $primaryKey = 'ca_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'integer';
 
     protected $fillable = [
@@ -17,7 +21,7 @@ class ConsumerAddress extends Model
         'b_id',
         't_id',
         'prov_id',
-        'stat_id'
+        'stat_id',
     ];
 
     /**

@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Customer extends Model
 {
     protected $table = 'customer';
+
     protected $primaryKey = 'cust_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -21,7 +25,7 @@ class Customer extends Model
         'land_mark',
         'stat_id',
         'c_type',
-        'resolution_no'
+        'resolution_no',
     ];
 
     protected $casts = [

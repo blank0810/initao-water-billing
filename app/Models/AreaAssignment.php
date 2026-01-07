@@ -7,16 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 class AreaAssignment extends Model
 {
     protected $table = 'AreaAssignment';
+
     protected $primaryKey = 'area_assignment_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'area_id',
         'meter_reader_id',
         'effective_from',
-        'effective_to'
+        'effective_to',
     ];
 
     protected $casts = [

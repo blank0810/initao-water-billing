@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -42,7 +41,7 @@ return new class extends Migration
             $indexes = [
                 'misc_reference_type_index',
                 'misc_reference_code_index',
-                'misc_reference_active_index'
+                'misc_reference_active_index',
             ];
 
             foreach ($indexes as $index) {

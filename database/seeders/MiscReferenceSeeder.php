@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use App\Models\Status;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class MiscReferenceSeeder extends Seeder
 {
@@ -18,8 +18,9 @@ class MiscReferenceSeeder extends Seeder
 
         // Get the first user (admin) as the creator
         // If no users exist, skip seeding (user should be seeded first)
-        if (!DB::table('users')->exists()) {
+        if (! DB::table('users')->exists()) {
             $this->command->warn('No users found. Please seed users first before seeding misc references.');
+
             return;
         }
 
@@ -54,7 +55,7 @@ class MiscReferenceSeeder extends Seeder
                 ->exists();
 
             // Only insert if it doesn't exist
-            if (!$existing) {
+            if (! $existing) {
                 DB::table('misc_reference')->insert([
                     'reference_type' => $reference['reference_type'],
                     'reference_code' => $reference['reference_code'],
@@ -70,6 +71,6 @@ class MiscReferenceSeeder extends Seeder
             }
         }
 
-        $this->command->info('Misc References seeded: ' . $insertCount . ' new reference types');
+        $this->command->info('Misc References seeded: '.$insertCount.' new reference types');
     }
 }

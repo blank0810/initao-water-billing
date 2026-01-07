@@ -14,6 +14,7 @@ class PermissionService
     {
         return Permission::withCount('roles')->get()->map(function ($permission) {
             $module = explode('.', $permission->permission_name)[0] ?? 'other';
+
             return [
                 'permission_id' => $permission->permission_id,
                 'permission_name' => $permission->permission_name,
@@ -36,7 +37,7 @@ class PermissionService
             $module = explode('.', $permission->permission_name)[0] ?? 'other';
             $moduleKey = ucfirst($module);
 
-            if (!isset($grouped[$moduleKey])) {
+            if (! isset($grouped[$moduleKey])) {
                 $grouped[$moduleKey] = [];
             }
 
@@ -63,7 +64,7 @@ class PermissionService
             'permission_name' => $permission->permission_name,
             'description' => $permission->description,
             'module' => ucfirst(explode('.', $permission->permission_name)[0] ?? 'other'),
-            'roles' => $permission->roles->map(fn($r) => [
+            'roles' => $permission->roles->map(fn ($r) => [
                 'role_id' => $r->role_id,
                 'role_name' => $r->role_name,
                 'description' => $r->description,

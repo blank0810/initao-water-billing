@@ -7,14 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Area extends Model
 {
     protected $table = 'area';
+
     protected $primaryKey = 'a_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'a_desc',
-        'stat_id'
+        'stat_id',
     ];
 
     /**

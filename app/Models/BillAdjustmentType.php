@@ -7,15 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 class BillAdjustmentType extends Model
 {
     protected $table = 'BillAdjustmentType';
+
     protected $primaryKey = 'bill_adjustment_type_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'name',
         'direction',
-        'stat_id'
+        'stat_id',
     ];
 
     /**

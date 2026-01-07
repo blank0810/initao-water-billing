@@ -27,7 +27,7 @@ return new class extends Migration
         if (Schema::hasTable('user_roles')) {
             Schema::dropIfExists('user_roles');
         }
-        
+
         Schema::dropIfExists('roles');
     }
 };

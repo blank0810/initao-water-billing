@@ -7,16 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 class ReadingSchedule extends Model
 {
     protected $table = 'reading_schedule';
+
     protected $primaryKey = 'rs_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'a_id',
         'per_id',
         'rs_start_date',
-        'stat_id'
+        'stat_id',
     ];
 
     protected $casts = [

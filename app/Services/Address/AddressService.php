@@ -2,14 +2,14 @@
 
 namespace App\Services\Address;
 
-use App\Models\Province;
-use App\Models\Town;
-use App\Models\Barangay;
-use App\Models\Purok;
 use App\Models\AccountType;
-use App\Models\WaterRate;
+use App\Models\Barangay;
 use App\Models\ChargeItem;
+use App\Models\Province;
+use App\Models\Purok;
 use App\Models\Status;
+use App\Models\Town;
+use App\Models\WaterRate;
 
 class AddressService
 {
@@ -40,7 +40,6 @@ class AddressService
     /**
      * Get towns by province
      *
-     * @param int $provinceId
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getTownsByProvince(int $provinceId)

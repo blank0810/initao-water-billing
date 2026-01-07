@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentTransaction extends Model
 {
     protected $table = 'payment_transactions';
+
     protected $primaryKey = 'pt_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -20,7 +24,7 @@ class PaymentTransaction extends Model
         'paid_amount',
         'amount_diff',
         'stat_id',
-        'user_id'
+        'user_id',
     ];
 
     protected $casts = [

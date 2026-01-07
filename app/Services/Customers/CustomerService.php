@@ -2,12 +2,12 @@
 
 namespace App\Services\Customers;
 
-use App\Models\Customer;
-use App\Models\ConsumerAddress;
-use App\Models\ServiceApplication;
-use App\Models\CustomerCharge;
-use App\Models\Status;
 use App\Http\Helpers\CustomerHelper;
+use App\Models\ConsumerAddress;
+use App\Models\Customer;
+use App\Models\CustomerCharge;
+use App\Models\ServiceApplication;
+use App\Models\Status;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +16,6 @@ class CustomerService
 {
     /**
      * Get paginated list of customers with filters
-     *
-     * @param Request $request
-     * @return array
      */
     public function getCustomerList(Request $request): array
     {
@@ -26,10 +23,10 @@ class CustomerService
 
         // Apply search filter (support both DataTables and direct search)
         $search = $request->input('search');
-        if (is_array($search) && !empty($search['value'])) {
+        if (is_array($search) && ! empty($search['value'])) {
             // DataTables format
             $searchValue = $search['value'];
-        } elseif (is_string($search) && !empty($search)) {
+        } elseif (is_string($search) && ! empty($search)) {
             // Direct search format (from Flowbite)
             $searchValue = $search;
         }
@@ -46,7 +43,7 @@ class CustomerService
 
         // Apply status filter (support both formats)
         $statusFilter = $request->input('status_filter') ?? $request->input('status');
-        if (!empty($statusFilter)) {
+        if (! empty($statusFilter)) {
             $query->whereHas('status', function (Builder $q) use ($statusFilter) {
                 $q->where('stat_description', $statusFilter);
             });
@@ -134,13 +131,10 @@ class CustomerService
 
     /**
      * Format customer location from address
-     *
-     * @param Customer $customer
-     * @return string
      */
     private function formatLocation(Customer $customer): string
     {
-        if (!$customer->address) {
+        if (! $customer->address) {
             return 'N/A';
         }
 
@@ -156,14 +150,11 @@ class CustomerService
             $parts[] = $customer->address->town->t_desc;
         }
 
-        return !empty($parts) ? implode(', ', $parts) : 'N/A';
+        return ! empty($parts) ? implode(', ', $parts) : 'N/A';
     }
 
     /**
      * Get status badge HTML
-     *
-     * @param string $status
-     * @return string
      */
     private function getStatusBadge(string $status): string
     {
@@ -174,14 +165,11 @@ class CustomerService
             'UNKNOWN' => '<span class="inline-flex px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full text-xs font-semibold">Unknown</span>',
         ];
 
-        return $badges[$status] ?? '<span class="inline-flex px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded-full text-xs font-semibold">' . ucfirst(strtolower($status)) . '</span>';
+        return $badges[$status] ?? '<span class="inline-flex px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded-full text-xs font-semibold">'.ucfirst(strtolower($status)).'</span>';
     }
 
     /**
      * Get customer by ID
-     *
-     * @param int $id
-     * @return Customer|null
      */
     public function getCustomerById(int $id): ?Customer
     {
@@ -192,8 +180,6 @@ class CustomerService
      * Create customer with service application (Approach B)
      * Creates: Customer + ConsumerAddress + ServiceApplication + CustomerCharges in one transaction
      *
-     * @param array $data
-     * @return array
      * @throws \Exception
      */
     public function createCustomerWithApplication(array $data): array
@@ -259,14 +245,12 @@ class CustomerService
                 ];
             });
         } catch (\Exception $e) {
-            throw new \Exception('Failed to create customer with application: ' . $e->getMessage());
+            throw new \Exception('Failed to create customer with application: '.$e->getMessage());
         }
     }
 
     /**
      * Generate unique application number
-     *
-     * @return string
      */
     private function generateApplicationNumber(): string
     {
@@ -277,20 +261,17 @@ class CustomerService
 
         $nextNumber = $lastApplication ? ((int) substr($lastApplication->application_number, -5)) + 1 : 1;
 
-        return 'APP-' . $year . '-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        return 'APP-'.$year.'-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     /**
      * Get customer's service applications
-     *
-     * @param int $customerId
-     * @return array
      */
     public function getCustomerApplications(int $customerId): array
     {
         $customer = Customer::with('status')->find($customerId);
 
-        if (!$customer) {
+        if (! $customer) {
             throw new \Exception('Customer not found');
         }
 
@@ -301,6 +282,7 @@ class CustomerService
 
         $formattedApplications = $applications->map(function ($app) {
             $statusDesc = $app->status->stat_desc ?? 'Unknown';
+
             return [
                 'application_id' => $app->application_id,
                 'application_number' => $app->application_number,
@@ -321,9 +303,6 @@ class CustomerService
 
     /**
      * Get status class for application badge
-     *
-     * @param string $status
-     * @return string
      */
     private function getApplicationStatusClass(string $status): string
     {
@@ -340,15 +319,12 @@ class CustomerService
 
     /**
      * Check if customer can be deleted
-     *
-     * @param int $customerId
-     * @return array
      */
     public function canDeleteCustomer(int $customerId): array
     {
         $customer = Customer::find($customerId);
 
-        if (!$customer) {
+        if (! $customer) {
             throw new \Exception('Customer not found');
         }
 
@@ -375,16 +351,12 @@ class CustomerService
 
     /**
      * Update customer information
-     *
-     * @param int $customerId
-     * @param array $data
-     * @return Customer
      */
     public function updateCustomer(int $customerId, array $data): Customer
     {
         $customer = Customer::find($customerId);
 
-        if (!$customer) {
+        if (! $customer) {
             throw new \Exception('Customer not found');
         }
 
@@ -401,16 +373,13 @@ class CustomerService
 
     /**
      * Delete customer
-     *
-     * @param int $customerId
-     * @return bool
      */
     public function deleteCustomer(int $customerId): bool
     {
         return DB::transaction(function () use ($customerId) {
             $customer = Customer::find($customerId);
 
-            if (!$customer) {
+            if (! $customer) {
                 throw new \Exception('Customer not found');
             }
 

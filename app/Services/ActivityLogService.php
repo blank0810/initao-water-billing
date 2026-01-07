@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use Spatie\Activitylog\Models\Activity;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
-use App\Models\User;
+use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogService
 {
@@ -36,7 +36,7 @@ class ActivityLogService
         // Filter by user
         if ($request->filled('user_id')) {
             $query->where('causer_id', $request->user_id)
-                  ->where('causer_type', User::class);
+                ->where('causer_type', User::class);
         }
 
         // Search in description or properties
@@ -44,7 +44,7 @@ class ActivityLogService
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                  ->orWhere('properties', 'like', "%{$search}%");
+                    ->orWhere('properties', 'like', "%{$search}%");
             });
         }
 

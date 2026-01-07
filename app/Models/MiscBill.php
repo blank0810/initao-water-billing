@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class MiscBill extends Model
 {
     protected $table = 'misc_bill';
+
     protected $primaryKey = 'mb_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -18,7 +22,7 @@ class MiscBill extends Model
         'per_id',
         'create_date',
         'amount',
-        'stat_id'
+        'stat_id',
     ];
 
     protected $casts = [

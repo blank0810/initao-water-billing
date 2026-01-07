@@ -2,11 +2,10 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -16,12 +15,13 @@ return new class extends Migration
             $table->id('stat_id');
             $table->string('stat_desc');
         });
-        
+
         // Insert default statuses
         DB::table('statuses')->insert([
             ['stat_desc' => 'PENDING'],
             ['stat_desc' => 'ACTIVE'],
             ['stat_desc' => 'INACTIVE'],
+            ['stat_desc' => 'FAULTY'],
         ]);
     }
 
@@ -38,7 +38,7 @@ return new class extends Migration
                 }
             });
         }
-        
+
         Schema::dropIfExists('statuses');
     }
 };

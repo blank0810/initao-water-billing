@@ -7,14 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class UserType extends Model
 {
     protected $table = 'user_types';
+
     protected $primaryKey = 'ut_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'ut_desc',
-        'status_id'
+        'status_id',
     ];
 
     /**

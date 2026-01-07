@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class AdminUserRoleSeeder extends Seeder
 {
@@ -16,7 +16,7 @@ class AdminUserRoleSeeder extends Seeder
         // Find the existing admin user
         $adminUser = User::where('email', 'admin@initao-water.gov.ph')->first();
 
-        if (!$adminUser) {
+        if (! $adminUser) {
             // Try finding by username
             $adminUser = User::where('username', 'admin')->first();
         }
@@ -34,10 +34,12 @@ class AdminUserRoleSeeder extends Seeder
                 'email' => 'admin@initao-water.gov.ph',
                 'name' => 'Admin User',
                 'password' => bcrypt('password'),
+                'u_type' => 3, // ADMIN type
+                'stat_id' => 1, // ACTIVE status
             ]);
 
             $adminUser->assignRole(Role::SUPER_ADMIN);
-            $this->command->info("Created admin user and assigned Super Admin role");
+            $this->command->info('Created admin user and assigned Super Admin role');
         }
     }
 }

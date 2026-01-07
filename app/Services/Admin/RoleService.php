@@ -2,8 +2,8 @@
 
 namespace App\Services\Admin;
 
-use App\Models\Role;
 use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Support\Collection;
 
 class RoleService
@@ -23,8 +23,8 @@ class RoleService
                     : $role->permissions_count,
                 'users_count' => $role->users_count,
                 'is_system_role' => in_array($role->role_name, Role::getAllRoleNames()),
-                'can_delete' => $role->users_count === 0 && !in_array($role->role_name, [
-                    Role::SUPER_ADMIN, Role::ADMIN
+                'can_delete' => $role->users_count === 0 && ! in_array($role->role_name, [
+                    Role::SUPER_ADMIN, Role::ADMIN,
                 ]),
             ];
         });
@@ -41,12 +41,12 @@ class RoleService
             'role_id' => $role->role_id,
             'role_name' => $role->role_name,
             'description' => $role->description,
-            'permissions' => $role->permissions->map(fn($p) => [
+            'permissions' => $role->permissions->map(fn ($p) => [
                 'permission_id' => $p->permission_id,
                 'permission_name' => $p->permission_name,
                 'description' => $p->description,
             ]),
-            'users' => $role->users->map(fn($u) => [
+            'users' => $role->users->map(fn ($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
                 'email' => $u->email,
@@ -65,7 +65,7 @@ class RoleService
             'description' => $data['description'] ?? null,
         ]);
 
-        if (!empty($data['permissions'])) {
+        if (! empty($data['permissions'])) {
             $permissionIds = Permission::whereIn('permission_name', $data['permissions'])
                 ->pluck('permission_id')
                 ->toArray();
@@ -109,7 +109,7 @@ class RoleService
         if (in_array($role->role_name, [Role::SUPER_ADMIN, Role::ADMIN])) {
             return [
                 'success' => false,
-                'message' => 'Cannot delete system roles (super_admin, admin)'
+                'message' => 'Cannot delete system roles (super_admin, admin)',
             ];
         }
 
@@ -117,7 +117,7 @@ class RoleService
         if ($role->users()->count() > 0) {
             return [
                 'success' => false,
-                'message' => 'Cannot delete role with assigned users. Reassign users first.'
+                'message' => 'Cannot delete role with assigned users. Reassign users first.',
             ];
         }
 
