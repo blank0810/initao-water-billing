@@ -8,7 +8,9 @@
                     class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="default">Default Rates (Base)</option>
                     <template x-for="period in periods" :key="period.per_id">
-                        <option :value="period.per_id" x-text="period.per_name + (period.is_closed ? ' (Closed)' : '')"></option>
+                        <option :value="period.per_id"
+                            :selected="period.per_id == selectedPeriodId"
+                            x-text="period.per_name + (period.is_closed ? ' (Closed)' : '') + (period.is_active ? ' (Current)' : '')"></option>
                     </template>
                 </select>
             </div>
@@ -18,7 +20,7 @@
                     class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="all">All Classes</option>
                     <template x-for="(name, id) in accountTypes" :key="id">
-                        <option :value="id" x-text="name"></option>
+                        <option :value="id" :selected="id == selectedClassId" x-text="name"></option>
                     </template>
                 </select>
             </div>
@@ -371,9 +373,12 @@ function periodRatesData() {
         periods: [],
         rates: [],
         accountTypes: {},
-        selectedPeriodId: 'default',
-        selectedClassId: 'all',
+        selectedPeriodId: null, // Will be set to active period on init
+        selectedClassId: null, // Will be set to Residential on init
         hasCustomRates: false,
+        activePeriodId: null,
+        defaultAccountTypeId: null,
+        initialized: false,
 
         // Modals
         showCreateModal: false,
@@ -396,19 +401,19 @@ function periodRatesData() {
         dragover: false,
 
         get selectedPeriodName() {
-            if (this.selectedPeriodId === 'default') return 'Default Rates';
+            if (this.selectedPeriodId === 'default' || this.selectedPeriodId === null) return 'Default Rates';
             const period = this.periods.find(p => p.per_id == this.selectedPeriodId);
             return period ? period.per_name : 'Unknown Period';
         },
 
         get selectedPeriodClosed() {
-            if (this.selectedPeriodId === 'default') return false;
+            if (this.selectedPeriodId === 'default' || this.selectedPeriodId === null) return false;
             const period = this.periods.find(p => p.per_id == this.selectedPeriodId);
             return period ? period.is_closed : false;
         },
 
         get filteredRates() {
-            if (this.selectedClassId === 'all') {
+            if (this.selectedClassId === 'all' || this.selectedClassId === null) {
                 return this.rates;
             }
             return this.rates.filter(r => r.class_id == this.selectedClassId);
@@ -417,6 +422,7 @@ function periodRatesData() {
         async init() {
             await this.loadPeriods();
             await this.loadRates();
+            this.initialized = true;
         },
 
         async loadPeriods() {
@@ -424,21 +430,43 @@ function periodRatesData() {
                 const response = await fetch('/rate/periods');
                 const data = await response.json();
                 this.periods = data.periods || [];
+                this.activePeriodId = data.activePeriodId || null;
+
+                // Set the default selected period to the active period on initial load
+                if (!this.initialized && this.activePeriodId) {
+                    this.selectedPeriodId = this.activePeriodId;
+                } else if (!this.initialized) {
+                    this.selectedPeriodId = 'default';
+                }
             } catch (error) {
                 console.error('Failed to load periods:', error);
+                if (!this.initialized) {
+                    this.selectedPeriodId = 'default';
+                }
             }
         },
 
         async loadRates() {
             try {
-                const periodParam = this.selectedPeriodId === 'default' ? 'default' : this.selectedPeriodId;
+                const periodParam = (this.selectedPeriodId === 'default' || this.selectedPeriodId === null) ? 'default' : this.selectedPeriodId;
                 const response = await fetch(`/rate/periods/${periodParam}/rates`);
                 const data = await response.json();
                 this.rates = data.rates || [];
                 this.hasCustomRates = data.hasCustomRates || false;
                 this.accountTypes = data.accountTypes || {};
+                this.defaultAccountTypeId = data.defaultAccountTypeId || null;
+
+                // Set the default selected class to Residential on initial load
+                if (!this.initialized && this.defaultAccountTypeId) {
+                    this.selectedClassId = this.defaultAccountTypeId;
+                } else if (!this.initialized) {
+                    this.selectedClassId = 'all';
+                }
             } catch (error) {
                 console.error('Failed to load rates:', error);
+                if (!this.initialized) {
+                    this.selectedClassId = 'all';
+                }
             }
         },
 

@@ -196,6 +196,17 @@ Route::middleware('auth')->group(function () {
 
             return view('pages.ledger.overall-data.overall-data');
         })->name('ledger.overall-data');
+
+        // Water Bill API endpoints
+        Route::get('/water-bills/billable-connections', [\App\Http\Controllers\WaterBillController::class, 'getBillableConnections'])->name('water-bills.connections');
+        Route::get('/water-bills/billing-periods', [\App\Http\Controllers\WaterBillController::class, 'getBillingPeriods'])->name('water-bills.periods');
+        Route::get('/water-bills/last-reading/{connectionId}', [\App\Http\Controllers\WaterBillController::class, 'getLastReading'])->name('water-bills.last-reading');
+        Route::post('/water-bills/preview', [\App\Http\Controllers\WaterBillController::class, 'previewBill'])->name('water-bills.preview');
+        Route::post('/water-bills/generate', [\App\Http\Controllers\WaterBillController::class, 'generateBill'])->name('water-bills.generate');
+        Route::get('/water-bills/connection/{connectionId}', [\App\Http\Controllers\WaterBillController::class, 'getConnectionBillingDetails'])->name('water-bills.connection-details');
+        Route::get('/water-bills/consumers', [\App\Http\Controllers\WaterBillController::class, 'getConsumerBillingList'])->name('water-bills.consumers');
+        Route::get('/water-bills/billed-consumers', [\App\Http\Controllers\WaterBillController::class, 'getBilledConsumersByPeriod'])->name('water-bills.billed-consumers');
+        Route::get('/water-bills/summary', [\App\Http\Controllers\WaterBillController::class, 'getBillingSummary'])->name('water-bills.summary');
     });
 
     // -------------------------------------------------------------------------
@@ -255,15 +266,20 @@ Route::middleware('auth')->group(function () {
 
     // Meter Management - Manage (meters.manage permission)
     Route::middleware(['permission:meters.manage'])->group(function () {
-        Route::get('/meter/assignment', function () {
-            return view('pages.meter.meter-assignment');
-        })->name('meter.assignment');
-
         // Meter Inventory CRUD API
         Route::post('/meters', [\App\Http\Controllers\MeterController::class, 'store'])->name('meters.store');
         Route::put('/meters/{meterId}', [\App\Http\Controllers\MeterController::class, 'update'])->name('meters.update');
         Route::delete('/meters/{meterId}', [\App\Http\Controllers\MeterController::class, 'destroy'])->name('meters.destroy');
         Route::post('/meters/{meterId}/faulty', [\App\Http\Controllers\MeterController::class, 'markFaulty'])->name('meters.faulty');
+
+        // Meter Assignment API
+        Route::get('/meter-assignments', [\App\Http\Controllers\MeterAssignmentController::class, 'index'])->name('meter-assignments.index');
+        Route::get('/meter-assignments/stats', [\App\Http\Controllers\MeterAssignmentController::class, 'stats'])->name('meter-assignments.stats');
+        Route::get('/meter-assignments/available-meters', [\App\Http\Controllers\MeterAssignmentController::class, 'getAvailableMeters'])->name('meter-assignments.available-meters');
+        Route::get('/meter-assignments/unassigned-connections', [\App\Http\Controllers\MeterAssignmentController::class, 'getUnassignedConnections'])->name('meter-assignments.unassigned-connections');
+        Route::get('/meter-assignments/{assignmentId}', [\App\Http\Controllers\MeterAssignmentController::class, 'show'])->name('meter-assignments.show');
+        Route::post('/meter-assignments', [\App\Http\Controllers\MeterAssignmentController::class, 'store'])->name('meter-assignments.store');
+        Route::post('/meter-assignments/{assignmentId}/remove', [\App\Http\Controllers\MeterAssignmentController::class, 'remove'])->name('meter-assignments.remove');
     });
 
     // -------------------------------------------------------------------------

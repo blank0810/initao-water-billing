@@ -26,25 +26,33 @@ class RateController extends Controller
      */
     public function getPeriods(): JsonResponse
     {
-        $periods = Period::select('per_id', 'per_name', 'per_start_date', 'is_closed')
-            ->withCount(['waterRates' => function ($query) {
-                $query->where('stat_id', Status::getIdByDescription(Status::ACTIVE));
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        $periods = Period::select('per_id', 'per_name', 'start_date', 'is_closed', 'stat_id')
+            ->withCount(['waterRates' => function ($query) use ($activeStatusId) {
+                $query->where('stat_id', $activeStatusId);
             }])
-            ->orderBy('per_start_date', 'desc')
+            ->orderBy('start_date', 'desc')
             ->get()
-            ->map(function ($period) {
+            ->map(function ($period) use ($activeStatusId) {
                 return [
                     'per_id' => $period->per_id,
                     'per_name' => $period->per_name,
-                    'per_start_date' => $period->per_start_date,
+                    'start_date' => $period->start_date,
                     'is_closed' => (bool) $period->is_closed,
+                    'is_active' => $period->stat_id === $activeStatusId && ! $period->is_closed,
                     'has_custom_rates' => $period->water_rates_count > 0,
                     'rate_count' => $period->water_rates_count,
                 ];
             });
 
+        // Find the current active period (not closed, active status)
+        $activePeriod = $periods->first(fn ($p) => $p['is_active']);
+        $activePeriodId = $activePeriod ? $activePeriod['per_id'] : null;
+
         return response()->json([
             'periods' => $periods,
+            'activePeriodId' => $activePeriodId,
         ]);
     }
 
@@ -57,8 +65,13 @@ class RateController extends Controller
             ->orderBy('at_id')
             ->get(['at_id', 'at_desc']);
 
+        // Find Residential account type as default
+        $residentialType = $accountTypes->first(fn ($at) => strtolower($at->at_desc) === 'residential');
+        $defaultAccountTypeId = $residentialType ? $residentialType->at_id : ($accountTypes->first()?->at_id ?? null);
+
         return response()->json([
             'accountTypes' => $accountTypes,
+            'defaultAccountTypeId' => $defaultAccountTypeId,
         ]);
     }
 
@@ -71,7 +84,14 @@ class RateController extends Controller
 
         // Get account types for class names
         $accountTypes = AccountType::where('stat_id', $activeStatusId)
-            ->pluck('at_desc', 'at_id');
+            ->orderBy('at_id')
+            ->get(['at_id', 'at_desc']);
+
+        $accountTypesMap = $accountTypes->pluck('at_desc', 'at_id');
+
+        // Find Residential account type as default
+        $residentialType = $accountTypes->first(fn ($at) => strtolower($at->at_desc) === 'residential');
+        $defaultAccountTypeId = $residentialType ? $residentialType->at_id : ($accountTypes->first()?->at_id ?? null);
 
         if ($periodId === 'default') {
             $rates = WaterRate::whereNull('period_id')
@@ -81,8 +101,8 @@ class RateController extends Controller
                 ->get();
 
             // Add class name to each rate
-            $rates = $rates->map(function ($rate) use ($accountTypes) {
-                $rate->class_name = $accountTypes[$rate->class_id] ?? 'Unknown';
+            $rates = $rates->map(function ($rate) use ($accountTypesMap) {
+                $rate->class_name = $accountTypesMap[$rate->class_id] ?? 'Unknown';
 
                 return $rate;
             });
@@ -91,7 +111,8 @@ class RateController extends Controller
                 'rates' => $rates,
                 'hasCustomRates' => false,
                 'periodId' => null,
-                'accountTypes' => $accountTypes,
+                'accountTypes' => $accountTypesMap,
+                'defaultAccountTypeId' => $defaultAccountTypeId,
             ]);
         }
 
@@ -103,8 +124,8 @@ class RateController extends Controller
             ->get();
 
         if ($customRates->isNotEmpty()) {
-            $customRates = $customRates->map(function ($rate) use ($accountTypes) {
-                $rate->class_name = $accountTypes[$rate->class_id] ?? 'Unknown';
+            $customRates = $customRates->map(function ($rate) use ($accountTypesMap) {
+                $rate->class_name = $accountTypesMap[$rate->class_id] ?? 'Unknown';
 
                 return $rate;
             });
@@ -113,7 +134,8 @@ class RateController extends Controller
                 'rates' => $customRates,
                 'hasCustomRates' => true,
                 'periodId' => (int) $periodId,
-                'accountTypes' => $accountTypes,
+                'accountTypes' => $accountTypesMap,
+                'defaultAccountTypeId' => $defaultAccountTypeId,
             ]);
         }
 
@@ -124,8 +146,8 @@ class RateController extends Controller
             ->orderBy('range_id')
             ->get();
 
-        $defaultRates = $defaultRates->map(function ($rate) use ($accountTypes) {
-            $rate->class_name = $accountTypes[$rate->class_id] ?? 'Unknown';
+        $defaultRates = $defaultRates->map(function ($rate) use ($accountTypesMap) {
+            $rate->class_name = $accountTypesMap[$rate->class_id] ?? 'Unknown';
 
             return $rate;
         });
@@ -134,7 +156,8 @@ class RateController extends Controller
             'rates' => $defaultRates,
             'hasCustomRates' => false,
             'periodId' => (int) $periodId,
-            'accountTypes' => $accountTypes,
+            'accountTypes' => $accountTypesMap,
+            'defaultAccountTypeId' => $defaultAccountTypeId,
         ]);
     }
 
