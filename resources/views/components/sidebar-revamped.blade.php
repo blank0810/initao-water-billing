@@ -7,8 +7,9 @@ $user = Auth::user() ?? (object) [
 
 <!-- Sidebar -->
 <aside x-data="sidebar()"
-    class="hidden lg:flex flex-col flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 sidebar-transition h-screen fixed left-0 top-0 z-50 overflow-hidden"
-    :class="sidebarOpen ? 'w-72' : 'w-20'">
+    class="flex flex-col flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 sidebar-transition h-screen fixed left-0 top-0 z-50 overflow-hidden max-lg:hidden lg:flex"
+    :class="sidebarOpen ? 'w-72' : 'w-20'"
+    x-init="init()">
 
     <!-- Header with Logo -->
     <div class="flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 h-24">
@@ -209,21 +210,6 @@ $user = Auth::user() ?? (object) [
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Analytics</span>
         </a>
     </nav>
-
-    <!-- Bottom Actions -->
-    <div class="px-3 py-3 mt-auto border-t border-gray-200 dark:border-gray-800">
-        <div :class="sidebarOpen ? 'flex items-center justify-between' : 'flex flex-col items-center space-y-2'">
-            <a href="{{ url('/profile') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Profile">
-                <i class="fas fa-user text-gray-600 dark:text-gray-400"></i>
-            </a>
-            <a href="{{ url('/settings') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Settings">
-                <i class="fas fa-cog text-gray-600 dark:text-gray-400"></i>
-            </a>
-            <a href="{{ url('/report') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Report">
-                <i class="fas fa-flag text-gray-600 dark:text-gray-400"></i>
-            </a>
-        </div>
-    </div>
 </aside>
 
 <script>
@@ -255,7 +241,12 @@ $user = Auth::user() ?? (object) [
                     '/customer/declined-customer': 'approve-customer',
                     '/user/add': 'user-add',
                     '/user/list': 'user-list',
+                    '/billing': 'billing-management',
                     '/billing/management': 'billing-management',
+                    '/billing/consumer': 'billing-management',
+                    '/billing/collections': 'billing-management',
+                    '/billing/generation': 'billing-management',
+                    '/billing/adjustments': 'billing-management',
                     '/meter/management': 'meter-management',
                     '/rate/management': 'rate-management',
                     '/ledger/management': 'ledger-management',
@@ -266,6 +257,8 @@ $user = Auth::user() ?? (object) [
                     this.activeMenu = 'payment-management';
                 } else if (path.startsWith('/customer/invoice-list') || path.startsWith('/customer/declined-customer')) {
                     this.activeMenu = 'approve-customer';
+                } else if (path.startsWith('/billing')) {
+                    this.activeMenu = 'billing-management';
                 } else {
                     this.activeMenu = routeMap[path] || '{{ session('active_menu', 'dashboard') }}';
                 }

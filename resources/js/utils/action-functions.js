@@ -166,9 +166,44 @@ class ActionFunctionsManager {
     }
 }
 
+// Billing-specific modal functions
+window.openAdjustmentModal = function() {
+    const modal = document.getElementById('addAdjustmentModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+};
+
+window.closeAdjustmentModal = function() {
+    const modal = document.getElementById('addAdjustmentModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+};
+
+window.redownloadFile = function(btn) {
+    console.log('Re-downloading file...');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Downloading...';
+    btn.disabled = true;
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-redo mr-1"></i>Re-download';
+        btn.disabled = false;
+    }, 1500);
+};
+
+window.openBillDetailsModal = function() {
+    const modal = document.getElementById('bill-details-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+};
+
 // Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    const tables = ['applicationTable', 'approvalTable', 'invoiceTable', 'declinedTable', 'paymentTable', 'connectionsTable', 'areaTable', 'consumer-documents-tbody', 'consumerBillingTable', 'collectionsTable', 'billGenerationTable', 'adjustmentsTable'];
+    const tables = ['applicationTable', 'approvalTable', 'invoiceTable', 'declinedTable', 'paymentTable', 'connectionsTable', 'areaTable', 'consumer-documents-tbody', 'consumerBillingTable', 'collectionsTable', 'billGenerationTable', 'adjustmentsTable', 'downloadHistoryTable'];
     
     tables.forEach(tableId => {
         if (document.getElementById(tableId)) {

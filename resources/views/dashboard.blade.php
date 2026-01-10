@@ -1,7 +1,7 @@
 <x-app-layout>
-    <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div class="min-h-screen bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
         <!-- Main Content -->
-        <main class="p-6">
+        <main class="p-6 max-w-7xl mx-auto">
 
 
             <!-- Stats Cards -->

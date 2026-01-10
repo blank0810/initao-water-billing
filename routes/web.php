@@ -140,12 +140,17 @@ Route::get('/customer/service-connection', function () {
 // Billing Management Pages - Unified System
 Route::get('/billing', function () {
     session(['active_menu' => 'billing-management']);
-    return view('pages.billing.bill-generation');
+    return view('pages.billing.index');
 })->name('billing.main');
+
+Route::get('/billing/management', function () {
+    session(['active_menu' => 'billing-management']);
+    return view('pages.billing.index');
+})->name('billing.management');
 
 Route::get('/billing/consumer', function () {
     session(['active_menu' => 'billing-management']);
-    return view('pages.billing.bill-generation');
+    return view('pages.billing.index');
 })->name('billing.consumer');
 
 Route::get('/billing/collections', function () {
@@ -167,6 +172,11 @@ Route::get('/billing/rate-detail', function () {
     session(['active_menu' => 'billing-management']);
     return view('pages.billing.bill-generation');
 })->name('billing.rate-detail');
+
+Route::get('/billing/customer-details', function () {
+    session(['active_menu' => 'billing-management']);
+    return view('pages.billing.customer-details');
+})->name('billing.customer-details');
 
 Route::get('/billing/ledger', function () {
     session(['active_menu' => 'billing-management']);

@@ -1,4 +1,115 @@
-// Enhanced Rate Management System - Water Billing
+// Rate Data - Phase 3 (Updated)
+const rateData = [
+    {
+        id: 'RT-2024-001',
+        rate_id: 'RT-2024-001',
+        category: '<div class="text-sm font-medium text-gray-900 dark:text-white">Residential Standard</div><div class="text-xs text-gray-500">RT-2024-001</div>',
+        consumers: '<span class="font-semibold text-blue-600 dark:text-blue-400">245</span>',
+        status: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Active</span>',
+        billing_period: 'January 2024 - December 2024',
+        actions: '<a href="/rate/show/RT-2024-001" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition inline-block"><i class="fas fa-eye mr-1"></i>View</a>'
+    },
+    {
+        id: 'RT-2024-002',
+        rate_id: 'RT-2024-002',
+        category: '<div class="text-sm font-medium text-gray-900 dark:text-white">Commercial</div><div class="text-xs text-gray-500">RT-2024-002</div>',
+        consumers: '<span class="font-semibold text-green-600 dark:text-green-400">45</span>',
+        status: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Active</span>',
+        billing_period: 'January 2024 - December 2024',
+        actions: '<a href="/rate/show/RT-2024-002" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition inline-block"><i class="fas fa-eye mr-1"></i>View</a>'
+    },
+    {
+        id: 'RT-2024-003',
+        rate_id: 'RT-2024-003',
+        category: '<div class="text-sm font-medium text-gray-900 dark:text-white">Institutional</div><div class="text-xs text-gray-500">RT-2024-003</div>',
+        consumers: '<span class="font-semibold text-purple-600 dark:text-purple-400">12</span>',
+        status: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Active</span>',
+        billing_period: 'January 2024 - December 2024',
+        actions: '<a href="/rate/show/RT-2024-003" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition inline-block"><i class="fas fa-eye mr-1"></i>View</a>'
+    },
+];
+
+// Rate Parent (Billing Period) Data
+const rateParentData = [
+    {
+        id: 'BP-2024-01',
+        period_id: 'BP-2024-01',
+        period_name: '<div class="text-sm font-medium text-gray-900 dark:text-white">January 2024</div><div class="text-xs text-gray-500">BP-2024-01</div>',
+        date_range: 'January 1 - January 31, 2024',
+        rates_assigned: '<span class="font-semibold text-blue-600 dark:text-blue-400">3</span>',
+        consumers_total: '<span class="font-semibold text-green-600 dark:text-green-400">302</span>',
+        status: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Open</span>',
+        actions: '<a href="/rate/parent/BP-2024-01" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition inline-block"><i class="fas fa-eye mr-1"></i>View</a>'
+    },
+    {
+        id: 'BP-2024-02',
+        period_id: 'BP-2024-02',
+        period_name: '<div class="text-sm font-medium text-gray-900 dark:text-white">February 2024</div><div class="text-xs text-gray-500">BP-2024-02</div>',
+        date_range: 'February 1 - February 29, 2024',
+        rates_assigned: '<span class="font-semibold text-blue-600 dark:text-blue-400">3</span>',
+        consumers_total: '<span class="font-semibold text-green-600 dark:text-green-400">308</span>',
+        status: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Open</span>',
+        actions: '<a href="/rate/parent/BP-2024-02" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition inline-block"><i class="fas fa-eye mr-1"></i>View</a>'
+    },
+];
+
+// Rate Detail (Increment Range) Data
+const rateDetailData = [
+    {
+        id: 'RD-2024-001-T1',
+        tier: 'Tier 1',
+        range: '0 - 10 m³',
+        rate: '<span class="font-bold text-blue-600 dark:text-blue-400">₱10.00/m³</span>',
+        status: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Active</span>',
+        actions: '<a href="/rate/detail/RD-2024-001-T1" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 text-xs"><i class="fas fa-eye"></i></a>'
+    },
+    {
+        id: 'RD-2024-001-T2',
+        tier: 'Tier 2',
+        range: '11 - 20 m³',
+        rate: '<span class="font-bold text-orange-600 dark:text-orange-400">₱12.00/m³</span>',
+        status: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Active</span>',
+        actions: '<a href="/rate/detail/RD-2024-001-T2" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 text-xs"><i class="fas fa-eye"></i></a>'
+    },
+    {
+        id: 'RD-2024-001-T3',
+        tier: 'Tier 3',
+        range: '21+ m³',
+        rate: '<span class="font-bold text-red-600 dark:text-red-400">₱15.00/m³</span>',
+        status: '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">Active</span>',
+        actions: '<a href="/rate/detail/RD-2024-001-T3" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 text-xs"><i class="fas fa-eye"></i></a>'
+    },
+];
+
+// Rate Detail Show Page Data
+const rateDetailShowData = {
+    id: 'RD-2024-001-T1',
+    tier: 'Tier 1',
+    range_min: 0,
+    range_max: 10,
+    rate_per_cubic_meter: 10.00,
+    rate_id: 'RT-2024-001',
+    rate_name: 'Residential Standard',
+    rate_parent_id: 'BP-2024-01',
+    billing_period: 'January 2024',
+    effective_from: '2024-01-01',
+    effective_to: '2024-01-31',
+    status: 'Active',
+    consumers_affected: 245,
+    calculation_examples: [
+        { consumption: '5 m³', formula: '5 × ₱10.00', total: '₱50.00' },
+        { consumption: '8 m³', formula: '8 × ₱10.00', total: '₱80.00' },
+        { consumption: '10 m³', formula: '10 × ₱10.00', total: '₱100.00' },
+        { consumption: '15 m³', formula: '10 × ₱10.00 + 5 × ₱12.00', total: '₱160.00 (Tier 2 applies)' },
+    ],
+    related_tiers: [
+        { tier: 'Tier 1', range: '0-10 m³', rate: '₱10.00', link: '/rate/detail/RD-2024-001-T1' },
+        { tier: 'Tier 2', range: '11-20 m³', rate: '₱12.00', link: '/rate/detail/RD-2024-001-T2' },
+        { tier: 'Tier 3', range: '21+ m³', rate: '₱15.00', link: '/rate/detail/RD-2024-001-T3' },
+    ]
+};
+
+// Legacy code (commented out)
 (function(){
     // Account Types
     const accountTypes = [

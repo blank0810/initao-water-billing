@@ -126,12 +126,12 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased h-full">
-        <div class="min-h-screen bg-gray-50 dark:bg-gray-900" x-data="appState()">
+    <body class="font-sans antialiased h-full" x-data="appState()" @alpine:initialized.window="initializeApp()">
+        <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
             @include('components.sidebar-revamped')
 
             <!-- Main Content Area -->
-            <div class="sidebar-transition"
+            <div class="flex-1 sidebar-transition flex flex-col"
                  :class="sidebarOpen ? 'lg:ml-72' : 'lg:ml-20'"
                  x-init="$watch('sidebarOpen', value => {
                     localStorage.setItem('sidebarOpen', value);
@@ -161,24 +161,74 @@
         </div>
 
         <script>
+            // Shared app state for sidebar and navigation
+            const globalAppState = {
+                sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false',
+                activeMenu: localStorage.getItem('activeMenu') || 'dashboard',
+                openSubmenus: {}
+            };
+
             function appState() {
                 return {
-                    sidebarOpen: true,
+                    sidebarOpen: globalAppState.sidebarOpen,
 
                     init() {
-                        // Get sidebar state from localStorage
-                        const savedSidebarState = localStorage.getItem('sidebarOpen');
-                        if (savedSidebarState !== null) {
-                            this.sidebarOpen = savedSidebarState === 'true';
-                        }
-
-                        // Make instance globally available
-                        window.appState = this;
+                        // Sync with global state
+                        this.sidebarOpen = globalAppState.sidebarOpen;
                     },
 
                     toggleSidebar() {
                         this.sidebarOpen = !this.sidebarOpen;
+                        globalAppState.sidebarOpen = this.sidebarOpen;
                         localStorage.setItem('sidebarOpen', this.sidebarOpen);
+                        // Broadcast to sidebar component
+                        window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: { open: this.sidebarOpen } }));
+                    }
+                }
+            }
+
+            function sidebar() {
+                return {
+                    sidebarOpen: globalAppState.sidebarOpen,
+                    activeMenu: globalAppState.activeMenu,
+                    openSubmenus: globalAppState.openSubmenus,
+
+                    init() {
+                        // Listen for sidebar toggle events
+                        window.addEventListener('sidebar-toggled', (e) => {
+                            this.sidebarOpen = e.detail.open;
+                            globalAppState.sidebarOpen = this.sidebarOpen;
+                        });
+                        
+                        // Sync with global state
+                        const savedState = localStorage.getItem('sidebarOpen');
+                        if (savedState !== null) {
+                            this.sidebarOpen = savedState === 'true';
+                        }
+                        
+                        const savedMenu = localStorage.getItem('activeMenu');
+                        if (savedMenu) {
+                            this.activeMenu = savedMenu;
+                        }
+                    },
+
+                    toggleSidebar() {
+                        this.sidebarOpen = !this.sidebarOpen;
+                        globalAppState.sidebarOpen = this.sidebarOpen;
+                        localStorage.setItem('sidebarOpen', this.sidebarOpen);
+                    },
+
+                    setActiveMenu(menu) {
+                        this.activeMenu = menu;
+                        globalAppState.activeMenu = menu;
+                        localStorage.setItem('activeMenu', menu);
+                    },
+
+                    toggleSubmenu(submenu) {
+                        if (!this.openSubmenus[submenu]) {
+                            this.openSubmenus[submenu] = false;
+                        }
+                        this.openSubmenus[submenu] = !this.openSubmenus[submenu];
                     }
                 }
             }

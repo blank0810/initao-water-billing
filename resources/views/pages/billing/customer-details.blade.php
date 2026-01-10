@@ -19,15 +19,15 @@
             </x-ui.page-header>
 
             <!-- Customer Profile Card -->
-            <x-ui.card class="mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
                 <div class="flex justify-between items-start mb-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                         <i class="fas fa-user-circle mr-2"></i>Customer Profile
                     </h3>
-                    <x-ui.badge id="overdueBadge" color="red" class="hidden">
+                    <div id="overdueBadge" class="hidden inline-flex items-center px-3 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-full text-sm font-medium">
                         <i class="fas fa-exclamation-triangle mr-1"></i>
                         Overdue by <span id="overdueDays">0</span> day(s)
-                    </x-ui.badge>
+                    </div>
                 </div>
                 <div class="flex items-start space-x-6 mb-6">
                     <div class="h-16 w-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
@@ -54,7 +54,7 @@
                             <div class="flex items-center">
                                 <i class="fas fa-circle text-green-500 w-5 mr-3"></i>
                                 <span class="text-gray-500 dark:text-gray-400 w-24">Status:</span>
-                                <x-ui.status-badge id="customerStatus" status="Active" />
+                                <span class="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">Active</span>
                             </div>
                             <div class="flex items-center">
                                 <i class="fas fa-map-marker-alt text-gray-400 w-5 mr-3"></i>
@@ -69,48 +69,48 @@
                         </div>
                     </div>
                 </div>
-            </x-ui.card>
+            </div>
 
             <!-- Current Bill Overview -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <x-ui.stat-card
-                    title="Current Amount Due"
-                    value="₱739.20"
-                    subtitle="Billing Period: Jan 2024"
-                    icon="file-invoice-dollar"
-                    color="blue"
-                    id="currentAmount"
-                />
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Current Amount Due</h3>
+                        <i class="fas fa-file-invoice-dollar text-blue-500 text-2xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">₱739.20</div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Billing Period: Jan 2024</p>
+                </div>
                 
-                <x-ui.stat-card
-                    title="Total Consumption"
-                    value="25 m³"
-                    subtitle="This Billing Period"
-                    icon="tint"
-                    color="green"
-                    id="totalConsumption"
-                />
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Consumption</h3>
+                        <i class="fas fa-tint text-green-500 text-2xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">25 m³</div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">This Billing Period</p>
+                </div>
                 
-                <x-ui.stat-card
-                    title="Ledger Balance"
-                    value="₱0.00"
-                    subtitle="Outstanding Balance"
-                    icon="book"
-                    color="purple"
-                    id="ledgerBalance"
-                />
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Ledger Balance</h3>
+                        <i class="fas fa-book text-purple-500 text-2xl"></i>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900 dark:text-white">₱0.00</div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Outstanding Balance</p>
+                </div>
             </div>
 
             <!-- Rate Schedule Applied -->
-            <x-ui.card class="mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     <i class="fas fa-calculator mr-2"></i>Applied Rate Schedule
                 </h3>
-                <x-ui.alert type="info" class="mb-4">
-                    <div class="text-sm">
-                        <strong>Rate Structure:</strong> Residential Standard | <strong>Billing Period:</strong> January 2024 | <strong>Status:</strong> <x-ui.badge color="green">Posted & Locked</x-ui.badge>
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900 rounded-lg p-4 mb-4">
+                    <div class="text-sm text-blue-800 dark:text-blue-300">
+                        <strong>Rate Structure:</strong> Residential Standard | <strong>Billing Period:</strong> January 2024 | <strong>Status:</strong> <span class="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-xs font-medium">Posted & Locked</span>
                     </div>
-                </x-ui.alert>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700">
@@ -163,33 +163,39 @@
                         </tbody>
                     </table>
                 </div>
-            </x-ui.card>
+            </div>
 
             <!-- Customer Ledger History -->
-            <x-ui.card>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     <i class="fas fa-book mr-2"></i>Customer Ledger History
                 </h3>
-                <x-ui.alert type="warning" class="mb-4">
-                    <div class="text-sm">
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4 mb-4">
+                    <div class="text-sm text-yellow-800 dark:text-yellow-300">
                         <strong>COA Compliance:</strong> This ledger history is permanent and non-deletable as required by Commission on Audit (COA) regulations. All transactions are recorded and cannot be modified.
                     </div>
-                </x-ui.alert>
-                
-                <x-ui.action-functions 
-                    searchPlaceholder="Search ledger entries..."
-                    filterLabel="All Types"
-                    :filterOptions="[
-                        ['value' => 'bill', 'label' => 'Bills'],
-                        ['value' => 'payment', 'label' => 'Payments'],
-                        ['value' => 'adjustment', 'label' => 'Adjustments']
-                    ]"
-                    :showDateFilter="true"
-                    :showExport="true"
-                    tableId="customerLedgerTable"
-                />
+                </div>
                 
                 @php
+                    $ledgerData = [
+                        [
+                            'date' => '2024-01-05',
+                            'reference' => '<span class="font-mono text-blue-600 dark:text-blue-400">BILL-2024-001</span>',
+                            'description' => 'Bill Generated - January 2024',
+                            'debit' => '<span class="text-red-600 font-semibold">₱739.20</span>',
+                            'credit' => '-',
+                            'balance' => '<span class="font-semibold">₱739.20</span>'
+                        ],
+                        [
+                            'date' => '2024-01-15',
+                            'reference' => '<span class="font-mono text-green-600 dark:text-green-400">PAY-2024-001</span>',
+                            'description' => 'Payment Received - Check #12345',
+                            'debit' => '-',
+                            'credit' => '<span class="text-green-600 font-semibold">₱500.00</span>',
+                            'balance' => '<span class="font-semibold">₱239.20</span>'
+                        ]
+                    ];
+
                     $ledgerHeaders = [
                         ['key' => 'date', 'label' => 'Date', 'html' => false],
                         ['key' => 'reference', 'label' => 'Reference', 'html' => true],
@@ -200,32 +206,78 @@
                     ];
                 @endphp
                 
-                <x-table
-                    id="customerLedgerTable"
-                    :headers="$ledgerHeaders"
-                    :data="[]"
-                    :searchable="false"
-                    :paginated="true"
-                    :pageSize="20"
-                    :actions="false"
-                />
-            </x-ui.card>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                @foreach($ledgerHeaders as $header)
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">{{ $header['label'] }}</th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            @foreach($ledgerData as $row)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    @foreach($ledgerHeaders as $header)
+                                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                            @if($header['html'])
+                                                {!! $row[$header['key']] !!}
+                                            @else
+                                                {{ $row[$header['key']] }}
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
         </div>
     </div>
 
-    @vite(['resources/js/data/billing/customer-ledger-data.js'])
-
-    <script>
-    const customerId = {{ $customer_id ?? 1 }};
+    <script src="{{ asset('js/data/billing/customer-profile-data.js') }}"></script>
     
+    <script>
+    // Load customer data on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get query parameters from URL
+        const params = new URLSearchParams(window.location.search);
+        const customerName = params.get('customer');
+        const accountNo = params.get('account');
+
+        let customer = null;
+
+        // Try to find customer by name first
+        if (customerName) {
+            customer = getCustomerByName(customerName);
+        }
+        
+        // If not found by name, try by account number
+        if (!customer && accountNo) {
+            customer = getCustomerByAccountNo(accountNo);
+        }
+
+        // If customer found, populate the page with their data
+        if (customer) {
+            document.getElementById('customerName').textContent = customer.name;
+            document.getElementById('customerId').textContent = customer.account_no;
+            document.getElementById('customerClass').textContent = customer.rate_class;
+            document.getElementById('meterNo').textContent = customer.meter_no;
+            document.getElementById('customerAddress').textContent = customer.address;
+            document.getElementById('customerPhone').textContent = customer.contact;
+            document.getElementById('customerInitials').textContent = customer.initials;
+        }
+    });
+
     function downloadCustomerBill() {
-        alert('Downloading bill for customer: ' + customerId);
+        alert('Downloading bill for customer');
         // Implementation will trigger PDF download
     }
     
     function editCustomer() {
-        window.location.href = '/customer/edit/' + customerId;
+        window.location.href = '/customer/edit/';
     }
     </script>
 </x-app-layout>

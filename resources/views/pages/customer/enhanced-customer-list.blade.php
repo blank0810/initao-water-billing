@@ -27,7 +27,6 @@
             </div>
 
 
-
             <x-ui.action-functions 
                 searchPlaceholder="Search customer..."
                 filterLabel="All Status"
