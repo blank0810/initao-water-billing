@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class ServiceConnection extends Model
 {
     protected $table = 'ServiceConnection';
+
     protected $primaryKey = 'connection_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -17,10 +21,9 @@ class ServiceConnection extends Model
         'customer_id',
         'address_id',
         'account_type_id',
-        'rate_id',
         'started_at',
         'ended_at',
-        'stat_id'
+        'stat_id',
     ];
 
     protected $casts = [

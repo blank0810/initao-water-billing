@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class ConsumerLedger extends Model
 {
     protected $table = 'consumer_ledger';
+
     protected $primaryKey = 'cl_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -21,7 +25,7 @@ class ConsumerLedger extends Model
         'create_date',
         'stat_id',
         'user_id',
-        'or_no'
+        'or_no',
     ];
 
     protected $casts = [

@@ -7,14 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class MeterReader extends Model
 {
     protected $table = 'meter_readers';
+
     protected $primaryKey = 'mr_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'mr_name',
-        'stat_id'
+        'stat_id',
     ];
 
     /**

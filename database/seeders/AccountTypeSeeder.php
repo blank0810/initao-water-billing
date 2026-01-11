@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Status;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Status;
 
 class AccountTypeSeeder extends Seeder
 {
@@ -16,12 +16,8 @@ class AccountTypeSeeder extends Seeder
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
         $accountTypes = [
-            'Individual',
-            'Corporation',
-            'Partnership',
-            'Government',
-            'Non-Profit Organization',
-            'Cooperative',
+            'Residential',
+            'Commercial',
         ];
 
         foreach ($accountTypes as $type) {

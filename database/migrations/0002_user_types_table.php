@@ -21,9 +21,9 @@ return new class extends Migration
         // Add the foreign key constraint separately
         Schema::table('user_types', function (Blueprint $table) {
             $table->foreign('stat_id')
-                  ->references('stat_id')
-                  ->on('statuses')
-                  ->onDelete('restrict');
+                ->references('stat_id')
+                ->on('statuses')
+                ->onDelete('restrict');
         });
     }
 
@@ -38,7 +38,7 @@ return new class extends Migration
                 $table->dropForeign(['stat_id']);
             }
         });
-        
+
         Schema::dropIfExists('user_types');
     }
 };

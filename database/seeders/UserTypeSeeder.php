@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Status;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\Status;
 
 class UserTypeSeeder extends Seeder
 {
@@ -40,6 +40,6 @@ class UserTypeSeeder extends Seeder
             );
         }
 
-        $this->command->info('User types seeded: ' . count($userTypes) . ' user types');
+        $this->command->info('User types seeded: '.count($userTypes).' user types');
     }
 }

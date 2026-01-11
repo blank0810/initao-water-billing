@@ -228,6 +228,54 @@ Route::middleware('auth')->group(function () {
 
             return view('pages.ledger.overall-data.overall-data');
         })->name('ledger.overall-data');
+
+        // Water Bill API endpoints
+        Route::get('/water-bills/billable-connections', [\App\Http\Controllers\WaterBillController::class, 'getBillableConnections'])->name('water-bills.connections');
+        Route::get('/water-bills/billing-periods', [\App\Http\Controllers\WaterBillController::class, 'getBillingPeriods'])->name('water-bills.periods');
+        Route::get('/water-bills/last-reading/{connectionId}', [\App\Http\Controllers\WaterBillController::class, 'getLastReading'])->name('water-bills.last-reading');
+        Route::post('/water-bills/preview', [\App\Http\Controllers\WaterBillController::class, 'previewBill'])->name('water-bills.preview');
+        Route::post('/water-bills/generate', [\App\Http\Controllers\WaterBillController::class, 'generateBill'])->name('water-bills.generate');
+        Route::get('/water-bills/connection/{connectionId}', [\App\Http\Controllers\WaterBillController::class, 'getConnectionBillingDetails'])->name('water-bills.connection-details');
+        Route::get('/water-bills/consumers', [\App\Http\Controllers\WaterBillController::class, 'getConsumerBillingList'])->name('water-bills.consumers');
+        Route::get('/water-bills/billed-consumers', [\App\Http\Controllers\WaterBillController::class, 'getBilledConsumersByPeriod'])->name('water-bills.billed-consumers');
+        Route::get('/water-bills/summary', [\App\Http\Controllers\WaterBillController::class, 'getBillingSummary'])->name('water-bills.summary');
+
+        // Area Management API
+        Route::get('/areas/list', [\App\Http\Controllers\AreaController::class, 'index'])->name('areas.list');
+        Route::get('/areas/stats', [\App\Http\Controllers\AreaController::class, 'stats'])->name('areas.stats');
+        Route::get('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'show'])->name('areas.show');
+        Route::post('/areas', [\App\Http\Controllers\AreaController::class, 'store'])->name('areas.store');
+        Route::put('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'update'])->name('areas.update');
+        Route::delete('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'destroy'])->name('areas.destroy');
+
+        // Area Assignment API
+        Route::get('/area-assignments', [\App\Http\Controllers\AreaAssignmentController::class, 'index'])->name('area-assignments.index');
+        Route::get('/area-assignments/stats', [\App\Http\Controllers\AreaAssignmentController::class, 'stats'])->name('area-assignments.stats');
+        Route::get('/area-assignments/meter-readers', [\App\Http\Controllers\AreaAssignmentController::class, 'getMeterReaders'])->name('area-assignments.meter-readers');
+        Route::get('/area-assignments/by-area/{areaId}', [\App\Http\Controllers\AreaAssignmentController::class, 'byArea'])->name('area-assignments.by-area');
+        Route::get('/area-assignments/by-user/{userId}', [\App\Http\Controllers\AreaAssignmentController::class, 'byUser'])->name('area-assignments.by-user');
+        Route::get('/area-assignments/{assignmentId}', [\App\Http\Controllers\AreaAssignmentController::class, 'show'])->name('area-assignments.show');
+        Route::post('/area-assignments', [\App\Http\Controllers\AreaAssignmentController::class, 'store'])->name('area-assignments.store');
+        Route::put('/area-assignments/{assignmentId}', [\App\Http\Controllers\AreaAssignmentController::class, 'update'])->name('area-assignments.update');
+        Route::post('/area-assignments/{assignmentId}/end', [\App\Http\Controllers\AreaAssignmentController::class, 'end'])->name('area-assignments.end');
+        Route::delete('/area-assignments/{assignmentId}', [\App\Http\Controllers\AreaAssignmentController::class, 'destroy'])->name('area-assignments.destroy');
+
+        // Reading Schedule API
+        Route::get('/reading-schedules', [\App\Http\Controllers\ReadingScheduleController::class, 'index'])->name('reading-schedules.index');
+        Route::get('/reading-schedules/stats', [\App\Http\Controllers\ReadingScheduleController::class, 'stats'])->name('reading-schedules.stats');
+        Route::get('/reading-schedules/meter-readers', [\App\Http\Controllers\ReadingScheduleController::class, 'getMeterReaders'])->name('reading-schedules.meter-readers');
+        Route::get('/reading-schedules/areas', [\App\Http\Controllers\ReadingScheduleController::class, 'getAreas'])->name('reading-schedules.areas');
+        Route::get('/reading-schedules/periods', [\App\Http\Controllers\ReadingScheduleController::class, 'getPeriods'])->name('reading-schedules.periods');
+        Route::get('/reading-schedules/by-period/{periodId}', [\App\Http\Controllers\ReadingScheduleController::class, 'byPeriod'])->name('reading-schedules.by-period');
+        Route::get('/reading-schedules/by-area/{areaId}', [\App\Http\Controllers\ReadingScheduleController::class, 'byArea'])->name('reading-schedules.by-area');
+        Route::get('/reading-schedules/by-reader/{readerId}', [\App\Http\Controllers\ReadingScheduleController::class, 'byReader'])->name('reading-schedules.by-reader');
+        Route::get('/reading-schedules/{scheduleId}', [\App\Http\Controllers\ReadingScheduleController::class, 'show'])->name('reading-schedules.show');
+        Route::post('/reading-schedules', [\App\Http\Controllers\ReadingScheduleController::class, 'store'])->name('reading-schedules.store');
+        Route::put('/reading-schedules/{scheduleId}', [\App\Http\Controllers\ReadingScheduleController::class, 'update'])->name('reading-schedules.update');
+        Route::post('/reading-schedules/{scheduleId}/start', [\App\Http\Controllers\ReadingScheduleController::class, 'start'])->name('reading-schedules.start');
+        Route::post('/reading-schedules/{scheduleId}/complete', [\App\Http\Controllers\ReadingScheduleController::class, 'complete'])->name('reading-schedules.complete');
+        Route::post('/reading-schedules/{scheduleId}/delay', [\App\Http\Controllers\ReadingScheduleController::class, 'delay'])->name('reading-schedules.delay');
+        Route::delete('/reading-schedules/{scheduleId}', [\App\Http\Controllers\ReadingScheduleController::class, 'destroy'])->name('reading-schedules.destroy');
     });
 
     // -------------------------------------------------------------------------
@@ -278,13 +326,29 @@ Route::middleware('auth')->group(function () {
 
             return view('pages.meter.overall-data.overall-data');
         })->name('meter.overall-data');
+
+        // Meter Inventory API (read-only)
+        Route::get('/meters/list', [\App\Http\Controllers\MeterController::class, 'index'])->name('meters.list');
+        Route::get('/meters/stats', [\App\Http\Controllers\MeterController::class, 'stats'])->name('meters.stats');
+        Route::get('/meters/{meterId}', [\App\Http\Controllers\MeterController::class, 'show'])->name('meters.show');
     });
 
     // Meter Management - Manage (meters.manage permission)
     Route::middleware(['permission:meters.manage'])->group(function () {
-        Route::get('/meter/assignment', function () {
-            return view('pages.meter.meter-assignment');
-        })->name('meter.assignment');
+        // Meter Inventory CRUD API
+        Route::post('/meters', [\App\Http\Controllers\MeterController::class, 'store'])->name('meters.store');
+        Route::put('/meters/{meterId}', [\App\Http\Controllers\MeterController::class, 'update'])->name('meters.update');
+        Route::delete('/meters/{meterId}', [\App\Http\Controllers\MeterController::class, 'destroy'])->name('meters.destroy');
+        Route::post('/meters/{meterId}/faulty', [\App\Http\Controllers\MeterController::class, 'markFaulty'])->name('meters.faulty');
+
+        // Meter Assignment API
+        Route::get('/meter-assignments', [\App\Http\Controllers\MeterAssignmentController::class, 'index'])->name('meter-assignments.index');
+        Route::get('/meter-assignments/stats', [\App\Http\Controllers\MeterAssignmentController::class, 'stats'])->name('meter-assignments.stats');
+        Route::get('/meter-assignments/available-meters', [\App\Http\Controllers\MeterAssignmentController::class, 'getAvailableMeters'])->name('meter-assignments.available-meters');
+        Route::get('/meter-assignments/unassigned-connections', [\App\Http\Controllers\MeterAssignmentController::class, 'getUnassignedConnections'])->name('meter-assignments.unassigned-connections');
+        Route::get('/meter-assignments/{assignmentId}', [\App\Http\Controllers\MeterAssignmentController::class, 'show'])->name('meter-assignments.show');
+        Route::post('/meter-assignments', [\App\Http\Controllers\MeterAssignmentController::class, 'store'])->name('meter-assignments.store');
+        Route::post('/meter-assignments/{assignmentId}/remove', [\App\Http\Controllers\MeterAssignmentController::class, 'remove'])->name('meter-assignments.remove');
     });
 
     // -------------------------------------------------------------------------
@@ -302,6 +366,25 @@ Route::middleware('auth')->group(function () {
 
             return view('pages.rate.overall-data.overall-data');
         })->name('rate.overall-data');
+
+        // Period Rates API
+        Route::get('/rate/periods', [\App\Http\Controllers\RateController::class, 'getPeriods'])->name('rate.periods');
+        Route::get('/rate/account-types', [\App\Http\Controllers\RateController::class, 'getAccountTypes'])->name('rate.account-types');
+        Route::get('/rate/periods/{periodId}/rates', [\App\Http\Controllers\RateController::class, 'getRatesForPeriod'])->name('rate.periods.rates');
+        Route::post('/rate/periods/{periodId}/rates/copy', [\App\Http\Controllers\RateController::class, 'copyRatesToPeriod'])->name('rate.periods.rates.copy');
+        Route::put('/rate/rates/{rateId}', [\App\Http\Controllers\RateController::class, 'updateRate'])->name('rate.rates.update');
+        Route::post('/rate/rates/upload', [\App\Http\Controllers\RateController::class, 'uploadRates'])->name('rate.rates.upload');
+        Route::get('/rate/template', [\App\Http\Controllers\RateController::class, 'downloadTemplate'])->name('rate.template');
+
+        // Period Management API
+        Route::get('/periods/list', [\App\Http\Controllers\PeriodController::class, 'index'])->name('periods.list');
+        Route::post('/periods', [\App\Http\Controllers\PeriodController::class, 'store'])->name('periods.store');
+        Route::get('/periods/{periodId}', [\App\Http\Controllers\PeriodController::class, 'show'])->name('periods.show');
+        Route::put('/periods/{periodId}', [\App\Http\Controllers\PeriodController::class, 'update'])->name('periods.update');
+        Route::delete('/periods/{periodId}', [\App\Http\Controllers\PeriodController::class, 'destroy'])->name('periods.destroy');
+        Route::post('/periods/{periodId}/close', [\App\Http\Controllers\PeriodController::class, 'closePeriod'])->name('periods.close');
+        Route::post('/periods/{periodId}/open', [\App\Http\Controllers\PeriodController::class, 'openPeriod'])->name('periods.open');
+        Route::post('/periods/generate-from-date', [\App\Http\Controllers\PeriodController::class, 'generateFromDate'])->name('periods.generate-from-date');
 
         Route::get('/settings', function () {
             session(['active_menu' => 'settings']);

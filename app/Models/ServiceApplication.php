@@ -10,6 +10,7 @@ class ServiceApplication extends Model
 {
     protected $table = 'ServiceApplication';
 
+
     protected $primaryKey = 'application_id';
 
     public $timestamps = false;

@@ -3,12 +3,8 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Http\Helpers\CustomerHelper;
-use App\Models\Status;
-use App\Rules\Uppercase;
 use App\Services\Customers\CustomerService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -23,13 +19,13 @@ class CustomerController extends Controller
      * Display a listing of the resource.
      * Returns JSON for DataTables
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
         if ($request->ajax() || $request->wantsJson()) {
             $data = $this->customerService->getCustomerList($request);
+
             return response()->json($data);
         }
 
@@ -65,7 +61,6 @@ class CustomerController extends Controller
     /**
      * Store a newly created customer with service application (Approach B)
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
@@ -136,7 +131,7 @@ class CustomerController extends Controller
         try {
             $customer = $this->customerService->getCustomerById($id);
 
-            if (!$customer) {
+            if (! $customer) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Customer not found',
@@ -162,6 +157,7 @@ class CustomerController extends Controller
     {
         try {
             $data = $this->customerService->getCustomerApplications($id);
+
             return response()->json($data, 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -181,6 +177,7 @@ class CustomerController extends Controller
     {
         try {
             $result = $this->customerService->canDeleteCustomer($id);
+
             return response()->json($result, 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -193,7 +190,6 @@ class CustomerController extends Controller
     /**
      * Update the specified customer
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
@@ -243,7 +239,7 @@ class CustomerController extends Controller
             // Check if customer can be deleted
             $canDelete = $this->customerService->canDeleteCustomer($id);
 
-            if (!$canDelete['can_delete']) {
+            if (! $canDelete['can_delete']) {
                 return response()->json([
                     'success' => false,
                     'message' => $canDelete['message'],

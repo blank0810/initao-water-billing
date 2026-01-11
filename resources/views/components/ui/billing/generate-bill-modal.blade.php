@@ -1,108 +1,434 @@
-<div id="generateBillModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Generate Water Bill</h3>
-            <button onclick="closeGenerateBillModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times"></i>
+<!-- Generate Water Bill Modal -->
+<div id="generateBillModal" x-data="generateBillModalData()" x-cloak class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-file-invoice-dollar text-blue-600 mr-2"></i>Generate Water Bill
+            </h3>
+            <button @click="closeModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="fas fa-times text-lg"></i>
             </button>
         </div>
-        
-        <div class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Consumer *</label>
-                    <select id="billConsumer" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        <option value="">Select Consumer</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Billing Period *</label>
-                    <input type="month" id="billPeriod" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Previous Reading *</label>
-                    <input type="number" id="billPrevReading" step="0.001" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Reading *</label>
-                    <input type="number" id="billCurrentReading" step="0.001" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Consumption (m³)</label>
-                    <input type="text" id="billConsumption" readonly class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white" />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Due Date *</label>
-                    <input type="date" id="billDueDate" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
-                </div>
-            </div>
-            
-            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                <div class="flex justify-between items-center">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Estimated Amount:</span>
-                    <span id="billEstimatedAmount" class="text-2xl font-bold text-blue-600 dark:text-blue-400">₱0.00</span>
-                </div>
-            </div>
+
+        <!-- Loading State -->
+        <div x-show="loading" class="flex justify-center items-center py-12">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span class="ml-2 text-gray-600 dark:text-gray-400">Loading data...</span>
         </div>
-        
-        <div class="flex justify-end gap-3 mt-6">
-            <button onclick="closeGenerateBillModal()" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
-            <button onclick="submitGenerateBill()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                <i class="fas fa-file-invoice mr-2"></i>Generate Bill
-            </button>
+
+        <div x-show="!loading" class="space-y-5">
+            <!-- Account Selection -->
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h4 class="font-medium text-gray-900 dark:text-white mb-3">
+                    <i class="fas fa-user-circle mr-2 text-blue-600"></i>Account Information
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Account *</label>
+                        <select x-model="form.connection_id" @change="onConnectionChange()"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Select account...</option>
+                            <template x-for="conn in connections" :key="conn.connection_id">
+                                <option :value="conn.connection_id" x-text="conn.label"></option>
+                            </template>
+                        </select>
+                        <template x-if="connections.length === 0 && !loading">
+                            <p class="mt-1 text-sm text-orange-600">No billable accounts found.</p>
+                        </template>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Billing Period *</label>
+                        <select x-model="form.period_id"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Select period...</option>
+                            <template x-for="period in periods" :key="period.per_id">
+                                <option :value="period.per_id" :selected="period.per_id == activePeriodId"
+                                    x-text="period.per_name + (period.is_active ? ' (Current)' : '')"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Selected Account Info -->
+                <template x-if="selectedConnection">
+                    <div class="mt-3 p-3 bg-white dark:bg-gray-700 rounded-lg">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">Type:</span>
+                                <span class="ml-1 font-medium text-gray-900 dark:text-white" x-text="selectedConnection.account_type"></span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">Location:</span>
+                                <span class="ml-1 font-medium text-gray-900 dark:text-white" x-text="selectedConnection.barangay"></span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">Meter:</span>
+                                <span class="ml-1 font-mono font-medium text-gray-900 dark:text-white" x-text="selectedConnection.meter_serial"></span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500 dark:text-gray-400">Install Read:</span>
+                                <span class="ml-1 font-mono font-medium text-gray-900 dark:text-white" x-text="parseFloat(selectedConnection.install_read || 0).toFixed(3)"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Meter Readings -->
+            <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <h4 class="font-medium text-gray-900 dark:text-white mb-3">
+                    <i class="fas fa-tachometer-alt mr-2 text-green-600"></i>Meter Readings
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Previous Reading (m<sup>3</sup>) *</label>
+                        <input type="number" x-model="form.prev_reading" @input="calculateConsumption()" step="0.001" min="0" placeholder="0.000"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono">
+                        <template x-if="lastReading">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Last reading: <span class="font-mono" x-text="parseFloat(lastReading.reading_value).toFixed(3)"></span> m<sup>3</sup>
+                                <span x-show="lastReading.reading_date">(<span x-text="lastReading.reading_date"></span>)</span>
+                            </p>
+                        </template>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Reading (m<sup>3</sup>) *</label>
+                        <input type="number" x-model="form.curr_reading" @input="calculateConsumption()" step="0.001" min="0" placeholder="0.000"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Consumption (m<sup>3</sup>)</label>
+                        <input type="text" :value="consumption.toFixed(3)" readonly
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white font-mono font-bold">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bill Calculation -->
+            <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <h4 class="font-medium text-gray-900 dark:text-white mb-3">
+                    <i class="fas fa-calculator mr-2 text-purple-600"></i>Bill Calculation
+                </h4>
+
+                <!-- Loading calculation -->
+                <div x-show="calculating" class="flex items-center py-4">
+                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+                    <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Calculating...</span>
+                </div>
+
+                <!-- Calculation Breakdown -->
+                <template x-if="breakdown && !calculating">
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div class="p-2 bg-white dark:bg-gray-700 rounded">
+                                <p class="text-gray-500 dark:text-gray-400 text-xs uppercase">Range</p>
+                                <p class="font-medium text-gray-900 dark:text-white" x-text="breakdown.range"></p>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-gray-700 rounded">
+                                <p class="text-gray-500 dark:text-gray-400 text-xs uppercase">Base Amount</p>
+                                <p class="font-medium text-gray-900 dark:text-white">&#8369;<span x-text="parseFloat(breakdown.base_amount).toFixed(2)"></span></p>
+                            </div>
+                            <div class="p-2 bg-white dark:bg-gray-700 rounded">
+                                <p class="text-gray-500 dark:text-gray-400 text-xs uppercase">Excess (<span x-text="breakdown.excess_consumption"></span> x &#8369;<span x-text="breakdown.rate_increment"></span>)</p>
+                                <p class="font-medium text-gray-900 dark:text-white">&#8369;<span x-text="parseFloat(breakdown.excess_amount).toFixed(2)"></span></p>
+                            </div>
+                            <div class="p-2 bg-purple-100 dark:bg-purple-800 rounded">
+                                <p class="text-purple-600 dark:text-purple-300 text-xs uppercase font-semibold">Total Bill</p>
+                                <p class="font-bold text-purple-700 dark:text-purple-200 text-lg">&#8369;<span x-text="parseFloat(breakdown.total_amount).toFixed(2)"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- No calculation yet -->
+                <template x-if="!breakdown && !calculating">
+                    <div class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                        Enter readings to calculate bill amount
+                    </div>
+                </template>
+            </div>
+
+            <!-- Due Date -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reading Date</label>
+                    <input type="date" x-model="form.reading_date"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Due Date</label>
+                    <input type="date" x-model="form.due_date"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <template x-if="errorMessage">
+                <div class="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p class="text-sm text-red-600 dark:text-red-400" x-text="errorMessage"></p>
+                </div>
+            </template>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button @click="closeModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    Cancel
+                </button>
+                <button @click="submitBill()" :disabled="submitting || !canSubmit"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    <span x-show="!submitting"><i class="fas fa-file-invoice mr-2"></i>Generate Bill</span>
+                    <span x-show="submitting"><i class="fas fa-spinner fa-spin mr-2"></i>Generating...</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+function generateBillModalData() {
+    return {
+        loading: false,
+        calculating: false,
+        submitting: false,
+        errorMessage: '',
+        connections: [],
+        periods: [],
+        activePeriodId: null,
+        lastReading: null,
+        breakdown: null,
+        consumption: 0,
+        form: {
+            connection_id: '',
+            period_id: '',
+            prev_reading: 0,
+            curr_reading: 0,
+            reading_date: new Date().toISOString().split('T')[0],
+            due_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        },
+
+        get selectedConnection() {
+            if (!this.form.connection_id) return null;
+            return this.connections.find(c => c.connection_id == this.form.connection_id);
+        },
+
+        get canSubmit() {
+            return this.form.connection_id &&
+                   this.form.period_id &&
+                   this.form.prev_reading !== '' &&
+                   this.form.curr_reading !== '' &&
+                   this.consumption >= 0 &&
+                   this.breakdown;
+        },
+
+        async loadData() {
+            this.loading = true;
+            this.errorMessage = '';
+            try {
+                const [connectionsRes, periodsRes] = await Promise.all([
+                    fetch('/water-bills/billable-connections'),
+                    fetch('/water-bills/billing-periods')
+                ]);
+
+                const connectionsData = await connectionsRes.json();
+                const periodsData = await periodsRes.json();
+
+                if (connectionsData.success) {
+                    this.connections = connectionsData.data;
+                }
+                if (periodsData.success) {
+                    this.periods = periodsData.data;
+                    this.activePeriodId = periodsData.activePeriodId;
+                    // Set default period to active period
+                    if (this.activePeriodId) {
+                        this.form.period_id = this.activePeriodId;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                this.errorMessage = 'Failed to load data. Please try again.';
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async onConnectionChange() {
+            this.lastReading = null;
+            this.breakdown = null;
+            this.consumption = 0;
+            this.form.prev_reading = 0;
+            this.form.curr_reading = 0;
+
+            if (!this.form.connection_id) return;
+
+            try {
+                const response = await fetch(`/water-bills/last-reading/${this.form.connection_id}`);
+                const result = await response.json();
+                if (result.success) {
+                    this.lastReading = result.data;
+                    // Set previous reading to last reading value
+                    this.form.prev_reading = result.data.reading_value;
+                }
+            } catch (error) {
+                console.error('Error loading last reading:', error);
+            }
+        },
+
+        calculateConsumption() {
+            const prev = parseFloat(this.form.prev_reading) || 0;
+            const curr = parseFloat(this.form.curr_reading) || 0;
+            this.consumption = Math.max(0, curr - prev);
+
+            // Preview calculation if we have valid consumption
+            if (this.consumption > 0 && this.form.connection_id) {
+                this.previewCalculation();
+            } else {
+                this.breakdown = null;
+            }
+        },
+
+        async previewCalculation() {
+            if (!this.form.connection_id || this.consumption <= 0) {
+                this.breakdown = null;
+                return;
+            }
+
+            this.calculating = true;
+            try {
+                const response = await fetch('/water-bills/preview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        connection_id: this.form.connection_id,
+                        period_id: this.form.period_id || null,
+                        prev_reading: this.form.prev_reading,
+                        curr_reading: this.form.curr_reading
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    this.breakdown = result.breakdown;
+                } else {
+                    this.breakdown = null;
+                    this.errorMessage = result.message || 'Failed to calculate bill';
+                }
+            } catch (error) {
+                console.error('Error calculating bill:', error);
+                this.breakdown = null;
+            } finally {
+                this.calculating = false;
+            }
+        },
+
+        async submitBill() {
+            this.errorMessage = '';
+
+            if (!this.form.connection_id) {
+                this.errorMessage = 'Please select a service account';
+                return;
+            }
+            if (!this.form.period_id) {
+                this.errorMessage = 'Please select a billing period';
+                return;
+            }
+            if (this.consumption < 0) {
+                this.errorMessage = 'Current reading cannot be less than previous reading';
+                return;
+            }
+
+            this.submitting = true;
+            try {
+                const response = await fetch('/water-bills/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(this.form)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    this.closeModal();
+                    if (window.showToast) {
+                        window.showToast('Bill generated successfully!', 'success');
+                    } else if (window.showAlert) {
+                        window.showAlert('Bill generated successfully!', 'success');
+                    } else {
+                        alert('Bill generated successfully!');
+                    }
+                    // Dispatch event to refresh billing data
+                    document.dispatchEvent(new CustomEvent('bill-generated'));
+                    // Refresh billing summary cards
+                    if (typeof window.refreshBillingSummary === 'function') {
+                        window.refreshBillingSummary();
+                    }
+                    // Legacy refresh callbacks
+                    if (typeof window.refreshConsumerBilling === 'function') {
+                        window.refreshConsumerBilling();
+                    }
+                    if (window.billing && typeof window.billing.renderConsumerBilling === 'function') {
+                        window.billing.renderConsumerBilling();
+                    }
+                } else {
+                    this.errorMessage = result.message || 'Failed to generate bill';
+                }
+            } catch (error) {
+                console.error('Error generating bill:', error);
+                this.errorMessage = 'Failed to generate bill. Please try again.';
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        resetForm() {
+            this.form = {
+                connection_id: '',
+                period_id: this.activePeriodId || '',
+                prev_reading: 0,
+                curr_reading: 0,
+                reading_date: new Date().toISOString().split('T')[0],
+                due_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            };
+            this.errorMessage = '';
+            this.lastReading = null;
+            this.breakdown = null;
+            this.consumption = 0;
+        },
+
+        closeModal() {
+            document.getElementById('generateBillModal').classList.add('hidden');
+            this.resetForm();
+        }
+    }
+}
+
 function openGenerateBillModal() {
-    document.getElementById('generateBillModal').classList.remove('hidden');
-    const select = document.getElementById('billConsumer');
-    if (window.billingData) {
-        select.innerHTML = '<option value="">Select Consumer</option>' + 
-            window.billingData.consumers.map(c => `<option value="${c.connection_id}">${c.name} - ${c.account_no}</option>`).join('');
+    const modal = document.getElementById('generateBillModal');
+    modal.classList.remove('hidden');
+
+    // Get Alpine.js component and load data
+    const alpineComponent = Alpine.$data(modal);
+    if (alpineComponent) {
+        alpineComponent.resetForm();
+        alpineComponent.loadData();
     }
 }
 
 function closeGenerateBillModal() {
-    document.getElementById('generateBillModal').classList.add('hidden');
-}
+    const modal = document.getElementById('generateBillModal');
+    modal.classList.add('hidden');
 
-function submitGenerateBill() {
-    const consumer = document.getElementById('billConsumer').value;
-    const period = document.getElementById('billPeriod').value;
-    const prevReading = document.getElementById('billPrevReading').value;
-    const currentReading = document.getElementById('billCurrentReading').value;
-    const dueDate = document.getElementById('billDueDate').value;
-    
-    if (!consumer || !period || !prevReading || !currentReading || !dueDate) {
-        alert('Please fill all required fields');
-        return;
+    const alpineComponent = Alpine.$data(modal);
+    if (alpineComponent) {
+        alpineComponent.resetForm();
     }
-    
-    if (window.showToast) {
-        showToast('Bill generated successfully!', 'success');
-    } else {
-        alert('Bill generated successfully!');
-    }
-    closeGenerateBillModal();
 }
-
-document.getElementById('billCurrentReading')?.addEventListener('input', function() {
-    const prev = parseFloat(document.getElementById('billPrevReading').value) || 0;
-    const current = parseFloat(this.value) || 0;
-    const consumption = Math.max(0, current - prev);
-    document.getElementById('billConsumption').value = consumption.toFixed(3);
-    document.getElementById('billEstimatedAmount').textContent = '₱' + (consumption * 18).toFixed(2);
-});
 
 window.openGenerateBillModal = openGenerateBillModal;
 window.closeGenerateBillModal = closeGenerateBillModal;
-window.submitGenerateBill = submitGenerateBill;
 </script>

@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class MeterAssignment extends Model
 {
     protected $table = 'MeterAssignment';
+
     protected $primaryKey = 'assignment_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -18,7 +22,7 @@ class MeterAssignment extends Model
         'installed_at',
         'removed_at',
         'install_read',
-        'removal_read'
+        'removal_read',
     ];
 
     protected $casts = [

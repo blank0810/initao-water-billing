@@ -14,20 +14,20 @@ return new class extends Migration
         Schema::create('role_permissions', function (Blueprint $table) {
             $table->unsignedBigInteger('role_id');
             $table->unsignedBigInteger('permission_id');
-            
+
             // Composite primary key
             $table->primary(['role_id', 'permission_id']);
-            
+
             // Foreign keys
             $table->foreign('role_id')
-                  ->references('role_id')
-                  ->on('roles')
-                  ->onDelete('cascade');
-                  
+                ->references('role_id')
+                ->on('roles')
+                ->onDelete('cascade');
+
             $table->foreign('permission_id')
-                  ->references('permission_id')
-                  ->on('permissions')
-                  ->onDelete('cascade');
+                ->references('permission_id')
+                ->on('permissions')
+                ->onDelete('cascade');
         });
     }
 
@@ -40,7 +40,7 @@ return new class extends Migration
             $table->dropForeign(['role_id']);
             $table->dropForeign(['permission_id']);
         });
-        
+
         Schema::dropIfExists('role_permissions');
     }
 };

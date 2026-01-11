@@ -10,11 +10,13 @@ class CustomerCharge extends Model
 {
     protected $table = 'CustomerCharge';
 
+
     protected $primaryKey = 'charge_id';
 
     public $timestamps = true;
 
     public $incrementing = true;
+
 
     protected $keyType = 'int';
 
@@ -27,6 +29,7 @@ class CustomerCharge extends Model
         'quantity',
         'unit_amount',
         'due_date',
+        'stat_id',
         'stat_id',
     ];
 

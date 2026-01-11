@@ -14,7 +14,7 @@ class CustomerHelper
     {
         $initials = strtoupper(
             substr($firstName, 0, 1).
-              substr($lastName, 0, 1)
+            substr($lastName, 0, 1)
         );
 
         $timestamp = now()->format('YmdHis');

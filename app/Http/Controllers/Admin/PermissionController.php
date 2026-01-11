@@ -20,6 +20,7 @@ class PermissionController extends Controller
     public function index()
     {
         session(['active_menu' => 'user-permissions']);
+
         return view('pages.admin.permissions.index');
     }
 
@@ -29,6 +30,7 @@ class PermissionController extends Controller
     public function apiIndex(): JsonResponse
     {
         $permissions = $this->permissionService->getAllPermissionsWithRoleCounts();
+
         return response()->json(['data' => $permissions]);
     }
 
@@ -38,6 +40,7 @@ class PermissionController extends Controller
     public function getGroupedPermissions(): JsonResponse
     {
         $grouped = $this->permissionService->getPermissionsGroupedByModule();
+
         return response()->json(['data' => $grouped]);
     }
 
@@ -47,6 +50,7 @@ class PermissionController extends Controller
     public function show(Permission $permission): JsonResponse
     {
         $data = $this->permissionService->getPermissionWithRoles($permission);
+
         return response()->json(['data' => $data]);
     }
 
@@ -60,10 +64,11 @@ class PermissionController extends Controller
         ]);
 
         $permission->update($validated);
+
         return response()->json([
             'success' => true,
             'message' => 'Permission updated successfully',
-            'data' => $permission
+            'data' => $permission,
         ]);
     }
 }

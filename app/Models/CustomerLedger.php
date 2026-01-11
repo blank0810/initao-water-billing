@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class CustomerLedger extends Model
 {
     protected $table = 'CustomerLedger';
+
     protected $primaryKey = 'ledger_entry_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -25,7 +29,7 @@ class CustomerLedger extends Model
         'debit',
         'credit',
         'user_id',
-        'stat_id'
+        'stat_id',
     ];
 
     protected $casts = [
@@ -83,6 +87,7 @@ class CustomerLedger extends Model
         if ($this->source_type === 'BILL') {
             return $this->belongsTo(WaterBillHistory::class, 'source_id', 'bill_id');
         }
+
         return null;
     }
 
@@ -94,6 +99,7 @@ class CustomerLedger extends Model
         if ($this->source_type === 'CHARGE') {
             return $this->belongsTo(CustomerCharge::class, 'source_id', 'charge_id');
         }
+
         return null;
     }
 
@@ -105,6 +111,7 @@ class CustomerLedger extends Model
         if ($this->source_type === 'PAYMENT') {
             return $this->belongsTo(Payment::class, 'source_id', 'payment_id');
         }
+
         return null;
     }
 }

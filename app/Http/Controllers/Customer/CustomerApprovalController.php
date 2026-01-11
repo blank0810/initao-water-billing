@@ -10,6 +10,7 @@ class CustomerApprovalController extends Controller
     public function index()
     {
         session(['active_menu' => 'approve-customer']);
+
         return view('pages.application.approve-customer');
     }
 
@@ -21,14 +22,14 @@ class CustomerApprovalController extends Controller
         // For now, we'll just redirect with the customer ID
 
         return redirect()->route('service.connection', ['customer_id' => $customerId])
-                        ->with('success', 'Customer approved successfully. Please proceed with service connection.');
+            ->with('success', 'Customer approved successfully. Please proceed with service connection.');
     }
 
     public function decline(Request $request)
     {
         $request->validate([
             'customer_id' => 'required',
-            'reason' => 'required|string|max:500'
+            'reason' => 'required|string|max:500',
         ]);
 
         $customerId = $request->input('customer_id');
@@ -39,7 +40,7 @@ class CustomerApprovalController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Customer application declined successfully.'
+            'message' => 'Customer application declined successfully.',
         ]);
     }
 
@@ -52,7 +53,7 @@ class CustomerApprovalController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Customer application restored to approval queue.'
+            'message' => 'Customer application restored to approval queue.',
         ]);
     }
 }

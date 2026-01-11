@@ -70,3 +70,4 @@ class PaymentTransaction extends Model
         return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
     }
 }
+

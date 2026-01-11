@@ -38,70 +38,135 @@
             </div>
 
             <!-- Meters Tab -->
-            <div id="content-meters" class="tab-content">
+            <div id="content-meters" class="tab-content" x-data="consumerMetersData()" x-init="init()">
                 <!-- Summary Cards -->
                 <div id="meterSummaryWrapper" class="mb-8">
-                    @include('components.ui.meter.info-cards')
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-5 text-white">
+                            <div class="flex items-center justify-between mb-2">
+                                <i class="fas fa-tachometer-alt text-3xl opacity-80"></i>
+                                <span class="text-xs font-semibold bg-blue-400 bg-opacity-30 px-2 py-1 rounded">TOTAL</span>
+                            </div>
+                            <div class="text-3xl font-bold mb-1" x-text="stats.total_meters">0</div>
+                            <div class="text-xs opacity-90">Total Meters</div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-5 text-white">
+                            <div class="flex items-center justify-between mb-2">
+                                <i class="fas fa-plug text-3xl opacity-80"></i>
+                                <span class="text-xs font-semibold bg-green-400 bg-opacity-30 px-2 py-1 rounded">ASSIGNED</span>
+                            </div>
+                            <div class="text-3xl font-bold mb-1" x-text="stats.active_assignments">0</div>
+                            <div class="text-xs opacity-90">Active Assignments</div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg shadow-lg p-5 text-white">
+                            <div class="flex items-center justify-between mb-2">
+                                <i class="fas fa-box-open text-3xl opacity-80"></i>
+                                <span class="text-xs font-semibold bg-cyan-400 bg-opacity-30 px-2 py-1 rounded">AVAILABLE</span>
+                            </div>
+                            <div class="text-3xl font-bold mb-1" x-text="stats.available_meters">0</div>
+                            <div class="text-xs opacity-90">Available Meters</div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-5 text-white">
+                            <div class="flex items-center justify-between mb-2">
+                                <i class="fas fa-exclamation-circle text-3xl opacity-80"></i>
+                                <span class="text-xs font-semibold bg-orange-400 bg-opacity-30 px-2 py-1 rounded">PENDING</span>
+                            </div>
+                            <div class="text-3xl font-bold mb-1" x-text="stats.unassigned_connections">0</div>
+                            <div class="text-xs opacity-90">Unassigned Connections</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Search and Filters -->
                 <div id="searchFilterSection" class="mb-6">
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex-1">
-                            <x-ui.search-bar placeholder="Search by meter no, consumer name, address..." />
+                            <input type="text" x-model="searchQuery" placeholder="Search by meter serial, account no, customer name..."
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div class="sm:w-48">
-                            <select id="statusFilterDropdown" onchange="filterByStatus(this.value)" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <select x-model="statusFilter" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 <option value="all">All Status</option>
+                                <option value="active">Active Only</option>
+                                <option value="removed">Removed</option>
                             </select>
                         </div>
                         <div class="sm:w-48">
-                            <select id="zoneFilterDropdown" onchange="filterByZone(this.value)" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <option value="all">All Zones</option>
+                            <select x-model="typeFilter" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="all">All Types</option>
+                                <option value="Residential">Residential</option>
+                                <option value="Commercial">Commercial</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
+                <!-- Loading State -->
+                <div x-show="loading" class="flex justify-center items-center py-12">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span class="ml-2 text-gray-600 dark:text-gray-400">Loading consumer meters...</span>
+                </div>
+
                 <!-- Main Table Section -->
-                <div id="tableSection" x-data="meterManagementData()" x-init="init()">
+                <div id="tableSection" x-show="!loading">
                     <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800">
                         <div class="overflow-x-auto">
                             <table class="min-w-full">
                                 <thead>
                                     <tr class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
-                                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Meter No.</th>
-                                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Consumer</th>
-                                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Address</th>
+                                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Meter Serial</th>
+                                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Account / Customer</th>
+                                        <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Location</th>
+                                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Type</th>
+                                        <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Installed</th>
+                                        <th class="px-4 py-3.5 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Install Reading</th>
                                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Status</th>
-                                        <th class="px-4 py-3.5 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Current Reading</th>
-                                        <th class="px-4 py-3.5 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Consumption</th>
                                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                    <template x-for="meter in paginatedData" :key="meter.id">
+                                    <template x-for="item in paginatedData" :key="item.assignment_id">
                                         <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-all duration-150">
-                                            <td class="px-4 py-3 text-sm font-mono text-gray-900 dark:text-gray-100" x-text="meter.meterNo"></td>
-                                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="meter.name"></td>
-                                            <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300" x-text="meter.address"></td>
-                                            <td class="px-4 py-3 text-center">
-                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" :class="meter.statusClass">
-                                                    <i class="fas mr-1" :class="meter.statusIcon"></i><span x-text="meter.statusName"></span>
-                                                </span>
+                                            <td class="px-4 py-3">
+                                                <div class="text-sm font-mono font-medium text-gray-900 dark:text-gray-100" x-text="item.meter_serial"></div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400" x-text="item.meter_brand"></div>
                                             </td>
-                                            <td class="px-4 py-3 text-sm text-right text-gray-700 dark:text-gray-300" x-text="meter.currentReading.toFixed(2) + ' m³'"></td>
-                                            <td class="px-4 py-3 text-sm text-right text-gray-700 dark:text-gray-300" x-text="meter.consumption.toFixed(2) + ' m³'"></td>
+                                            <td class="px-4 py-3">
+                                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="item.account_no"></div>
+                                                <div class="text-sm text-gray-500 dark:text-gray-400" x-text="item.customer_name"></div>
+                                            </td>
+                                            <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300" x-text="item.barangay"></td>
                                             <td class="px-4 py-3 text-center">
-                                                <button @click="selectConsumer(meter.id)" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">View Details</button>
+                                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200" x-text="item.account_type"></span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300" x-text="item.installed_at"></td>
+                                            <td class="px-4 py-3 text-right text-sm font-mono text-gray-700 dark:text-gray-300">
+                                                <span x-text="parseFloat(item.install_read || 0).toFixed(3)"></span> m<sup>3</sup>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" :class="item.status_class" x-text="item.status"></span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <div class="flex items-center justify-center gap-1">
+                                                    <button @click="viewDetails(item)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded" title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button x-show="item.is_active" @click="openRemoveModal(item)" class="text-red-600 hover:text-red-900 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded" title="Remove Meter">
+                                                        <i class="fas fa-unlink"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     </template>
-                                    <template x-if="paginatedData.length === 0">
+                                    <template x-if="paginatedData.length === 0 && !loading">
                                         <tr>
-                                            <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                            <td colspan="8" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                                                 <i class="fas fa-inbox text-3xl mb-2 opacity-50"></i>
-                                                <p>No meters found</p>
+                                                <p>No meter assignments found</p>
+                                                <p class="mt-2 text-xs">Click "Assign Meter" to assign meters to service connections</p>
                                             </td>
                                         </tr>
                                     </template>
@@ -110,7 +175,7 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-center mt-4 flex-wrap gap-4">
+                    <div x-show="filteredData.length > 0" class="flex justify-between items-center mt-4 flex-wrap gap-4">
                         <div class="flex items-center gap-2">
                             <span class="text-sm text-gray-600 dark:text-gray-400">Show</span>
                             <select x-model.number="pageSize" @change="currentPage = 1" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
@@ -121,7 +186,7 @@
                             </select>
                             <span class="text-sm text-gray-600 dark:text-gray-400">entries</span>
                         </div>
-                        
+
                         <div class="flex items-center gap-2">
                             <button @click="prevPage()" :disabled="currentPage === 1" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                                 <i class="fas fa-chevron-left mr-1"></i>Previous
@@ -133,84 +198,144 @@
                                 Next<i class="fas fa-chevron-right ml-1"></i>
                             </button>
                         </div>
-                        
+
                         <div class="text-sm text-gray-600 dark:text-gray-400">
                             Showing <span class="font-semibold text-gray-900 dark:text-white" x-text="startRecord"></span> to <span class="font-semibold text-gray-900 dark:text-white" x-text="endRecord"></span> of <span class="font-semibold text-gray-900 dark:text-white" x-text="totalRecords"></span> results
                         </div>
                     </div>
                 </div>
 
-<script>
-function meterManagementData() {
-    return {
-        searchQuery: '',
-        statusFilter: 'all',
-        zoneFilter: 'all',
-        pageSize: 10,
-        currentPage: 1,
-        data: [],
-        
-        init() {
-            this.loadData();
-            this.$watch('searchQuery', () => this.currentPage = 1);
-            this.$watch('statusFilter', () => this.currentPage = 1);
-            this.$watch('zoneFilter', () => this.currentPage = 1);
-            this.$watch('pageSize', () => this.currentPage = 1);
-        },
-        
-        loadData() {
-            if (!window._meterModule) {
-                setTimeout(() => this.loadData(), 100);
-                return;
-            }
-            const { consumers, meterStatuses } = window._meterModule;
-            this.data = consumers.map(c => {
-                const status = meterStatuses.find(s => s.id === c.statusId) || meterStatuses[0];
-                const consumption = c.currentReading - c.previousReading;
-                return {
-                    ...c,
-                    consumption,
-                    statusName: status.name,
-                    statusClass: `bg-${status.color}-100 text-${status.color}-800 dark:bg-${status.color}-900 dark:text-${status.color}-200`,
-                    statusIcon: status.icon
-                };
-            });
-        },
-        
-        get filteredData() {
-            let filtered = this.data;
-            if (this.searchQuery) {
-                filtered = filtered.filter(m => 
-                    m.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                    m.meterNo.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                    m.address.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-                    m.id.toLowerCase().includes(this.searchQuery.toLowerCase())
-                );
-            }
-            if (this.statusFilter !== 'all') {
-                filtered = filtered.filter(m => m.statusId === parseInt(this.statusFilter));
-            }
-            if (this.zoneFilter !== 'all') {
-                filtered = filtered.filter(m => m.zone === this.zoneFilter);
-            }
-            return filtered;
-        },
-        
-        get totalRecords() { return this.filteredData.length; },
-        get totalPages() { return Math.ceil(this.totalRecords / this.pageSize) || 1; },
-        get startRecord() { return this.totalRecords === 0 ? 0 : ((this.currentPage - 1) * this.pageSize) + 1; },
-        get endRecord() { return Math.min(this.currentPage * this.pageSize, this.totalRecords); },
-        get paginatedData() {
-            const start = (this.currentPage - 1) * this.pageSize;
-            return this.filteredData.slice(start, start + this.pageSize);
-        },
-        
-        prevPage() { if (this.currentPage > 1) this.currentPage--; },
-        nextPage() { if (this.currentPage < this.totalPages) this.currentPage++; },
-        selectConsumer(id) { if (window.selectConsumer) window.selectConsumer(id); }
-    }
-}
-</script>
+                <!-- Remove Meter Modal -->
+                <div x-show="showRemoveModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                    <div @click.away="showRemoveModal = false" class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                                <i class="fas fa-unlink text-red-600 mr-2"></i>Remove Meter
+                            </h3>
+                            <button @click="showRemoveModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
+
+                        <template x-if="removeItem">
+                            <div class="mb-6">
+                                <div class="p-3 bg-red-50 dark:bg-red-900/30 rounded-lg mb-4">
+                                    <p class="text-sm text-red-800 dark:text-red-200">
+                                        Remove meter <span class="font-bold" x-text="removeItem.meter_serial"></span> from account <span class="font-bold" x-text="removeItem.account_no"></span>?
+                                    </p>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Removal Date *</label>
+                                        <input type="date" x-model="removeForm.removed_at" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Final Reading (m<sup>3</sup>) *</label>
+                                        <input type="number" x-model="removeForm.removal_read" step="0.001" :min="removeItem.install_read" placeholder="0.000"
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                        <p class="mt-1 text-xs text-gray-500">Install reading: <span x-text="parseFloat(removeItem.install_read || 0).toFixed(3)"></span> m<sup>3</sup></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div class="flex justify-end gap-3">
+                            <button @click="showRemoveModal = false" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                                Cancel
+                            </button>
+                            <button @click="submitRemove()" :disabled="submitting" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50">
+                                <span x-show="!submitting"><i class="fas fa-unlink mr-2"></i>Remove</span>
+                                <span x-show="submitting"><i class="fas fa-spinner fa-spin mr-2"></i>Removing...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View Details Modal -->
+                <div x-show="showDetailsModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                    <div @click.away="showDetailsModal = false" class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Assignment Details</h3>
+                            <button @click="showDetailsModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <i class="fas fa-times text-lg"></i>
+                            </button>
+                        </div>
+
+                        <template x-if="detailsItem">
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Account No</p>
+                                        <p class="font-medium text-gray-900 dark:text-white" x-text="detailsItem.account_no"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Status</p>
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" :class="detailsItem.status_class" x-text="detailsItem.status"></span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Customer</p>
+                                    <p class="font-medium text-gray-900 dark:text-white" x-text="detailsItem.customer_name"></p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Account Type</p>
+                                        <p class="font-medium text-gray-900 dark:text-white" x-text="detailsItem.account_type"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Location</p>
+                                        <p class="font-medium text-gray-900 dark:text-white" x-text="detailsItem.barangay"></p>
+                                    </div>
+                                </div>
+                                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Meter Information</h4>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Serial</p>
+                                            <p class="font-mono font-medium text-gray-900 dark:text-white" x-text="detailsItem.meter_serial"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Brand</p>
+                                            <p class="font-medium text-gray-900 dark:text-white" x-text="detailsItem.meter_brand"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Assignment Details</h4>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Installed</p>
+                                            <p class="font-medium text-gray-900 dark:text-white" x-text="detailsItem.installed_at"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Install Reading</p>
+                                            <p class="font-mono font-medium text-gray-900 dark:text-white"><span x-text="parseFloat(detailsItem.install_read || 0).toFixed(3)"></span> m<sup>3</sup></p>
+                                        </div>
+                                    </div>
+                                    <template x-if="detailsItem.removed_at">
+                                        <div class="grid grid-cols-2 gap-4 mt-3">
+                                            <div>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Removed</p>
+                                                <p class="font-medium text-gray-900 dark:text-white" x-text="detailsItem.removed_at"></p>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">Final Reading</p>
+                                                <p class="font-mono font-medium text-gray-900 dark:text-white"><span x-text="parseFloat(detailsItem.removal_read || 0).toFixed(3)"></span> m<sup>3</sup></p>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+
+                        <div class="flex justify-end gap-3 mt-6">
+                            <button @click="showDetailsModal = false" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Meter Inventory Tab -->
@@ -359,6 +484,169 @@ function meterManagementData() {
 </x-app-layout>
 
 @vite(['resources/js/meter.js'])
+
+<script>
+// Consumer Meters Data - Fetches from API
+function consumerMetersData() {
+    return {
+        loading: true,
+        submitting: false,
+        searchQuery: '',
+        statusFilter: 'all',
+        typeFilter: 'all',
+        pageSize: 10,
+        currentPage: 1,
+        data: [],
+        stats: {
+            total_meters: 0,
+            available_meters: 0,
+            active_assignments: 0,
+            unassigned_connections: 0
+        },
+
+        // Modals
+        showRemoveModal: false,
+        showDetailsModal: false,
+        removeItem: null,
+        detailsItem: null,
+        removeForm: {
+            removed_at: new Date().toISOString().split('T')[0],
+            removal_read: 0
+        },
+
+        async init() {
+            await this.fetchData();
+            this.$watch('searchQuery', () => this.currentPage = 1);
+            this.$watch('statusFilter', () => this.currentPage = 1);
+            this.$watch('typeFilter', () => this.currentPage = 1);
+            this.$watch('pageSize', () => this.currentPage = 1);
+
+            // Expose refresh function globally
+            window.refreshConsumerMeters = () => this.fetchData();
+        },
+
+        async fetchData() {
+            this.loading = true;
+            try {
+                const response = await fetch('/meter-assignments?all=true');
+                const result = await response.json();
+                if (result.success) {
+                    this.data = result.data || [];
+                    this.stats = result.stats || this.stats;
+                }
+            } catch (error) {
+                console.error('Error fetching meter assignments:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        get filteredData() {
+            let filtered = this.data;
+
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(item =>
+                    (item.meter_serial && item.meter_serial.toLowerCase().includes(query)) ||
+                    (item.account_no && item.account_no.toLowerCase().includes(query)) ||
+                    (item.customer_name && item.customer_name.toLowerCase().includes(query)) ||
+                    (item.barangay && item.barangay.toLowerCase().includes(query))
+                );
+            }
+
+            if (this.statusFilter === 'active') {
+                filtered = filtered.filter(item => item.is_active);
+            } else if (this.statusFilter === 'removed') {
+                filtered = filtered.filter(item => !item.is_active);
+            }
+
+            if (this.typeFilter !== 'all') {
+                filtered = filtered.filter(item => item.account_type === this.typeFilter);
+            }
+
+            return filtered;
+        },
+
+        get totalRecords() { return this.filteredData.length; },
+        get totalPages() { return Math.ceil(this.totalRecords / this.pageSize) || 1; },
+        get startRecord() { return this.totalRecords === 0 ? 0 : ((this.currentPage - 1) * this.pageSize) + 1; },
+        get endRecord() { return Math.min(this.currentPage * this.pageSize, this.totalRecords); },
+        get paginatedData() {
+            const start = (this.currentPage - 1) * this.pageSize;
+            return this.filteredData.slice(start, start + this.pageSize);
+        },
+
+        prevPage() { if (this.currentPage > 1) this.currentPage--; },
+        nextPage() { if (this.currentPage < this.totalPages) this.currentPage++; },
+
+        viewDetails(item) {
+            this.detailsItem = item;
+            this.showDetailsModal = true;
+        },
+
+        openRemoveModal(item) {
+            this.removeItem = item;
+            this.removeForm = {
+                removed_at: new Date().toISOString().split('T')[0],
+                removal_read: item.install_read || 0
+            };
+            this.showRemoveModal = true;
+        },
+
+        async submitRemove() {
+            if (!this.removeItem) return;
+
+            if (parseFloat(this.removeForm.removal_read) < parseFloat(this.removeItem.install_read)) {
+                if (window.showAlert) {
+                    window.showAlert('Final reading cannot be less than install reading', 'error');
+                } else {
+                    alert('Final reading cannot be less than install reading');
+                }
+                return;
+            }
+
+            this.submitting = true;
+            try {
+                const response = await fetch(`/meter-assignments/${this.removeItem.assignment_id}/remove`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(this.removeForm)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    this.showRemoveModal = false;
+                    if (window.showAlert) {
+                        window.showAlert('Meter removed successfully', 'success');
+                    } else {
+                        alert('Meter removed successfully');
+                    }
+                    await this.fetchData();
+                } else {
+                    if (window.showAlert) {
+                        window.showAlert(result.message || 'Failed to remove meter', 'error');
+                    } else {
+                        alert(result.message || 'Failed to remove meter');
+                    }
+                }
+            } catch (error) {
+                console.error('Error removing meter:', error);
+                if (window.showAlert) {
+                    window.showAlert('Failed to remove meter', 'error');
+                } else {
+                    alert('Failed to remove meter');
+                }
+            } finally {
+                this.submitting = false;
+            }
+        }
+    }
+}
+</script>
 
 <script>
 function showTab(tab) {

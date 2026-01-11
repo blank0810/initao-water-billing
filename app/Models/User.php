@@ -249,4 +249,28 @@ class User extends Authenticatable
     {
         return $this->hasAnyRole([Role::SUPER_ADMIN, Role::ADMIN]);
     }
+
+    /**
+     * Get the area assignments for the user (when user is a meter reader)
+     */
+    public function areaAssignments()
+    {
+        return $this->hasMany(AreaAssignment::class, 'user_id', 'id');
+    }
+
+    /**
+     * Get active area assignments for the user
+     */
+    public function activeAreaAssignments()
+    {
+        return $this->areaAssignments()->active();
+    }
+
+    /**
+     * Check if user is a meter reader
+     */
+    public function isMeterReader(): bool
+    {
+        return $this->hasRole(Role::METER_READER);
+    }
 }

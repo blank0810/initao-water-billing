@@ -7,9 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class BillAdjustment extends Model
 {
     protected $table = 'BillAdjustment';
+
     protected $primaryKey = 'bill_adjustment_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
@@ -18,7 +22,7 @@ class BillAdjustment extends Model
         'amount',
         'remarks',
         'created_at',
-        'user_id'
+        'user_id',
     ];
 
     protected $casts = [
