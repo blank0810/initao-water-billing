@@ -28,9 +28,11 @@ Route::prefix('address')->group(function () {
 
 // Customer API endpoints for CRUD operations
 Route::prefix('customers')->group(function () {
-    Route::get('/{id}', [CustomerController::class, 'show']);
-    Route::get('/{id}/applications', [CustomerController::class, 'getApplications']);
-    Route::get('/{id}/can-delete', [CustomerController::class, 'canDelete']);
-    Route::put('/{id}', [CustomerController::class, 'update']);
-    Route::delete('/{id}', [CustomerController::class, 'destroy']);
+    // Search must come BEFORE /{id} to avoid "search" being captured as an ID
+    Route::get('/search', [CustomerController::class, 'search']);
+    Route::get('/{id}', [CustomerController::class, 'show'])->where('id', '[0-9]+');
+    Route::get('/{id}/applications', [CustomerController::class, 'getApplications'])->where('id', '[0-9]+');
+    Route::get('/{id}/can-delete', [CustomerController::class, 'canDelete'])->where('id', '[0-9]+');
+    Route::put('/{id}', [CustomerController::class, 'update'])->where('id', '[0-9]+');
+    Route::delete('/{id}', [CustomerController::class, 'destroy'])->where('id', '[0-9]+');
 });

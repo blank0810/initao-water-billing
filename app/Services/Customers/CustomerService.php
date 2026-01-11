@@ -202,7 +202,7 @@ class CustomerService
             return [
                 'id' => $customer->cust_id,
                 'fullName' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
-                'phone' => $customer->phone ?? 'N/A',
+                'phone' => $customer->contact_number ?? 'N/A',
                 'type' => $customer->c_type ?? 'RESIDENTIAL',
                 'connectionsCount' => $customer->serviceConnections ? $customer->serviceConnections->count() : 0,
             ];
