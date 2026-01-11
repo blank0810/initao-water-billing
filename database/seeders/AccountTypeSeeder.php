@@ -16,12 +16,8 @@ class AccountTypeSeeder extends Seeder
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
         $accountTypes = [
-            'Individual',
-            'Corporation',
-            'Partnership',
-            'Government',
-            'Non-Profit Organization',
-            'Cooperative',
+            'Residential',
+            'Commercial',
         ];
 
         foreach ($accountTypes as $type) {
@@ -41,6 +37,6 @@ class AccountTypeSeeder extends Seeder
             ->whereNull('created_at')
             ->update(['created_at' => now()]);
 
-        $this->command->info('Account Types seeded: '.count($accountTypes).' types');
+        $this->command->info('Account Types seeded: ' . count($accountTypes) . ' types');
     }
 }

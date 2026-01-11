@@ -17,6 +17,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
+        // Seed location data first (required by other seeders)
+        $this->call([
+            ProvinceSeeder::class,        // Province: Misamis Oriental
+            TownSeeder::class,            // Town: Initao
+            BarangaySeeder::class,        // Barangays: 16 barangays
+            PurokSeeder::class,           // Puroks: 24 per barangay (1-A to 12-B)
+        ]);
+
         // Seed service-related tables
         $this->call([
             UserTypeSeeder::class,        // User types (ADMIN, BILLING)
@@ -43,6 +51,7 @@ class DatabaseSeeder extends Seeder
             TestUsersSeeder::class,       // Create test users for each role
             PeriodSeeder::class,          // Billing periods (12 months)
             MiscReferenceSeeder::class,   // Misc references (penalties, discounts, surcharges)
+            ServiceConnectionSeeder::class, // Sample service connections (Residential & Commercial)
         ]);
 
         $this->command->info('✅ All seeders completed successfully!');
@@ -62,5 +71,6 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- Roles: 6 roles (Super Admin, Admin, Billing Officer, Meter Reader, Cashier, Viewer)');
         $this->command->info('- Permissions: 18 permissions across 8 modules');
         $this->command->info('- Test Users: 6 users (1 per role) - Password: "password"');
+        $this->command->info('- Service Connections: 5 connections (3 Residential, 2 Commercial)');
     }
 }

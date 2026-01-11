@@ -370,7 +370,17 @@ function updateBillSummary(details) {
 
 function updateBillingHistory(details) {
     if (!details) return;
+    // Use API data if available
+    if (details.billingHistory && details.billingHistory.length > 0) {
+        updateBillingHistoryFromApi(details.billingHistory);
+        return;
+    }
+    // Fallback to dummy data
     const list = document.getElementById('billingHistoryList');
+    if (!window.billingData?.billingHistory) {
+        list.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No billing history available</p>';
+        return;
+    }
     list.innerHTML = window.billingData.billingHistory.map(bill => `
         <div class="flex justify-between items-center py-4">
             <div class="flex items-center">
@@ -394,13 +404,70 @@ function updateBillingHistory(details) {
     `).join('');
 }
 
+function updateBillingHistoryFromApi(billingHistory) {
+    const list = document.getElementById('billingHistoryList');
+    if (!billingHistory || billingHistory.length === 0) {
+        list.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No billing history available</p>';
+        return;
+    }
+
+    // Helper to format numbers safely
+    const formatNum = (val, dec = 2) => {
+        const n = parseFloat(val);
+        return isNaN(n) ? (dec === 3 ? '0.000' : '0.00') : n.toFixed(dec);
+    };
+
+    list.innerHTML = billingHistory.map(bill => `
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center">
+                <i class="fas fa-calendar-alt text-gray-400 mr-3"></i>
+                <div>
+                    <div class="text-gray-900 dark:text-white font-medium">${bill.period}</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-clock mr-1"></i>Due: ${bill.due_date || 'N/A'}
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        Consumption: ${formatNum(bill.consumption, 3)} m³
+                    </div>
+                </div>
+            </div>
+            <div class="text-right space-y-2">
+                <div class="font-semibold text-gray-900 dark:text-white">₱${formatNum(bill.total_amount, 2)}</div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    bill.status === 'PAID' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                    bill.status === 'OVERDUE' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                }">
+                    <i class="fas fa-${bill.status === 'PAID' ? 'check' : bill.status === 'OVERDUE' ? 'exclamation-circle' : 'clock'} mr-1"></i>${bill.status}
+                </span>
+            </div>
+        </div>
+    `).join('');
+}
+
 async function updateBillTrendGraph(details) {
     if (!details) return;
+    // Use API data if available
+    if (details.monthlyTrend && details.monthlyTrend.labels?.length > 0) {
+        updateBillTrendGraphFromApi(details.monthlyTrend);
+        return;
+    }
     const canvas = document.getElementById('monthlyTrendChart');
     if (!canvas) return;
-    if (window.monthlyTrendChart) window.monthlyTrendChart.destroy();
+
+    // Safely destroy existing chart
+    if (window.monthlyTrendChart && typeof window.monthlyTrendChart.destroy === 'function') {
+        window.monthlyTrendChart.destroy();
+    }
+
     const ctx = canvas.getContext('2d');
-    const trend = window.billingData.monthlyTrend;
+    const trend = window.billingData?.monthlyTrend || { labels: [], data: [] };
+
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js not loaded');
+        return;
+    }
+
     window.monthlyTrendChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -408,6 +475,57 @@ async function updateBillTrendGraph(details) {
             datasets: [{
                 label: 'Bill Amount (₱)',
                 data: trend.data,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `₱${context.parsed.y.toFixed(2)}`
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: (value) => '₱' + value }
+                }
+            }
+        }
+    });
+}
+
+function updateBillTrendGraphFromApi(monthlyTrend) {
+    const canvas = document.getElementById('monthlyTrendChart');
+    if (!canvas) return;
+
+    // Safely destroy existing chart
+    if (window.monthlyTrendChart && typeof window.monthlyTrendChart.destroy === 'function') {
+        window.monthlyTrendChart.destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js not loaded');
+        return;
+    }
+
+    window.monthlyTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: monthlyTrend.labels || [],
+            datasets: [{
+                label: 'Bill Amount (₱)',
+                data: monthlyTrend.data || [],
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 tension: 0.4,
@@ -460,30 +578,73 @@ function openProcessPaymentModal() {
 }
 
 function loadUnpaidBills() {
-    const connectionId = window.currentConnectionId || 1001;
-    const bills = window.billingData.waterBillHistory.filter(b => 
-        b.connection_id === connectionId && 
-        (b.stat_id === window.billing.STATUSES.ACTIVE || b.stat_id === window.billing.STATUSES.OVERDUE)
-    );
-    
+    const connectionId = window.currentConnectionId || 0;
     const billsList = document.getElementById('modalBillsList');
     paymentAllocations = [];
-    
+
+    // Try to use API data first
+    if (window.connectionBillingData?.billing_history) {
+        const unpaidBills = window.connectionBillingData.billing_history.filter(b =>
+            b.status === 'UNPAID' || b.status === 'OVERDUE'
+        );
+
+        if (unpaidBills.length === 0) {
+            billsList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No unpaid bills</p>';
+            return;
+        }
+
+        billsList.innerHTML = unpaidBills.map(bill => `
+            <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                <div class="flex-1">
+                    <div class="font-medium text-gray-900 dark:text-white">Bill #${bill.bill_id} - ${bill.period}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Due: ${bill.due_date || 'N/A'} | Amount: ₱${bill.total_amount?.toFixed(2) || '0.00'}</div>
+                </div>
+                <input type="number"
+                       id="alloc-${bill.bill_id}"
+                       data-bill-id="${bill.bill_id}"
+                       data-bill-amount="${bill.total_amount}"
+                       placeholder="0.00"
+                       min="0"
+                       max="${bill.total_amount}"
+                       step="0.01"
+                       onchange="updateAllocation()"
+                       class="w-32 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+            </div>
+        `).join('');
+        return;
+    }
+
+    // Fallback to dummy data
+    if (!window.billingData?.waterBillHistory) {
+        billsList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No billing data available</p>';
+        return;
+    }
+
+    const bills = window.billingData.waterBillHistory.filter(b =>
+        b.connection_id === connectionId &&
+        (b.stat_id === window.billing?.STATUSES?.ACTIVE || b.stat_id === window.billing?.STATUSES?.OVERDUE)
+    );
+
+    if (bills.length === 0) {
+        billsList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No unpaid bills</p>';
+        return;
+    }
+
     billsList.innerHTML = bills.map(bill => `
         <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
             <div class="flex-1">
                 <div class="font-medium text-gray-900 dark:text-white">Bill #${bill.bill_id}</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400">Due: ${bill.due_date} | Amount: ₱${bill.total_amount.toFixed(2)}</div>
             </div>
-            <input type="number" 
-                   id="alloc-${bill.bill_id}" 
-                   data-bill-id="${bill.bill_id}" 
-                   data-bill-amount="${bill.total_amount}" 
-                   placeholder="0.00" 
-                   min="0" 
-                   max="${bill.total_amount}" 
-                   step="0.01" 
-                   onchange="updateAllocation()" 
+            <input type="number"
+                   id="alloc-${bill.bill_id}"
+                   data-bill-id="${bill.bill_id}"
+                   data-bill-amount="${bill.total_amount}"
+                   placeholder="0.00"
+                   min="0"
+                   max="${bill.total_amount}"
+                   step="0.01"
+                   onchange="updateAllocation()"
                    class="w-32 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
         </div>
     `).join('');
@@ -568,7 +729,9 @@ window.updateRecentActivities = updateRecentActivities;
 window.updateWaterUsage = updateWaterUsage;
 window.updateBillSummary = updateBillSummary;
 window.updateBillingHistory = updateBillingHistory;
+window.updateBillingHistoryFromApi = updateBillingHistoryFromApi;
 window.updateBillTrendGraph = updateBillTrendGraph;
+window.updateBillTrendGraphFromApi = updateBillTrendGraphFromApi;
 window.openProcessPaymentModal = openProcessPaymentModal;
 window.closeProcessPaymentModal = closeProcessPaymentModal;
 window.submitProcessPayment = submitProcessPayment;

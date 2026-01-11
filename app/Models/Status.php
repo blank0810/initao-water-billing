@@ -19,6 +19,12 @@ class Status extends Model
 
     public const INACTIVE = 'INACTIVE';
 
+    public const PAID = 'PAID';
+
+    public const OVERDUE = 'OVERDUE';
+
+    public const CANCELLED = 'CANCELLED';
+
     /**
      * Get the ID of a status by its description
      */
