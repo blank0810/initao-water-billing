@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\ServiceConnection;
 
+use App\Http\Controllers\Controller;
 use App\Models\ServiceApplication;
 use App\Models\ServiceConnection;
 use App\Models\Status;
@@ -9,6 +10,7 @@ use App\Services\Meter\MeterAssignmentService;
 use App\Services\ServiceConnection\ServiceConnectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ServiceConnectionController extends Controller
@@ -25,7 +27,7 @@ class ServiceConnectionController extends Controller
     {
         session(['active_menu' => 'connection-active']);
 
-        $connections = ServiceConnection::with(['customer', 'address.barangay', 'status', 'accountType'])
+        $connections = ServiceConnection::with(['customer', 'address.barangay', 'address.purok', 'status', 'accountType'])
             ->orderBy('started_at', 'desc')
             ->paginate(15);
 
@@ -120,7 +122,7 @@ class ServiceConnectionController extends Controller
             $connection = $this->connectionService->suspendConnection(
                 $id,
                 $request->input('reason'),
-                auth()->id()
+                Auth::id()
             );
 
             return response()->json([
@@ -149,7 +151,7 @@ class ServiceConnectionController extends Controller
             $connection = $this->connectionService->disconnectConnection(
                 $id,
                 $request->input('reason'),
-                auth()->id()
+                Auth::id()
             );
 
             return response()->json([
@@ -171,7 +173,7 @@ class ServiceConnectionController extends Controller
     public function reconnect(Request $request, int $id): JsonResponse
     {
         try {
-            $connection = $this->connectionService->reconnectConnection($id, auth()->id());
+            $connection = $this->connectionService->reconnectConnection($id, Auth::id());
 
             return response()->json([
                 'success' => true,

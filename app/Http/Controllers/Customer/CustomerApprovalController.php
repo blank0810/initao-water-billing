@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Customer;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 class CustomerApprovalController extends Controller
@@ -15,10 +16,10 @@ class CustomerApprovalController extends Controller
     public function approve(Request $request)
     {
         $customerId = $request->input('customer_id');
-        
+
         // Here you would typically update the customer status in the database
         // For now, we'll just redirect with the customer ID
-        
+
         return redirect()->route('service.connection', ['customer_id' => $customerId])
                         ->with('success', 'Customer approved successfully. Please proceed with service connection.');
     }
@@ -32,10 +33,10 @@ class CustomerApprovalController extends Controller
 
         $customerId = $request->input('customer_id');
         $reason = $request->input('reason');
-        
+
         // Here you would typically update the customer status in the database
         // and store the decline reason
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Customer application declined successfully.'
@@ -45,10 +46,10 @@ class CustomerApprovalController extends Controller
     public function restore(Request $request)
     {
         $customerId = $request->input('customer_id');
-        
+
         // Here you would typically restore the customer to pending status
         // in the database
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Customer application restored to approval queue.'

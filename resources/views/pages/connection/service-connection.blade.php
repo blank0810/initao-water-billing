@@ -177,18 +177,17 @@
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900 dark:text-gray-100" x-text="formatCustomerName(conn)"></div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400" x-text="conn.customer?.resolution_number || '-'"></div>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400" x-text="conn.customer?.resolution_no || '-'"></div>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="text-sm text-gray-900 dark:text-gray-100" x-text="formatAddress(conn)"></div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400" x-text="conn.address?.barangay?.b_name || '-'"></div>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap" x-text="conn.account_type?.description || 'Residential'"></td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap" x-text="conn.account_type?.at_desc || 'Residential'"></td>
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap" x-text="formatDate(conn.started_at)"></td>
                                     <td class="px-4 py-3 text-center whitespace-nowrap">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                            :class="getStatusClass(conn.status?.description)"
-                                            x-text="conn.status?.description || 'ACTIVE'"></span>
+                                            :class="getStatusClass(conn.status?.stat_desc)"
+                                            x-text="conn.status?.stat_desc || 'ACTIVE'"></span>
                                     </td>
                                     <td class="px-4 py-3 text-center whitespace-nowrap" @click.stop>
                                         <div class="flex items-center justify-center gap-2">
@@ -197,14 +196,14 @@
                                                 title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <template x-if="conn.status?.description === 'ACTIVE'">
+                                            <template x-if="conn.status?.stat_desc === 'ACTIVE'">
                                                 <button @click="quickSuspend(conn)"
                                                     class="p-2 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 rounded-lg transition-colors"
                                                     title="Suspend">
                                                     <i class="fas fa-pause-circle"></i>
                                                 </button>
                                             </template>
-                                            <template x-if="conn.status?.description === 'SUSPENDED'">
+                                            <template x-if="conn.status?.stat_desc === 'SUSPENDED'">
                                                 <button @click="quickReconnect(conn)"
                                                     class="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
                                                     title="Reconnect">
@@ -339,9 +338,9 @@
 
             calculateStats() {
                 this.stats.total = this.data.length;
-                this.stats.active = this.data.filter(c => c.status?.description === 'ACTIVE').length;
-                this.stats.suspended = this.data.filter(c => c.status?.description === 'SUSPENDED').length;
-                this.stats.disconnected = this.data.filter(c => c.status?.description === 'DISCONNECTED').length;
+                this.stats.active = this.data.filter(c => c.status?.stat_desc === 'ACTIVE').length;
+                this.stats.suspended = this.data.filter(c => c.status?.stat_desc === 'SUSPENDED').length;
+                this.stats.disconnected = this.data.filter(c => c.status?.stat_desc === 'DISCONNECTED').length;
             },
 
             filterByStatus(status) {
@@ -362,7 +361,7 @@
                 }
 
                 if (this.statusFilter) {
-                    filtered = filtered.filter(conn => conn.status?.description === this.statusFilter);
+                    filtered = filtered.filter(conn => conn.status?.stat_desc === this.statusFilter);
                 }
 
                 return filtered;
@@ -403,12 +402,15 @@
             formatCustomerName(item) {
                 if (!item.customer) return '-';
                 const c = item.customer;
-                return [c.fname, c.mname ? c.mname[0] + '.' : '', c.lname].filter(Boolean).join(' ');
+                return [c.cust_first_name, c.cust_middle_name ? c.cust_middle_name[0] + '.' : '', c.cust_last_name].filter(Boolean).join(' ');
             },
 
             formatAddress(item) {
                 if (!item.address) return '-';
-                return item.address.purok || item.address.street || '-';
+                const purokName = item.address.purok?.p_desc || '';
+                const barangayName = item.address.barangay?.b_desc || '';
+                if (purokName && barangayName) return `${purokName}, ${barangayName}`;
+                return purokName || barangayName || '-';
             },
 
             formatDate(dateString) {

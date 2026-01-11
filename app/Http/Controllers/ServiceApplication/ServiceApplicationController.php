@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\ServiceApplication;
 
+use App\Http\Controllers\Controller;
 use App\Models\ServiceApplication;
-use App\Models\Status;
 use App\Services\ServiceApplication\ServiceApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ServiceApplicationController extends Controller
@@ -83,7 +84,7 @@ class ServiceApplicationController extends Controller
                 $request->input('customerType'),
                 $request->input('customer'),
                 $request->input('application'),
-                auth()->id() // Pass current user for audit trail
+                Auth::id() // Pass current user for audit trail
             );
 
             return response()->json([
@@ -149,7 +150,7 @@ class ServiceApplicationController extends Controller
     public function verify(Request $request, int $id): JsonResponse
     {
         try {
-            $result = $this->applicationService->verifyApplication($id, auth()->id());
+            $result = $this->applicationService->verifyApplication($id, Auth::id());
 
             return response()->json([
                 'success' => true,
@@ -203,7 +204,7 @@ class ServiceApplicationController extends Controller
             $result = $this->applicationService->processPayment(
                 $id,
                 (float) $request->input('amount_received'),
-                auth()->id()
+                Auth::id()
             );
 
             return response()->json([
@@ -254,7 +255,7 @@ class ServiceApplicationController extends Controller
             $application = $this->applicationService->scheduleConnection(
                 $id,
                 \Carbon\Carbon::parse($request->input('scheduled_date')),
-                auth()->id()
+                Auth::id()
             );
 
             return response()->json([
@@ -283,7 +284,7 @@ class ServiceApplicationController extends Controller
             $application = $this->applicationService->rejectApplication(
                 $id,
                 $request->input('reason'),
-                auth()->id()
+                Auth::id()
             );
 
             return response()->json([

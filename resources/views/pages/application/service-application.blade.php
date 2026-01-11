@@ -597,71 +597,33 @@
         <!-- Success Modal -->
         <div x-show="showSuccessModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
              class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full p-6">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-8">
                 <div class="text-center">
-                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900 mb-4">
-                        <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Application Submitted!</h3>
-
-                    <!-- Application Info -->
-                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 text-left">
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 dark:text-gray-400">Application #:</span>
-                                <span class="font-mono font-semibold text-gray-900 dark:text-white" x-text="submissionResult.applicationNumber || '-'"></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 dark:text-gray-400">Customer:</span>
-                                <span class="font-semibold text-gray-900 dark:text-white" x-text="customerDisplayName"></span>
-                            </div>
-                        </div>
+                    <!-- Success Icon -->
+                    <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 dark:bg-green-900 mb-6">
+                        <i class="fas fa-check text-green-600 dark:text-green-400 text-4xl"></i>
                     </div>
 
-                    <!-- Charges Breakdown -->
-                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg mb-4 text-left overflow-hidden">
-                        <div class="bg-gray-100 dark:bg-gray-700 px-4 py-2 border-b border-gray-200 dark:border-gray-600">
-                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Application Fees</span>
-                        </div>
-                        <div class="divide-y divide-gray-100 dark:divide-gray-700">
-                            <template x-for="charge in submissionResult.charges || []" :key="charge.charge_id">
-                                <div class="flex justify-between px-4 py-2 text-sm">
-                                    <span class="text-gray-600 dark:text-gray-400" x-text="charge.description"></span>
-                                    <span class="font-medium text-gray-900 dark:text-white" x-text="formatCurrency(charge.total_amount)"></span>
-                                </div>
-                            </template>
-                        </div>
-                        <div class="bg-blue-50 dark:bg-blue-900/30 px-4 py-3 flex justify-between border-t-2 border-blue-200 dark:border-blue-700">
-                            <span class="font-bold text-blue-900 dark:text-blue-100">Total Amount Due</span>
-                            <span class="font-bold text-lg text-blue-600 dark:text-blue-400" x-text="formatCurrency(submissionResult.totalAmount || 0)"></span>
-                        </div>
-                    </div>
+                    <!-- Success Message -->
+                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Application Submitted</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-2">Your service application has been successfully submitted.</p>
 
-                    <!-- Status Notice -->
-                    <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-3 mb-4 text-left">
-                        <p class="text-sm text-green-800 dark:text-green-200">
-                            <i class="fas fa-arrow-right mr-2"></i>
-                            <strong>Ready for Payment</strong> - Direct customer to Cashier
-                        </p>
+                    <!-- Application Number -->
+                    <div class="inline-block bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2 mb-6">
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Application Number</span>
+                        <p class="font-mono font-bold text-lg text-gray-900 dark:text-white" x-text="submissionResult.applicationNumber || '-'"></p>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="space-y-2">
-                        <a :href="'/connection/service-application/' + submissionResult.applicationId + '/order-of-payment'"
-                           target="_blank"
-                           class="block w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-center">
-                            <i class="fas fa-print mr-2"></i>Print Order of Payment
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button @click="resetForm()"
+                                class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Create Another
+                        </button>
+                        <a href="{{ route('connection.service-application.index') }}"
+                           class="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors text-center">
+                            <i class="fas fa-list mr-2"></i>View Applications
                         </a>
-                        <div class="flex gap-2">
-                            <a :href="'/connection/service-application/' + submissionResult.applicationId"
-                               class="flex-1 px-4 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors text-center">
-                                <i class="fas fa-eye mr-2"></i>View Details
-                            </a>
-                            <button @click="resetForm()"
-                                    class="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
-                                <i class="fas fa-plus mr-2"></i>New Application
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>

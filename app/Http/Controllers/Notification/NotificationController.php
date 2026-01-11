@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Notification;
 
+use App\Http\Controllers\Controller;
 use App\Services\Notification\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
@@ -18,7 +20,7 @@ class NotificationController extends Controller
     public function index(Request $request): JsonResponse
     {
         $limit = $request->input('limit', 50);
-        $notifications = $this->notificationService->getUserNotifications(auth()->id(), $limit);
+        $notifications = $this->notificationService->getUserNotifications(Auth::id(), $limit);
 
         return response()->json([
             'success' => true,
@@ -31,7 +33,7 @@ class NotificationController extends Controller
      */
     public function unreadCount(): JsonResponse
     {
-        $count = $this->notificationService->getUnreadCount(auth()->id());
+        $count = $this->notificationService->getUnreadCount(Auth::id());
 
         return response()->json([
             'success' => true,
@@ -65,7 +67,7 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(): JsonResponse
     {
-        $count = $this->notificationService->markAllAsRead(auth()->id());
+        $count = $this->notificationService->markAllAsRead(Auth::id());
 
         return response()->json([
             'success' => true,

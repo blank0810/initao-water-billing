@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Admin\CustomerController;
-use App\Http\Controllers\Api\AddressController;
+use App\Http\Controllers\Address\AddressController;
+use App\Http\Controllers\Customer\CustomerController;
 use Illuminate\Support\Facades\Route;
 
 /*

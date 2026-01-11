@@ -1,17 +1,17 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
-use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\RolePermissionController;
-use App\Http\Controllers\CustomerApprovalController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ServiceApplicationController;
-use App\Http\Controllers\ServiceConnectionController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\Customer\CustomerApprovalController;
+use App\Http\Controllers\Customer\CustomerController;
+use App\Http\Controllers\Notification\NotificationController;
+use App\Http\Controllers\Payment\PaymentController;
+use App\Http\Controllers\ServiceApplication\ServiceApplicationController;
+use App\Http\Controllers\ServiceConnection\ServiceConnectionController;
+use App\Http\Controllers\User\ProfileController;
+use App\Http\Controllers\User\UserController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
