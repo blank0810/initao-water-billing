@@ -6,316 +6,263 @@ use App\Models\Meter;
 use App\Models\MeterAssignment;
 use App\Models\ServiceConnection;
 use App\Models\Status;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class MeterAssignmentService
 {
     /**
-     * Get all meter assignments with details.
+     * Create a new meter and assign it to a service connection
+     * Used for customer-purchased meters
      */
-    public function getAllAssignments(): Collection
-    {
-        return MeterAssignment::with([
-            'meter',
-            'serviceConnection.customer',
-            'serviceConnection.accountType',
-            'serviceConnection.address.barangay',
-        ])
-            ->orderByRaw('CASE WHEN removed_at IS NULL THEN 0 ELSE 1 END')
-            ->orderBy('installed_at', 'desc')
-            ->get()
-            ->map(function ($assignment) {
-                return $this->formatAssignmentData($assignment);
-            });
-    }
+    public function createAndAssignMeter(
+        int $connectionId,
+        string $meterSerial,
+        string $meterBrand,
+        float $installRead,
+        Carbon $installedAt
+    ): MeterAssignment {
+        // Verify connection exists and is active
+        $connection = ServiceConnection::findOrFail($connectionId);
 
-    /**
-     * Get active assignments only (currently installed meters).
-     */
-    public function getActiveAssignments(): Collection
-    {
-        return MeterAssignment::with([
-            'meter',
-            'serviceConnection.customer',
-            'serviceConnection.accountType',
-            'serviceConnection.address.barangay',
-        ])
-            ->whereNull('removed_at')
-            ->orderBy('installed_at', 'desc')
-            ->get()
-            ->map(function ($assignment) {
-                return $this->formatAssignmentData($assignment);
-            });
-    }
-
-    /**
-     * Get available meters (active status, not currently assigned).
-     */
-    public function getAvailableMeters(): Collection
-    {
-        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-
-        return Meter::where('stat_id', $activeStatusId)
-            ->whereDoesntHave('meterAssignments', function ($query) {
-                $query->whereNull('removed_at');
-            })
-            ->orderBy('mtr_serial')
-            ->get()
-            ->map(function ($meter) {
-                return [
-                    'mtr_id' => $meter->mtr_id,
-                    'mtr_serial' => $meter->mtr_serial,
-                    'mtr_brand' => $meter->mtr_brand,
-                    'label' => $meter->mtr_serial.' ('.$meter->mtr_brand.')',
-                ];
-            });
-    }
-
-    /**
-     * Get service connections without active meter assignment.
-     */
-    public function getUnassignedConnections(): Collection
-    {
-        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-
-        return ServiceConnection::with(['customer', 'accountType', 'address.barangay'])
-            ->where('stat_id', $activeStatusId)
-            ->whereNull('ended_at')
-            ->whereDoesntHave('meterAssignments', function ($query) {
-                $query->whereNull('removed_at');
-            })
-            ->orderBy('account_no')
-            ->get()
-            ->map(function ($connection) {
-                $customer = $connection->customer;
-                $customerName = $customer
-                    ? trim($customer->cust_first_name.' '.$customer->cust_last_name)
-                    : 'Unknown';
-
-                return [
-                    'connection_id' => $connection->connection_id,
-                    'account_no' => $connection->account_no,
-                    'customer_name' => $customerName,
-                    'account_type' => $connection->accountType?->at_desc ?? 'Unknown',
-                    'barangay' => $connection->address?->barangay?->b_name ?? 'Unknown',
-                    'label' => $connection->account_no.' - '.$customerName,
-                ];
-            });
-    }
-
-    /**
-     * Assign a meter to a service connection.
-     */
-    public function assignMeter(array $data): array
-    {
-        // Validate meter exists and is available
-        $meter = Meter::find($data['meter_id']);
-        if (! $meter) {
-            return [
-                'success' => false,
-                'message' => 'Meter not found.',
-            ];
+        if ($connection->stat_id !== Status::getIdByDescription(Status::ACTIVE)) {
+            throw new \Exception('Can only assign meters to ACTIVE connections');
         }
 
-        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-        if ($meter->stat_id !== $activeStatusId) {
-            return [
-                'success' => false,
-                'message' => 'Meter is not in active status.',
-            ];
+        // Check if connection already has an active meter
+        $currentAssignment = $this->getCurrentAssignment($connectionId);
+        if ($currentAssignment) {
+            throw new \Exception('Connection already has an active meter. Remove it first.');
         }
 
-        // Check if meter is already assigned
-        $existingAssignment = MeterAssignment::where('meter_id', $data['meter_id'])
+        // Check if meter serial already exists
+        $existingMeter = Meter::where('mtr_serial', $meterSerial)->first();
+        if ($existingMeter) {
+            throw new \Exception('A meter with this serial number already exists');
+        }
+
+        return DB::transaction(function () use ($connectionId, $meterSerial, $meterBrand, $installRead, $installedAt) {
+            // Create the meter record (status INACTIVE since it's being assigned)
+            $meter = Meter::create([
+                'mtr_serial' => $meterSerial,
+                'mtr_brand' => $meterBrand,
+                'stat_id' => Status::getIdByDescription(Status::INACTIVE),
+            ]);
+
+            // Create assignment
+            $assignment = MeterAssignment::create([
+                'connection_id' => $connectionId,
+                'meter_id' => $meter->mtr_id,
+                'installed_at' => $installedAt,
+                'install_read' => $installRead,
+            ]);
+
+            return $assignment;
+        });
+    }
+
+    /**
+     * Assign a meter to a service connection
+     */
+    public function assignMeter(
+        int $connectionId,
+        int $meterId,
+        float $installRead,
+        Carbon $installedAt
+    ): MeterAssignment {
+        // Verify connection exists and is active
+        $connection = ServiceConnection::findOrFail($connectionId);
+
+        if ($connection->stat_id !== Status::getIdByDescription(Status::ACTIVE)) {
+            throw new \Exception('Can only assign meters to ACTIVE connections');
+        }
+
+        // Check if connection already has an active meter
+        $currentAssignment = $this->getCurrentAssignment($connectionId);
+        if ($currentAssignment) {
+            throw new \Exception('Connection already has an active meter. Remove it first.');
+        }
+
+        // Verify meter is available
+        $meter = Meter::findOrFail($meterId);
+
+        if ($meter->stat_id !== Status::getIdByDescription(Status::ACTIVE)) {
+            throw new \Exception('Meter is not available for assignment');
+        }
+
+        // Check if meter is already assigned elsewhere
+        $existingAssignment = MeterAssignment::where('meter_id', $meterId)
             ->whereNull('removed_at')
             ->first();
 
         if ($existingAssignment) {
-            return [
-                'success' => false,
-                'message' => 'This meter is already assigned to another connection.',
-            ];
+            throw new \Exception('Meter is already assigned to another connection');
         }
 
-        // Validate service connection exists
-        $connection = ServiceConnection::find($data['connection_id']);
-        if (! $connection) {
-            return [
-                'success' => false,
-                'message' => 'Service connection not found.',
-            ];
-        }
+        return DB::transaction(function () use ($connectionId, $meterId, $installRead, $installedAt, $meter) {
+            // Create assignment
+            $assignment = MeterAssignment::create([
+                'connection_id' => $connectionId,
+                'meter_id' => $meterId,
+                'installed_at' => $installedAt,
+                'install_read' => $installRead,
+            ]);
 
-        // Check if connection already has an active meter
-        $connectionMeter = MeterAssignment::where('connection_id', $data['connection_id'])
-            ->whereNull('removed_at')
-            ->first();
+            // Update meter status to indicate it's in use
+            $meter->update([
+                'stat_id' => Status::getIdByDescription(Status::INACTIVE),
+            ]);
 
-        if ($connectionMeter) {
-            return [
-                'success' => false,
-                'message' => 'This connection already has an active meter assigned.',
-            ];
-        }
-
-        // Create the assignment
-        $assignment = MeterAssignment::create([
-            'connection_id' => $data['connection_id'],
-            'meter_id' => $data['meter_id'],
-            'installed_at' => $data['installed_at'] ?? now()->format('Y-m-d'),
-            'removed_at' => null,
-            'install_read' => $data['install_read'] ?? 0,
-            'removal_read' => null,
-        ]);
-
-        return [
-            'success' => true,
-            'message' => 'Meter assigned successfully.',
-            'data' => $this->getAssignmentDetails($assignment->assignment_id),
-        ];
+            return $assignment;
+        });
     }
 
     /**
-     * Remove a meter from a service connection.
+     * Remove a meter from a connection
      */
-    public function removeMeter(int $assignmentId, array $data): array
-    {
-        $assignment = MeterAssignment::find($assignmentId);
-
-        if (! $assignment) {
-            return [
-                'success' => false,
-                'message' => 'Assignment not found.',
-            ];
-        }
+    public function removeMeter(
+        int $assignmentId,
+        float $removalRead,
+        Carbon $removedAt,
+        string $reason
+    ): MeterAssignment {
+        $assignment = MeterAssignment::with('meter')->findOrFail($assignmentId);
 
         if ($assignment->removed_at !== null) {
-            return [
-                'success' => false,
-                'message' => 'This meter has already been removed.',
-            ];
+            throw new \Exception('Meter has already been removed');
         }
 
-        // Validate removal reading is >= install reading
-        $removalRead = $data['removal_read'] ?? 0;
         if ($removalRead < $assignment->install_read) {
-            return [
-                'success' => false,
-                'message' => 'Removal reading cannot be less than installation reading.',
-            ];
+            throw new \Exception('Removal reading cannot be less than install reading');
         }
 
-        $assignment->update([
-            'removed_at' => $data['removed_at'] ?? now()->format('Y-m-d'),
-            'removal_read' => $removalRead,
-        ]);
+        return DB::transaction(function () use ($assignment, $removalRead, $removedAt) {
+            // Update assignment with removal info
+            $assignment->update([
+                'removed_at' => $removedAt,
+                'removal_read' => $removalRead,
+            ]);
 
-        return [
-            'success' => true,
-            'message' => 'Meter removed successfully.',
-            'data' => $this->getAssignmentDetails($assignment->assignment_id),
-        ];
+            // Make meter available again
+            $assignment->meter->update([
+                'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+            ]);
+
+            return $assignment->fresh();
+        });
     }
 
     /**
-     * Get assignment details by ID.
+     * Replace a meter on a connection (remove old, assign new)
      */
-    public function getAssignmentDetails(int $assignmentId): ?array
-    {
-        $assignment = MeterAssignment::with([
-            'meter',
-            'serviceConnection.customer',
-            'serviceConnection.accountType',
-            'serviceConnection.address.barangay',
-            'meterReadings' => function ($query) {
-                $query->orderBy('reading_date', 'desc')->limit(5);
-            },
-        ])->find($assignmentId);
+    public function replaceMeter(
+        int $connectionId,
+        int $newMeterId,
+        float $oldMeterRead,
+        float $newMeterRead
+    ): array {
+        $currentAssignment = $this->getCurrentAssignment($connectionId);
 
-        if (! $assignment) {
-            return null;
+        if (! $currentAssignment) {
+            throw new \Exception('No active meter assignment found to replace');
         }
 
-        $data = $this->formatAssignmentData($assignment);
+        return DB::transaction(function () use ($currentAssignment, $connectionId, $newMeterId, $oldMeterRead, $newMeterRead) {
+            // Remove old meter
+            $removedAssignment = $this->removeMeter(
+                $currentAssignment->assignment_id,
+                $oldMeterRead,
+                now(),
+                'Meter replacement'
+            );
 
-        // Add recent readings
-        $data['recent_readings'] = $assignment->meterReadings->map(function ($reading) {
+            // Assign new meter
+            $newAssignment = $this->assignMeter(
+                $connectionId,
+                $newMeterId,
+                $newMeterRead,
+                now()
+            );
+
             return [
-                'reading_id' => $reading->reading_id,
-                'reading_date' => $reading->reading_date?->format('Y-m-d'),
-                'current_reading' => $reading->current_reading,
-                'consumption' => $reading->consumption,
+                'removed_assignment' => $removedAssignment,
+                'new_assignment' => $newAssignment,
             ];
-        })->toArray();
-
-        return $data;
+        });
     }
 
     /**
-     * Get assignment statistics.
+     * Get all available meters (not currently assigned)
      */
-    public function getStats(): array
+    public function getAvailableMeters(): Collection
     {
-        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $assignedMeterIds = MeterAssignment::whereNull('removed_at')
+            ->pluck('meter_id');
 
-        $totalMeters = Meter::count();
-        $availableMeters = Meter::where('stat_id', $activeStatusId)
-            ->whereDoesntHave('meterAssignments', function ($query) {
-                $query->whereNull('removed_at');
-            })
-            ->count();
-
-        $activeAssignments = MeterAssignment::whereNull('removed_at')->count();
-
-        $unassignedConnections = ServiceConnection::where('stat_id', $activeStatusId)
-            ->whereNull('ended_at')
-            ->whereDoesntHave('meterAssignments', function ($query) {
-                $query->whereNull('removed_at');
-            })
-            ->count();
-
-        return [
-            'total_meters' => $totalMeters,
-            'available_meters' => $availableMeters,
-            'active_assignments' => $activeAssignments,
-            'unassigned_connections' => $unassignedConnections,
-        ];
+        return Meter::with('status')
+            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->whereNotIn('mtr_id', $assignedMeterIds)
+            ->orderBy('mtr_serial')
+            ->get();
     }
 
     /**
-     * Format assignment data for API response.
+     * Get current active assignment for a connection
      */
-    private function formatAssignmentData(MeterAssignment $assignment): array
+    public function getCurrentAssignment(int $connectionId): ?MeterAssignment
     {
-        $connection = $assignment->serviceConnection;
-        $customer = $connection?->customer;
-        $meter = $assignment->meter;
+        return MeterAssignment::with('meter')
+            ->where('connection_id', $connectionId)
+            ->whereNull('removed_at')
+            ->first();
+    }
 
-        $customerName = $customer
-            ? trim($customer->cust_first_name.' '.$customer->cust_last_name)
-            : 'Unknown';
+    /**
+     * Get assignment history for a connection
+     */
+    public function getAssignmentHistory(int $connectionId): Collection
+    {
+        return MeterAssignment::with('meter')
+            ->where('connection_id', $connectionId)
+            ->orderBy('installed_at', 'desc')
+            ->get();
+    }
 
-        $isActive = is_null($assignment->removed_at);
+    /**
+     * Get all assignments for a meter (to track its history)
+     */
+    public function getMeterHistory(int $meterId): Collection
+    {
+        return MeterAssignment::with('serviceConnection.customer')
+            ->where('meter_id', $meterId)
+            ->orderBy('installed_at', 'desc')
+            ->get();
+    }
 
-        return [
-            'assignment_id' => $assignment->assignment_id,
-            'connection_id' => $assignment->connection_id,
-            'meter_id' => $assignment->meter_id,
-            'account_no' => $connection?->account_no ?? 'N/A',
-            'customer_name' => $customerName,
-            'account_type' => $connection?->accountType?->at_desc ?? 'Unknown',
-            'barangay' => $connection?->address?->barangay?->b_name ?? 'Unknown',
-            'meter_serial' => $meter?->mtr_serial ?? 'N/A',
-            'meter_brand' => $meter?->mtr_brand ?? 'N/A',
-            'installed_at' => $assignment->installed_at?->format('Y-m-d'),
-            'removed_at' => $assignment->removed_at?->format('Y-m-d'),
-            'install_read' => $assignment->install_read,
-            'removal_read' => $assignment->removal_read,
-            'is_active' => $isActive,
-            'status' => $isActive ? 'Active' : 'Removed',
-            'status_class' => $isActive
-                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
-                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
-        ];
+    /**
+     * Calculate consumption for an assignment during a period
+     */
+    public function calculateConsumption(int $assignmentId, float $previousRead, float $currentRead): float
+    {
+        if ($currentRead < $previousRead) {
+            throw new \Exception('Current reading cannot be less than previous reading');
+        }
+
+        return round($currentRead - $previousRead, 3);
+    }
+
+    /**
+     * Get connections without assigned meters
+     */
+    public function getConnectionsWithoutMeters(): Collection
+    {
+        $connectionsWithMeters = MeterAssignment::whereNull('removed_at')
+            ->pluck('connection_id');
+
+        return ServiceConnection::with(['customer', 'address'])
+            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->whereNotIn('connection_id', $connectionsWithMeters)
+            ->get();
     }
 }

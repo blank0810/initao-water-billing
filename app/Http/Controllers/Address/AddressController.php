@@ -3,67 +3,109 @@
 namespace App\Http\Controllers\Address;
 
 use App\Http\Controllers\Controller;
+use App\Services\Address\AddressService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class AddressController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        $barangays = DB::table('barangay')->select('b_id', 'b_desc')->get();
-        $puroks = DB::table('purok')->select('p_id', 'p_desc')->get();
+    protected AddressService $addressService;
 
-        return response()->json([
-            'barangays' => $barangays,
-            'puroks' => $puroks,
+    public function __construct(AddressService $addressService)
+    {
+        $this->addressService = $addressService;
+    }
+
+    /**
+     * Get all provinces
+     */
+    public function getProvinces(): JsonResponse
+    {
+        $provinces = $this->addressService->getProvinces();
+
+        return response()->json($provinces);
+    }
+
+    /**
+     * Get towns (all or by province)
+     */
+    public function getTowns(Request $request): JsonResponse
+    {
+        $request->validate([
+            'province_id' => 'nullable|integer|exists:province,prov_id',
         ]);
+
+        if ($request->has('province_id') && $request->province_id) {
+            $towns = $this->addressService->getTownsByProvince($request->province_id);
+        } else {
+            $towns = $this->addressService->getAllTowns();
+        }
+
+        return response()->json($towns);
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @return \Illuminate\Http\Response
+     * Get all barangays
+     * Note: Not filtered by town since barangay table doesn't have town_id
      */
-    public function store(Request $request)
+    public function getBarangays(): JsonResponse
     {
-        //
+        $barangays = $this->addressService->getBarangays();
+
+        return response()->json($barangays);
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Get puroks (all or by barangay)
      */
-    public function show($id)
+    public function getPuroks(Request $request): JsonResponse
     {
-        //
+        $request->validate([
+            'barangay_id' => 'nullable|integer|exists:barangay,b_id',
+        ]);
+
+        if ($request->has('barangay_id') && $request->barangay_id) {
+            $puroks = $this->addressService->getPuroksByBarangay($request->barangay_id);
+
+            // Fallback to all puroks if none are linked to this barangay yet
+            // This handles the case where b_id linkage hasn't been established
+            if ($puroks->isEmpty()) {
+                $puroks = $this->addressService->getAllPuroks();
+            }
+        } else {
+            $puroks = $this->addressService->getAllPuroks();
+        }
+
+        return response()->json($puroks);
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Get all account types
      */
-    public function update(Request $request, $id)
+    public function getAccountTypes(): JsonResponse
     {
-        //
+        $accountTypes = $this->addressService->getAccountTypes();
+
+        return response()->json($accountTypes);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * Get all water rates
      */
-    public function destroy($id)
+    public function getWaterRates(): JsonResponse
     {
-        //
+        $waterRates = $this->addressService->getWaterRates();
+
+        return response()->json($waterRates);
+    }
+
+    /**
+     * Get application charge items
+     */
+    public function getApplicationCharges(): JsonResponse
+    {
+        $charges = $this->addressService->getApplicationCharges();
+
+        return response()->json($charges);
     }
 }

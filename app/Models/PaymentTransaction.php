@@ -3,51 +3,71 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class PaymentTransaction extends Model
 {
     protected $table = 'payment_transactions';
-
-    protected $primaryKey = 'pt_id';
-
-    public $timestamps = false;
-
-    public $incrementing = true;
-
-    protected $keyType = 'int';
+    protected $primaryKey = 'transaction_id';
 
     protected $fillable = [
-        'or_no',
-        'create_date',
-        'payment_date',
-        'amount_tendered',
-        'paid_amount',
-        'amount_diff',
+        'payment_id',
+        'bill_id',
+        'reference_number',
+        'transaction_type',
+        'amount',
+        'applied_to_type',
+        'applied_to_id',
+        'notes',
+        'processed_by',
         'stat_id',
-        'user_id',
     ];
 
     protected $casts = [
-        'create_date' => 'datetime',
-        'payment_date' => 'datetime',
-        'amount_tendered' => 'decimal:2',
-        'paid_amount' => 'decimal:2',
-        'amount_diff' => 'decimal:2',
+        'amount' => 'decimal:2',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
-     * Get the status associated with the payment transaction
+     * Get the payment associated with the transaction
      */
-    public function status()
+    public function payment(): BelongsTo
     {
-        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+        return $this->belongsTo(Payment::class, 'payment_id', 'payment_id');
     }
 
     /**
-     * Get the user that created the payment transaction
+     * Get the bill associated with the transaction
      */
-    public function user()
+    public function bill(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
+        return $this->belongsTo(WaterBill::class, 'bill_id', 'wb_id');
+    }
+
+    /**
+     * Get the polymorphic applied_to relation
+     */
+    public function appliedTo(): MorphTo
+    {
+        return $this->morphTo('applied_to', 'applied_to_type', 'applied_to_id');
+    }
+
+    /**
+     * Get the user that processed this transaction
+     */
+    public function processedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processed_by', 'id');
+    }
+
+    /**
+     * Get the status associated with the transaction
+     */
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
     }
 }
+

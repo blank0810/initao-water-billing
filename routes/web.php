@@ -1,13 +1,17 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
-use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\RolePermissionController;
-use App\Http\Controllers\CustomerApprovalController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\Customer\CustomerApprovalController;
+use App\Http\Controllers\Customer\CustomerController;
+use App\Http\Controllers\Notification\NotificationController;
+use App\Http\Controllers\Payment\PaymentController;
+use App\Http\Controllers\ServiceApplication\ServiceApplicationController;
+use App\Http\Controllers\ServiceConnection\ServiceConnectionController;
+use App\Http\Controllers\User\ProfileController;
+use App\Http\Controllers\User\UserController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -81,6 +85,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // -------------------------------------------------------------------------
+    // Notifications - All authenticated users
+    // -------------------------------------------------------------------------
+    Route::prefix('api/notifications')->name('api.notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+    });
+
+    // -------------------------------------------------------------------------
     // Customer Management - View (customers.view permission)
     // -------------------------------------------------------------------------
     Route::middleware(['permission:customers.view'])->group(function () {
@@ -95,12 +109,6 @@ Route::middleware('auth')->group(function () {
 
     // Customer Management - Manage (customers.manage permission)
     Route::middleware(['permission:customers.manage'])->group(function () {
-        Route::get('/customer/add', function () {
-            session(['active_menu' => 'customer-add']);
-
-            return view('pages.customer.add-customer');
-        })->name('customer.add');
-
         Route::post('/customer/store', [CustomerController::class, 'store'])->name('customer.store');
         Route::post('/customer', [CustomerController::class, 'store'])->name('customer.store.alt');
         Route::put('/customer/{id}', [CustomerController::class, 'update'])->name('customer.update');
@@ -130,27 +138,48 @@ Route::middleware('auth')->group(function () {
         Route::post('/customer/decline', [CustomerApprovalController::class, 'decline'])->name('customer.decline');
         Route::post('/customer/restore', [CustomerApprovalController::class, 'restore'])->name('customer.restore');
 
-        // Service Connection
-        Route::get('/connection/service-application', function () {
-            session(['active_menu' => 'service-application']);
+        // Service Application Workflow
+        Route::get('/connection/service-application', [ServiceApplicationController::class, 'index'])->name('connection.service-application.index');
+        Route::get('/connection/service-application/create', [ServiceApplicationController::class, 'create'])->name('connection.service-application.create');
+        Route::get('/api/service-application/fee-templates', [ServiceApplicationController::class, 'getFeeTemplates'])->name('api.service-application.fee-templates');
+        Route::post('/connection/service-application', [ServiceApplicationController::class, 'store'])->name('connection.service-application.store');
+        Route::get('/connection/service-application/{id}', [ServiceApplicationController::class, 'show'])->name('connection.service-application.show');
+        Route::post('/connection/service-application/{id}/verify', [ServiceApplicationController::class, 'verify'])->name('service.application.verify');
+        Route::get('/connection/service-application/{id}/charges', [ServiceApplicationController::class, 'getCharges'])->name('service.application.charges');
+        Route::get('/connection/service-application/{id}/order-of-payment', [ServiceApplicationController::class, 'orderOfPayment'])->name('service.application.order-of-payment');
+        Route::post('/connection/service-application/{id}/schedule', [ServiceApplicationController::class, 'schedule'])->name('service.application.schedule');
+        Route::post('/connection/service-application/{id}/reject', [ServiceApplicationController::class, 'reject'])->name('service.application.reject');
+        Route::post('/connection/service-application/{id}/cancel', [ServiceApplicationController::class, 'cancel'])->name('service.application.cancel');
+        Route::get('/connection/service-application/{id}/timeline', [ServiceApplicationController::class, 'timeline'])->name('service.application.timeline');
 
-            return view('pages.connection.service-application');
-        })->name('service.application');
+        // Service Connection Workflow
+        Route::get('/customer/service-connection', [ServiceConnectionController::class, 'index'])->name('service.connection');
 
-        Route::get('/customer/service-connection', function () {
-            session(['active_menu' => 'service-connection']);
+        // Lookup routes - MUST come before {id} wildcard route
+        Route::get('/customer/service-connection/meters/available', [ServiceConnectionController::class, 'availableMeters'])->name('service.connection.available-meters');
+        Route::get('/customer/service-connection/account-types', [ServiceConnectionController::class, 'getAccountTypes'])->name('service.connection.account-types');
+        Route::get('/customer/service-connection/water-rates', [ServiceConnectionController::class, 'getWaterRates'])->name('service.connection.water-rates');
+        Route::post('/customer/service-connection/complete', [ServiceConnectionController::class, 'completeConnection'])->name('service.connection.complete');
+        Route::post('/customer/service-connection/meter/{assignmentId}/remove', [ServiceConnectionController::class, 'removeMeter'])->name('service.connection.remove-meter');
 
-            return view('pages.connection.service-connection');
-        })->name('service.connection');
+        // Wildcard routes - MUST come after specific routes
+        Route::get('/customer/service-connection/{id}', [ServiceConnectionController::class, 'show'])->name('service.connection.show');
+        Route::post('/customer/service-connection/{id}/suspend', [ServiceConnectionController::class, 'suspend'])->name('service.connection.suspend');
+        Route::post('/customer/service-connection/{id}/disconnect', [ServiceConnectionController::class, 'disconnect'])->name('service.connection.disconnect');
+        Route::post('/customer/service-connection/{id}/reconnect', [ServiceConnectionController::class, 'reconnect'])->name('service.connection.reconnect');
+        Route::get('/customer/service-connection/{id}/balance', [ServiceConnectionController::class, 'balance'])->name('service.connection.balance');
+        Route::post('/customer/service-connection/{id}/assign-meter', [ServiceConnectionController::class, 'assignMeter'])->name('service.connection.assign-meter');
     });
 
     // -------------------------------------------------------------------------
     // Payment Processing - View (payments.view permission)
     // -------------------------------------------------------------------------
     Route::middleware(['permission:payments.view'])->group(function () {
-        Route::get('/customer/payment-management', function () {
-            return view('pages.payment.payment-management');
-        })->name('payment.management');
+        Route::get('/customer/payment-management', [PaymentController::class, 'index'])->name('payment.management');
+        Route::get('/api/payments/pending', [PaymentController::class, 'getPendingPayments'])->name('api.payments.pending');
+        Route::get('/api/payments/statistics', [PaymentController::class, 'getStatistics'])->name('api.payments.statistics');
+        Route::get('/payment/process/application/{id}', [PaymentController::class, 'processApplicationPayment'])->name('payment.process.application');
+        Route::get('/payment/receipt/{id}', [PaymentController::class, 'showReceipt'])->name('payment.receipt');
     });
 
     // Payment Processing - Process (payments.process permission)
@@ -160,6 +189,9 @@ Route::middleware('auth')->group(function () {
 
             return view('pages.customer.payment-management', ['customerCode' => $customerCode]);
         })->name('customer.payment');
+
+        // Service Application Payment Processing (for cashiers)
+        Route::post('/connection/service-application/{id}/process-payment', [ServiceApplicationController::class, 'processPayment'])->name('service.application.process-payment');
     });
 
     // -------------------------------------------------------------------------
@@ -422,6 +454,19 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['permission:users.manage'])->group(function () {
         Route::get('/api/roles/available', [RoleController::class, 'getAvailableRoles'])->name('api.roles.available');
+    });
+
+    // API Routes for Service Application/Connection Workflow
+    Route::middleware(['permission:customers.manage'])->prefix('api')->name('api.')->group(function () {
+        // Customer Search (for service application)
+        Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+
+        // Service Applications
+        Route::get('/service-applications/status/{status}', [ServiceApplicationController::class, 'getByStatus'])->name('service-applications.by-status');
+
+        // Service Connections
+        Route::get('/service-connections/status/{status}', [ServiceConnectionController::class, 'getByStatus'])->name('service-connections.by-status');
+        Route::get('/service-connections/customer/{customerId}', [ServiceConnectionController::class, 'customerConnections'])->name('service-connections.customer');
     });
 
     // -------------------------------------------------------------------------

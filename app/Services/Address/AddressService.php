@@ -72,7 +72,20 @@ class AddressService
     {
         return Purok::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
             ->orderBy('p_desc')
-            ->get(['p_id', 'p_desc']);
+            ->get(['p_id', 'p_desc', 'b_id']);
+    }
+
+    /**
+     * Get puroks by barangay
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getPuroksByBarangay(int $barangayId)
+    {
+        return Purok::where('b_id', $barangayId)
+            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->orderBy('p_desc')
+            ->get(['p_id', 'p_desc', 'b_id']);
     }
 
     /**

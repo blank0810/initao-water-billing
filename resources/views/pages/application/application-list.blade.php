@@ -5,8 +5,8 @@
                 title="Application List"
                 icon="fas fa-file-alt">
                 <x-slot name="actions">
-                    <a href="{{ route('customer.add') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm">
-                        <i class="fas fa-user-plus mr-2"></i>Add Customer
+                    <a href="{{ route('connection.service-application.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm">
+                        <i class="fas fa-plus-circle mr-2"></i>New Application
                     </a>
                 </x-slot>
             </x-ui.page-header>

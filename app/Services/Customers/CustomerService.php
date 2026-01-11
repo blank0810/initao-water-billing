@@ -177,6 +177,39 @@ class CustomerService
     }
 
     /**
+     * Search customers by name, phone, or ID for service application
+     *
+     * @param string $query
+     * @return array
+     */
+    public function searchCustomers(string $query): array
+    {
+        $customers = Customer::with(['status', 'serviceConnections'])
+            ->where(function (Builder $q) use ($query) {
+                $q->where('cust_first_name', 'like', "%{$query}%")
+                    ->orWhere('cust_middle_name', 'like', "%{$query}%")
+                    ->orWhere('cust_last_name', 'like', "%{$query}%")
+                    ->orWhere('resolution_no', 'like', "%{$query}%")
+                    ->orWhereRaw("CONCAT(cust_first_name, ' ', COALESCE(cust_middle_name, ''), ' ', cust_last_name) LIKE ?", ["%{$query}%"]);
+            })
+            ->whereHas('status', function (Builder $q) {
+                $q->where('stat_desc', '!=', 'INACTIVE');
+            })
+            ->limit(10)
+            ->get();
+
+        return $customers->map(function ($customer) {
+            return [
+                'id' => $customer->cust_id,
+                'fullName' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
+                'phone' => $customer->phone ?? 'N/A',
+                'type' => $customer->c_type ?? 'RESIDENTIAL',
+                'connectionsCount' => $customer->serviceConnections ? $customer->serviceConnections->count() : 0,
+            ];
+        })->toArray();
+    }
+
+    /**
      * Create customer with service application (Approach B)
      * Creates: Customer + ConsumerAddress + ServiceApplication + CustomerCharges in one transaction
      *

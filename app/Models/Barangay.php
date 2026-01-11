@@ -8,9 +8,11 @@ class Barangay extends Model
 {
     protected $table = 'barangay';
 
+
     protected $primaryKey = 'b_id';
 
     public $timestamps = false;
+
 
     public $incrementing = true;
 
@@ -18,6 +20,7 @@ class Barangay extends Model
 
     protected $fillable = [
         'b_desc',
+        'b_code',
         'stat_id',
     ];
 

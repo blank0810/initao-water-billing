@@ -14,7 +14,7 @@ class CustomerHelper
     {
         $initials = strtoupper(
             substr($firstName, 0, 1).
-              substr($lastName, 0, 1)
+            substr($lastName, 0, 1)
         );
 
         $timestamp = now()->format('YmdHis');
@@ -63,6 +63,9 @@ class CustomerHelper
             'cust_last_name' => $data['cust_last_name'],
             'cust_first_name' => $data['cust_first_name'],
             'cust_middle_name' => $data['cust_middle_name'] ?? null,
+            'contact_number' => $data['contact_number'] ?? null,
+            'id_type' => $data['id_type'] ?? null,
+            'id_number' => $data['id_number'] ?? null,
             'ca_id' => $addressId,
             'land_mark' => $data['land_mark'] ?? null,
             'stat_id' => $data['stat_id'] ?? null,

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Services\Customers\CustomerService;
@@ -84,6 +84,33 @@ class CustomerController extends Controller
                 'message' => 'Validation failed',
                 'errors' => $e->errors(),
             ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Search customers by name, phone, or ID
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function search(Request $request)
+    {
+        try {
+            $query = $request->input('q', '');
+
+            if (strlen($query) < 2) {
+                return response()->json([]);
+            }
+
+            $customers = $this->customerService->searchCustomers($query);
+
+            return response()->json($customers);
 
         } catch (\Exception $e) {
             return response()->json([
