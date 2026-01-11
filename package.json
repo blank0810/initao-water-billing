@@ -4,7 +4,9 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "deploy": "vite build && php artisan migrate --force",
+        "deploy:fresh": "vite build && php artisan migrate:fresh --seed --force"
     },
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
