@@ -18,7 +18,7 @@ class AreaAssignment extends Model
 
     protected $fillable = [
         'area_id',
-        'meter_reader_id',
+        'user_id',
         'effective_from',
         'effective_to',
     ];
@@ -37,10 +37,49 @@ class AreaAssignment extends Model
     }
 
     /**
-     * Get the meter reader that owns the area assignment
+     * Get the user (meter reader) that owns the area assignment
      */
-    public function meterReader()
+    public function user()
     {
-        return $this->belongsTo(MeterReader::class, 'meter_reader_id', 'mr_id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    /**
+     * Scope for active assignments (no end date or end date in future)
+     */
+    public function scopeActive($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('effective_to')
+                ->orWhere('effective_to', '>=', now()->format('Y-m-d'));
+        });
+    }
+
+    /**
+     * Scope for assignments by user
+     */
+    public function scopeForUser($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
+     * Scope for assignments by area
+     */
+    public function scopeForArea($query, int $areaId)
+    {
+        return $query->where('area_id', $areaId);
+    }
+
+    /**
+     * Check if assignment is currently active
+     */
+    public function isActive(): bool
+    {
+        if ($this->effective_to === null) {
+            return true;
+        }
+
+        return $this->effective_to->gte(now()->startOfDay());
     }
 }

@@ -36,6 +36,14 @@
                             class="billing-tab border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400">
                             <i class="fas fa-edit mr-2"></i>Adjustments
                         </button>
+                        <button onclick="showBillingTab('areas')" id="tab-areas"
+                            class="billing-tab border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400">
+                            <i class="fas fa-map-marker-alt mr-2"></i>Areas & Assignments
+                        </button>
+                        <button onclick="showBillingTab('schedules')" id="tab-schedules"
+                            class="billing-tab border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400">
+                            <i class="fas fa-calendar-alt mr-2"></i>Reading Schedules
+                        </button>
                     </nav>
                 </div>
             </div>
@@ -55,6 +63,14 @@
 
             <div id="content-adjustments" class="billing-tab-content hidden">
                 @include('pages.billing.bill-adjustments')
+            </div>
+
+            <div id="content-areas" class="billing-tab-content hidden">
+                @include('pages.billing.areas-assignments-tab')
+            </div>
+
+            <div id="content-schedules" class="billing-tab-content hidden">
+                @include('pages.billing.reading-schedule-tab')
             </div>
 
         </div>
@@ -85,6 +101,8 @@
                 if (tab === 'collections' && window.renderCollections) window.renderCollections();
                 if (tab === 'details' && window.renderBillingDetails) window.renderBillingDetails();
                 if (tab === 'adjustments' && window.renderAdjustments) window.renderAdjustments();
+                if (tab === 'areas' && window.initAreasTab) window.initAreasTab();
+                if (tab === 'schedules' && window.initSchedulesTab) window.initSchedulesTab();
             }, 100);
         }
 

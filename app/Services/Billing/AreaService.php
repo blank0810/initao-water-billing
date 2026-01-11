@@ -1,0 +1,207 @@
+<?php
+
+namespace App\Services\Billing;
+
+use App\Models\Area;
+use App\Models\Status;
+use Illuminate\Support\Collection;
+
+class AreaService
+{
+    /**
+     * Get all areas with status.
+     */
+    public function getAllAreas(): Collection
+    {
+        return Area::with('status')
+            ->orderBy('a_desc')
+            ->get()
+            ->map(fn ($area) => $this->formatAreaData($area));
+    }
+
+    /**
+     * Get active areas only.
+     */
+    public function getActiveAreas(): Collection
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        return Area::with('status')
+            ->where('stat_id', $activeStatusId)
+            ->orderBy('a_desc')
+            ->get()
+            ->map(fn ($area) => $this->formatAreaData($area));
+    }
+
+    /**
+     * Get a single area by ID.
+     */
+    public function getAreaById(int $areaId): ?array
+    {
+        $area = Area::with(['status', 'areaAssignments.user'])->find($areaId);
+
+        if (! $area) {
+            return null;
+        }
+
+        $data = $this->formatAreaData($area);
+        $data['assignments'] = $area->areaAssignments->map(function ($assignment) {
+            return [
+                'area_assignment_id' => $assignment->area_assignment_id,
+                'user_id' => $assignment->user_id,
+                'user_name' => $assignment->user?->name ?? 'Unknown',
+                'effective_from' => $assignment->effective_from?->format('Y-m-d'),
+                'effective_to' => $assignment->effective_to?->format('Y-m-d'),
+                'is_active' => $assignment->isActive(),
+            ];
+        })->toArray();
+
+        return $data;
+    }
+
+    /**
+     * Create a new area.
+     */
+    public function createArea(array $data): array
+    {
+        // Check for duplicate area name
+        $exists = Area::where('a_desc', $data['a_desc'])->exists();
+        if ($exists) {
+            return [
+                'success' => false,
+                'message' => 'An area with this name already exists.',
+            ];
+        }
+
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        $area = Area::create([
+            'a_desc' => $data['a_desc'],
+            'stat_id' => $data['stat_id'] ?? $activeStatusId,
+        ]);
+
+        return [
+            'success' => true,
+            'message' => 'Area created successfully.',
+            'data' => $this->formatAreaData($area->fresh('status')),
+        ];
+    }
+
+    /**
+     * Update an existing area.
+     */
+    public function updateArea(int $areaId, array $data): array
+    {
+        $area = Area::find($areaId);
+
+        if (! $area) {
+            return [
+                'success' => false,
+                'message' => 'Area not found.',
+            ];
+        }
+
+        // Check for duplicate area name (excluding current)
+        if (isset($data['a_desc'])) {
+            $exists = Area::where('a_desc', $data['a_desc'])
+                ->where('a_id', '!=', $areaId)
+                ->exists();
+
+            if ($exists) {
+                return [
+                    'success' => false,
+                    'message' => 'An area with this name already exists.',
+                ];
+            }
+        }
+
+        $updateData = [];
+        if (isset($data['a_desc'])) {
+            $updateData['a_desc'] = $data['a_desc'];
+        }
+        if (isset($data['stat_id'])) {
+            $updateData['stat_id'] = $data['stat_id'];
+        }
+
+        $area->update($updateData);
+
+        return [
+            'success' => true,
+            'message' => 'Area updated successfully.',
+            'data' => $this->formatAreaData($area->fresh('status')),
+        ];
+    }
+
+    /**
+     * Delete an area.
+     */
+    public function deleteArea(int $areaId): array
+    {
+        $area = Area::find($areaId);
+
+        if (! $area) {
+            return [
+                'success' => false,
+                'message' => 'Area not found.',
+            ];
+        }
+
+        // Check if area has any assignments
+        if ($area->areaAssignments()->exists()) {
+            return [
+                'success' => false,
+                'message' => 'Cannot delete area with existing assignments. Remove assignments first.',
+            ];
+        }
+
+        // Check if area has consumers
+        if ($area->consumers()->exists()) {
+            return [
+                'success' => false,
+                'message' => 'Cannot delete area with existing consumers.',
+            ];
+        }
+
+        $area->delete();
+
+        return [
+            'success' => true,
+            'message' => 'Area deleted successfully.',
+        ];
+    }
+
+    /**
+     * Get area statistics.
+     */
+    public function getStats(): array
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        return [
+            'total_areas' => Area::count(),
+            'active_areas' => Area::where('stat_id', $activeStatusId)->count(),
+            'areas_with_assignments' => Area::whereHas('areaAssignments', function ($query) {
+                $query->active();
+            })->count(),
+        ];
+    }
+
+    /**
+     * Format area data for API response.
+     */
+    private function formatAreaData(Area $area): array
+    {
+        $isActive = $area->status?->stat_desc === Status::ACTIVE;
+
+        return [
+            'a_id' => $area->a_id,
+            'a_desc' => $area->a_desc,
+            'stat_id' => $area->stat_id,
+            'status_name' => $area->status?->stat_desc ?? 'Unknown',
+            'is_active' => $isActive,
+            'status_class' => $isActive
+                ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+        ];
+    }
+}

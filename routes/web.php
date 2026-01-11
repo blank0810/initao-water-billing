@@ -207,6 +207,43 @@ Route::middleware('auth')->group(function () {
         Route::get('/water-bills/consumers', [\App\Http\Controllers\WaterBillController::class, 'getConsumerBillingList'])->name('water-bills.consumers');
         Route::get('/water-bills/billed-consumers', [\App\Http\Controllers\WaterBillController::class, 'getBilledConsumersByPeriod'])->name('water-bills.billed-consumers');
         Route::get('/water-bills/summary', [\App\Http\Controllers\WaterBillController::class, 'getBillingSummary'])->name('water-bills.summary');
+
+        // Area Management API
+        Route::get('/areas/list', [\App\Http\Controllers\AreaController::class, 'index'])->name('areas.list');
+        Route::get('/areas/stats', [\App\Http\Controllers\AreaController::class, 'stats'])->name('areas.stats');
+        Route::get('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'show'])->name('areas.show');
+        Route::post('/areas', [\App\Http\Controllers\AreaController::class, 'store'])->name('areas.store');
+        Route::put('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'update'])->name('areas.update');
+        Route::delete('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'destroy'])->name('areas.destroy');
+
+        // Area Assignment API
+        Route::get('/area-assignments', [\App\Http\Controllers\AreaAssignmentController::class, 'index'])->name('area-assignments.index');
+        Route::get('/area-assignments/stats', [\App\Http\Controllers\AreaAssignmentController::class, 'stats'])->name('area-assignments.stats');
+        Route::get('/area-assignments/meter-readers', [\App\Http\Controllers\AreaAssignmentController::class, 'getMeterReaders'])->name('area-assignments.meter-readers');
+        Route::get('/area-assignments/by-area/{areaId}', [\App\Http\Controllers\AreaAssignmentController::class, 'byArea'])->name('area-assignments.by-area');
+        Route::get('/area-assignments/by-user/{userId}', [\App\Http\Controllers\AreaAssignmentController::class, 'byUser'])->name('area-assignments.by-user');
+        Route::get('/area-assignments/{assignmentId}', [\App\Http\Controllers\AreaAssignmentController::class, 'show'])->name('area-assignments.show');
+        Route::post('/area-assignments', [\App\Http\Controllers\AreaAssignmentController::class, 'store'])->name('area-assignments.store');
+        Route::put('/area-assignments/{assignmentId}', [\App\Http\Controllers\AreaAssignmentController::class, 'update'])->name('area-assignments.update');
+        Route::post('/area-assignments/{assignmentId}/end', [\App\Http\Controllers\AreaAssignmentController::class, 'end'])->name('area-assignments.end');
+        Route::delete('/area-assignments/{assignmentId}', [\App\Http\Controllers\AreaAssignmentController::class, 'destroy'])->name('area-assignments.destroy');
+
+        // Reading Schedule API
+        Route::get('/reading-schedules', [\App\Http\Controllers\ReadingScheduleController::class, 'index'])->name('reading-schedules.index');
+        Route::get('/reading-schedules/stats', [\App\Http\Controllers\ReadingScheduleController::class, 'stats'])->name('reading-schedules.stats');
+        Route::get('/reading-schedules/meter-readers', [\App\Http\Controllers\ReadingScheduleController::class, 'getMeterReaders'])->name('reading-schedules.meter-readers');
+        Route::get('/reading-schedules/areas', [\App\Http\Controllers\ReadingScheduleController::class, 'getAreas'])->name('reading-schedules.areas');
+        Route::get('/reading-schedules/periods', [\App\Http\Controllers\ReadingScheduleController::class, 'getPeriods'])->name('reading-schedules.periods');
+        Route::get('/reading-schedules/by-period/{periodId}', [\App\Http\Controllers\ReadingScheduleController::class, 'byPeriod'])->name('reading-schedules.by-period');
+        Route::get('/reading-schedules/by-area/{areaId}', [\App\Http\Controllers\ReadingScheduleController::class, 'byArea'])->name('reading-schedules.by-area');
+        Route::get('/reading-schedules/by-reader/{readerId}', [\App\Http\Controllers\ReadingScheduleController::class, 'byReader'])->name('reading-schedules.by-reader');
+        Route::get('/reading-schedules/{scheduleId}', [\App\Http\Controllers\ReadingScheduleController::class, 'show'])->name('reading-schedules.show');
+        Route::post('/reading-schedules', [\App\Http\Controllers\ReadingScheduleController::class, 'store'])->name('reading-schedules.store');
+        Route::put('/reading-schedules/{scheduleId}', [\App\Http\Controllers\ReadingScheduleController::class, 'update'])->name('reading-schedules.update');
+        Route::post('/reading-schedules/{scheduleId}/start', [\App\Http\Controllers\ReadingScheduleController::class, 'start'])->name('reading-schedules.start');
+        Route::post('/reading-schedules/{scheduleId}/complete', [\App\Http\Controllers\ReadingScheduleController::class, 'complete'])->name('reading-schedules.complete');
+        Route::post('/reading-schedules/{scheduleId}/delay', [\App\Http\Controllers\ReadingScheduleController::class, 'delay'])->name('reading-schedules.delay');
+        Route::delete('/reading-schedules/{scheduleId}', [\App\Http\Controllers\ReadingScheduleController::class, 'destroy'])->name('reading-schedules.destroy');
     });
 
     // -------------------------------------------------------------------------
