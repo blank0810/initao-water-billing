@@ -2,12 +2,20 @@
     @php
         $connData = $connection ?? null;
         $statusName = $connData?->status?->stat_desc ?? 'ACTIVE';
-        $customerName = $connData?->customer
-            ? trim($connData->customer->fname . ' ' . ($connData->customer->mname ? $connData->customer->mname[0] . '. ' : '') . $connData->customer->lname)
-            : '-';
-        $fullAddress = $connData?->address
-            ? trim(($connData->address->purok->p_desc ?? '') . ', ' . ($connData->address->barangay->b_desc ?? ''))
-            : '-';
+
+        // Build customer name with null-safe access
+        $firstName = data_get($connData, 'customer.cust_first_name', '');
+        $middleName = data_get($connData, 'customer.cust_middle_name', '');
+        $lastName = data_get($connData, 'customer.cust_last_name', '');
+        $middleInitial = $middleName ? substr($middleName, 0, 1) . '.' : '';
+        $customerName = trim(implode(' ', array_filter([$firstName, $middleInitial, $lastName]))) ?: '-';
+
+        // Build full address with null-safe access
+        $purokDesc = data_get($connData, 'address.purok.p_desc', '');
+        $barangayDesc = data_get($connData, 'address.barangay.b_desc', '');
+        $addressParts = array_filter([$purokDesc, $barangayDesc]);
+        $fullAddress = $addressParts ? implode(', ', $addressParts) : '-';
+
         $balanceData = $balance ?? ['total_billed' => 0, 'total_paid' => 0, 'balance' => 0];
         $meterData = $currentMeter ?? null;
         $meterHistoryData = $meterHistory ?? [];
@@ -19,12 +27,12 @@
         'status' => $statusName,
         'customer_name' => $customerName,
         'customer' => $connData?->customer ? [
-            'resolution_number' => $connData->customer->resolution_number,
-            'contact_number' => $connData->customer->contact_number,
-            'email' => $connData->customer->email,
+            'resolution_no' => data_get($connData, 'customer.resolution_no'),
+            'contact_number' => data_get($connData, 'customer.contact_number'),
+            'email' => data_get($connData, 'customer.email'),
         ] : null,
         'full_address' => $fullAddress,
-        'barangay' => $connData?->address?->barangay ? ['b_name' => $connData->address->barangay->b_desc] : null,
+        'barangay' => $barangayDesc ? ['b_name' => $barangayDesc] : null,
         'account_type' => $connData?->accountType?->at_desc ?? 'Residential',
         'rate' => $connData?->rate?->rate_desc ?? 'Standard Rate',
         'started_at' => $connData?->started_at,

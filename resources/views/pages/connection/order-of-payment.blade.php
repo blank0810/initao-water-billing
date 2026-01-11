@@ -241,6 +241,18 @@
         </div>
 
         <!-- Application Info -->
+        @php
+            $firstName = data_get($application, 'customer.cust_first_name', '');
+            $middleName = data_get($application, 'customer.cust_middle_name', '');
+            $lastName = data_get($application, 'customer.cust_last_name', '');
+            $middleInitial = $middleName ? substr($middleName, 0, 1) . '.' : '';
+            $fullName = trim(implode(' ', array_filter([$firstName, $middleInitial, $lastName])));
+
+            $purokName = data_get($application, 'address.purok.p_desc', '');
+            $barangayName = data_get($application, 'address.barangay.b_desc', '');
+            $addressParts = array_filter([$purokName, $barangayName, 'Initao', 'Misamis Oriental']);
+            $fullAddress = implode(', ', $addressParts);
+        @endphp
         <div class="info-section">
             <div class="info-box">
                 <div class="info-row">
@@ -253,27 +265,19 @@
                 </div>
                 <div class="info-row">
                     <span class="info-label">Status:</span>
-                    <span class="info-value">{{ $application->status->stat_desc ?? 'N/A' }}</span>
+                    <span class="info-value">{{ data_get($application, 'status.stat_desc', 'N/A') }}</span>
                 </div>
             </div>
             <div class="info-box">
                 <div class="info-row">
                     <span class="info-label">Customer Name:</span>
                     <span class="info-value">
-                        <strong>
-                            {{ $application->customer->cust_first_name ?? '' }}
-                            {{ $application->customer->cust_middle_name ? substr($application->customer->cust_middle_name, 0, 1) . '.' : '' }}
-                            {{ $application->customer->cust_last_name ?? '' }}
-                        </strong>
+                        <strong>{{ $fullName ?: 'N/A' }}</strong>
                     </span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Service Address:</span>
-                    <span class="info-value">
-                        {{ $application->address->purok->purok_name ?? '' }},
-                        {{ $application->address->barangay->b_name ?? '' }},
-                        Initao, Misamis Oriental
-                    </span>
+                    <span class="info-value">{{ $fullAddress }}</span>
                 </div>
             </div>
         </div>
@@ -288,11 +292,11 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($chargesData['charges'] as $charge)
+                @forelse(($chargesData['charges'] ?? []) as $charge)
                 <tr>
-                    <td>{{ $charge->description }}</td>
-                    <td>{{ number_format($charge->quantity, 0) }}</td>
-                    <td>{{ number_format($charge->total_amount, 2) }}</td>
+                    <td>{{ $charge->description ?? 'N/A' }}</td>
+                    <td>{{ number_format((float) ($charge->quantity ?? 0), 0) }}</td>
+                    <td>{{ number_format((float) ($charge->total_amount ?? 0), 2) }}</td>
                 </tr>
                 @empty
                 <tr>
@@ -303,7 +307,7 @@
             <tfoot>
                 <tr class="total-row">
                     <td colspan="2">TOTAL AMOUNT DUE</td>
-                    <td>PHP {{ number_format($chargesData['total_amount'], 2) }}</td>
+                    <td>PHP {{ number_format((float) ($chargesData['total_amount'] ?? 0), 2) }}</td>
                 </tr>
             </tfoot>
         </table>
