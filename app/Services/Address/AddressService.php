@@ -2,14 +2,14 @@
 
 namespace App\Services\Address;
 
-use App\Models\Province;
-use App\Models\Town;
-use App\Models\Barangay;
-use App\Models\Purok;
 use App\Models\AccountType;
-use App\Models\WaterRate;
+use App\Models\Barangay;
 use App\Models\ChargeItem;
+use App\Models\Province;
+use App\Models\Purok;
 use App\Models\Status;
+use App\Models\Town;
+use App\Models\WaterRate;
 
 class AddressService
 {
@@ -40,7 +40,6 @@ class AddressService
     /**
      * Get towns by province
      *
-     * @param int $provinceId
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getTownsByProvince(int $provinceId)
@@ -73,7 +72,20 @@ class AddressService
     {
         return Purok::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
             ->orderBy('p_desc')
-            ->get(['p_id', 'p_desc']);
+            ->get(['p_id', 'p_desc', 'b_id']);
+    }
+
+    /**
+     * Get puroks by barangay
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getPuroksByBarangay(int $barangayId)
+    {
+        return Purok::where('b_id', $barangayId)
+            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->orderBy('p_desc')
+            ->get(['p_id', 'p_desc', 'b_id']);
     }
 
     /**

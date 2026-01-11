@@ -77,7 +77,7 @@ class User extends Authenticatable
      */
     public function payments()
     {
-        return $this->hasMany(Payment::class, 'user_id', 'user_id');
+        return $this->hasMany(Payment::class, 'user_id', 'id');
     }
 
     /**
@@ -85,7 +85,7 @@ class User extends Authenticatable
      */
     public function customerLedgerEntries()
     {
-        return $this->hasMany(CustomerLedger::class, 'user_id', 'user_id');
+        return $this->hasMany(CustomerLedger::class, 'user_id', 'id');
     }
 
     /**
@@ -93,7 +93,7 @@ class User extends Authenticatable
      */
     public function billAdjustments()
     {
-        return $this->hasMany(BillAdjustment::class, 'user_id', 'user_id');
+        return $this->hasMany(BillAdjustment::class, 'user_id', 'id');
     }
 
     // =========================================================================

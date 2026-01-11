@@ -53,6 +53,14 @@ class ServiceConnection extends Model
     }
 
     /**
+     * Get the water rate that owns the service connection
+     */
+    public function rate()
+    {
+        return $this->belongsTo(WaterRate::class, 'rate_id', 'wr_id');
+    }
+
+    /**
      * Get the status associated with the service connection
      */
     public function status()

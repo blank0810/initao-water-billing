@@ -99,6 +99,33 @@ class CustomerController extends Controller
     }
 
     /**
+     * Search customers by name, phone, or ID
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function search(Request $request)
+    {
+        try {
+            $query = $request->input('q', '');
+
+            if (strlen($query) < 2) {
+                return response()->json([]);
+            }
+
+            $customers = $this->customerService->searchCustomers($query);
+
+            return response()->json($customers);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Display the specified customer
      *
      * @param  int  $id

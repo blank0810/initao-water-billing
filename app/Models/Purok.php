@@ -7,15 +7,28 @@ use Illuminate\Database\Eloquent\Model;
 class Purok extends Model
 {
     protected $table = 'purok';
+
     protected $primaryKey = 'p_id';
+
     public $timestamps = false;
+
     public $incrementing = true;
+
     protected $keyType = 'int';
 
     protected $fillable = [
         'p_desc',
-        'stat_id'
+        'b_id',
+        'stat_id',
     ];
+
+    /**
+     * Get the barangay that owns the purok
+     */
+    public function barangay()
+    {
+        return $this->belongsTo(Barangay::class, 'b_id', 'b_id');
+    }
 
     /**
      * Get the status associated with the purok
