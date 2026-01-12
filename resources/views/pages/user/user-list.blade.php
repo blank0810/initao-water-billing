@@ -43,9 +43,9 @@
                                     <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
                                     <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
                                     <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
-                                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phone</th>
                                     <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
-                                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Address / Landmark</th>
+                                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Created</th>
+                                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                     <th class="px-4 py-3 text-center text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
@@ -91,9 +91,9 @@
                             <td class="px-4 py-3 text-sm font-mono text-gray-900 dark:text-gray-100" data-col="id"></td>
                             <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100" data-col="name"></td>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" data-col="email"></td>
-                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" data-col="phone"></td>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" data-col="role"></td>
-                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" data-col="address"></td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" data-col="date"></td>
+                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" data-col="status"></td>
                             <td class="px-4 py-3 text-center" data-col="actions"></td>
                         </tr>
                     </template>
@@ -108,5 +108,5 @@
         </div>
     </div>
 
-    @vite('resources/js/user.js')
+    @vite('resources/js/data/user/user.js')
 </x-app-layout>
