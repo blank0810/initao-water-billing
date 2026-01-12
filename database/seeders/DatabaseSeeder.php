@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
 
         // Create default test user
         User::factory()->create([
+            'username' => 'testuser',
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
@@ -47,8 +48,7 @@ class DatabaseSeeder extends Seeder
         // Seed tables that depend on users (must come after user creation)
         $this->call([
             RolePermissionSeeder::class,  // Assign permissions to roles
-            AdminUserRoleSeeder::class,   // Assign Super Admin role to admin user
-            TestUsersSeeder::class,       // Create test users for each role
+            TestUsersSeeder::class,       // Create test users for each role (includes super admin)
             PeriodSeeder::class,          // Billing periods (12 months)
             MiscReferenceSeeder::class,   // Misc references (penalties, discounts, surcharges)
             ServiceConnectionSeeder::class, // Sample service connections (Residential & Commercial)
@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- Misc References: 3 reference types');
         $this->command->info('- Roles: 6 roles (Super Admin, Admin, Billing Officer, Meter Reader, Cashier, Viewer)');
         $this->command->info('- Permissions: 18 permissions across 8 modules');
-        $this->command->info('- Test Users: 6 users (1 per role) - Password: "password"');
+        $this->command->info('- Test Users: 7 users (1 per role + testuser) - Password: "password"');
         $this->command->info('- Service Connections: 5 connections (3 Residential, 2 Commercial)');
     }
 }

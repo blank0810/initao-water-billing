@@ -16,6 +16,12 @@ class TestUsersSeeder extends Seeder
     {
         $testUsers = [
             [
+                'username' => 'super_admin',
+                'email' => 'admin@initao-water.gov.ph',
+                'name' => 'Super Admin',
+                'role' => Role::SUPER_ADMIN,
+            ],
+            [
                 'username' => 'admin_user',
                 'email' => 'admin@test.com',
                 'name' => 'Admin User',
@@ -57,26 +63,27 @@ class TestUsersSeeder extends Seeder
                 array_merge($userData, [
                     'password' => Hash::make('password'),
                     'u_type' => 3, // Default user type
-                    'stat_id' => 1, // ACTIVE status
+                    'stat_id' => 2, // ACTIVE status
                 ])
             );
 
             // Assign role
             $user->assignRole($roleName);
 
-            $this->command->info("Created user: {$user->email} with role: {$roleName}");
+            $this->command->info("Created user: {$user->username} with role: {$roleName}");
         }
 
         $this->command->newLine();
         $this->command->info('Test Users Created:');
         $this->command->table(
-            ['Email', 'Password', 'Role'],
+            ['Username', 'Password', 'Role'],
             [
-                ['admin@test.com', 'password', 'Admin'],
-                ['billing@test.com', 'password', 'Billing Officer'],
-                ['meter@test.com', 'password', 'Meter Reader'],
-                ['cashier@test.com', 'password', 'Cashier'],
-                ['viewer@test.com', 'password', 'Viewer'],
+                ['super_admin', 'password', 'Super Admin'],
+                ['admin_user', 'password', 'Admin'],
+                ['billing_officer', 'password', 'Billing Officer'],
+                ['meter_reader', 'password', 'Meter Reader'],
+                ['cashier', 'password', 'Cashier'],
+                ['viewer', 'password', 'Viewer'],
             ]
         );
     }

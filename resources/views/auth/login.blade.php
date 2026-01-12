@@ -10,7 +10,7 @@
                         Administrator Login
                     </h2>
                     <p class="text-gray-500 dark:text-gray-400">
-                        Enter your registered email and password.
+                        Enter your username and password.
                     </p>
                 </div>
 
@@ -21,13 +21,13 @@
                 <form method="POST" action="{{ route('login') }}" class="space-y-6">
                     @csrf
 
-                    <!-- Email -->
+                    <!-- Username -->
                     <div>
-                        <x-input-label for="email" :value="__('Email Address')" />
-                        <x-text-input id="email" type="email" name="email" :value="old('email')" required autofocus
+                        <x-input-label for="username" :value="__('Username')" />
+                        <x-text-input id="username" type="text" name="username" :value="old('username')" required autofocus
                             class="mt-1 block w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                            placeholder="Enter your email" />
-                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                            placeholder="Enter your username" />
+                        <x-input-error :messages="$errors->get('username')" class="mt-2" />
                     </div>
 
                     <!-- Password with toggle -->
