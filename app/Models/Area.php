@@ -52,4 +52,12 @@ class Area extends Model
     {
         return $this->hasMany(ReadingSchedule::class, 'a_id', 'a_id');
     }
+
+    /**
+     * Get the service connections for the area
+     */
+    public function serviceConnections()
+    {
+        return $this->hasMany(ServiceConnection::class, 'area_id', 'a_id');
+    }
 }

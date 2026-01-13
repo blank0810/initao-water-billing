@@ -15,9 +15,12 @@ class WaterBillController extends Controller
     /**
      * Get billable connections (service connections with active meters).
      */
-    public function getBillableConnections(): JsonResponse
+    public function getBillableConnections(Request $request): JsonResponse
     {
-        $connections = $this->billService->getBillableConnections();
+        $search = $request->input('search', '');
+        $limit = (int) $request->input('limit', 100);
+
+        $connections = $this->billService->getBillableConnections($search, $limit);
 
         return response()->json([
             'success' => true,

@@ -19,11 +19,11 @@ class WaterBillService
     /**
      * Get connections with active meter assignments for bill generation.
      */
-    public function getBillableConnections(): Collection
+    public function getBillableConnections(string $search = '', int $limit = 100): Collection
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
-        return ServiceConnection::with([
+        $query = ServiceConnection::with([
             'customer',
             'accountType',
             'address.barangay',
@@ -36,8 +36,28 @@ class WaterBillService
             ->whereNull('ended_at')
             ->whereHas('meterAssignments', function ($query) {
                 $query->whereNull('removed_at');
-            })
-            ->orderBy('account_no')
+            });
+
+        // Apply search filter
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('account_no', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($customerQuery) use ($search) {
+                        $customerQuery->where('cust_first_name', 'like', "%{$search}%")
+                            ->orWhere('cust_last_name', 'like', "%{$search}%")
+                            ->orWhereRaw("CONCAT(cust_first_name, ' ', cust_last_name) LIKE ?", ["%{$search}%"]);
+                    })
+                    ->orWhereHas('address.barangay', function ($addressQuery) use ($search) {
+                        $addressQuery->where('b_desc', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('meterAssignments.meter', function ($meterQuery) use ($search) {
+                        $meterQuery->where('mtr_serial', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query->orderBy('account_no')
+            ->limit($limit)
             ->get()
             ->map(function ($connection) {
                 $customer = $connection->customer;
@@ -53,7 +73,7 @@ class WaterBillService
                     'customer_name' => $customerName,
                     'account_type_id' => $connection->account_type_id,
                     'account_type' => $connection->accountType?->at_desc ?? 'Unknown',
-                    'barangay' => $connection->address?->barangay?->b_name ?? 'Unknown',
+                    'barangay' => $connection->address?->barangay?->b_desc ?? 'Unknown',
                     'assignment_id' => $activeAssignment?->assignment_id,
                     'meter_serial' => $activeAssignment?->meter?->mtr_serial ?? 'N/A',
                     'install_read' => $activeAssignment?->install_read ?? 0,
@@ -401,7 +421,7 @@ class WaterBillService
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
         $paidStatusId = Status::getIdByDescription(Status::PAID) ?? Status::getIdByDescription('Paid') ?? 2;
-        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE) ?? Status::getIdByDescription('Overdue') ?? 4;
+        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
 
         $connection = ServiceConnection::with([
             'customer',
@@ -501,7 +521,7 @@ class WaterBillService
             'customer_initials' => $customerInitials,
             'account_type' => $connection->accountType?->at_desc ?? 'Unknown',
             'meter_serial' => $activeAssignment?->meter?->mtr_serial ?? 'N/A',
-            'barangay' => $connection->address?->barangay?->b_name ?? 'Unknown',
+            'barangay' => $connection->address?->barangay?->b_desc ?? 'Unknown',
             'status' => $connection->stat_id === $activeStatusId ? 'Active' : 'Inactive',
             'email' => $customer?->cust_email ?? 'N/A',
             'phone' => $customer?->cust_phone ?? 'N/A',
@@ -536,7 +556,7 @@ class WaterBillService
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
         $paidStatusId = Status::getIdByDescription(Status::PAID) ?? Status::getIdByDescription('Paid') ?? 2;
-        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE) ?? Status::getIdByDescription('Overdue') ?? 4;
+        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
 
         return ServiceConnection::with([
             'customer',
@@ -583,7 +603,7 @@ class WaterBillService
                     'connection_id' => $connection->connection_id,
                     'account_no' => $connection->account_no,
                     'name' => $customerName,
-                    'location' => $connection->address?->barangay?->b_name ?? 'Unknown',
+                    'location' => $connection->address?->barangay?->b_desc ?? 'Unknown',
                     'meter_serial' => $activeAssignment?->meter?->mtr_serial ?? 'N/A',
                     'account_type' => $connection->accountType?->at_desc ?? 'Unknown',
                     'totalDue' => round($totalDue, 2),
@@ -600,7 +620,7 @@ class WaterBillService
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
         $paidStatusId = Status::getIdByDescription(Status::PAID) ?? Status::getIdByDescription('Paid') ?? 2;
-        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE) ?? Status::getIdByDescription('Overdue') ?? 4;
+        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
 
         // If no period specified, get the active period
         if (! $periodId) {
@@ -677,7 +697,7 @@ class WaterBillService
                 'bill_id' => $bill->bill_id,
                 'account_no' => $connection->account_no,
                 'name' => $customerName,
-                'location' => $connection->address?->barangay?->b_name ?? 'Unknown',
+                'location' => $connection->address?->barangay?->b_desc ?? 'Unknown',
                 'meter_serial' => $activeAssignment?->meter?->mtr_serial ?? 'N/A',
                 'account_type' => $connection->accountType?->at_desc ?? 'Unknown',
                 'period' => $bill->period?->per_name ?? 'N/A',
@@ -713,7 +733,7 @@ class WaterBillService
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
         $paidStatusId = Status::getIdByDescription(Status::PAID) ?? Status::getIdByDescription('Paid') ?? 2;
-        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE) ?? Status::getIdByDescription('Overdue') ?? 4;
+        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
 
         // Get all unpaid bills
         $unpaidBills = WaterBillHistory::whereIn('stat_id', [$activeStatusId, $overdueStatusId])->get();
