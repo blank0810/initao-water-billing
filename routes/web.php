@@ -243,6 +243,11 @@ Route::middleware('auth')->group(function () {
         // Area Management API
         Route::get('/areas/list', [\App\Http\Controllers\AreaController::class, 'index'])->name('areas.list');
         Route::get('/areas/stats', [\App\Http\Controllers\AreaController::class, 'stats'])->name('areas.stats');
+        Route::get('/areas/connections-without-area', [\App\Http\Controllers\AreaController::class, 'getConnectionsWithoutArea'])->name('areas.connections-without-area');
+        Route::get('/areas/connections-by-area', [\App\Http\Controllers\AreaController::class, 'getConnectionsByArea'])->name('areas.connections-by-area');
+        Route::get('/areas/connection-area-stats', [\App\Http\Controllers\AreaController::class, 'connectionAreaStats'])->name('areas.connection-area-stats');
+        Route::post('/areas/assign-connections', [\App\Http\Controllers\AreaController::class, 'assignAreaToConnections'])->name('areas.assign-connections');
+        Route::post('/areas/remove-connections', [\App\Http\Controllers\AreaController::class, 'removeAreaFromConnections'])->name('areas.remove-connections');
         Route::get('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'show'])->name('areas.show');
         Route::post('/areas', [\App\Http\Controllers\AreaController::class, 'store'])->name('areas.store');
         Route::put('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'update'])->name('areas.update');
