@@ -265,4 +265,35 @@ class MeterAssignmentService
             ->whereNotIn('connection_id', $connectionsWithMeters)
             ->get();
     }
+
+    /**
+     * Get unassigned connections formatted for the assign meter modal
+     */
+    public function getUnassignedConnections(): Collection
+    {
+        $connectionsWithMeters = MeterAssignment::whereNull('removed_at')
+            ->pluck('connection_id');
+
+        return ServiceConnection::with(['customer', 'accountType', 'address.barangay'])
+            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->whereNull('ended_at')
+            ->whereNotIn('connection_id', $connectionsWithMeters)
+            ->orderBy('account_no')
+            ->get()
+            ->map(function ($connection) {
+                $customer = $connection->customer;
+                $customerName = $customer
+                    ? trim($customer->cust_first_name . ' ' . $customer->cust_last_name)
+                    : 'Unknown';
+
+                return [
+                    'connection_id' => $connection->connection_id,
+                    'account_no' => $connection->account_no,
+                    'customer_name' => $customerName,
+                    'account_type' => $connection->accountType?->at_desc ?? 'Unknown',
+                    'barangay' => $connection->address?->barangay?->b_desc ?? 'Unknown',
+                    'label' => $connection->account_no . ' - ' . $customerName,
+                ];
+            });
+    }
 }

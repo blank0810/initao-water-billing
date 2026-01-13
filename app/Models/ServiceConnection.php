@@ -21,6 +21,7 @@ class ServiceConnection extends Model
         'customer_id',
         'address_id',
         'account_type_id',
+        'area_id',
         'started_at',
         'ended_at',
         'stat_id',
@@ -56,19 +57,19 @@ class ServiceConnection extends Model
     }
 
     /**
-     * Get the water rate that owns the service connection
-     */
-    public function rate()
-    {
-        return $this->belongsTo(WaterRate::class, 'rate_id', 'wr_id');
-    }
-
-    /**
      * Get the status associated with the service connection
      */
     public function status()
     {
         return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
+    }
+
+    /**
+     * Get the area associated with the service connection
+     */
+    public function area()
+    {
+        return $this->belongsTo(Area::class, 'area_id', 'a_id');
     }
 
     /**

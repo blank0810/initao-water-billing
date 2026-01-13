@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\Meter\MeterAssignmentService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -90,9 +91,25 @@ class MeterAssignmentController extends Controller
             'install_read' => 'nullable|numeric|min:0',
         ]);
 
-        $result = $this->assignmentService->assignMeter($validated);
+        try {
+            $assignment = $this->assignmentService->assignMeter(
+                (int) $validated['connection_id'],
+                (int) $validated['meter_id'],
+                (float) ($validated['install_read'] ?? 0),
+                Carbon::parse($validated['installed_at'] ?? now())
+            );
 
-        return response()->json($result, $result['success'] ? 201 : 422);
+            return response()->json([
+                'success' => true,
+                'message' => 'Meter assigned successfully.',
+                'data' => $assignment,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     /**
