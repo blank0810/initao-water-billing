@@ -104,4 +104,90 @@ class AreaController extends Controller
             'data' => $stats,
         ]);
     }
+
+    // ========================================================================
+    // Service Connection Area Assignment Endpoints
+    // ========================================================================
+
+    /**
+     * Get service connections without area assignment.
+     */
+    public function getConnectionsWithoutArea(Request $request): JsonResponse
+    {
+        $search = $request->input('search', '');
+        $barangayId = $request->has('barangay_id') ? (int) $request->input('barangay_id') : null;
+        $limit = (int) $request->input('limit', 100);
+
+        $connections = $this->areaService->getConnectionsWithoutArea($search, $barangayId, $limit);
+
+        return response()->json([
+            'success' => true,
+            'data' => $connections,
+        ]);
+    }
+
+    /**
+     * Get service connections by area.
+     */
+    public function getConnectionsByArea(Request $request): JsonResponse
+    {
+        $areaId = $request->input('area_id') !== null ? (int) $request->input('area_id') : null;
+        $search = $request->input('search', '');
+        $barangayId = $request->has('barangay_id') ? (int) $request->input('barangay_id') : null;
+        $limit = (int) $request->input('limit', 100);
+
+        $connections = $this->areaService->getConnectionsByArea($areaId, $search, $barangayId, $limit);
+
+        return response()->json([
+            'success' => true,
+            'data' => $connections,
+        ]);
+    }
+
+    /**
+     * Assign area to service connections.
+     */
+    public function assignAreaToConnections(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'area_id' => 'required|integer|exists:area,a_id',
+            'connection_ids' => 'required|array|min:1',
+            'connection_ids.*' => 'integer|exists:ServiceConnection,connection_id',
+        ]);
+
+        $result = $this->areaService->assignAreaToConnections(
+            $validated['area_id'],
+            $validated['connection_ids']
+        );
+
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * Remove area assignment from service connections.
+     */
+    public function removeAreaFromConnections(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'connection_ids' => 'required|array|min:1',
+            'connection_ids.*' => 'integer|exists:ServiceConnection,connection_id',
+        ]);
+
+        $result = $this->areaService->removeAreaFromConnections($validated['connection_ids']);
+
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * Get connection area assignment statistics.
+     */
+    public function connectionAreaStats(): JsonResponse
+    {
+        $stats = $this->areaService->getConnectionAreaStats();
+
+        return response()->json([
+            'success' => true,
+            'data' => $stats,
+        ]);
+    }
 }
