@@ -24,9 +24,6 @@
                         <button onclick="switchTab('period-rates')" id="tabPeriodRates" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
                             <i class="fas fa-money-bill-wave mr-2"></i>Period Rates
                         </button>
-                        <button onclick="switchTab('structures')" id="tabStructures" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-                            <i class="fas fa-layer-group mr-2"></i>Rate Structures
-                        </button>
                     </nav>
                 </div>
             </div>
@@ -39,11 +36,6 @@
             <!-- Period Rates Section -->
             <div id="periodRatesSection" class="hidden">
                 @include('pages.rate.period-rates-content')
-            </div>
-
-            <!-- Rate Structures Section -->
-            <div id="rateStructuresSection" class="hidden">
-                @include('components.ui.rate.rate-structure-content')
             </div>
 
         </div>
@@ -67,7 +59,6 @@ function switchTab(tab) {
     // Hide all sections
     document.getElementById('periodsSection').classList.add('hidden');
     document.getElementById('periodRatesSection').classList.add('hidden');
-    document.getElementById('rateStructuresSection').classList.add('hidden');
 
     if(tab === 'periods') {
         document.getElementById('tabPeriods').classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
@@ -77,10 +68,6 @@ function switchTab(tab) {
         document.getElementById('tabPeriodRates').classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
         document.getElementById('tabPeriodRates').classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
         document.getElementById('periodRatesSection').classList.remove('hidden');
-    } else if(tab === 'structures') {
-        document.getElementById('tabStructures').classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-        document.getElementById('tabStructures').classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
-        document.getElementById('rateStructuresSection').classList.remove('hidden');
     }
 }
 
