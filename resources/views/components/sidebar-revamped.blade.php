@@ -1,16 +1,8 @@
 @php
-try {
-    $user = Auth::user() ?? (object) [
-        'name' => 'Demo User',
-        'email' => 'demo@example.com',
-    ];
-} catch (\Exception $e) {
-    // Fallback for when database is not available (development)
-    $user = (object) [
-        'name' => 'Demo User',
-        'email' => 'demo@example.com',
-    ];
-}
+$user = Auth::user() ?? (object) [
+    'name' => 'Demo User',
+    'email' => 'demo@example.com',
+];
 @endphp
 
 <!-- Sidebar -->
@@ -54,7 +46,7 @@ try {
         </a>
 
         <!-- User Management -->
-        @dev @can('users.view') @enddev
+        @can('users.view')
         <div class="space-y-1">
             <button @click="toggleSubmenu('userManagement')"
                 :class="(activeMenu.startsWith('user-') || openSubmenus.userManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
@@ -106,10 +98,10 @@ try {
                 @endcan
             </div>
         </div>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Connection Management -->
-        @dev @can('customers.manage') @enddev
+        @can('customers.manage')
         <div class="space-y-1">
             <button @click="toggleSubmenu('connectionManagement')"
                 :class="(activeMenu.startsWith('connection-') || openSubmenus.connectionManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
@@ -145,10 +137,10 @@ try {
                 </a>
             </div>
         </div>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Customer Management -->
-        @dev @can('customers.view') @enddev
+        @can('customers.view')
         <div class="space-y-1">
             <button @click="toggleSubmenu('customerManagement')"
                 :class="(activeMenu.startsWith('customer-') || openSubmenus.customerManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
@@ -180,10 +172,10 @@ try {
                 @endcan
             </div>
         </div>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Consumer List -->
-        @dev @can('customers.view') @enddev
+        @can('customers.view')
         <a href="{{ route('consumer.list') }}" @click="setActiveMenu('consumer-list')"
             :class="activeMenu === 'consumer-list' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -193,10 +185,10 @@ try {
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Consumer List</span>
         </a>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Payment Management -->
-        @dev @can('payments.view') @enddev
+        @can('payments.view')
         <a href="{{ route('payment.management') }}" @click="setActiveMenu('payment-management')"
             :class="activeMenu === 'payment-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -206,10 +198,10 @@ try {
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Payment Management</span>
         </a>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Billing Management -->
-        @dev @can('billing.view') @enddev
+        @can('billing.view')
         <a href="{{ route('billing.management') }}" @click="setActiveMenu('billing-management')"
             :class="activeMenu === 'billing-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -219,10 +211,10 @@ try {
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Billing</span>
         </a>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Meter Management -->
-        @dev @can('meters.view') @enddev
+        @can('meters.view')
         <a href="{{ route('meter.management') }}" @click="setActiveMenu('meter-management')"
             :class="activeMenu === 'meter-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -232,10 +224,10 @@ try {
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Meter</span>
         </a>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Rate Management -->
-        @dev @can('settings.manage') @enddev
+        @can('settings.manage')
         <a href="{{ route('rate.management') }}" @click="setActiveMenu('rate-management')"
             :class="activeMenu === 'rate-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -245,10 +237,10 @@ try {
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Rate</span>
         </a>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Ledger Management -->
-        @dev @can('billing.view') @enddev
+        @can('billing.view')
         <a href="{{ route('ledger.management') }}" @click="setActiveMenu('ledger-management')"
             :class="activeMenu === 'ledger-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -258,10 +250,10 @@ try {
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Ledger</span>
         </a>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Analytics -->
-        @dev @can('reports.view') @enddev
+        @can('reports.view')
         <a href="{{ route('analytics') }}" @click="setActiveMenu('analytics')"
             :class="activeMenu === 'analytics' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -271,10 +263,10 @@ try {
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Analytics</span>
         </a>
-        @dev @endcan @enddev
+        @endcan
 
         <!-- Activity Log - Super Admin Only -->
-        @dev @role('super_admin') @enddev
+        @role('super_admin')
         <a href="{{ route('admin.activity-log') }}" @click="setActiveMenu('activity-log')"
             :class="activeMenu === 'activity-log' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -284,7 +276,7 @@ try {
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Activity Log</span>
         </a>
-        @dev @endrole @enddev
+        @endrole
 
     </nav>
 
@@ -294,16 +286,16 @@ try {
             <a href="{{ url('/profile') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Profile">
                 <i class="fas fa-user text-gray-600 dark:text-gray-400"></i>
             </a>
-            @dev @can('settings.manage') @enddev
+            @can('settings.manage')
             <a href="{{ url('/settings') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Settings">
                 <i class="fas fa-cog text-gray-600 dark:text-gray-400"></i>
             </a>
-            @dev @endcan @enddev
-            @dev @can('reports.view') @enddev
+            @endcan
+            @can('reports.view')
             <a href="{{ url('/report') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Report">
                 <i class="fas fa-flag text-gray-600 dark:text-gray-400"></i>
             </a>
-            @dev @endcan @enddev
+            @endcan
         </div>
     </div>
 </aside>
