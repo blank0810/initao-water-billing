@@ -1,9 +1,13 @@
-class MEEDOContractPrint {
-    static printWaterServiceContract(customer) {
-        const w = window.open('', '_blank', 'width=842,height=1191');
-        const today = new Date();
-        const days = ['', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21st', '22nd', '23rd', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31st'];
-        const months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+// Meedo Water Service Contract Print Utility - Standalone Function
+function printWaterServiceContract(customer) {
+    const w = window.open('', '_blank', 'width=842,height=1191');
+    if (!w) {
+        alert('Pop-up blocked. Please allow pop-ups for this site.');
+        return;
+    }
+    const today = new Date();
+    const days = ['', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21st', '22nd', '23rd', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31st'];
+    const months = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         
         w.document.write(`
             <!DOCTYPE html>
@@ -13,6 +17,12 @@ class MEEDOContractPrint {
                 <title>Water Service Contract - ${customer.CustomerName || 'Customer'}</title>
                 <style>
                     @page { size: A4; margin: 10mm; }
+                    @media print {
+                        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+                        body { padding: 10px; margin: 0; background: white; }
+                        @page { margin: 10mm; }
+                        .no-print { display: none !important; }
+                    }
                     * { margin: 0; padding: 0; box-sizing: border-box; }
                     body { font-family: 'Courier New', monospace; font-size: 10px; padding: 20px; color: #000; line-height: 1.4; background: white; }
                     .header { text-align: center; margin-bottom: 8px; }
@@ -34,10 +44,6 @@ class MEEDOContractPrint {
                     .signature-block { flex: 1; }
                     .signature-line { border-top: 1px solid #000; margin-top: 30px; text-align: center; }
                     .addendum { margin-top: 16px; }
-                    @media print {
-                        body { padding: 10px; }
-                        @page { margin: 10mm; }
-                    }
                 </style>
             </head>
             <body>
@@ -233,20 +239,16 @@ class MEEDOContractPrint {
                 </div>
                 
                 <script>
-                    window.onload = function() {
-                        setTimeout(function() {
-                            window.print();
-                        }, 250);
-                    };
+                    // Clean document for printing
+                    document.title = '';
                 </script>
             </body>
             </html>
         `);
         w.document.close();
-    }
 }
 
 // Export to global scope
-window.MEEDOContractPrint = MEEDOContractPrint;
+window.printWaterServiceContract = printWaterServiceContract;
 
-export { MEEDOContractPrint };
+export { printWaterServiceContract };

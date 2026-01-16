@@ -1,8 +1,16 @@
 @php
-$user = Auth::user() ?? (object) [
-    'name' => 'Demo User',
-    'email' => 'demo@example.com',
-];
+try {
+    $user = Auth::user() ?? (object) [
+        'name' => 'Demo User',
+        'email' => 'demo@example.com',
+    ];
+} catch (\Exception $e) {
+    // Fallback for when database is not available (development)
+    $user = (object) [
+        'name' => 'Demo User',
+        'email' => 'demo@example.com',
+    ];
+}
 @endphp
 
 <!-- Sidebar -->
@@ -46,7 +54,7 @@ $user = Auth::user() ?? (object) [
         </a>
 
         <!-- User Management -->
-        @can('users.view')
+        @dev @can('users.view') @enddev
         <div class="space-y-1">
             <button @click="toggleSubmenu('userManagement')"
                 :class="(activeMenu.startsWith('user-') || openSubmenus.userManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
@@ -98,10 +106,10 @@ $user = Auth::user() ?? (object) [
                 @endcan
             </div>
         </div>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Connection Management -->
-        @can('customers.manage')
+        @dev @can('customers.manage') @enddev
         <div class="space-y-1">
             <button @click="toggleSubmenu('connectionManagement')"
                 :class="(activeMenu.startsWith('connection-') || openSubmenus.connectionManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
@@ -137,10 +145,10 @@ $user = Auth::user() ?? (object) [
                 </a>
             </div>
         </div>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Customer Management -->
-        @can('customers.view')
+        @dev @can('customers.view') @enddev
         <div class="space-y-1">
             <button @click="toggleSubmenu('customerManagement')"
                 :class="(activeMenu.startsWith('customer-') || openSubmenus.customerManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
@@ -172,10 +180,10 @@ $user = Auth::user() ?? (object) [
                 @endcan
             </div>
         </div>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Consumer List -->
-        @can('customers.view')
+        @dev @can('customers.view') @enddev
         <a href="{{ route('consumer.list') }}" @click="setActiveMenu('consumer-list')"
             :class="activeMenu === 'consumer-list' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -185,10 +193,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Consumer List</span>
         </a>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Payment Management -->
-        @can('payments.view')
+        @dev @can('payments.view') @enddev
         <a href="{{ route('payment.management') }}" @click="setActiveMenu('payment-management')"
             :class="activeMenu === 'payment-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -198,10 +206,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Payment Management</span>
         </a>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Billing Management -->
-        @can('billing.view')
+        @dev @can('billing.view') @enddev
         <a href="{{ route('billing.management') }}" @click="setActiveMenu('billing-management')"
             :class="activeMenu === 'billing-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -211,10 +219,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Billing</span>
         </a>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Meter Management -->
-        @can('meters.view')
+        @dev @can('meters.view') @enddev
         <a href="{{ route('meter.management') }}" @click="setActiveMenu('meter-management')"
             :class="activeMenu === 'meter-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -224,10 +232,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Meter</span>
         </a>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Rate Management -->
-        @can('settings.manage')
+        @dev @can('settings.manage') @enddev
         <a href="{{ route('rate.management') }}" @click="setActiveMenu('rate-management')"
             :class="activeMenu === 'rate-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -237,10 +245,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Rate</span>
         </a>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Ledger Management -->
-        @can('billing.view')
+        @dev @can('billing.view') @enddev
         <a href="{{ route('ledger.management') }}" @click="setActiveMenu('ledger-management')"
             :class="activeMenu === 'ledger-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -250,10 +258,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Ledger</span>
         </a>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Analytics -->
-        @can('reports.view')
+        @dev @can('reports.view') @enddev
         <a href="{{ route('analytics') }}" @click="setActiveMenu('analytics')"
             :class="activeMenu === 'analytics' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -263,10 +271,10 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Analytics</span>
         </a>
-        @endcan
+        @dev @endcan @enddev
 
         <!-- Activity Log - Super Admin Only -->
-        @role('super_admin')
+        @dev @role('super_admin') @enddev
         <a href="{{ route('admin.activity-log') }}" @click="setActiveMenu('activity-log')"
             :class="activeMenu === 'activity-log' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
             class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
@@ -276,7 +284,7 @@ $user = Auth::user() ?? (object) [
             </div>
             <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Activity Log</span>
         </a>
-        @endrole
+        @dev @endrole @enddev
 
     </nav>
 
@@ -286,16 +294,16 @@ $user = Auth::user() ?? (object) [
             <a href="{{ url('/profile') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Profile">
                 <i class="fas fa-user text-gray-600 dark:text-gray-400"></i>
             </a>
-            @can('settings.manage')
+            @dev @can('settings.manage') @enddev
             <a href="{{ url('/settings') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Settings">
                 <i class="fas fa-cog text-gray-600 dark:text-gray-400"></i>
             </a>
-            @endcan
-            @can('reports.view')
+            @dev @endcan @enddev
+            @dev @can('reports.view') @enddev
             <a href="{{ url('/report') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Report">
                 <i class="fas fa-flag text-gray-600 dark:text-gray-400"></i>
             </a>
-            @endcan
+            @dev @endcan @enddev
         </div>
     </div>
 </aside>

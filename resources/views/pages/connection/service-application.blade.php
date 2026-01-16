@@ -167,6 +167,11 @@
                                                 title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            <button @click="openPrintModal(app)"
+                                                class="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition-colors"
+                                                title="Print Forms">
+                                                <i class="fas fa-print"></i>
+                                            </button>
                                             <template x-if="app.status?.stat_desc === 'PENDING'">
                                                 <button @click="quickVerify(app)"
                                                     class="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition-colors"
@@ -238,6 +243,7 @@
     <!-- Include Modal Components -->
     <x-ui.connection.verify-modal />
     <x-ui.connection.schedule-modal />
+    <x-ui.connection.print-modal />
 
     <script>
     function applicationList(initialData) {
@@ -378,8 +384,14 @@
                     this.formatCustomerName(app),
                     this.formatAddress(app) + ', ' + (app.address?.barangay?.b_desc || '')
                 );
+            },
+
+            openPrintModal(app) {
+                openPrintModal(app);
             }
         };
     }
     </script>
+
+    @vite(['resources/js/utils/print-form.js'])
 </x-app-layout>
