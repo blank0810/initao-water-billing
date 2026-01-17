@@ -88,11 +88,13 @@ class ServiceConnectionService
      *
      * Uses retry logic to handle race conditions when generating account numbers.
      * If a unique constraint violation occurs, retries with a new account number.
+     *
+     * Note: Water rates are now determined automatically by account type (tiered rate system).
      */
     public function createFromApplication(
         ServiceApplication $application,
         int $accountTypeId,
-        int $rateId
+        ?int $areaId = null
     ): ServiceConnection {
         if ($application->stat_id !== Status::getIdByDescription(Status::SCHEDULED)) {
             throw new \Exception('Application must be in SCHEDULED status to create connection');
@@ -105,20 +107,20 @@ class ServiceConnectionService
             $attempts++;
 
             try {
-                return DB::transaction(function () use ($application, $accountTypeId, $rateId) {
+                return DB::transaction(function () use ($application, $accountTypeId, $areaId) {
                     // Get barangay from application's address
                     $barangayId = $application->address->b_id;
 
                     // Generate account number with lock to prevent race conditions
                     $accountNumber = $this->generateAccountNumberWithLock($barangayId);
 
-                    // Create service connection
+                    // Create service connection (rates determined by account_type_id)
                     $connection = ServiceConnection::create([
                         'account_no' => $accountNumber,
                         'customer_id' => $application->customer_id,
                         'address_id' => $application->address_id,
                         'account_type_id' => $accountTypeId,
-                        'rate_id' => $rateId,
+                        'area_id' => $areaId,
                         'started_at' => now(),
                         'stat_id' => Status::getIdByDescription(Status::ACTIVE),
                     ]);
@@ -313,7 +315,6 @@ class ServiceConnectionService
             'address.barangay',
             'address.town',
             'accountType',
-            'rate',
             'status',
             'meterAssignments.meter',
             'customerLedgerEntries',

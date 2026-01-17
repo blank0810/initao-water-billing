@@ -57,30 +57,29 @@
                     <i class="fas fa-cog mr-2"></i>Connection Setup
                 </h4>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Account Type -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Account Type <span class="text-red-500">*</span>
-                        </label>
-                        <select id="completeAccountType"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            required>
-                            <option value="">Loading account types...</option>
-                        </select>
-                    </div>
+                <!-- Account Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Account Type <span class="text-red-500">*</span>
+                    </label>
+                    <select id="completeAccountType"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        required>
+                        <option value="">Loading account types...</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Water rates are automatically determined based on account type</p>
+                </div>
 
-                    <!-- Rate -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Rate Classification <span class="text-red-500">*</span>
-                        </label>
-                        <select id="completeRate"
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                            required>
-                            <option value="">Loading rates...</option>
-                        </select>
-                    </div>
+                <!-- Area Assignment -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Area Assignment <span class="text-gray-400 text-xs font-normal">(Optional)</span>
+                    </label>
+                    <select id="completeArea"
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                        <option value="">Select Area (optional)</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Assign customer to a specific reading area for billing purposes</p>
                 </div>
             </div>
 
@@ -146,7 +145,7 @@
 
 <script>
 let accountTypes = [];
-let waterRates = [];
+let areas = [];
 
 async function openCompleteConnectionModal(applicationId, appNumber, customerName, address, scheduledDate) {
     document.getElementById('completeApplicationId').value = applicationId;
@@ -157,7 +156,7 @@ async function openCompleteConnectionModal(applicationId, appNumber, customerNam
 
     // Reset form
     document.getElementById('completeAccountType').value = '';
-    document.getElementById('completeRate').value = '';
+    document.getElementById('completeArea').value = '';
     document.getElementById('completeMeterSerial').value = '';
     document.getElementById('completeMeterBrand').value = '';
     document.getElementById('completeInitialReading').value = '0.000';
@@ -165,10 +164,7 @@ async function openCompleteConnectionModal(applicationId, appNumber, customerNam
     document.getElementById('completeConnectionModal').classList.remove('hidden');
 
     // Load dropdown data
-    await Promise.all([
-        loadAccountTypes(),
-        loadWaterRates()
-    ]);
+    await Promise.all([loadAccountTypes(), loadAreas()]);
 }
 
 function closeCompleteConnectionModal() {
@@ -205,12 +201,12 @@ async function loadAccountTypes() {
     }
 }
 
-async function loadWaterRates() {
-    const select = document.getElementById('completeRate');
+async function loadAreas() {
+    const select = document.getElementById('completeArea');
     select.innerHTML = '<option value="">Loading...</option>';
 
     try {
-        const response = await fetch('/customer/service-connection/water-rates', {
+        const response = await fetch('/areas/list?all=false', {
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
@@ -219,26 +215,28 @@ async function loadWaterRates() {
         const data = await response.json();
 
         if (data.success) {
-            waterRates = data.data;
-            select.innerHTML = '<option value="">Select Rate</option>';
+            areas = data.data;
+            select.innerHTML = '<option value="">Select Area (optional)</option>';
 
-            waterRates.forEach(rate => {
-                const option = document.createElement('option');
-                option.value = rate.id;
-                option.textContent = rate.description + (rate.rate ? ` (₱${parseFloat(rate.rate).toFixed(2)}/cu.m)` : '');
-                select.appendChild(option);
+            areas.forEach(area => {
+                if (area.is_active) {
+                    const option = document.createElement('option');
+                    option.value = area.a_id;
+                    option.textContent = area.a_desc;
+                    select.appendChild(option);
+                }
             });
         }
     } catch (error) {
-        select.innerHTML = '<option value="">Error loading rates</option>';
-        console.error('Error loading rates:', error);
+        select.innerHTML = '<option value="">No areas available</option>';
+        console.error('Error loading areas:', error);
     }
 }
 
 async function submitCompleteConnection() {
     const applicationId = document.getElementById('completeApplicationId').value;
     const accountTypeId = document.getElementById('completeAccountType').value;
-    const rateId = document.getElementById('completeRate').value;
+    const areaId = document.getElementById('completeArea').value;
     const meterSerial = document.getElementById('completeMeterSerial').value.trim();
     const meterBrand = document.getElementById('completeMeterBrand').value.trim();
     const initialReading = document.getElementById('completeInitialReading').value;
@@ -247,10 +245,6 @@ async function submitCompleteConnection() {
     // Validation
     if (!accountTypeId) {
         alert('Please select an account type');
-        return;
-    }
-    if (!rateId) {
-        alert('Please select a rate classification');
         return;
     }
     if (!meterSerial) {
@@ -280,7 +274,7 @@ async function submitCompleteConnection() {
             body: JSON.stringify({
                 application_id: applicationId,
                 account_type_id: parseInt(accountTypeId),
-                rate_id: parseInt(rateId),
+                area_id: areaId ? parseInt(areaId) : null,
                 meter_serial: meterSerial,
                 meter_brand: meterBrand,
                 install_read: parseFloat(initialReading)

@@ -71,7 +71,7 @@ class ServiceConnectionController extends Controller
         $request->validate([
             'application_id' => 'required|integer|exists:ServiceApplication,application_id',
             'account_type_id' => 'required|integer|exists:account_type,at_id',
-            'rate_id' => 'required|integer|exists:water_rates,wr_id',
+            'area_id' => 'nullable|integer|exists:area,a_id',
             'meter_serial' => 'required|string|max:100|unique:meter,mtr_serial',
             'meter_brand' => 'required|string|max:100',
             'install_read' => 'required|numeric|min:0',
@@ -80,11 +80,11 @@ class ServiceConnectionController extends Controller
         try {
             $application = ServiceApplication::findOrFail($request->input('application_id'));
 
-            // Create the connection
+            // Create the connection (rates determined by account type)
             $connection = $this->connectionService->createFromApplication(
                 $application,
                 $request->input('account_type_id'),
-                $request->input('rate_id')
+                $request->input('area_id')
             );
 
             // Create and assign the meter (customer-purchased meter)
@@ -347,33 +347,6 @@ class ServiceConnectionController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $accountTypes,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
-        }
-    }
-
-    /**
-     * Get water rates for connection setup
-     */
-    public function getWaterRates(): JsonResponse
-    {
-        try {
-            $rates = \App\Models\WaterRate::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
-                ->orderBy('rate_desc')
-                ->get()
-                ->map(fn ($rate) => [
-                    'id' => $rate->wr_id,
-                    'description' => $rate->rate_desc,
-                    'rate' => $rate->rate,
-                ]);
-
-            return response()->json([
-                'success' => true,
-                'data' => $rates,
             ]);
         } catch (\Exception $e) {
             return response()->json([
