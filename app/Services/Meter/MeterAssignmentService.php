@@ -4,6 +4,7 @@ namespace App\Services\Meter;
 
 use App\Models\Meter;
 use App\Models\MeterAssignment;
+use App\Models\MeterReading;
 use App\Models\ServiceConnection;
 use App\Models\Status;
 use Carbon\Carbon;
@@ -58,6 +59,17 @@ class MeterAssignmentService
                 'install_read' => $installRead,
             ]);
 
+            // Create initial meter reading record
+            // period_id = NULL indicates this is an installation reading, not a billing reading
+            MeterReading::create([
+                'assignment_id' => $assignment->assignment_id,
+                'period_id' => null,
+                'reading_date' => $installedAt,
+                'reading_value' => $installRead,
+                'is_estimated' => false,
+                'meter_reader_id' => null,
+            ]);
+
             return $assignment;
         });
     }
@@ -107,6 +119,17 @@ class MeterAssignmentService
                 'meter_id' => $meterId,
                 'installed_at' => $installedAt,
                 'install_read' => $installRead,
+            ]);
+
+            // Create initial meter reading record
+            // period_id = NULL indicates this is an installation reading, not a billing reading
+            MeterReading::create([
+                'assignment_id' => $assignment->assignment_id,
+                'period_id' => null,
+                'reading_date' => $installedAt,
+                'reading_value' => $installRead,
+                'is_estimated' => false,
+                'meter_reader_id' => null,
             ]);
 
             // Update meter status to indicate it's in use
@@ -283,7 +306,7 @@ class MeterAssignmentService
             ->map(function ($connection) {
                 $customer = $connection->customer;
                 $customerName = $customer
-                    ? trim($customer->cust_first_name . ' ' . $customer->cust_last_name)
+                    ? trim($customer->cust_first_name.' '.$customer->cust_last_name)
                     : 'Unknown';
 
                 return [
@@ -292,7 +315,7 @@ class MeterAssignmentService
                     'customer_name' => $customerName,
                     'account_type' => $connection->accountType?->at_desc ?? 'Unknown',
                     'barangay' => $connection->address?->barangay?->b_desc ?? 'Unknown',
-                    'label' => $connection->account_no . ' - ' . $customerName,
+                    'label' => $connection->account_no.' - '.$customerName,
                 ];
             });
     }
