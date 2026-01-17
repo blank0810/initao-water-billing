@@ -151,6 +151,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/connection/service-application/{id}/reject', [ServiceApplicationController::class, 'reject'])->name('service.application.reject');
         Route::post('/connection/service-application/{id}/cancel', [ServiceApplicationController::class, 'cancel'])->name('service.application.cancel');
         Route::get('/connection/service-application/{id}/timeline', [ServiceApplicationController::class, 'timeline'])->name('service.application.timeline');
+        Route::get('/connection/service-application/{id}/print', [ServiceApplicationController::class, 'printApplication'])->name('service.application.print');
 
         // Service Connection Workflow
         Route::get('/customer/service-connection', [ServiceConnectionController::class, 'index'])->name('service.connection');
@@ -158,7 +159,6 @@ Route::middleware('auth')->group(function () {
         // Lookup routes - MUST come before {id} wildcard route
         Route::get('/customer/service-connection/meters/available', [ServiceConnectionController::class, 'availableMeters'])->name('service.connection.available-meters');
         Route::get('/customer/service-connection/account-types', [ServiceConnectionController::class, 'getAccountTypes'])->name('service.connection.account-types');
-        Route::get('/customer/service-connection/water-rates', [ServiceConnectionController::class, 'getWaterRates'])->name('service.connection.water-rates');
         Route::post('/customer/service-connection/complete', [ServiceConnectionController::class, 'completeConnection'])->name('service.connection.complete');
         Route::post('/customer/service-connection/meter/{assignmentId}/remove', [ServiceConnectionController::class, 'removeMeter'])->name('service.connection.remove-meter');
 

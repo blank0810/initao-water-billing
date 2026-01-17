@@ -347,4 +347,21 @@ class ServiceApplicationController extends Controller
             ], 400);
         }
     }
+
+    /**
+     * Print service application form
+     * Accessible at any application status
+     */
+    public function printApplication(int $id): View
+    {
+        $application = $this->applicationService->getApplicationById($id);
+
+        if (! $application) {
+            abort(404, 'Application not found');
+        }
+
+        $chargesData = $this->applicationService->getApplicationCharges($id);
+
+        return view('pages.connection.service-application-print', compact('application', 'chargesData'));
+    }
 }

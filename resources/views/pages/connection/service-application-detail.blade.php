@@ -354,6 +354,13 @@
                     </h3>
 
                     <div class="flex flex-wrap gap-3">
+                        <!-- Print Application - Always Available -->
+                        <a :href="'/connection/service-application/' + application.id + '/print'"
+                            target="_blank"
+                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors">
+                            <i class="fas fa-print mr-2"></i>Print Application
+                        </a>
+
                         <!-- PENDING Status Actions -->
                         <template x-if="application.status === 'PENDING'">
                             <div class="flex flex-wrap gap-3">
