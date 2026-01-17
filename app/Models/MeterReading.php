@@ -10,7 +10,7 @@ class MeterReading extends Model
 
     protected $primaryKey = 'reading_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 
@@ -23,14 +23,12 @@ class MeterReading extends Model
         'reading_value',
         'is_estimated',
         'meter_reader_id',
-        'created_at',
     ];
 
     protected $casts = [
         'reading_date' => 'date',
         'reading_value' => 'decimal:3',
         'is_estimated' => 'boolean',
-        'created_at' => 'datetime',
     ];
 
     /**

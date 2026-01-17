@@ -10,7 +10,7 @@ class Area extends Model
 
     protected $primaryKey = 'a_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 

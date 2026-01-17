@@ -10,7 +10,7 @@ class MeterAssignment extends Model
 
     protected $primaryKey = 'assignment_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 

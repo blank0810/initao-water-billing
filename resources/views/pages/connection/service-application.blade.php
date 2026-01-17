@@ -393,5 +393,4 @@
     }
     </script>
 
-    @vite(['resources/js/utils/print-form.js'])
 </x-app-layout>
