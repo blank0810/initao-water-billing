@@ -27,7 +27,7 @@ class ServiceConnectionController extends Controller
     {
         session(['active_menu' => 'connection-active']);
 
-        $connections = ServiceConnection::with(['customer', 'address.barangay', 'address.purok', 'status', 'accountType'])
+        $connections = ServiceConnection::with(['customer', 'address.barangay', 'address.purok', 'status', 'accountType', 'serviceApplication'])
             ->orderBy('started_at', 'desc')
             ->paginate(15);
 
@@ -354,5 +354,35 @@ class ServiceConnectionController extends Controller
                 'message' => $e->getMessage(),
             ], 400);
         }
+    }
+
+    /**
+     * Print account statement
+     */
+    public function printStatement(int $id): View
+    {
+        $connection = ServiceConnection::with([
+            'customer',
+            'address.purok',
+            'address.barangay',
+            'accountType',
+            'status',
+        ])->findOrFail($id);
+
+        // Get balance information
+        $balance = $this->connectionService->getConnectionBalance($id);
+
+        // Get ledger entries for statement
+        $ledgerEntries = \App\Models\CustomerLedger::where('connection_id', $id)
+            ->orderBy('txn_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
+            ->get();
+
+        return view('pages.connection.service-connection-statement', compact(
+            'connection',
+            'balance',
+            'ledgerEntries'
+        ));
     }
 }

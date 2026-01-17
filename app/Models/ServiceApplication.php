@@ -10,10 +10,9 @@ class ServiceApplication extends Model
 {
     protected $table = 'ServiceApplication';
 
-
     protected $primaryKey = 'application_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 
@@ -26,6 +25,7 @@ class ServiceApplication extends Model
         'submitted_at',
         'approved_at',
         'approved_by',
+        'processed_by',
         'remarks',
         'stat_id',
         // Workflow columns
@@ -135,5 +135,13 @@ class ServiceApplication extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get the user who processed/created the application
+     */
+    public function processedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processed_by');
     }
 }

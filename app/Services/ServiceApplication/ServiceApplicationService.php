@@ -125,6 +125,7 @@ class ServiceApplicationService
                 'submitted_at' => now(),
                 'verified_at' => now(), // Auto-verified on submission
                 'verified_by' => $userId,
+                'processed_by' => $userId, // Set the processing officer
                 'stat_id' => $verifiedStatusId, // Skip PENDING, go directly to VERIFIED
                 'remarks' => $applicationData['remarks'] ?? null,
             ]);
@@ -421,7 +422,9 @@ class ServiceApplicationService
             'verifier',
             'scheduler',
             'payment',
-            'serviceConnection',
+            'processedBy',
+            'serviceConnection.accountType',
+            'serviceConnection.meterAssignment.meter',
         ])->find($applicationId);
     }
 

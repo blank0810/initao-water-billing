@@ -318,6 +318,7 @@ class ServiceConnectionService
             'status',
             'meterAssignments.meter',
             'customerLedgerEntries',
+            'serviceApplication',
         ])->find($connectionId);
     }
 
