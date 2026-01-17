@@ -369,15 +369,8 @@ class ServiceConnectionController extends Controller
             'status',
         ])->findOrFail($id);
 
-        // Get balance information
         $balance = $this->connectionService->getConnectionBalance($id);
-
-        // Get ledger entries for statement
-        $ledgerEntries = \App\Models\CustomerLedger::where('connection_id', $id)
-            ->orderBy('txn_date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get();
+        $ledgerEntries = $this->connectionService->getStatementLedgerEntries($id);
 
         return view('pages.connection.service-connection-statement', compact(
             'connection',

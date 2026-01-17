@@ -7,6 +7,7 @@ use App\Models\ConsumerAddress;
 use App\Models\Customer;
 use App\Models\ServiceApplication;
 use App\Models\Status;
+use App\Models\WaterRate;
 use App\Services\Charge\ApplicationChargeService;
 use App\Services\Ledger\LedgerService;
 use App\Services\Payment\PaymentService;
@@ -448,6 +449,52 @@ class ServiceApplicationService
         return [
             'items' => $items,
             'total' => (float) $total,
+        ];
+    }
+
+    /**
+     * Get contract print data for an application
+     *
+     * Assembles all data needed for the contract print view:
+     * - Application with relationships
+     * - Meter assignment (if connected)
+     * - Water rates for the account type
+     * - Account type name
+     *
+     * @return array|null Returns null if application not found
+     */
+    public function getContractPrintData(int $applicationId): ?array
+    {
+        $application = $this->getApplicationById($applicationId);
+
+        if (! $application) {
+            return null;
+        }
+
+        // Get meter assignment if connected
+        $meterAssignment = $application->serviceConnection?->meterAssignment;
+
+        // Get account type ID for rate lookup
+        $accountTypeId = $application->serviceConnection?->accountType?->at_id;
+
+        // Load rates for this account type (default period = null, active only)
+        $rates = collect();
+        if ($accountTypeId) {
+            $rates = WaterRate::where('class_id', $accountTypeId)
+                ->whereNull('period_id')
+                ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+                ->orderBy('range_id')
+                ->get();
+        }
+
+        // Get account type name with fallback
+        $accountTypeName = $application->serviceConnection?->accountType?->at_desc ?? 'Residential';
+
+        return [
+            'application' => $application,
+            'meterAssignment' => $meterAssignment,
+            'rates' => $rates,
+            'accountTypeName' => $accountTypeName,
         ];
     }
 }

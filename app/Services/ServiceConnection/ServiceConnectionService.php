@@ -3,6 +3,7 @@
 namespace App\Services\ServiceConnection;
 
 use App\Models\Barangay;
+use App\Models\CustomerLedger;
 use App\Models\ServiceApplication;
 use App\Models\ServiceConnection;
 use App\Models\Status;
@@ -333,6 +334,22 @@ class ServiceConnectionService
             ->where('ServiceConnection.stat_id', Status::getIdByDescription(Status::ACTIVE))
             ->groupBy('barangay.b_id', 'barangay.b_desc')
             ->select('barangay.b_id', 'barangay.b_desc', DB::raw('COUNT(*) as connection_count'))
+            ->get();
+    }
+
+    /**
+     * Get ledger entries for account statement
+     *
+     * @param  int  $connectionId  The connection ID
+     * @param  int  $limit  Maximum number of entries to return
+     * @return Collection Ledger entries ordered by transaction date and post timestamp
+     */
+    public function getStatementLedgerEntries(int $connectionId, int $limit = 50): Collection
+    {
+        return CustomerLedger::where('connection_id', $connectionId)
+            ->orderBy('txn_date', 'desc')
+            ->orderBy('post_ts', 'desc')
+            ->limit($limit)
             ->get();
     }
 }

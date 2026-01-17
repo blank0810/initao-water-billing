@@ -271,6 +271,7 @@
                             <template x-if="connection.application_id">
                                 <a :href="'/connection/service-application/' + connection.application_id + '/print'"
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors">
                                     <i class="fas fa-file-alt mr-2"></i>Print Application
                                 </a>
@@ -278,12 +279,14 @@
                             <template x-if="connection.application_id">
                                 <a :href="'/connection/service-application/' + connection.application_id + '/contract'"
                                     target="_blank"
+                                    rel="noopener noreferrer"
                                     class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors">
                                     <i class="fas fa-file-contract mr-2"></i>Print Contract
                                 </a>
                             </template>
                             <a :href="'/customer/service-connection/' + connection.id + '/statement'"
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors">
                                 <i class="fas fa-file-invoice mr-2"></i>Account Statement
                             </a>

@@ -3,9 +3,6 @@
 namespace App\Http\Controllers\ServiceApplication;
 
 use App\Http\Controllers\Controller;
-use App\Models\ServiceApplication;
-use App\Models\Status;
-use App\Models\WaterRate;
 use App\Services\ServiceApplication\ServiceApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -373,36 +370,17 @@ class ServiceApplicationController extends Controller
      */
     public function printContract(int $id): View
     {
-        $application = $this->applicationService->getApplicationById($id);
+        $data = $this->applicationService->getContractPrintData($id);
 
-        if (! $application) {
+        if (! $data) {
             abort(404, 'Application not found');
         }
 
-        // Get meter info if connected
-        $meterAssignment = $application->serviceConnection?->meterAssignment;
-
-        // Get account type ID for rate lookup
-        $accountTypeId = $application->serviceConnection?->accountType?->at_id;
-
-        // Load rates for this account type (default period = null)
-        $rates = collect();
-        if ($accountTypeId) {
-            $rates = WaterRate::where('class_id', $accountTypeId)
-                ->whereNull('period_id') // Default rates
-                ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
-                ->orderBy('range_id')
-                ->get();
-        }
-
-        // Get account type name for display
-        $accountTypeName = $application->serviceConnection?->accountType?->at_desc ?? 'Residential';
-
-        return view('pages.connection.service-contract-print', compact(
-            'application',
-            'meterAssignment',
-            'rates',
-            'accountTypeName'
-        ));
+        return view('pages.connection.service-contract-print', [
+            'application' => $data['application'],
+            'meterAssignment' => $data['meterAssignment'],
+            'rates' => $data['rates'],
+            'accountTypeName' => $data['accountTypeName'],
+        ]);
     }
 }
