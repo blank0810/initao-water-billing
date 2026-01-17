@@ -10,7 +10,7 @@ class PaymentAllocation extends Model
 
     protected $primaryKey = 'payment_allocation_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 

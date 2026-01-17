@@ -101,15 +101,20 @@ class AddressService
     }
 
     /**
-     * Get all active water rates
+     * Get all active water rates (tiered rate structure).
+     *
+     * Water rates are now automatically determined by account type.
+     * This returns the tiered rates grouped by class (account type) for informational purposes.
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getWaterRates()
     {
-        return WaterRate::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
-            ->orderBy('rate_desc')
-            ->get(['wr_id', 'rate_desc', 'rate']);
+        return WaterRate::with('accountType')
+            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->orderBy('class_id')
+            ->orderBy('range_id')
+            ->get();
     }
 
     /**

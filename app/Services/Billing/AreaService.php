@@ -6,10 +6,28 @@ use App\Models\Area;
 use App\Models\ServiceConnection;
 use App\Models\Status;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class AreaService
 {
+    /**
+     * Cache for area_id column existence check.
+     */
+    private ?bool $hasAreaIdColumn = null;
+
+    /**
+     * Check if the area_id column exists on ServiceConnection table.
+     * Result is cached for the lifetime of this service instance.
+     */
+    private function hasAreaIdColumn(): bool
+    {
+        if ($this->hasAreaIdColumn === null) {
+            $this->hasAreaIdColumn = Schema::hasColumn('ServiceConnection', 'area_id');
+        }
+
+        return $this->hasAreaIdColumn;
+    }
+
     /**
      * Get all areas with status.
      */
@@ -216,6 +234,10 @@ class AreaService
      */
     public function getConnectionsWithoutArea(string $search = '', ?int $barangayId = null, int $limit = 100): Collection
     {
+        if (! $this->hasAreaIdColumn()) {
+            return collect();
+        }
+
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
         $query = ServiceConnection::with(['customer', 'accountType', 'address.barangay'])
@@ -253,6 +275,10 @@ class AreaService
      */
     public function getConnectionsByArea(?int $areaId = null, string $search = '', ?int $barangayId = null, int $limit = 100): Collection
     {
+        if (! $this->hasAreaIdColumn()) {
+            return collect();
+        }
+
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
         $query = ServiceConnection::with(['customer', 'accountType', 'address.barangay', 'area'])
@@ -298,6 +324,13 @@ class AreaService
      */
     public function assignAreaToConnections(int $areaId, array $connectionIds): array
     {
+        if (! $this->hasAreaIdColumn()) {
+            return [
+                'success' => false,
+                'message' => 'Area assignment feature is not available. Please run database migrations.',
+            ];
+        }
+
         $area = Area::find($areaId);
         if (! $area) {
             return [
@@ -332,6 +365,13 @@ class AreaService
      */
     public function removeAreaFromConnections(array $connectionIds): array
     {
+        if (! $this->hasAreaIdColumn()) {
+            return [
+                'success' => false,
+                'message' => 'Area assignment feature is not available. Please run database migrations.',
+            ];
+        }
+
         if (empty($connectionIds)) {
             return [
                 'success' => false,
@@ -359,6 +399,16 @@ class AreaService
         $totalActive = ServiceConnection::where('stat_id', $activeStatusId)
             ->whereNull('ended_at')
             ->count();
+
+        if (! $this->hasAreaIdColumn()) {
+            return [
+                'total_active_connections' => $totalActive,
+                'connections_with_area' => 0,
+                'connections_without_area' => $totalActive,
+                'per_area' => collect(),
+                'migration_pending' => true,
+            ];
+        }
 
         $withArea = ServiceConnection::where('stat_id', $activeStatusId)
             ->whereNull('ended_at')
@@ -394,7 +444,7 @@ class AreaService
     {
         $customer = $connection->customer;
         $customerName = $customer
-            ? trim($customer->cust_first_name . ' ' . $customer->cust_last_name)
+            ? trim($customer->cust_first_name.' '.$customer->cust_last_name)
             : 'Unknown';
 
         return [

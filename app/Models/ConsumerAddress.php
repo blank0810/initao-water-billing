@@ -10,7 +10,7 @@ class ConsumerAddress extends Model
 
     protected $primaryKey = 'ca_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 

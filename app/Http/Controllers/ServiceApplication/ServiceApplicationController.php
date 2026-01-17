@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\ServiceApplication;
 
 use App\Http\Controllers\Controller;
-use App\Models\ServiceApplication;
 use App\Services\ServiceApplication\ServiceApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -346,5 +345,42 @@ class ServiceApplicationController extends Controller
                 'message' => $e->getMessage(),
             ], 400);
         }
+    }
+
+    /**
+     * Print service application form
+     * Accessible at any application status
+     */
+    public function printApplication(int $id): View
+    {
+        $application = $this->applicationService->getApplicationById($id);
+
+        if (! $application) {
+            abort(404, 'Application not found');
+        }
+
+        $chargesData = $this->applicationService->getApplicationCharges($id);
+
+        return view('pages.connection.service-application-print', compact('application', 'chargesData'));
+    }
+
+    /**
+     * Print water service contract
+     * Shows contract with customer data and clauses
+     */
+    public function printContract(int $id): View
+    {
+        $data = $this->applicationService->getContractPrintData($id);
+
+        if (! $data) {
+            abort(404, 'Application not found');
+        }
+
+        return view('pages.connection.service-contract-print', [
+            'application' => $data['application'],
+            'meterAssignment' => $data['meterAssignment'],
+            'rates' => $data['rates'],
+            'accountTypeName' => $data['accountTypeName'],
+        ]);
     }
 }

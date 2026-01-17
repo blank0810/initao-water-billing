@@ -10,7 +10,7 @@ class CustomerLedger extends Model
 
     protected $primaryKey = 'ledger_entry_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 

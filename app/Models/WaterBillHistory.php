@@ -10,7 +10,7 @@ class WaterBillHistory extends Model
 
     protected $primaryKey = 'bill_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 
@@ -25,7 +25,6 @@ class WaterBillHistory extends Model
         'water_amount',
         'due_date',
         'adjustment_total',
-        'created_at',
         'stat_id',
     ];
 
@@ -34,7 +33,6 @@ class WaterBillHistory extends Model
         'water_amount' => 'decimal:2',
         'due_date' => 'date',
         'adjustment_total' => 'decimal:2',
-        'created_at' => 'datetime',
     ];
 
     /**

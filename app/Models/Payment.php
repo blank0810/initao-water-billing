@@ -10,7 +10,7 @@ class Payment extends Model
 
     protected $primaryKey = 'payment_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 
@@ -21,7 +21,6 @@ class Payment extends Model
         'payer_id',
         'payment_date',
         'amount_received',
-        'created_at',
         'user_id',
         'stat_id',
     ];
@@ -29,7 +28,6 @@ class Payment extends Model
     protected $casts = [
         'payment_date' => 'date',
         'amount_received' => 'decimal:2',
-        'created_at' => 'datetime',
     ];
 
     /**

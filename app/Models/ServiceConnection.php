@@ -10,7 +10,7 @@ class ServiceConnection extends Model
 
     protected $primaryKey = 'connection_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 
@@ -78,6 +78,24 @@ class ServiceConnection extends Model
     public function meterAssignments()
     {
         return $this->hasMany(MeterAssignment::class, 'connection_id', 'connection_id');
+    }
+
+    /**
+     * Get the current (active) meter assignment for the service connection
+     */
+    public function meterAssignment()
+    {
+        return $this->hasOne(MeterAssignment::class, 'connection_id', 'connection_id')
+            ->whereNull('removed_at')
+            ->latest('installed_at');
+    }
+
+    /**
+     * Get the service application that created this connection
+     */
+    public function serviceApplication()
+    {
+        return $this->hasOne(ServiceApplication::class, 'connection_id', 'connection_id');
     }
 
     /**

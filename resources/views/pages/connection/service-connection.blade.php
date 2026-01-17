@@ -196,6 +196,11 @@
                                                 title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                            <button @click="openPrintModal(conn)"
+                                                class="p-2 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition-colors"
+                                                title="Print Forms">
+                                                <i class="fas fa-print"></i>
+                                            </button>
                                             <template x-if="conn.status?.stat_desc === 'ACTIVE'">
                                                 <button @click="quickSuspend(conn)"
                                                     class="p-2 text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 rounded-lg transition-colors"
@@ -312,6 +317,9 @@
 
         </div>
     </div>
+
+    <!-- Include Modal Components -->
+    <x-ui.connection.connection-print-modal />
 
     <script>
     function connectionList(initialData, scheduledData) {
@@ -491,6 +499,10 @@
                 } catch (error) {
                     alert('Error: ' + error.message);
                 }
+            },
+
+            openPrintModal(conn) {
+                openConnectionPrintModal(conn);
             }
         };
     }

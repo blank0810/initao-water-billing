@@ -10,7 +10,7 @@ class Customer extends Model
 
     protected $primaryKey = 'cust_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 

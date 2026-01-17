@@ -348,91 +348,115 @@
 
                 <!-- Action Buttons -->
                 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
                         <i class="fas fa-cogs mr-2 text-gray-600 dark:text-gray-400"></i>
                         Actions
                     </h3>
 
-                    <div class="flex flex-wrap gap-3">
-                        <!-- PENDING Status Actions -->
-                        <template x-if="application.status === 'PENDING'">
-                            <div class="flex flex-wrap gap-3">
-                                <button @click="openVerifyModal()"
-                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                                    <i class="fas fa-clipboard-check mr-2"></i>Verify Application
-                                </button>
-                                <button @click="openRejectModal()"
-                                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
-                                    <i class="fas fa-times-circle mr-2"></i>Reject
-                                </button>
-                            </div>
-                        </template>
+                    <!-- Documents Section -->
+                    <div class="mb-6">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Documents</p>
+                        <div class="flex flex-wrap gap-3">
+                            <a :href="'/connection/service-application/' + application.id + '/print'"
+                                target="_blank"
+                                class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                                <i class="fas fa-file-alt mr-2"></i>Print Application
+                            </a>
+                            <a :href="'/connection/service-application/' + application.id + '/contract'"
+                                target="_blank"
+                                class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                                <i class="fas fa-file-contract mr-2"></i>Print Contract
+                            </a>
+                            <!-- Order of Payment - Show when verified or has charges -->
+                            <a x-show="application.charges && application.charges.length > 0 && !application.is_fully_paid"
+                                :href="'/connection/service-application/' + application.id + '/order-of-payment'"
+                                target="_blank"
+                                class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                                <i class="fas fa-file-invoice mr-2"></i>Print Order of Payment
+                            </a>
+                            <!-- View Receipt - Show when paid -->
+                            <a x-show="application.is_fully_paid && application.payment_id"
+                                :href="'/payment/receipt/' + application.payment_id"
+                                target="_blank"
+                                class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                                <i class="fas fa-receipt mr-2"></i>View Receipt
+                            </a>
+                        </div>
+                    </div>
 
-                        <!-- VERIFIED Status Actions -->
-                        <template x-if="application.status === 'VERIFIED'">
-                            <div class="flex flex-wrap gap-3">
-                                <a :href="'/connection/service-application/' + application.id + '/order-of-payment'"
-                                    target="_blank"
-                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                                    <i class="fas fa-print mr-2"></i>Print Order of Payment
-                                </a>
-                                <button @click="openRejectModal()"
-                                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
-                                    <i class="fas fa-times-circle mr-2"></i>Reject
-                                </button>
-                                <div class="flex items-center text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-4 py-2 rounded-lg">
-                                    <i class="fas fa-info-circle mr-2"></i>
-                                    <span class="text-sm">Payment processing available at Cashier (Payment Management)</span>
+                    <!-- Workflow Section - Status dependent -->
+                    <template x-if="!['REJECTED', 'CANCELLED'].includes(application.status)">
+                        <div class="mb-6 pt-6 border-t border-dashed border-gray-200 dark:border-gray-700">
+                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Workflow</p>
+
+                            <!-- Status Banner -->
+                            <div class="mb-4 p-4 rounded-lg" :class="getStatusBannerClass()">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas" :class="getStatusIcon()"></i>
+                                    <span class="font-medium" x-text="getStatusMessage()"></span>
                                 </div>
+                                <p class="text-sm mt-1 opacity-80" x-text="getStatusHint()" x-show="getStatusHint()"></p>
                             </div>
-                        </template>
 
-                        <!-- PAID Status Actions -->
-                        <template x-if="application.status === 'PAID'">
+                            <!-- Action Buttons -->
+                            <div class="flex flex-wrap gap-3 items-center">
+                                <!-- PENDING Status Actions -->
+                                <template x-if="application.status === 'PENDING'">
+                                    <button @click="openVerifyModal()"
+                                        class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition-colors">
+                                        <i class="fas fa-clipboard-check mr-2"></i>Verify Application
+                                    </button>
+                                </template>
+
+                                <!-- PAID Status Actions -->
+                                <template x-if="application.status === 'PAID'">
+                                    <button @click="openScheduleModal()"
+                                        class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition-colors">
+                                        <i class="fas fa-calendar-check mr-2"></i>Schedule Connection
+                                    </button>
+                                </template>
+
+                                <!-- SCHEDULED Status Actions -->
+                                <template x-if="application.status === 'SCHEDULED'">
+                                    <button @click="openCompleteConnectionModal()"
+                                        class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-medium transition-colors">
+                                        <i class="fas fa-plug mr-2"></i>Complete Connection
+                                    </button>
+                                </template>
+
+                                <!-- CONNECTED Status -->
+                                <template x-if="application.status === 'CONNECTED'">
+                                    <a x-show="application.connection_id"
+                                        :href="'/customer/service-connection/' + application.connection_id"
+                                        class="px-4 py-2 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded-lg font-medium transition-colors dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-900/20">
+                                        <i class="fas fa-eye mr-2"></i>View Connection
+                                    </a>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Danger Zone - Show for statuses that can be rejected/cancelled -->
+                    <template x-if="['PENDING', 'VERIFIED'].includes(application.status)">
+                        <div class="pt-6 border-t border-dashed border-gray-200 dark:border-gray-700">
+                            <p class="text-xs font-medium text-red-500 uppercase tracking-wide mb-3">Danger Zone</p>
                             <div class="flex flex-wrap gap-3">
-                                <a x-show="application.payment_id"
-                                    :href="'/payment/receipt/' + application.payment_id"
-                                    target="_blank"
-                                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
-                                    <i class="fas fa-receipt mr-2"></i>View Receipt
-                                </a>
-                                <button @click="openScheduleModal()"
-                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                                    <i class="fas fa-calendar-check mr-2"></i>Schedule Connection
+                                <button @click="openRejectModal()"
+                                    class="px-4 py-2 bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 rounded-lg font-medium transition-colors dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/40">
+                                    <i class="fas fa-times-circle mr-2"></i>Reject Application
                                 </button>
                             </div>
-                        </template>
+                        </div>
+                    </template>
 
-                        <!-- SCHEDULED Status Actions -->
-                        <template x-if="application.status === 'SCHEDULED'">
-                            <div class="flex flex-wrap gap-3">
-                                <button @click="openCompleteConnectionModal()"
-                                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
-                                    <i class="fas fa-plug mr-2"></i>Complete Connection
-                                </button>
-                            </div>
-                        </template>
-
-                        <!-- CONNECTED Status - Read Only -->
-                        <template x-if="application.status === 'CONNECTED'">
-                            <div class="flex items-center text-green-600 dark:text-green-400">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                <span class="font-medium">Connection Completed</span>
-                                <a :href="'/customer/service-connection/' + application.connection_id"
-                                    x-show="application.connection_id"
-                                    class="ml-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-                                    <i class="fas fa-eye mr-2"></i>View Connection
-                                </a>
-                            </div>
-                        </template>
-
-                        <!-- REJECTED/CANCELLED Status - No Actions -->
-                        <template x-if="application.status === 'REJECTED' || application.status === 'CANCELLED'">
+                    <!-- REJECTED/CANCELLED Status - No Actions Message -->
+                    <template x-if="['REJECTED', 'CANCELLED'].includes(application.status)">
+                        <div class="pt-6 border-t border-dashed border-gray-200 dark:border-gray-700">
                             <div class="text-gray-500 dark:text-gray-400 italic">
                                 <i class="fas fa-ban mr-2"></i>No actions available for this application
                             </div>
-                        </template>
-                    </div>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -521,6 +545,47 @@
                     hour: '2-digit',
                     minute: '2-digit'
                 });
+            },
+
+            getStatusBannerClass() {
+                const classes = {
+                    'PENDING': 'bg-yellow-50 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+                    'VERIFIED': 'bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
+                    'PAID': 'bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+                    'SCHEDULED': 'bg-purple-50 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
+                    'CONNECTED': 'bg-teal-50 text-teal-800 dark:bg-teal-900/20 dark:text-teal-400'
+                };
+                return classes[this.application.status] || 'bg-gray-50 text-gray-800';
+            },
+
+            getStatusMessage() {
+                const messages = {
+                    'PENDING': 'Ready for Verification',
+                    'VERIFIED': 'Awaiting Payment',
+                    'PAID': 'Ready to Schedule',
+                    'SCHEDULED': 'Scheduled for ' + this.formatDate(this.application.scheduled_date),
+                    'CONNECTED': 'Connection Completed'
+                };
+                return messages[this.application.status] || '';
+            },
+
+            getStatusHint() {
+                const hints = {
+                    'VERIFIED': 'Payment processing available at Cashier',
+                    'SCHEDULED': 'Ready for installation'
+                };
+                return hints[this.application.status] || '';
+            },
+
+            getStatusIcon() {
+                const icons = {
+                    'PENDING': 'fa-clipboard-list',
+                    'VERIFIED': 'fa-clock',
+                    'PAID': 'fa-calendar-plus',
+                    'SCHEDULED': 'fa-truck',
+                    'CONNECTED': 'fa-check-circle'
+                };
+                return icons[this.application.status] || 'fa-info-circle';
             },
 
             openVerifyModal() {

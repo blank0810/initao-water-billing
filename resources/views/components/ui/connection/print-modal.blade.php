@@ -8,7 +8,7 @@
                     <i class="fas fa-print text-orange-600 dark:text-orange-400"></i>
                 </div>
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Print Application Form</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Print Documents</h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Select document to print</p>
                 </div>
             </div>
@@ -19,16 +19,9 @@
 
         <!-- Content -->
         <div class="p-6 space-y-6">
-            <!-- Heading -->
-            <div class="text-center">
-                <h4 class="text-base font-semibold text-gray-900 dark:text-white">
-                    What kind of form to print?
-                </h4>
-            </div>
-
             <!-- Customer Information -->
             <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 space-y-3">
-                <h4 class="font-semibold text-gray-900 dark:text-white text-sm">Customer Information</h4>
+                <h4 class="font-semibold text-gray-900 dark:text-white text-sm">Application Details</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div>
                         <span class="text-gray-600 dark:text-gray-400 block">Customer Name</span>
@@ -36,7 +29,7 @@
                     </div>
                     <div>
                         <span class="text-gray-600 dark:text-gray-400 block">Application #</span>
-                        <span class="font-medium text-gray-900 dark:text-white" id="printApplicationNumber">-</span>
+                        <span class="font-medium text-gray-900 dark:text-white font-mono" id="printApplicationNumber">-</span>
                     </div>
                     <div class="sm:col-span-2">
                         <span class="text-gray-600 dark:text-gray-400 block">Address</span>
@@ -48,21 +41,34 @@
             <!-- Divider -->
             <div class="border-t border-gray-200 dark:border-gray-600"></div>
 
-            <!-- Form Selection Buttons -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button 
-                    onclick="printApplicationForm()"
-                    class="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <i class="fas fa-file-pdf"></i>
-                    Application Form
-                </button>
-                <button 
-                    onclick="printMeedoContract()"
-                    class="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <i class="fas fa-file-contract"></i>
-                    Meedo Contract
-                </button>
+            <!-- Document Selection -->
+            <div>
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Documents</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <a id="printApplicationFormLink"
+                        href="#"
+                        target="_blank"
+                        class="px-4 py-3 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium rounded-lg transition-colors flex items-center justify-center gap-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                        <i class="fas fa-file-alt"></i>
+                        Application Form
+                    </a>
+                    <a id="printContractLink"
+                        href="#"
+                        target="_blank"
+                        class="px-4 py-3 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 font-medium rounded-lg transition-colors flex items-center justify-center gap-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600">
+                        <i class="fas fa-file-contract"></i>
+                        Water Service Contract
+                    </a>
+                </div>
             </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end">
+            <button onclick="closePrintModal()"
+                class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium transition-colors">
+                Close
+            </button>
         </div>
     </div>
 </div>
@@ -75,15 +81,15 @@ let currentPrintApplication = null;
 function formatCustomerNameForPrint(application) {
     const customer = application.customer;
     if (!customer) return application.customer_name || '-';
-    
+
     // Try different name field combinations
     if (customer.CustomerName) return customer.CustomerName;
     if (customer.customer_name) return customer.customer_name;
-    
+
     const firstName = customer.cust_first_name || customer.first_name || '';
     const middleName = customer.cust_middle_name || customer.middle_name || '';
     const lastName = customer.cust_last_name || customer.last_name || '';
-    
+
     return [firstName, middleName, lastName].filter(n => n).join(' ').trim() || '-';
 }
 
@@ -91,41 +97,28 @@ function formatCustomerNameForPrint(application) {
 function formatPrintAddress(application) {
     const address = application.address;
     if (!address) return application.address_line || '-';
-    
-    const street = address.street || address.a_street || address.street_name || '';
-    const purok = address.purok?.PurokName || address.purok?.p_desc || address.purok_name || '';
-    const barangay = address.barangay?.b_desc || address.barangay_name || '';
-    
-    const parts = [street, purok, barangay].filter(p => p && p.trim());
-    return parts.join(', ').trim() || '-';
-}
 
-// Prepare customer data for print utilities
-function prepareCustomerForPrint(application) {
-    const customer = application.customer || {};
-    
-    return {
-        CustomerName: formatCustomerNameForPrint(application),
-        customer_name: formatCustomerNameForPrint(application),
-        AreaCode: formatPrintAddress(application),
-        id: customer.id || customer.customer_id || application.application_id,
-        customer_code: customer.customer_code || customer.code || application.application_number || '',
-        Email: customer.email || customer.Email || '',
-        Phone: customer.phone || customer.Phone || '',
-        Address: formatPrintAddress(application),
-        DateApplied: application.submitted_at || application.created_at || new Date().toISOString()
-    };
+    const purok = address.purok?.p_desc || address.purok_name || '';
+    const barangay = address.barangay?.b_desc || address.barangay_name || '';
+
+    const parts = [purok, barangay].filter(p => p && p.trim());
+    return parts.join(', ').trim() || '-';
 }
 
 // Open print modal
 function openPrintModal(application) {
     currentPrintApplication = application;
-    
+    const appId = application.application_id;
+
     // Update modal content with properly formatted data
     document.getElementById('printCustomerName').textContent = formatCustomerNameForPrint(application);
-    document.getElementById('printApplicationNumber').textContent = application.application_number || 'APP-' + application.application_id;
+    document.getElementById('printApplicationNumber').textContent = application.application_number || 'APP-' + appId;
     document.getElementById('printAddress').textContent = formatPrintAddress(application);
-    
+
+    // Update print links with correct URLs
+    document.getElementById('printApplicationFormLink').href = '/connection/service-application/' + appId + '/print';
+    document.getElementById('printContractLink').href = '/connection/service-application/' + appId + '/contract';
+
     // Show modal
     document.getElementById('printFormModal').classList.remove('hidden');
 }
@@ -133,64 +126,6 @@ function openPrintModal(application) {
 // Close print modal
 function closePrintModal() {
     document.getElementById('printFormModal').classList.add('hidden');
-}
-
-// Print Application Form - Opens in new tab with print-ready layout
-function printApplicationForm() {
-    if (!currentPrintApplication) {
-        alert('No application selected');
-        return;
-    }
-    
-    // Check if the application form utility is loaded
-    if (typeof window.printServiceApplicationForm !== 'function') {
-        alert('Application form utility is not loaded. Please refresh the page.');
-        console.error('Application form function not found');
-        return;
-    }
-    
-    try {
-        const customerData = prepareCustomerForPrint(currentPrintApplication);
-        
-        // Call the application form utility directly
-        window.printServiceApplicationForm(customerData);
-        
-        // Close modal after successfully opening the print page
-        closePrintModal();
-        
-    } catch (error) {
-        console.error('Error opening application form:', error);
-        alert('Error opening application form. Please try again.');
-    }
-}
-
-// Print Meedo Contract - Opens in new tab with print-ready layout
-function printMeedoContract() {
-    if (!currentPrintApplication) {
-        alert('No application selected');
-        return;
-    }
-    
-    // Check if the meedo contract utility is loaded
-    if (typeof window.printWaterServiceContract !== 'function') {
-        alert('Meedo contract utility is not loaded. Please refresh the page.');
-        console.error('Meedo contract function not found');
-        return;
-    }
-    
-    try {
-        const customerData = prepareCustomerForPrint(currentPrintApplication);
-        
-        // Call the meedo contract utility directly
-        window.printWaterServiceContract(customerData);
-        
-        // Close modal after successfully opening the print page
-        closePrintModal();
-        
-    } catch (error) {
-        console.error('Error opening meedo contract:', error);
-        alert('Error opening meedo contract. Please try again.');
-    }
 }
 
 // Close modal when clicking outside
@@ -201,5 +136,3 @@ document.addEventListener('click', function(e) {
     }
 });
 </script>
-
-@vite(['resources/js/utils/application-form.js', 'resources/js/utils/meedo-contract.js'])

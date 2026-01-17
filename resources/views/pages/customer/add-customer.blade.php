@@ -245,26 +245,15 @@
                                 <h3 class="ml-4 text-xl font-semibold text-gray-900 dark:text-white">Service Connection Details</h3>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="account_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                        Account Type <span class="text-red-500">*</span>
-                                    </label>
-                                    <select id="account_type" name="account_type_id" required
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                        <option value="">Select Account Type</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="water_rate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                                        Water Rate Schedule <span class="text-red-500">*</span>
-                                    </label>
-                                    <select id="water_rate" name="rate_id" required
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                        <option value="">Select Water Rate</option>
-                                    </select>
-                                </div>
+                            <div>
+                                <label for="account_type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Account Type <span class="text-red-500">*</span>
+                                </label>
+                                <select id="account_type" name="account_type_id" required
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                    <option value="">Select Account Type</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Water rates are automatically determined based on account type</p>
                             </div>
 
                         </div>
@@ -558,7 +547,6 @@
             loadBarangays();
             loadPuroks();
             loadAccountTypes();
-            loadWaterRates();
 
             // Load saved form data from localStorage
             loadFormFromLocalStorage();
@@ -660,8 +648,7 @@
                 ];
             } else if (step === 3) {
                 requiredFields = [
-                    { id: 'account_type', label: 'Account Type' },
-                    { id: 'water_rate', label: 'Water Rate' }
+                    { id: 'account_type', label: 'Account Type' }
                 ];
             } else if (step === 4) {
                 // Check terms checkbox
@@ -708,7 +695,6 @@
             const landmark = document.getElementById('land_mark').value || 'N/A';
 
             const accountTypeEl = document.getElementById('account_type');
-            const waterRateEl = document.getElementById('water_rate');
 
             reviewContent.innerHTML = `
                 <!-- Personal Information -->
@@ -764,15 +750,12 @@
                         </svg>
                         Service Connection Details
                     </h4>
-                    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <dl>
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Account Type</dt>
                             <dd class="text-sm text-gray-900 dark:text-white font-semibold">${accountTypeEl.options[accountTypeEl.selectedIndex]?.text || 'N/A'}</dd>
                         </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Water Rate Schedule</dt>
-                            <dd class="text-sm text-gray-900 dark:text-white font-semibold">${waterRateEl.options[waterRateEl.selectedIndex]?.text || 'N/A'}</dd>
-                        </div>
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Water rates are automatically determined based on account type</p>
                     </dl>
                 </div>
             `;
@@ -911,17 +894,6 @@
             }
         }
 
-        // Load water rates
-        async function loadWaterRates() {
-            try {
-                const response = await fetch('/api/address/water-rates');
-                const waterRates = await response.json();
-                populateDropdown('water_rate', waterRates, 'wr_id', 'rate_desc');
-            } catch (error) {
-                console.error('Error loading water rates:', error);
-            }
-        }
-
         // Populate dropdown
         function populateDropdown(elementId, items, valueKey, textKey) {
             const select = document.getElementById(elementId);
@@ -933,8 +905,7 @@
                 'town': 'Select Town',
                 'barangay': 'Select Barangay',
                 'purok': 'Select Purok',
-                'account_type': 'Select Account Type',
-                'water_rate': 'Select Water Rate'
+                'account_type': 'Select Account Type'
             };
 
             // Clear existing options and set proper placeholder
@@ -1049,7 +1020,6 @@
                         loadBarangays();
                         loadPuroks();
                         loadAccountTypes();
-                        loadWaterRates();
                     }, 1000);
 
                     // Optional: Redirect to customer list after 3 seconds

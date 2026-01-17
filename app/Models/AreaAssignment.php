@@ -10,7 +10,7 @@ class AreaAssignment extends Model
 
     protected $primaryKey = 'area_assignment_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public $incrementing = true;
 

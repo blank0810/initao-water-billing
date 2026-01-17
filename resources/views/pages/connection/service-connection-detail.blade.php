@@ -34,12 +34,12 @@
         'full_address' => $fullAddress,
         'barangay' => $barangayDesc ? ['b_name' => $barangayDesc] : null,
         'account_type' => $connData?->accountType?->at_desc ?? 'Residential',
-        'rate' => $connData?->rate?->rate_desc ?? 'Standard Rate',
         'started_at' => $connData?->started_at,
         'suspended_at' => $connData?->suspended_at,
         'disconnected_at' => $connData?->disconnected_at,
         'suspension_reason' => $connData?->suspension_reason,
         'disconnection_reason' => $connData?->disconnection_reason,
+        'application_id' => $connData?->serviceApplication?->application_id,
     ]), @js($balanceData), @js($meterData), @js($meterHistoryData))">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <!-- Header with Back Button -->
@@ -84,10 +84,6 @@
                             <div class="flex justify-between">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">Type</span>
                                 <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="connection.account_type"></span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Rate</span>
-                                <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="connection.rate"></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">Since</span>
@@ -266,14 +262,41 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
+                <!-- Actions Card -->
                 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                        <i class="fas fa-cogs mr-2 text-gray-600 dark:text-gray-400"></i>
-                        Actions
-                    </h3>
+                    <!-- Documents Section -->
+                    <div class="mb-6">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Documents</p>
+                        <div class="flex flex-wrap gap-3">
+                            <template x-if="connection.application_id">
+                                <a :href="'/connection/service-application/' + connection.application_id + '/print'"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-file-alt mr-2"></i>Print Application
+                                </a>
+                            </template>
+                            <template x-if="connection.application_id">
+                                <a :href="'/connection/service-application/' + connection.application_id + '/contract'"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors">
+                                    <i class="fas fa-file-contract mr-2"></i>Print Contract
+                                </a>
+                            </template>
+                            <a :href="'/customer/service-connection/' + connection.id + '/statement'"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors">
+                                <i class="fas fa-file-invoice mr-2"></i>Account Statement
+                            </a>
+                        </div>
+                    </div>
 
-                    <div class="flex flex-wrap gap-3">
+                    <!-- Actions Section -->
+                    <div class="pt-6 border-t border-dashed border-gray-200 dark:border-gray-700">
+                        <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Actions</p>
+                        <div class="flex flex-wrap gap-3">
                         <!-- ACTIVE Status Actions -->
                         <template x-if="connection.status === 'ACTIVE'">
                             <div class="flex flex-wrap gap-3">
@@ -312,6 +335,7 @@
                                 <i class="fas fa-ban mr-2"></i>This connection has been permanently disconnected. No actions available.
                             </div>
                         </template>
+                        </div>
                     </div>
                 </div>
             </div>
