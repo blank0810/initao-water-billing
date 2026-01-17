@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Address\AddressController;
+use App\Http\Controllers\Api\MeterReadingDownloadController;
+use App\Http\Controllers\Api\MobileAuthController;
+use App\Http\Controllers\Api\UploadedReadingController;
 use App\Http\Controllers\Customer\CustomerController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,4 +38,37 @@ Route::prefix('customers')->group(function () {
     Route::get('/{id}/can-delete', [CustomerController::class, 'canDelete'])->where('id', '[0-9]+');
     Route::put('/{id}', [CustomerController::class, 'update'])->where('id', '[0-9]+');
     Route::delete('/{id}', [CustomerController::class, 'destroy'])->where('id', '[0-9]+');
+});
+
+// Meter Reading Download API endpoints
+Route::prefix('meter-reading')->middleware('auth:sanctum')->group(function () {
+    // Get consumer information for active schedules assigned to a user
+    Route::get('/user/{userId}/consumers', [MeterReadingDownloadController::class, 'getConsumerInfo'])
+        ->where('userId', '[0-9]+');
+
+    // Get water rates for current active period
+    Route::get('/rates/current', [MeterReadingDownloadController::class, 'getCurrentPeriodRates']);
+
+    // Get water rates for a specific period
+    Route::get('/rates/period/{periodId}', [MeterReadingDownloadController::class, 'getRatesByPeriod'])
+        ->where('periodId', '[0-9]+');
+});
+
+// Mobile App Authentication API endpoints
+Route::prefix('mobile')->group(function () {
+    Route::post('/login', [MobileAuthController::class, 'login']);
+});
+
+// Uploaded Readings API endpoints
+Route::prefix('uploaded-readings')->middleware('auth:sanctum')->group(function () {
+    // Upload readings from mobile device
+    Route::post('/upload', [UploadedReadingController::class, 'upload']);
+
+    // Get uploaded readings by schedule
+    Route::get('/schedule/{scheduleId}', [UploadedReadingController::class, 'getBySchedule'])
+        ->where('scheduleId', '[0-9]+');
+
+    // Get uploaded readings by user
+    Route::get('/user/{userId}', [UploadedReadingController::class, 'getByUser'])
+        ->where('userId', '[0-9]+');
 });

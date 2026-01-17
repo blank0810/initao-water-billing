@@ -99,19 +99,21 @@
                                             </tr>
                                         </template>
                                         <!-- Results -->
-                                        <template x-if="!searching" x-for="conn in connections" :key="conn.connection_id">
-                                            <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer transition-colors" @click="selectAccount(conn)">
-                                                <td class="px-3 py-2 text-sm font-mono text-gray-900 dark:text-white" x-text="conn.account_no"></td>
-                                                <td class="px-3 py-2 text-sm text-gray-900 dark:text-white" x-text="conn.customer_name"></td>
-                                                <td class="px-3 py-2 text-sm text-gray-600 dark:text-gray-400" x-text="conn.account_type"></td>
-                                                <td class="px-3 py-2 text-sm text-gray-600 dark:text-gray-400" x-text="conn.barangay"></td>
-                                                <td class="px-3 py-2 text-sm font-mono text-gray-600 dark:text-gray-400" x-text="conn.meter_serial || '-'"></td>
-                                                <td class="px-3 py-2 text-center">
-                                                    <button @click.stop="selectAccount(conn)" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition">
-                                                        Select
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                        <template x-if="!searching">
+                                            <template x-for="conn in connections" :key="conn.connection_id">
+                                                <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 cursor-pointer transition-colors" @click="selectAccount(conn)">
+                                                    <td class="px-3 py-2 text-sm font-mono text-gray-900 dark:text-white" x-text="conn.account_no"></td>
+                                                    <td class="px-3 py-2 text-sm text-gray-900 dark:text-white" x-text="conn.customer_name"></td>
+                                                    <td class="px-3 py-2 text-sm text-gray-600 dark:text-gray-400" x-text="conn.account_type"></td>
+                                                    <td class="px-3 py-2 text-sm text-gray-600 dark:text-gray-400" x-text="conn.barangay"></td>
+                                                    <td class="px-3 py-2 text-sm font-mono text-gray-600 dark:text-gray-400" x-text="conn.meter_serial || '-'"></td>
+                                                    <td class="px-3 py-2 text-center">
+                                                        <button @click.stop="selectAccount(conn)" class="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition">
+                                                            Select
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </template>
                                         </template>
                                         <!-- No results -->
                                         <template x-if="!searching && connections.length === 0">

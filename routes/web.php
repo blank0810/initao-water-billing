@@ -271,6 +271,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reading-schedules/meter-readers', [\App\Http\Controllers\ReadingScheduleController::class, 'getMeterReaders'])->name('reading-schedules.meter-readers');
         Route::get('/reading-schedules/areas', [\App\Http\Controllers\ReadingScheduleController::class, 'getAreas'])->name('reading-schedules.areas');
         Route::get('/reading-schedules/periods', [\App\Http\Controllers\ReadingScheduleController::class, 'getPeriods'])->name('reading-schedules.periods');
+        Route::get('/reading-schedules/helpers', [\App\Http\Controllers\ReadingScheduleController::class, 'getHelpers'])->name('reading-schedules.helpers');
         Route::get('/reading-schedules/by-period/{periodId}', [\App\Http\Controllers\ReadingScheduleController::class, 'byPeriod'])->name('reading-schedules.by-period');
         Route::get('/reading-schedules/by-area/{areaId}', [\App\Http\Controllers\ReadingScheduleController::class, 'byArea'])->name('reading-schedules.by-area');
         Route::get('/reading-schedules/by-reader/{readerId}', [\App\Http\Controllers\ReadingScheduleController::class, 'byReader'])->name('reading-schedules.by-reader');
@@ -280,6 +281,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/reading-schedules/{scheduleId}/start', [\App\Http\Controllers\ReadingScheduleController::class, 'start'])->name('reading-schedules.start');
         Route::post('/reading-schedules/{scheduleId}/complete', [\App\Http\Controllers\ReadingScheduleController::class, 'complete'])->name('reading-schedules.complete');
         Route::post('/reading-schedules/{scheduleId}/delay', [\App\Http\Controllers\ReadingScheduleController::class, 'delay'])->name('reading-schedules.delay');
+        Route::get('/reading-schedules/{scheduleId}/download', [\App\Http\Controllers\ReadingScheduleController::class, 'download'])->name('reading-schedules.download');
         Route::delete('/reading-schedules/{scheduleId}', [\App\Http\Controllers\ReadingScheduleController::class, 'destroy'])->name('reading-schedules.destroy');
     });
 
