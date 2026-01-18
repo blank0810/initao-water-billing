@@ -279,6 +279,9 @@ function getScheduleActionButtons(schedule) {
             <button onclick="startSchedule(${schedule.schedule_id})" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" title="Start">
                 <i class="fas fa-play"></i>
             </button>
+            <button onclick="downloadSchedule(${schedule.schedule_id})" class="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300" title="Download Reading List">
+                <i class="fas fa-download"></i>
+            </button>
             <button onclick="editSchedule(${schedule.schedule_id})" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Edit">
                 <i class="fas fa-edit"></i>
             </button>
@@ -287,6 +290,9 @@ function getScheduleActionButtons(schedule) {
 
     if (schedule.status === 'in_progress') {
         buttons += `
+            <button onclick="downloadSchedule(${schedule.schedule_id})" class="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300" title="Download Reading List">
+                <i class="fas fa-download"></i>
+            </button>
             <button onclick="openCompleteModal(${schedule.schedule_id})" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" title="Complete">
                 <i class="fas fa-check-circle"></i>
             </button>
@@ -512,6 +518,10 @@ async function startSchedule(scheduleId) {
         console.error('Error starting schedule:', error);
         showScheduleToast('Error starting schedule', 'error');
     }
+}
+
+function downloadSchedule(scheduleId) {
+    window.location.href = `/reading-schedules/${scheduleId}/download`;
 }
 
 function openCompleteModal(scheduleId) {
