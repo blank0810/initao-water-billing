@@ -50,6 +50,7 @@ class MeterReadingDownloadService
                     ->with(['meter', 'meterReadings']);
             },
             'schedule.period',
+            'status',
         ])
             ->whereIn('schedule_id', $scheduleIds)
             ->orderBy('schedule_id')
@@ -170,7 +171,7 @@ class MeterReadingDownloadService
                 'arrear' => $arrear,
                 'penalty' => $penalty,
                 'sequence_order' => $entry->sequence_order,
-                'entry_status' => $entry->status,
+                'entry_status' => $entry->status?->stat_desc,
             ];
         });
 

@@ -42,14 +42,16 @@ Route::prefix('customers')->group(function () {
 
 // Meter Reading Download API endpoints
 Route::prefix('meter-reading')->middleware('auth:sanctum')->group(function () {
-    // Get consumer information for active schedules assigned to a user
-    Route::get('/user/{userId}/consumers', [MeterReadingDownloadController::class, 'getConsumerInfo'])
-        ->where('userId', '[0-9]+');
+    // Endpoint to retrieve consumer information for the authenticated user's active schedules.
+    // Changed from '/user/{userId}/consumers' to '/me/consumers' to enforce
+    // that a user can only access their own data, preventing unauthorized access
+    // to other users' consumer information.
+    Route::get('/me/consumers', [MeterReadingDownloadController::class, 'getConsumerInfo']);
 
-    // Get water rates for current active period
+    // Endpoint to retrieve water rates applicable for the current active period.
     Route::get('/rates/current', [MeterReadingDownloadController::class, 'getCurrentPeriodRates']);
 
-    // Get water rates for a specific period
+    // Endpoint to retrieve water rates for a specific billing period, identified by periodId.
     Route::get('/rates/period/{periodId}', [MeterReadingDownloadController::class, 'getRatesByPeriod'])
         ->where('periodId', '[0-9]+');
 });
@@ -64,11 +66,14 @@ Route::prefix('uploaded-readings')->middleware('auth:sanctum')->group(function (
     // Upload readings from mobile device
     Route::post('/upload', [UploadedReadingController::class, 'upload']);
 
-    // Get uploaded readings by schedule
+    // Get authenticated user's uploaded readings (recommended)
+    Route::get('/me', [UploadedReadingController::class, 'getMyReadings']);
+
+    // Get uploaded readings by schedule (user must be assigned reader)
     Route::get('/schedule/{scheduleId}', [UploadedReadingController::class, 'getBySchedule'])
         ->where('scheduleId', '[0-9]+');
 
-    // Get uploaded readings by user
+    // Get uploaded readings by user (user can only access their own)
     Route::get('/user/{userId}', [UploadedReadingController::class, 'getByUser'])
         ->where('userId', '[0-9]+');
 });

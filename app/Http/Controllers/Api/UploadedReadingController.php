@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ReadingSchedule;
 use App\Models\UploadedReading;
+use App\Services\Billing\UploadedReadingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class UploadedReadingController extends Controller
 {
+    public function __construct(
+        private UploadedReadingService $uploadedReadingService
+    ) {}
+
     /**
      * Upload readings from mobile device.
      * Accepts an array of readings with consumer info and device data.
@@ -36,9 +41,9 @@ class UploadedReadingController extends Controller
             'readings.*.present_reading' => ['nullable', 'numeric'],
             'readings.*.reading_date' => ['nullable', 'date'],
             'readings.*.site_bill_amount' => ['nullable', 'numeric'],
+            'readings.*.computed_amount' => ['nullable', 'numeric'],
             'readings.*.is_printed' => ['nullable', 'boolean'],
             'readings.*.is_scanned' => ['nullable', 'boolean'],
-            'readings.*.user_id' => ['required', 'integer', 'exists:users,id'],
         ]);
 
         if ($validator->fails()) {
@@ -49,84 +54,41 @@ class UploadedReadingController extends Controller
             ], 422);
         }
 
-        $readings = $request->input('readings');
-        $uploaded = [];
-        $failed = [];
+        // Use authenticated user's ID instead of client-supplied value
+        $authUserId = $request->user()->id;
 
-        DB::beginTransaction();
-        try {
-            foreach ($readings as $index => $readingData) {
-                try {
-                    // Use updateOrCreate to handle duplicates
-                    $uploadedReading = UploadedReading::updateOrCreate(
-                        [
-                            'schedule_id' => $readingData['schedule_id'],
-                            'connection_id' => $readingData['connection_id'],
-                        ],
-                        [
-                            'account_no' => $readingData['account_no'] ?? null,
-                            'customer_name' => $readingData['customer_name'] ?? null,
-                            'address' => $readingData['address'] ?? null,
-                            'area_desc' => $readingData['area_desc'] ?? null,
-                            'account_type_desc' => $readingData['account_type_desc'] ?? null,
-                            'connection_status' => $readingData['connection_status'] ?? null,
-                            'meter_serial' => $readingData['meter_serial'] ?? null,
-                            'previous_reading' => $readingData['previous_reading'] ?? null,
-                            'arrear' => $readingData['arrear'] ?? 0,
-                            'penalty' => $readingData['penalty'] ?? 0,
-                            'sequence_order' => $readingData['sequence_order'] ?? 0,
-                            'entry_status' => $readingData['entry_status'] ?? null,
-                            'present_reading' => $readingData['present_reading'] ?? null,
-                            'reading_date' => $readingData['reading_date'] ?? null,
-                            'site_bill_amount' => $readingData['site_bill_amount'] ?? null,
-                            'is_printed' => $readingData['is_printed'] ?? false,
-                            'is_scanned' => $readingData['is_scanned'] ?? false,
-                            'user_id' => $readingData['user_id'],
-                        ]
-                    );
+        $result = $this->uploadedReadingService->processUploadedReadings(
+            $request->input('readings'),
+            $authUserId
+        );
 
-                    $uploaded[] = [
-                        'uploaded_reading_id' => $uploadedReading->uploaded_reading_id,
-                        'connection_id' => $uploadedReading->connection_id,
-                        'account_no' => $uploadedReading->account_no,
-                    ];
-                } catch (\Exception $e) {
-                    $failed[] = [
-                        'index' => $index,
-                        'connection_id' => $readingData['connection_id'] ?? null,
-                        'error' => $e->getMessage(),
-                    ];
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Readings uploaded successfully.',
-                'uploaded_count' => count($uploaded),
-                'failed_count' => count($failed),
-                'data' => [
-                    'uploaded' => $uploaded,
-                    'failed' => $failed,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to upload readings.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json($result, $result['success'] ? 200 : 500);
     }
 
     /**
      * Get uploaded readings for a specific schedule.
+     * Only the assigned reader can access their schedule's readings.
      */
-    public function getBySchedule(int $scheduleId): JsonResponse
+    public function getBySchedule(Request $request, int $scheduleId): JsonResponse
     {
+        $authUserId = $request->user()->id;
+
+        // Verify user is assigned to this schedule
+        $schedule = ReadingSchedule::find($scheduleId);
+        if (! $schedule) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Schedule not found.',
+            ], 404);
+        }
+
+        if ($schedule->reader_id !== $authUserId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. You are not assigned to this schedule.',
+            ], 403);
+        }
+
         $readings = UploadedReading::where('schedule_id', $scheduleId)
             ->orderBy('sequence_order')
             ->get();
@@ -149,9 +111,20 @@ class UploadedReadingController extends Controller
 
     /**
      * Get uploaded readings for a specific user.
+     * Users can only access their own readings.
      */
-    public function getByUser(int $userId): JsonResponse
+    public function getByUser(Request $request, int $userId): JsonResponse
     {
+        $authUserId = $request->user()->id;
+
+        // Users can only access their own readings
+        if ($userId !== $authUserId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. You can only access your own readings.',
+            ], 403);
+        }
+
         $readings = UploadedReading::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -160,6 +133,34 @@ class UploadedReadingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'No uploaded readings found for this user.',
+                'data' => [],
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Uploaded readings retrieved successfully.',
+            'count' => $readings->count(),
+            'data' => $readings->toArray(),
+        ]);
+    }
+
+    /**
+     * Get uploaded readings for the authenticated user.
+     * Convenience endpoint that uses the authenticated user's ID.
+     */
+    public function getMyReadings(Request $request): JsonResponse
+    {
+        $authUserId = $request->user()->id;
+
+        $readings = UploadedReading::where('user_id', $authUserId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($readings->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No uploaded readings found.',
                 'data' => [],
             ], 404);
         }

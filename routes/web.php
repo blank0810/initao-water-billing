@@ -283,6 +283,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/reading-schedules/{scheduleId}/delay', [\App\Http\Controllers\ReadingScheduleController::class, 'delay'])->name('reading-schedules.delay');
         Route::get('/reading-schedules/{scheduleId}/download', [\App\Http\Controllers\ReadingScheduleController::class, 'download'])->name('reading-schedules.download');
         Route::delete('/reading-schedules/{scheduleId}', [\App\Http\Controllers\ReadingScheduleController::class, 'destroy'])->name('reading-schedules.destroy');
+
+        // Uploaded Readings API
+        Route::get('/uploaded-readings', [\App\Http\Controllers\UploadedReadingController::class, 'index'])->name('uploaded-readings.index');
+        Route::get('/uploaded-readings/schedule/{scheduleId}', [\App\Http\Controllers\UploadedReadingController::class, 'bySchedule'])->name('uploaded-readings.by-schedule');
+        Route::get('/uploaded-readings/user/{userId}', [\App\Http\Controllers\UploadedReadingController::class, 'byUser'])->name('uploaded-readings.by-user');
     });
 
     // -------------------------------------------------------------------------

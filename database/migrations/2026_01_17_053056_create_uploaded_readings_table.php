@@ -51,11 +51,11 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
             // Indexes
-            $table->index(['schedule_id', 'connection_id']);
             $table->index('user_id');
             $table->index('reading_date');
 
             // Unique constraint to prevent duplicate uploads for same schedule and connection
+            // Note: This also serves as an index on (schedule_id, connection_id)
             $table->unique(['schedule_id', 'connection_id'], 'unique_schedule_connection');
         });
     }

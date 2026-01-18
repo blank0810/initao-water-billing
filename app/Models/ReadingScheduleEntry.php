@@ -12,7 +12,7 @@ class ReadingScheduleEntry extends Model
         'schedule_id',
         'connection_id',
         'sequence_order',
-        'status',
+        'status_id',
     ];
 
     /**
@@ -29,5 +29,13 @@ class ReadingScheduleEntry extends Model
     public function serviceConnection()
     {
         return $this->belongsTo(ServiceConnection::class, 'connection_id', 'connection_id');
+    }
+
+    /**
+     * Get the status associated with this entry.
+     */
+    public function status()
+    {
+        return $this->belongsTo(Status::class, 'status_id', 'stat_id');
     }
 }

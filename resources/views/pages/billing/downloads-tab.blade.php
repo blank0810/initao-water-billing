@@ -93,6 +93,14 @@
 <script>
     let downloadsInitialized = false;
 
+    // HTML escape function to prevent XSS
+    function escapeHtmlDownload(text) {
+        if (text === null || text === undefined) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     window.initDownloadsTab = function() {
         if (!downloadsInitialized) {
             loadDownloadPeriods();
@@ -147,11 +155,11 @@
                 tbody.innerHTML = schedules.map(s => `
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td class="px-4 py-3">
-                            <p class="font-medium text-gray-900 dark:text-white">${s.area_name}</p>
-                            <p class="text-xs text-gray-500">${s.period_name} • ${s.reader_name}</p>
+                            <p class="font-medium text-gray-900 dark:text-white">${escapeHtmlDownload(s.area_name)}</p>
+                            <p class="text-xs text-gray-500">${escapeHtmlDownload(s.period_name)} • ${escapeHtmlDownload(s.reader_name)}</p>
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <a href="/reading-schedules/${s.schedule_id}/download" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded shadow-sm transition-colors">
+                            <a href="/reading-schedules/${parseInt(s.schedule_id, 10)}/download" class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded shadow-sm transition-colors">
                                 <i class="fas fa-download mr-1.5"></i> Download CSV
                             </a>
                         </td>

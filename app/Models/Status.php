@@ -41,6 +41,9 @@ class Status extends Model
 
     public const DISCONNECTED = 'DISCONNECTED';
 
+    // Status constants - Reading Schedule
+    public const COMPLETED = 'COMPLETED';
+
     /**
      * Get the ID of a status by its description
      */

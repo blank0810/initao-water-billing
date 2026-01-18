@@ -213,6 +213,14 @@ class ReadingScheduleService
             ];
         }
 
+        // Block schedule creation for closed periods
+        if ($period->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot create schedule for a closed period.',
+            ];
+        }
+
         // Validate reader exists and is a meter reader
         $reader = User::find($data['reader_id']);
         if (! $reader) {
@@ -274,13 +282,15 @@ class ReadingScheduleService
                 ->orderBy('account_no') // Default sequence by account number
                 ->get();
 
+            $pendingStatusId = Status::getIdByDescription(Status::PENDING);
+
             $entries = [];
             foreach ($connections as $index => $conn) {
                 $entries[] = [
                     'schedule_id' => $schedule->schedule_id,
                     'connection_id' => $conn->connection_id,
                     'sequence_order' => $index + 1,
-                    'status' => 'pending',
+                    'status_id' => $pendingStatusId,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
@@ -312,12 +322,20 @@ class ReadingScheduleService
      */
     public function updateSchedule(int $scheduleId, array $data): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block updates for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot modify schedule for a closed period.',
             ];
         }
 
@@ -374,12 +392,20 @@ class ReadingScheduleService
      */
     public function startSchedule(int $scheduleId): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block modifications for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot modify schedule for a closed period.',
             ];
         }
 
@@ -407,12 +433,20 @@ class ReadingScheduleService
      */
     public function completeSchedule(int $scheduleId, array $data = []): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block modifications for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot modify schedule for a closed period.',
             ];
         }
 
@@ -451,12 +485,20 @@ class ReadingScheduleService
      */
     public function markAsDelayed(int $scheduleId, ?string $notes = null): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block modifications for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot modify schedule for a closed period.',
             ];
         }
 
@@ -482,12 +524,20 @@ class ReadingScheduleService
      */
     public function deleteSchedule(int $scheduleId): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block deletion for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot delete schedule for a closed period.',
             ];
         }
 
@@ -522,6 +572,8 @@ class ReadingScheduleService
 
     /**
      * Get readings data for download (to handheld/mobile).
+     * Uses ReadingScheduleEntry to ensure the exact snapshot of connections
+     * that were in the schedule at generation time, in the correct sequence.
      */
     public function getDownloadData(int $scheduleId): array
     {
@@ -534,45 +586,67 @@ class ReadingScheduleService
             ];
         }
 
-        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        // Find previous period for previous reading lookup
+        $previousPeriod = null;
+        if ($schedule->period_id) {
+            $currentPeriod = $schedule->period;
+            if ($currentPeriod) {
+                $previousPeriod = Period::where('start_date', '<', $currentPeriod->start_date)
+                    ->orderBy('start_date', 'desc')
+                    ->first();
+            }
+        }
 
-        // Get all active service connections in this area
-        $connections = ServiceConnection::with([
-            'customer',
-            'address.barangay',
-            'address.purok',
-            'meterAssignments' => function ($query) {
-                $query->whereNull('removed_at');
+        // Use ReadingScheduleEntry to get the exact snapshot of connections
+        // that were assigned to this schedule at creation time
+        $entries = ReadingScheduleEntry::with([
+            'serviceConnection.customer',
+            'serviceConnection.address.barangay',
+            'serviceConnection.address.purok',
+            'serviceConnection.meterAssignments' => function ($query) {
+                $query->whereNull('removed_at')
+                    ->with(['meter', 'meterReadings']);
             },
-            'meterAssignments.meter',
         ])
-            ->where('area_id', $schedule->area_id)
-            ->where('stat_id', $activeStatusId)
-            ->whereNull('ended_at')
+            ->where('schedule_id', $scheduleId)
+            ->orderBy('sequence_order')
             ->get();
 
-        $readings = $connections->map(function ($conn) {
-            $customer = $conn->customer;
-            $activeAssignment = $conn->meterAssignments->first();
+        $readings = $entries->map(function ($entry) use ($previousPeriod) {
+            $conn = $entry->serviceConnection;
+            $customer = $conn?->customer;
+            $activeAssignment = $conn?->meterAssignments->first();
 
-            // Get last reading for this assignment
-            $lastReading = MeterReading::where('assignment_id', $activeAssignment?->assignment_id)
-                ->orderBy('reading_date', 'desc')
-                ->orderBy('reading_id', 'desc')
-                ->first();
+            // Get previous reading value from meterReadings relationship
+            $prevReading = null;
+            $prevDate = null;
 
-            $prevReading = $lastReading ? (float) $lastReading->reading_value : (float) ($activeAssignment?->install_read ?? 0);
-            $prevDate = $lastReading ? $lastReading->reading_date?->format('Y-m-d') : $activeAssignment?->installed_at?->format('Y-m-d');
+            if ($activeAssignment) {
+                if ($previousPeriod) {
+                    $previousReading = $activeAssignment->meterReadings
+                        ->where('period_id', $previousPeriod->per_id)
+                        ->first();
+                    $prevReading = $previousReading?->reading_value;
+                    $prevDate = $previousReading?->reading_date?->format('Y-m-d');
+                }
+
+                // If no previous reading found, use install_read as fallback
+                if ($prevReading === null) {
+                    $prevReading = (float) ($activeAssignment->install_read ?? 0);
+                    $prevDate = $activeAssignment->installed_at?->format('Y-m-d');
+                }
+            }
 
             return [
-                'connection_id' => $conn->connection_id,
-                'account_no' => $conn->account_no,
+                'connection_id' => $conn?->connection_id,
+                'account_no' => $conn?->account_no,
                 'customer_name' => $customer ? trim($customer->cust_first_name.' '.$customer->cust_last_name) : 'Unknown',
-                'barangay' => $conn->address?->barangay?->b_desc ?? 'N/A',
-                'purok' => $conn->address?->purok?->p_desc ?? 'N/A',
+                'barangay' => $conn?->address?->barangay?->b_desc ?? 'N/A',
+                'purok' => $conn?->address?->purok?->p_desc ?? 'N/A',
                 'meter_serial' => $activeAssignment?->meter?->mtr_serial ?? 'N/A',
-                'prev_reading' => $prevReading,
+                'prev_reading' => (float) ($prevReading ?? 0),
                 'prev_reading_date' => $prevDate,
+                'sequence_order' => $entry->sequence_order,
             ];
         });
 
