@@ -279,6 +279,9 @@ function getScheduleActionButtons(schedule) {
             <button onclick="startSchedule(${schedule.schedule_id})" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" title="Start">
                 <i class="fas fa-play"></i>
             </button>
+            <button onclick="downloadSchedule(${schedule.schedule_id})" class="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300" title="Download Reading List">
+                <i class="fas fa-download"></i>
+            </button>
             <button onclick="editSchedule(${schedule.schedule_id})" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="Edit">
                 <i class="fas fa-edit"></i>
             </button>
@@ -287,6 +290,9 @@ function getScheduleActionButtons(schedule) {
 
     if (schedule.status === 'in_progress') {
         buttons += `
+            <button onclick="downloadSchedule(${schedule.schedule_id})" class="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300" title="Download Reading List">
+                <i class="fas fa-download"></i>
+            </button>
             <button onclick="openCompleteModal(${schedule.schedule_id})" class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" title="Complete">
                 <i class="fas fa-check-circle"></i>
             </button>
@@ -376,6 +382,61 @@ function populateScheduleReaderDropdown(readers) {
     readers.forEach(reader => {
         select.innerHTML += `<option value="${reader.id}">${escapeHtmlSchedule(reader.name)} (${escapeHtmlSchedule(reader.email)})</option>`;
     });
+}
+
+// Auto-fill logic
+document.addEventListener('DOMContentLoaded', function() {
+    const areaSelect = document.getElementById('scheduleAreaId');
+    const periodSelect = document.getElementById('schedulePeriodId');
+    
+    if (areaSelect) {
+        areaSelect.addEventListener('change', fetchScheduleHelpers);
+    }
+    
+    if (periodSelect) {
+        periodSelect.addEventListener('change', fetchScheduleHelpers);
+    }
+});
+
+async function fetchScheduleHelpers() {
+    const areaId = document.getElementById('scheduleAreaId').value;
+    const periodId = document.getElementById('schedulePeriodId').value;
+    
+    if (!areaId) return;
+    
+    // Show loading state for reader and total meters
+    // But only if we are creating a new schedule (scheduleId is empty)
+    const scheduleId = document.getElementById('scheduleId').value;
+    if (scheduleId) return; 
+
+    try {
+        let url = `/reading-schedules/helpers?area_id=${areaId}`;
+        if (periodId) {
+            url += `&period_id=${periodId}`;
+        }
+        
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            // Auto-select reader if found
+            if (result.data.assigned_reader) {
+                const readerSelect = document.getElementById('scheduleReaderId');
+                // Check if the reader exists in the dropdown
+                const optionExists = [...readerSelect.options].some(o => o.value == result.data.assigned_reader.id);
+                if (optionExists) {
+                    readerSelect.value = result.data.assigned_reader.id;
+                }
+            }
+            
+            // Auto-fill total meters if period selected
+            if (result.data.unbilled_count !== undefined) {
+                document.getElementById('scheduleTotalMeters').value = result.data.unbilled_count;
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching schedule helpers:', error);
+    }
 }
 
 function openScheduleModal(scheduleId = null) {
@@ -479,6 +540,10 @@ async function startSchedule(scheduleId) {
         console.error('Error starting schedule:', error);
         showScheduleToast('Error starting schedule', 'error');
     }
+}
+
+function downloadSchedule(scheduleId) {
+    window.location.href = `/reading-schedules/${scheduleId}/download`;
 }
 
 function openCompleteModal(scheduleId) {

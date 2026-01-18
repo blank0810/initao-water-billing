@@ -3,13 +3,17 @@
 namespace App\Services\Billing;
 
 use App\Models\Area;
+use App\Models\AreaAssignment;
 use App\Models\Period;
 use App\Models\ReadingSchedule;
+use App\Models\ReadingScheduleEntry;
+use App\Models\ServiceConnection;
 use App\Models\Role;
 use App\Models\Status;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ReadingScheduleService
 {
@@ -29,8 +33,10 @@ class ReadingScheduleService
      */
     public function getSchedulesByStatus(string $status): Collection
     {
+        $statuses = explode(',', $status);
+
         return ReadingSchedule::with(['area', 'period', 'reader', 'statusRecord'])
-            ->where('status', $status)
+            ->whereIn('status', $statuses)
             ->orderBy('scheduled_start_date', 'desc')
             ->get()
             ->map(fn ($schedule) => $this->formatScheduleData($schedule));
@@ -144,6 +150,47 @@ class ReadingScheduleService
     }
 
     /**
+     * Get the assigned meter reader for an area.
+     */
+    public function getAssignedReaderForArea(int $areaId): ?array
+    {
+        $assignment = AreaAssignment::with('user')
+            ->active()
+            ->forArea($areaId)
+            ->orderBy('effective_from', 'desc')
+            ->first();
+
+        if (! $assignment || ! $assignment->user) {
+            return null;
+        }
+
+        return [
+            'id' => $assignment->user->id,
+            'name' => $assignment->user->name,
+            'email' => $assignment->user->email,
+        ];
+    }
+
+    /**
+     * Get the count of billable connections in an area for a period
+     * (connections that don't have a bill yet for this period).
+     */
+    public function getBillableCountForArea(int $areaId, int $periodId): int
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        // Get all active connections in the area
+        // that DO NOT have a WaterBillHistory record for this period
+        return ServiceConnection::where('area_id', $areaId)
+            ->where('stat_id', $activeStatusId)
+            ->whereNull('ended_at')
+            ->whereDoesntHave('waterBillHistory', function ($query) use ($periodId) {
+                $query->where('period_id', $periodId);
+            })
+            ->count();
+    }
+
+    /**
      * Create a new reading schedule.
      */
     public function createSchedule(array $data): array
@@ -163,6 +210,14 @@ class ReadingScheduleService
             return [
                 'success' => false,
                 'message' => 'Period not found.',
+            ];
+        }
+
+        // Block schedule creation for closed periods
+        if ($period->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot create schedule for a closed period.',
             ];
         }
 
@@ -195,28 +250,71 @@ class ReadingScheduleService
             ];
         }
 
+        // Calculate total meters if not provided
+        $totalMeters = $data['total_meters'] ?? $this->getBillableCountForArea($data['area_id'], $data['period_id']);
+
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
-        $schedule = ReadingSchedule::create([
-            'period_id' => $data['period_id'],
-            'area_id' => $data['area_id'],
-            'reader_id' => $data['reader_id'],
-            'scheduled_start_date' => $data['scheduled_start_date'],
-            'scheduled_end_date' => $data['scheduled_end_date'],
-            'status' => 'pending',
-            'notes' => $data['notes'] ?? null,
-            'total_meters' => $data['total_meters'] ?? 0,
-            'meters_read' => 0,
-            'meters_missed' => 0,
-            'created_by' => Auth::id(),
-            'stat_id' => $activeStatusId,
-        ]);
+        DB::beginTransaction();
+        try {
+            $schedule = ReadingSchedule::create([
+                'period_id' => $data['period_id'],
+                'area_id' => $data['area_id'],
+                'reader_id' => $data['reader_id'],
+                'scheduled_start_date' => $data['scheduled_start_date'],
+                'scheduled_end_date' => $data['scheduled_end_date'],
+                'status' => 'pending',
+                'notes' => $data['notes'] ?? null,
+                'total_meters' => $totalMeters,
+                'meters_read' => 0,
+                'meters_missed' => 0,
+                'created_by' => Auth::id(),
+                'stat_id' => $activeStatusId,
+            ]);
 
-        return [
-            'success' => true,
-            'message' => 'Reading schedule created successfully.',
-            'data' => $this->getScheduleById($schedule->schedule_id),
-        ];
+            // Populate reading_schedule_entries
+            $connections = ServiceConnection::where('area_id', $data['area_id'])
+                ->where('stat_id', $activeStatusId)
+                ->whereNull('ended_at')
+                ->whereDoesntHave('waterBillHistory', function ($query) use ($data) {
+                    $query->where('period_id', $data['period_id']);
+                })
+                ->orderBy('account_no') // Default sequence by account number
+                ->get();
+
+            $pendingStatusId = Status::getIdByDescription(Status::PENDING);
+
+            $entries = [];
+            foreach ($connections as $index => $conn) {
+                $entries[] = [
+                    'schedule_id' => $schedule->schedule_id,
+                    'connection_id' => $conn->connection_id,
+                    'sequence_order' => $index + 1,
+                    'status_id' => $pendingStatusId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            if (! empty($entries)) {
+                // Bulk insert
+                ReadingScheduleEntry::insert($entries);
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Reading schedule created successfully with ' . count($entries) . ' entries.',
+                'data' => $this->getScheduleById($schedule->schedule_id),
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return [
+                'success' => false,
+                'message' => 'Error creating schedule: ' . $e->getMessage(),
+            ];
+        }
     }
 
     /**
@@ -224,12 +322,20 @@ class ReadingScheduleService
      */
     public function updateSchedule(int $scheduleId, array $data): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block updates for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot modify schedule for a closed period.',
             ];
         }
 
@@ -286,12 +392,20 @@ class ReadingScheduleService
      */
     public function startSchedule(int $scheduleId): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block modifications for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot modify schedule for a closed period.',
             ];
         }
 
@@ -319,12 +433,20 @@ class ReadingScheduleService
      */
     public function completeSchedule(int $scheduleId, array $data = []): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block modifications for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot modify schedule for a closed period.',
             ];
         }
 
@@ -363,12 +485,20 @@ class ReadingScheduleService
      */
     public function markAsDelayed(int $scheduleId, ?string $notes = null): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block modifications for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot modify schedule for a closed period.',
             ];
         }
 
@@ -394,12 +524,20 @@ class ReadingScheduleService
      */
     public function deleteSchedule(int $scheduleId): array
     {
-        $schedule = ReadingSchedule::find($scheduleId);
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
 
         if (! $schedule) {
             return [
                 'success' => false,
                 'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Block deletion for schedules in closed periods
+        if ($schedule->period?->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'Cannot delete schedule for a closed period.',
             ];
         }
 
@@ -419,7 +557,7 @@ class ReadingScheduleService
     }
 
     /**
-     * Get schedule statistics.
+     * Get reading statistics.
      */
     public function getStats(): array
     {
@@ -429,6 +567,98 @@ class ReadingScheduleService
             'in_progress' => ReadingSchedule::inProgress()->count(),
             'completed' => ReadingSchedule::completed()->count(),
             'delayed' => ReadingSchedule::delayed()->count(),
+        ];
+    }
+
+    /**
+     * Get readings data for download (to handheld/mobile).
+     * Uses ReadingScheduleEntry to ensure the exact snapshot of connections
+     * that were in the schedule at generation time, in the correct sequence.
+     */
+    public function getDownloadData(int $scheduleId): array
+    {
+        $schedule = ReadingSchedule::with(['area', 'period', 'reader'])->find($scheduleId);
+
+        if (! $schedule) {
+            return [
+                'success' => false,
+                'message' => 'Schedule not found.',
+            ];
+        }
+
+        // Find previous period for previous reading lookup
+        $previousPeriod = null;
+        if ($schedule->period_id) {
+            $currentPeriod = $schedule->period;
+            if ($currentPeriod) {
+                $previousPeriod = Period::where('start_date', '<', $currentPeriod->start_date)
+                    ->orderBy('start_date', 'desc')
+                    ->first();
+            }
+        }
+
+        // Use ReadingScheduleEntry to get the exact snapshot of connections
+        // that were assigned to this schedule at creation time
+        $entries = ReadingScheduleEntry::with([
+            'serviceConnection.customer',
+            'serviceConnection.address.barangay',
+            'serviceConnection.address.purok',
+            'serviceConnection.meterAssignments' => function ($query) {
+                $query->whereNull('removed_at')
+                    ->with(['meter', 'meterReadings']);
+            },
+        ])
+            ->where('schedule_id', $scheduleId)
+            ->orderBy('sequence_order')
+            ->get();
+
+        $readings = $entries->map(function ($entry) use ($previousPeriod) {
+            $conn = $entry->serviceConnection;
+            $customer = $conn?->customer;
+            $activeAssignment = $conn?->meterAssignments->first();
+
+            // Get previous reading value from meterReadings relationship
+            $prevReading = null;
+            $prevDate = null;
+
+            if ($activeAssignment) {
+                if ($previousPeriod) {
+                    $previousReading = $activeAssignment->meterReadings
+                        ->where('period_id', $previousPeriod->per_id)
+                        ->first();
+                    $prevReading = $previousReading?->reading_value;
+                    $prevDate = $previousReading?->reading_date?->format('Y-m-d');
+                }
+
+                // If no previous reading found, use install_read as fallback
+                if ($prevReading === null) {
+                    $prevReading = (float) ($activeAssignment->install_read ?? 0);
+                    $prevDate = $activeAssignment->installed_at?->format('Y-m-d');
+                }
+            }
+
+            return [
+                'connection_id' => $conn?->connection_id,
+                'account_no' => $conn?->account_no,
+                'customer_name' => $customer ? trim($customer->cust_first_name.' '.$customer->cust_last_name) : 'Unknown',
+                'barangay' => $conn?->address?->barangay?->b_desc ?? 'N/A',
+                'purok' => $conn?->address?->purok?->p_desc ?? 'N/A',
+                'meter_serial' => $activeAssignment?->meter?->mtr_serial ?? 'N/A',
+                'prev_reading' => (float) ($prevReading ?? 0),
+                'prev_reading_date' => $prevDate,
+                'sequence_order' => $entry->sequence_order,
+            ];
+        });
+
+        return [
+            'success' => true,
+            'schedule' => [
+                'schedule_id' => $schedule->schedule_id,
+                'area_name' => $schedule->area?->a_desc,
+                'period_name' => $schedule->period?->per_name ?? $schedule->period?->per_code,
+                'reader_name' => $schedule->reader?->name,
+            ],
+            'readings' => $readings,
         ];
     }
 

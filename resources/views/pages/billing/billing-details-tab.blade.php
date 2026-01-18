@@ -104,7 +104,8 @@
                         </tr>
                     </template>
                     <!-- Data Rows -->
-                    <template x-if="!loading" x-for="bill in paginatedData" :key="bill.bill_id">
+                    <template x-if="!loading">
+                    <template x-for="bill in paginatedData" :key="bill.bill_id">
                         <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-all duration-150" :class="bill.status === 'Overdue' ? 'bg-red-50 dark:bg-red-900/10' : ''">
                             <td class="px-4 py-3 text-sm font-mono text-gray-900 dark:text-gray-100" x-text="'BILL-' + bill.bill_id"></td>
                             <td class="px-4 py-3">
@@ -126,6 +127,7 @@
                                 </button>
                             </td>
                         </tr>
+                    </template>
                     </template>
                     <!-- Empty State -->
                     <template x-if="!loading && paginatedData.length === 0">

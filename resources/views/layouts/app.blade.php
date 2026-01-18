@@ -160,6 +160,41 @@
             </div>
         </div>
 
+        @include('components.ui.alert-toast')
+
+        <!-- Handle Session Flash Messages -->
+        @if (session('success'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    window.showToast('Success', @json(session('success')), 'success');
+                });
+            </script>
+        @endif
+
+        @if (session('error'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    window.showToast('Error', @json(session('error')), 'error');
+                });
+            </script>
+        @endif
+
+        @if (session('warning'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    window.showToast('Warning', @json(session('warning')), 'warning');
+                });
+            </script>
+        @endif
+
+        @if (session('info'))
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    window.showToast('Info', @json(session('info')), 'info');
+                });
+            </script>
+        @endif
+
         <script>
             function appState() {
                 return {

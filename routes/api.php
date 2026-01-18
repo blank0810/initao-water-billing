@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Address\AddressController;
+use App\Http\Controllers\Api\MeterReadingDownloadController;
+use App\Http\Controllers\Api\MobileAuthController;
+use App\Http\Controllers\Api\UploadedReadingController;
 use App\Http\Controllers\Customer\CustomerController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,4 +38,42 @@ Route::prefix('customers')->group(function () {
     Route::get('/{id}/can-delete', [CustomerController::class, 'canDelete'])->where('id', '[0-9]+');
     Route::put('/{id}', [CustomerController::class, 'update'])->where('id', '[0-9]+');
     Route::delete('/{id}', [CustomerController::class, 'destroy'])->where('id', '[0-9]+');
+});
+
+// Meter Reading Download API endpoints
+Route::prefix('meter-reading')->middleware('auth:sanctum')->group(function () {
+    // Endpoint to retrieve consumer information for the authenticated user's active schedules.
+    // Changed from '/user/{userId}/consumers' to '/me/consumers' to enforce
+    // that a user can only access their own data, preventing unauthorized access
+    // to other users' consumer information.
+    Route::get('/me/consumers', [MeterReadingDownloadController::class, 'getConsumerInfo']);
+
+    // Endpoint to retrieve water rates applicable for the current active period.
+    Route::get('/rates/current', [MeterReadingDownloadController::class, 'getCurrentPeriodRates']);
+
+    // Endpoint to retrieve water rates for a specific billing period, identified by periodId.
+    Route::get('/rates/period/{periodId}', [MeterReadingDownloadController::class, 'getRatesByPeriod'])
+        ->where('periodId', '[0-9]+');
+});
+
+// Mobile App Authentication API endpoints
+Route::prefix('mobile')->group(function () {
+    Route::post('/login', [MobileAuthController::class, 'login']);
+});
+
+// Uploaded Readings API endpoints
+Route::prefix('uploaded-readings')->middleware('auth:sanctum')->group(function () {
+    // Upload readings from mobile device
+    Route::post('/upload', [UploadedReadingController::class, 'upload']);
+
+    // Get authenticated user's uploaded readings (recommended)
+    Route::get('/me', [UploadedReadingController::class, 'getMyReadings']);
+
+    // Get uploaded readings by schedule (user must be assigned reader)
+    Route::get('/schedule/{scheduleId}', [UploadedReadingController::class, 'getBySchedule'])
+        ->where('scheduleId', '[0-9]+');
+
+    // Get uploaded readings by user (user can only access their own)
+    Route::get('/user/{userId}', [UploadedReadingController::class, 'getByUser'])
+        ->where('userId', '[0-9]+');
 });

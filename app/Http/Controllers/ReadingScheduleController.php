@@ -131,6 +131,30 @@ class ReadingScheduleController extends Controller
     }
 
     /**
+     * Get schedule helpers (assigned reader and unbilled count).
+     */
+    public function getHelpers(Request $request): JsonResponse
+    {
+        $areaId = $request->input('area_id');
+        $periodId = $request->input('period_id');
+        
+        $data = [];
+
+        if ($areaId) {
+            $data['assigned_reader'] = $this->scheduleService->getAssignedReaderForArea((int) $areaId);
+        }
+
+        if ($areaId && $periodId) {
+            $data['unbilled_count'] = $this->scheduleService->getBillableCountForArea((int) $areaId, (int) $periodId);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
      * Create a new reading schedule.
      */
     public function store(Request $request): JsonResponse
@@ -220,6 +244,64 @@ class ReadingScheduleController extends Controller
         $result = $this->scheduleService->deleteSchedule($scheduleId);
 
         return response()->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * Download reading data for handheld/mobile.
+     */
+    public function download(int $scheduleId)
+    {
+        $result = $this->scheduleService->getDownloadData($scheduleId);
+
+        if (! $result['success']) {
+            return back()->with('error', $result['message']);
+        }
+
+        $schedule = $result['schedule'];
+        $readings = $result['readings'];
+
+        $filename = 'Reading_Schedule_'.$schedule['schedule_id'].'_'.$schedule['area_name'].'_'.now()->format('Ymd').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ];
+
+        $callback = function () use ($readings) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, [
+                'Connection ID',
+                'Account No',
+                'Customer Name',
+                'Barangay',
+                'Purok',
+                'Meter Serial',
+                'Prev Reading',
+                'Prev Reading Date',
+                'Current Reading', // Empty for entry
+                'Reading Date',    // Empty for entry
+                'Notes',           // Empty for entry
+            ]);
+
+            foreach ($readings as $row) {
+                fputcsv($file, [
+                    $row['connection_id'],
+                    $row['account_no'],
+                    $row['customer_name'],
+                    $row['barangay'],
+                    $row['purok'],
+                    $row['meter_serial'],
+                    $row['prev_reading'],
+                    $row['prev_reading_date'],
+                    '', // Placeholder for Current Reading
+                    '', // Placeholder for Reading Date
+                    '', // Placeholder for Notes
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     /**
