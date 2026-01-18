@@ -7,8 +7,8 @@ use App\Models\AreaAssignment;
 use App\Models\Period;
 use App\Models\ReadingSchedule;
 use App\Models\ReadingScheduleEntry;
-use App\Models\ServiceConnection;
 use App\Models\Role;
+use App\Models\ServiceConnection;
 use App\Models\Status;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -114,18 +114,24 @@ class ReadingScheduleService
     }
 
     /**
-     * Get available areas for scheduling.
+     * Get available areas for scheduling with assigned reader info.
      */
     public function getAvailableAreas(): Collection
     {
-        return Area::with('status')
+        return Area::with(['status', 'areaAssignments' => function ($query) {
+            $query->active()->with('user');
+        }])
             ->orderBy('a_desc')
             ->get()
             ->map(function ($area) {
+                $activeAssignment = $area->areaAssignments->first();
+
                 return [
                     'id' => $area->a_id,
                     'name' => $area->a_desc,
                     'status' => $area->status?->stat_desc ?? 'Unknown',
+                    'assigned_reader_id' => $activeAssignment?->user_id,
+                    'assigned_reader_name' => $activeAssignment?->user?->name,
                 ];
             });
     }
@@ -221,32 +227,40 @@ class ReadingScheduleService
             ];
         }
 
-        // Validate reader exists and is a meter reader
-        $reader = User::find($data['reader_id']);
-        if (! $reader) {
-            return [
-                'success' => false,
-                'message' => 'Reader not found.',
-            ];
+        // Get reader from area assignment if not provided
+        $readerId = ! empty($data['reader_id']) ? $data['reader_id'] : null;
+        if (! $readerId) {
+            $assignment = AreaAssignment::active()->forArea($data['area_id'])->first();
+            $readerId = $assignment?->user_id;
         }
 
-        if (! $reader->isMeterReader()) {
-            return [
-                'success' => false,
-                'message' => 'Selected user is not a meter reader.',
-            ];
+        // Validate reader if provided
+        if ($readerId) {
+            $reader = User::find($readerId);
+            if (! $reader) {
+                return [
+                    'success' => false,
+                    'message' => 'Reader not found.',
+                ];
+            }
+
+            if (! $reader->isMeterReader()) {
+                return [
+                    'success' => false,
+                    'message' => 'Selected user is not a meter reader.',
+                ];
+            }
         }
 
-        // Check for duplicate schedule (same area, period, reader)
+        // Check for duplicate schedule (same area and period)
         $exists = ReadingSchedule::where('area_id', $data['area_id'])
             ->where('period_id', $data['period_id'])
-            ->where('reader_id', $data['reader_id'])
             ->exists();
 
         if ($exists) {
             return [
                 'success' => false,
-                'message' => 'A schedule already exists for this area, period, and reader.',
+                'message' => 'A schedule already exists for this area and period.',
             ];
         }
 
@@ -260,7 +274,7 @@ class ReadingScheduleService
             $schedule = ReadingSchedule::create([
                 'period_id' => $data['period_id'],
                 'area_id' => $data['area_id'],
-                'reader_id' => $data['reader_id'],
+                'reader_id' => $readerId,
                 'scheduled_start_date' => $data['scheduled_start_date'],
                 'scheduled_end_date' => $data['scheduled_end_date'],
                 'status' => 'pending',
@@ -305,14 +319,15 @@ class ReadingScheduleService
 
             return [
                 'success' => true,
-                'message' => 'Reading schedule created successfully with ' . count($entries) . ' entries.',
+                'message' => 'Reading schedule created successfully with '.count($entries).' entries.',
                 'data' => $this->getScheduleById($schedule->schedule_id),
             ];
         } catch (\Exception $e) {
             DB::rollBack();
+
             return [
                 'success' => false,
-                'message' => 'Error creating schedule: ' . $e->getMessage(),
+                'message' => 'Error creating schedule: '.$e->getMessage(),
             ];
         }
     }

@@ -94,10 +94,11 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="scheduleReaderId" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Meter Reader</label>
-                    <select id="scheduleReaderId" name="reader_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="">Select Meter Reader</option>
-                    </select>
+                    <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Assigned Meter Reader</label>
+                    <div id="scheduleReaderDisplay" class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 dark:bg-gray-600 dark:border-gray-600 dark:text-gray-300">
+                        <span class="text-gray-400 dark:text-gray-500">Select an area first</span>
+                    </div>
+                    <input type="hidden" id="scheduleReaderId" name="reader_id" value="">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -172,7 +173,6 @@
 let schedulesData = [];
 let scheduleAreasData = [];
 let schedulePeriodsData = [];
-let scheduleMeterReadersData = [];
 let schedulesInitialized = false;
 
 // Initialize when the schedule tab is shown
@@ -323,16 +323,14 @@ function getScheduleActionButtons(schedule) {
 
 async function loadScheduleDropdowns() {
     try {
-        const [areasRes, periodsRes, readersRes] = await Promise.all([
+        const [areasRes, periodsRes] = await Promise.all([
             fetch('/reading-schedules/areas'),
-            fetch('/reading-schedules/periods'),
-            fetch('/reading-schedules/meter-readers')
+            fetch('/reading-schedules/periods')
         ]);
 
-        const [areasResult, periodsResult, readersResult] = await Promise.all([
+        const [areasResult, periodsResult] = await Promise.all([
             areasRes.json(),
-            periodsRes.json(),
-            readersRes.json()
+            periodsRes.json()
         ]);
 
         if (areasResult.success) {
@@ -343,11 +341,6 @@ async function loadScheduleDropdowns() {
         if (periodsResult.success) {
             schedulePeriodsData = periodsResult.data;
             populateSchedulePeriodDropdown(periodsResult.data);
-        }
-
-        if (readersResult.success) {
-            scheduleMeterReadersData = readersResult.data;
-            populateScheduleReaderDropdown(readersResult.data);
         }
     } catch (error) {
         console.error('Error loading dropdowns:', error);
@@ -360,8 +353,43 @@ function populateScheduleAreaDropdown(areas) {
 
     select.innerHTML = '<option value="">Select Area</option>';
     areas.forEach(area => {
-        select.innerHTML += `<option value="${area.id}">${escapeHtmlSchedule(area.name)}</option>`;
+        const option = document.createElement('option');
+        option.value = area.id;
+        option.textContent = escapeHtmlSchedule(area.name);
+        option.dataset.assignedReaderId = area.assigned_reader_id || '';
+        option.dataset.assignedReaderName = area.assigned_reader_name || '';
+        select.appendChild(option);
     });
+
+    // Add change event listener for auto-populating reader
+    select.removeEventListener('change', handleAreaChange);
+    select.addEventListener('change', handleAreaChange);
+}
+
+/**
+ * Handle area selection change - auto-populate meter reader display
+ */
+function handleAreaChange(event) {
+    const selectedOption = event.target.selectedOptions[0];
+    const readerDisplay = document.getElementById('scheduleReaderDisplay');
+    const readerInput = document.getElementById('scheduleReaderId');
+
+    if (!selectedOption || selectedOption.value === '') {
+        readerDisplay.innerHTML = '<span class="text-gray-400 dark:text-gray-500">Select an area first</span>';
+        readerInput.value = '';
+        return;
+    }
+
+    const readerId = selectedOption.dataset.assignedReaderId;
+    const readerName = selectedOption.dataset.assignedReaderName;
+
+    if (readerId && readerName) {
+        readerDisplay.textContent = readerName;
+        readerInput.value = readerId;
+    } else {
+        readerDisplay.innerHTML = '<span class="text-yellow-500 dark:text-yellow-400">No reader assigned to this area</span>';
+        readerInput.value = '';
+    }
 }
 
 function populateSchedulePeriodDropdown(periods) {
@@ -374,74 +402,12 @@ function populateSchedulePeriodDropdown(periods) {
     });
 }
 
-function populateScheduleReaderDropdown(readers) {
-    const select = document.getElementById('scheduleReaderId');
-    if (!select) return;
-
-    select.innerHTML = '<option value="">Select Meter Reader</option>';
-    readers.forEach(reader => {
-        select.innerHTML += `<option value="${reader.id}">${escapeHtmlSchedule(reader.name)} (${escapeHtmlSchedule(reader.email)})</option>`;
-    });
-}
-
-// Auto-fill logic
-document.addEventListener('DOMContentLoaded', function() {
-    const areaSelect = document.getElementById('scheduleAreaId');
-    const periodSelect = document.getElementById('schedulePeriodId');
-    
-    if (areaSelect) {
-        areaSelect.addEventListener('change', fetchScheduleHelpers);
-    }
-    
-    if (periodSelect) {
-        periodSelect.addEventListener('change', fetchScheduleHelpers);
-    }
-});
-
-async function fetchScheduleHelpers() {
-    const areaId = document.getElementById('scheduleAreaId').value;
-    const periodId = document.getElementById('schedulePeriodId').value;
-    
-    if (!areaId) return;
-    
-    // Show loading state for reader and total meters
-    // But only if we are creating a new schedule (scheduleId is empty)
-    const scheduleId = document.getElementById('scheduleId').value;
-    if (scheduleId) return; 
-
-    try {
-        let url = `/reading-schedules/helpers?area_id=${areaId}`;
-        if (periodId) {
-            url += `&period_id=${periodId}`;
-        }
-        
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            // Auto-select reader if found
-            if (result.data.assigned_reader) {
-                const readerSelect = document.getElementById('scheduleReaderId');
-                // Check if the reader exists in the dropdown
-                const optionExists = [...readerSelect.options].some(o => o.value == result.data.assigned_reader.id);
-                if (optionExists) {
-                    readerSelect.value = result.data.assigned_reader.id;
-                }
-            }
-            
-            // Auto-fill total meters if period selected
-            if (result.data.unbilled_count !== undefined) {
-                document.getElementById('scheduleTotalMeters').value = result.data.unbilled_count;
-            }
-        }
-    } catch (error) {
-        console.error('Error fetching schedule helpers:', error);
-    }
-}
-
 function openScheduleModal(scheduleId = null) {
     document.getElementById('scheduleForm').reset();
     document.getElementById('scheduleId').value = '';
+
+    const readerDisplay = document.getElementById('scheduleReaderDisplay');
+    const readerInput = document.getElementById('scheduleReaderId');
 
     if (scheduleId) {
         const schedule = schedulesData.find(s => s.schedule_id === scheduleId);
@@ -450,17 +416,29 @@ function openScheduleModal(scheduleId = null) {
             document.getElementById('scheduleId').value = schedule.schedule_id;
             document.getElementById('schedulePeriodId').value = schedule.period_id;
             document.getElementById('scheduleAreaId').value = schedule.area_id;
-            document.getElementById('scheduleReaderId').value = schedule.reader_id;
             document.getElementById('scheduledStartDate').value = schedule.scheduled_start_date;
             document.getElementById('scheduledEndDate').value = schedule.scheduled_end_date;
             document.getElementById('scheduleTotalMeters').value = schedule.total_meters || '';
             document.getElementById('scheduleNotes').value = schedule.notes || '';
+
+            // Set reader display for edit mode
+            if (schedule.reader_name) {
+                readerDisplay.textContent = schedule.reader_name;
+                readerInput.value = schedule.reader_id;
+            } else {
+                readerDisplay.innerHTML = '<span class="text-yellow-500 dark:text-yellow-400">No reader assigned</span>';
+                readerInput.value = '';
+            }
         }
     } else {
         document.getElementById('scheduleModalTitle').textContent = 'Add Reading Schedule';
         // Set default dates
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('scheduledStartDate').value = today;
+
+        // Reset reader display for new schedule
+        readerDisplay.innerHTML = '<span class="text-gray-400 dark:text-gray-500">Select an area first</span>';
+        readerInput.value = '';
     }
 
     document.getElementById('scheduleModal').classList.remove('hidden');
