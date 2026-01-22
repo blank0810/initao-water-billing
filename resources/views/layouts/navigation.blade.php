@@ -83,7 +83,7 @@ $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Pages', 'Dashboard'];
 $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
 @endphp
 
-<nav x-data="{ notifOpen: false, userOpen: false }" class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm z-30 relative sticky top-0">
+<nav x-data="{ notifOpen: false, userOpen: false }" class="bg-[#e7e7e7] dark:bg-[#0d131c] z-30 relative sticky top-0">
     <div class="max-w-full mx-auto px-6 sm:px-8 lg:px-10">
         <div class="flex justify-between h-24 items-center">
 
@@ -132,7 +132,7 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                     <input
                         type="text"
                         placeholder="Search..."
-                        class="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 w-64 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        class="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 w-64 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     >
                 </div>
 
@@ -151,7 +151,7 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                     }
                 }"
                 @click="toggle()"
-                class="p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300"
+                class="p-2.5 rounded-lg bg-gray-100 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300"
                 title="Toggle theme">
                     <!-- Sun for Light Mode -->
                     <svg x-show="!isDark" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                 <!-- Notifications -->
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open; $event.stopPropagation()"
-                            class="relative p-2.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300">
+                            class="relative p-2.5 rounded-lg bg-gray-100 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300">
                         <!-- Bell Icon -->
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />

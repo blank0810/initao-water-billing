@@ -195,3 +195,555 @@ html.dark .ui-input-error {
     border-color: rgba(61, 144, 215, 0.25);
     color: #3D90D7;
 }
+
+/* ==========================================
+   REVAMPED SIDEBAR STYLES - Carved Effect
+   ========================================== */
+
+:root {
+    --sidebar-width: 288px;
+    --sidebar-width-min: 80px;
+    /* Dark Mode Colors */
+    --sidebar-bg: #0d131c;
+    --sidebar-bg-secondary: #151d2a;
+    --sidebar-text: #8392a5;
+    --sidebar-text-light: #f5f6fa;
+    --sidebar-active-bg: #111826;
+    --sidebar-hover-bg: #111826;
+    --sidebar-hover-shadow: none;
+}
+
+/* Light Mode Colors */
+html:not(.dark) {
+    --sidebar-bg: #e7e7e7;
+    --sidebar-bg-secondary: #d9d9d9;
+    --sidebar-text: #64748b;
+    --sidebar-text-light: #1e293b;
+    --sidebar-active-bg: #f7f9fa;
+    --sidebar-hover-bg: #f7f9fa;
+    --sidebar-hover-shadow: none;
+}
+
+/* Sidebar Container */
+.sidebar-revamped {
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    color: var(--sidebar-text-light);
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    user-select: none;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease;
+}
+
+/* Sidebar Header */
+.sidebar-header {
+    position: relative;
+    min-height: 88px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    background: var(--sidebar-bg);
+    z-index: 2;
+}
+
+.sidebar-logo-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 8px;
+    border-radius: 12px;
+    transition: background 0.2s ease;
+}
+
+.sidebar-logo-btn:hover {
+    background: var(--sidebar-bg-secondary);
+}
+
+.sidebar-logo-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.sidebar-brand-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.sidebar-brand-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--sidebar-text-light);
+    line-height: 1.2;
+}
+
+.sidebar-brand-subtitle {
+    font-size: 0.7rem;
+    color: var(--sidebar-text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sidebar-status-dot {
+    width: 6px;
+    height: 6px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+/* Navigation Container */
+.sidebar-nav-content {
+    position: relative;
+    flex: 1;
+    padding: 24px 0 8px 0;
+    background: var(--sidebar-bg);
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Remove extra spacing from wrapper divs */
+.sidebar-nav-content > div {
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-nav-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-nav-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-nav-content::-webkit-scrollbar-thumb {
+    border-radius: 99px;
+    background-color: var(--sidebar-bg-secondary);
+}
+
+.sidebar-nav-content::-webkit-scrollbar-thumb:hover {
+    background-color: var(--sidebar-text);
+}
+
+/* ==========================================
+   CARVED NAVIGATION BUTTON STYLES
+   ========================================== */
+
+.nav-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 2px 0;
+    margin-left: 16px;
+    padding: 0 16px;
+    height: 54px;
+    color: var(--sidebar-text);
+    cursor: pointer;
+    z-index: 1;
+    transition: color 0.2s ease;
+    text-decoration: none;
+    text-align: left;
+    border: none;
+    background: transparent;
+}
+
+/* Ensure buttons with w-full class don't center content */
+.nav-btn.w-full {
+    width: calc(100% - 16px);
+    justify-content: flex-start;
+    text-align: left;
+}
+
+/* The carved highlight background - extends to the right only */
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--sidebar-active-bg);
+    border-radius: 16px 0 0 16px;
+    opacity: 0;
+    transition: opacity 0.2s ease, box-shadow 0.2s ease;
+    z-index: -1;
+}
+
+/* Top curved notch - flows upward */
+.nav-btn::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border-radius: 50%;
+    box-shadow: 12px 12px 0 var(--sidebar-active-bg);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Bottom curved notch - flows downward (using a wrapper span) */
+.nav-btn-notch {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border-radius: 50%;
+    box-shadow: 12px -12px 0 var(--sidebar-active-bg);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Hover state */
+.nav-btn:hover {
+    color: var(--sidebar-text-light);
+}
+
+.nav-btn:hover::before {
+    opacity: 1;
+    box-shadow: var(--sidebar-hover-shadow);
+}
+
+.nav-btn:hover::after,
+.nav-btn:hover .nav-btn-notch {
+    opacity: 1;
+}
+
+.nav-btn:hover .nav-btn-icon {
+    background: transparent;
+}
+
+.nav-btn:hover .nav-btn-icon i {
+    color: var(--sidebar-text-light);
+}
+
+.nav-btn:hover .nav-btn-chevron {
+    color: var(--sidebar-text-light);
+}
+
+/* Active state */
+.nav-btn.active {
+    color: var(--sidebar-text-light);
+}
+
+.nav-btn.active::before {
+    opacity: 1;
+    box-shadow: var(--sidebar-hover-shadow);
+}
+
+.nav-btn.active::after,
+.nav-btn.active .nav-btn-notch {
+    opacity: 1;
+}
+
+.nav-btn.active .nav-btn-icon {
+    background: transparent;
+}
+
+.nav-btn.active .nav-btn-icon i {
+    color: #64748b;
+    text-shadow: 0 0 8px rgba(100, 116, 139, 0.5), 0 0 16px rgba(100, 116, 139, 0.3);
+    filter: drop-shadow(0 0 3px rgba(100, 116, 139, 0.4));
+}
+
+/* Sky blue glow in dark mode */
+html.dark .nav-btn.active .nav-btn-icon i {
+    color: #38bdf8;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.5));
+}
+
+.nav-btn.active .nav-btn-chevron {
+    color: var(--sidebar-text-light);
+}
+
+/* Icon Glow for parent items when submenu is open */
+.nav-btn.icon-glow .nav-btn-icon i {
+    color: #64748b;
+    text-shadow: 0 0 8px rgba(100, 116, 139, 0.5), 0 0 16px rgba(100, 116, 139, 0.3);
+    filter: drop-shadow(0 0 3px rgba(100, 116, 139, 0.4));
+}
+
+html.dark .nav-btn.icon-glow .nav-btn-icon i {
+    color: #38bdf8;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.5));
+}
+
+/* Icon Container */
+.nav-btn-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sidebar-bg-secondary);
+    transition: all 0.2s ease;
+}
+
+.nav-btn-icon i {
+    font-size: 0.875rem;
+    color: var(--sidebar-text);
+    transition: color 0.2s ease;
+}
+
+/* Navigation Text */
+.nav-btn-text {
+    margin-left: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.2s ease;
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+}
+
+/* Chevron for dropdowns - consistent styling */
+.nav-btn-chevron {
+    margin-left: 8px;
+    margin-right: 4px;
+    font-size: 0.6rem;
+    color: var(--sidebar-text);
+    transition: transform 0.3s ease, color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.nav-btn-chevron.rotated {
+    transform: rotate(180deg);
+}
+
+/* ==========================================
+   SUBMENU STYLES WITH CARVED EFFECT
+   ========================================== */
+
+.nav-submenu {
+    overflow: hidden;
+    margin: 0;
+    margin-left: 16px;
+    padding: 0;
+    padding-left: 24px;
+}
+
+.nav-submenu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 16px;
+    margin: 2px 0;
+    color: var(--sidebar-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    z-index: 1;
+    text-align: left;
+}
+
+/* Carved background for submenu items */
+.nav-submenu-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--sidebar-active-bg);
+    border-radius: 12px 0 0 12px;
+    opacity: 0;
+    transition: opacity 0.2s ease, box-shadow 0.2s ease;
+    z-index: -1;
+}
+
+/* Top notch for submenu */
+.nav-submenu-item::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    width: 18px;
+    height: 18px;
+    background: transparent;
+    border-radius: 50%;
+    box-shadow: 9px 9px 0 var(--sidebar-active-bg);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.nav-submenu-notch {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    width: 18px;
+    height: 18px;
+    background: transparent;
+    border-radius: 50%;
+    box-shadow: 9px -9px 0 var(--sidebar-active-bg);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.nav-submenu-item:hover,
+.nav-submenu-item.active {
+    color: var(--sidebar-text-light);
+}
+
+.nav-submenu-item.active i {
+    color: #64748b;
+    text-shadow: 0 0 8px rgba(100, 116, 139, 0.5), 0 0 16px rgba(100, 116, 139, 0.3);
+    filter: drop-shadow(0 0 3px rgba(100, 116, 139, 0.4));
+}
+
+html.dark .nav-submenu-item.active i {
+    color: #38bdf8;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.5));
+}
+
+.nav-submenu-item:hover::before {
+    opacity: 1;
+    box-shadow: var(--sidebar-hover-shadow);
+}
+
+.nav-submenu-item:hover::after,
+.nav-submenu-item:hover .nav-submenu-notch {
+    opacity: 1;
+}
+
+.nav-submenu-item.active::before {
+    opacity: 1;
+    box-shadow: var(--sidebar-hover-shadow);
+}
+
+.nav-submenu-item.active::after,
+.nav-submenu-item.active .nav-submenu-notch {
+    opacity: 1;
+}
+
+.nav-submenu-item i {
+    width: 18px;
+    font-size: 0.7rem;
+    margin-right: 10px;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+/* ==========================================
+   COLLAPSED SIDEBAR ADJUSTMENTS
+   ========================================== */
+
+.sidebar-collapsed .nav-btn-text,
+.sidebar-collapsed .nav-btn-chevron,
+.sidebar-collapsed .sidebar-brand-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar-collapsed .nav-btn {
+    justify-content: center;
+    padding: 0;
+    margin: 4px 8px;
+    height: 52px;
+    width: auto;
+}
+
+.sidebar-collapsed .nav-btn.w-full {
+    width: calc(100% - 16px);
+    justify-content: center;
+}
+
+.sidebar-collapsed .nav-btn-icon {
+    width: 44px;
+    height: 44px;
+}
+
+.sidebar-collapsed .nav-btn::before {
+    border-radius: 12px;
+}
+
+.sidebar-collapsed .nav-btn::after,
+.sidebar-collapsed .nav-btn .nav-btn-notch {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar-logo-btn {
+    justify-content: center;
+    padding: 8px 0;
+}
+
+.sidebar-collapsed .nav-submenu {
+    display: none;
+}
+
+/* Section Divider - Hidden for cleaner look */
+.nav-section-divider {
+    margin: 8px 0;
+    border: none;
+    height: 0;
+    opacity: 0;
+}
+
+/* Tooltip for collapsed state */
+.sidebar-collapsed .nav-btn[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 8px 14px;
+    background: var(--sidebar-bg-secondary);
+    color: var(--sidebar-text-light);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    box-shadow: none;
+    width: auto;
+    height: auto;
+}
+
+.sidebar-collapsed .nav-btn[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Sidebar transition helper */
+.sidebar-transition {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}

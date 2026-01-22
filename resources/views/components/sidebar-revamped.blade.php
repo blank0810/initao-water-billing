@@ -7,92 +7,92 @@ $user = Auth::user() ?? (object) [
 
 <!-- Sidebar -->
 <aside x-data="sidebar()"
-    class="hidden lg:flex flex-col flex-shrink-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 sidebar-transition h-screen fixed left-0 top-0 z-50 overflow-hidden"
-    :class="sidebarOpen ? 'w-72' : 'w-20'">
+    class="hidden lg:flex flex-col flex-shrink-0
+           sidebar-revamped h-screen fixed left-0 top-0
+           z-50"
+    :class="[sidebarOpen ? 'w-72' : 'w-20', !sidebarOpen && 'sidebar-collapsed']">
 
-    <!-- Header with Logo -->
-    <div class="flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800 h-24">
-        <button @click="toggleSidebar()" class="flex items-center space-x-3 w-full min-w-0 group">
-            <!-- Logo -->
-            <div class="flex-shrink-0">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="w-11 h-11 rounded-lg object-cover">
-            </div>
-
-            <!-- Title (when expanded) -->
-            <div class="min-w-0 flex-1" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-2" x-transition:enter-end="opacity-100 translate-x-0">
-<p class="text-2xl font-semibold tracking-wide text-gray-700 dark:text-gray-300 flex items-center">
-    MEEDO
-</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+    <!-- Header -->
+    <div class="sidebar-header">
+        <button @click="toggleSidebar()" class="sidebar-logo-btn">
+            <img src="{{ asset('images/logo.png') }}" class="sidebar-logo-img">
+            <div class="sidebar-brand-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>
+                <span class="sidebar-brand-title">MEEDO</span>
+                <span class="sidebar-brand-subtitle">
+                    <span class="sidebar-status-dot"></span>
                     Administrator
-                </p>
+                </span>
             </div>
         </button>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
+    <nav class="sidebar-nav-content">
 
         <!-- Dashboard -->
         <a href="{{ route('dashboard') }}" @click="setActiveMenu('dashboard')"
-            :class="activeMenu === 'dashboard' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
-            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'dashboard' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-chart-pie text-sm" :class="activeMenu === 'dashboard' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            :class="activeMenu === 'dashboard' && 'active'"
+            class="nav-btn"
+            :data-tooltip="!sidebarOpen ? 'Dashboard' : null">
+            <span class="nav-btn-notch"></span>
+            <div class="nav-btn-icon">
+                <i class="fas fa-chart-pie"></i>
             </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Dashboard</span>
+            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Dashboard</span>
         </a>
 
         <!-- User Management -->
         @can('users.view')
-        <div class="space-y-1">
+        <div>
             <button @click="toggleSubmenu('userManagement')"
-                :class="(activeMenu.startsWith('user-') || openSubmenus.userManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
-                <div class="flex items-center min-w-0">
-                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                        :class="(activeMenu.startsWith('user-') || openSubmenus.userManagement) ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                        <i class="fas fa-users text-sm" :class="(activeMenu.startsWith('user-') || openSubmenus.userManagement) ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
-                    </div>
-                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>User Management</span>
+                :class="openSubmenus.userManagement && 'icon-glow'"
+                class="nav-btn w-full"
+                :data-tooltip="!sidebarOpen ? 'User Management' : null">
+                <span class="nav-btn-notch"></span>
+                <div class="nav-btn-icon">
+                    <i class="fas fa-users"></i>
                 </div>
-                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.userManagement }" x-show="sidebarOpen" x-transition></i>
+                <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>User Management</span>
+                <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.userManagement && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
             </button>
 
-            <div x-show="openSubmenus.userManagement && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
+            <div x-show="openSubmenus.userManagement && sidebarOpen" x-collapse class="nav-submenu">
                 @can('users.manage')
                 <a href="{{ route('user.add') }}" @click="setActiveMenu('user-add')"
-                    :class="activeMenu === 'user-add' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-user-plus w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'user-add' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-user-plus"></i>
                     <span>Add User</span>
                 </a>
                 @endcan
                 <a href="{{ route('user.list') }}" @click="setActiveMenu('user-list')"
-                    :class="activeMenu === 'user-list' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-list w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'user-list' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-list"></i>
                     <span>User List</span>
                 </a>
                 @can('settings.manage')
                 <a href="{{ route('admin.roles.index') }}" @click="setActiveMenu('user-roles')"
-                    :class="activeMenu === 'user-roles' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-user-shield w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'user-roles' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-user-shield"></i>
                     <span>Roles</span>
                 </a>
                 <a href="{{ route('admin.permissions.index') }}" @click="setActiveMenu('user-permissions')"
-                    :class="activeMenu === 'user-permissions' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-key w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'user-permissions' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-key"></i>
                     <span>Permissions</span>
                 </a>
                 <a href="{{ route('admin.role-permissions.matrix') }}" @click="setActiveMenu('user-matrix')"
-                    :class="activeMenu === 'user-matrix' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-th w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'user-matrix' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-th"></i>
                     <span>Permission Matrix</span>
                 </a>
                 @endcan
@@ -102,37 +102,39 @@ $user = Auth::user() ?? (object) [
 
         <!-- Connection Management -->
         @can('customers.manage')
-        <div class="space-y-1">
+        <div>
             <button @click="toggleSubmenu('connectionManagement')"
-                :class="(activeMenu.startsWith('connection-') || openSubmenus.connectionManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
-                <div class="flex items-center min-w-0">
-                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                        :class="(activeMenu.startsWith('connection-') || openSubmenus.connectionManagement) ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                        <i class="fas fa-plug text-sm" :class="(activeMenu.startsWith('connection-') || openSubmenus.connectionManagement) ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
-                    </div>
-                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Connection Management</span>
+                :class="openSubmenus.connectionManagement && 'icon-glow'"
+                class="nav-btn w-full"
+                :data-tooltip="!sidebarOpen ? 'Connections' : null">
+                <span class="nav-btn-notch"></span>
+                <div class="nav-btn-icon">
+                    <i class="fas fa-plug"></i>
                 </div>
-                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.connectionManagement }" x-show="sidebarOpen" x-transition></i>
+                <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Connection Management</span>
+                <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.connectionManagement && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
             </button>
 
-            <div x-show="openSubmenus.connectionManagement && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
+            <div x-show="openSubmenus.connectionManagement && sidebarOpen" x-collapse class="nav-submenu">
                 <a href="{{ route('connection.service-application.create') }}" @click="setActiveMenu('connection-new')"
-                    :class="activeMenu === 'connection-new' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-plus-circle w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'connection-new' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-plus-circle"></i>
                     <span>New Application</span>
                 </a>
                 <a href="{{ route('connection.service-application.index') }}" @click="setActiveMenu('connection-applications')"
-                    :class="activeMenu === 'connection-applications' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-file-alt w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'connection-applications' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-file-alt"></i>
                     <span>Applications</span>
                 </a>
                 <a href="{{ route('service.connection') }}" @click="setActiveMenu('connection-active')"
-                    :class="activeMenu === 'connection-active' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-plug w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'connection-active' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-plug"></i>
                     <span>Active Connections</span>
                 </a>
             </div>
@@ -141,32 +143,33 @@ $user = Auth::user() ?? (object) [
 
         <!-- Customer Management -->
         @can('customers.view')
-        <div class="space-y-1">
+        <div>
             <button @click="toggleSubmenu('customerManagement')"
-                :class="(activeMenu.startsWith('customer-') || openSubmenus.customerManagement) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
-                <div class="flex items-center min-w-0">
-                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                        :class="(activeMenu.startsWith('customer-') || openSubmenus.customerManagement) ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                        <i class="fas fa-user-tie text-sm" :class="(activeMenu.startsWith('customer-') || openSubmenus.customerManagement) ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
-                    </div>
-                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Customer Management</span>
+                :class="openSubmenus.customerManagement && 'icon-glow'"
+                class="nav-btn w-full"
+                :data-tooltip="!sidebarOpen ? 'Customers' : null">
+                <span class="nav-btn-notch"></span>
+                <div class="nav-btn-icon">
+                    <i class="fas fa-user-tie"></i>
                 </div>
-                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.customerManagement }" x-show="sidebarOpen" x-transition></i>
+                <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Customer Management</span>
+                <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.customerManagement && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
             </button>
 
-            <div x-show="openSubmenus.customerManagement && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
+            <div x-show="openSubmenus.customerManagement && sidebarOpen" x-collapse class="nav-submenu">
                 <a href="{{ route('customer.list') }}" @click="setActiveMenu('customer-list')"
-                    :class="activeMenu === 'customer-list' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-list w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'customer-list' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-list"></i>
                     <span>Customer List</span>
                 </a>
                 @can('customers.manage')
                 <a href="{{ route('approve.customer') }}" @click="setActiveMenu('customer-approval')"
-                    :class="activeMenu === 'customer-approval' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-check-circle w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'customer-approval' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-check-circle"></i>
                     <span>Customer Approval</span>
                 </a>
                 @endcan
@@ -174,130 +177,106 @@ $user = Auth::user() ?? (object) [
         </div>
         @endcan
 
-        <!-- Consumer List -->
-        @can('customers.view')
-        <a href="{{ route('consumer.list') }}" @click="setActiveMenu('consumer-list')"
-            :class="activeMenu === 'consumer-list' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
-            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'consumer-list' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-file-alt text-sm" :class="activeMenu === 'consumer-list' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
-            </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Consumer List</span>
-        </a>
-        @endcan
-
         <!-- Payment Management -->
         @can('payments.view')
         <a href="{{ route('payment.management') }}" @click="setActiveMenu('payment-management')"
-            :class="activeMenu === 'payment-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
-            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'payment-management' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-credit-card text-sm" :class="activeMenu === 'payment-management' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            :class="activeMenu === 'payment-management' && 'active'"
+            class="nav-btn"
+            :data-tooltip="!sidebarOpen ? 'Payments' : null">
+            <span class="nav-btn-notch"></span>
+            <div class="nav-btn-icon">
+                <i class="fas fa-credit-card"></i>
             </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Payment Management</span>
+            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Payment Management</span>
         </a>
         @endcan
 
         <!-- Billing Management -->
         @can('billing.view')
         <a href="{{ route('billing.management') }}" @click="setActiveMenu('billing-management')"
-            :class="activeMenu === 'billing-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
-            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'billing-management' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-file-invoice-dollar text-sm" :class="activeMenu === 'billing-management' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            :class="activeMenu === 'billing-management' && 'active'"
+            class="nav-btn"
+            :data-tooltip="!sidebarOpen ? 'Billing' : null">
+            <span class="nav-btn-notch"></span>
+            <div class="nav-btn-icon">
+                <i class="fas fa-file-invoice-dollar"></i>
             </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Billing</span>
+            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Billing</span>
         </a>
         @endcan
 
         <!-- Meter Management -->
         @can('meters.view')
         <a href="{{ route('meter.management') }}" @click="setActiveMenu('meter-management')"
-            :class="activeMenu === 'meter-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
-            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'meter-management' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-tachometer-alt text-sm" :class="activeMenu === 'meter-management' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            :class="activeMenu === 'meter-management' && 'active'"
+            class="nav-btn"
+            :data-tooltip="!sidebarOpen ? 'Meter' : null">
+            <span class="nav-btn-notch"></span>
+            <div class="nav-btn-icon">
+                <i class="fas fa-tachometer-alt"></i>
             </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Meter</span>
+            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Meter</span>
         </a>
         @endcan
 
         <!-- Rate Management -->
         @can('settings.manage')
         <a href="{{ route('rate.management') }}" @click="setActiveMenu('rate-management')"
-            :class="activeMenu === 'rate-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
-            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'rate-management' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-percentage text-sm" :class="activeMenu === 'rate-management' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            :class="activeMenu === 'rate-management' && 'active'"
+            class="nav-btn"
+            :data-tooltip="!sidebarOpen ? 'Rate' : null">
+            <span class="nav-btn-notch"></span>
+            <div class="nav-btn-icon">
+                <i class="fas fa-percentage"></i>
             </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Rate</span>
+            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Rate</span>
         </a>
         @endcan
 
         <!-- Ledger Management -->
         @can('billing.view')
         <a href="{{ route('ledger.management') }}" @click="setActiveMenu('ledger-management')"
-            :class="activeMenu === 'ledger-management' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
-            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'ledger-management' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-book text-sm" :class="activeMenu === 'ledger-management' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            :class="activeMenu === 'ledger-management' && 'active'"
+            class="nav-btn"
+            :data-tooltip="!sidebarOpen ? 'Ledger' : null">
+            <span class="nav-btn-notch"></span>
+            <div class="nav-btn-icon">
+                <i class="fas fa-book"></i>
             </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Ledger</span>
+            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Ledger</span>
         </a>
         @endcan
 
         <!-- Analytics -->
         @can('reports.view')
         <a href="{{ route('analytics') }}" @click="setActiveMenu('analytics')"
-            :class="activeMenu === 'analytics' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
-            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'analytics' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-chart-line text-sm" :class="activeMenu === 'analytics' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            :class="activeMenu === 'analytics' && 'active'"
+            class="nav-btn"
+            :data-tooltip="!sidebarOpen ? 'Analytics' : null">
+            <span class="nav-btn-notch"></span>
+            <div class="nav-btn-icon">
+                <i class="fas fa-chart-line"></i>
             </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Analytics</span>
+            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Analytics</span>
         </a>
         @endcan
 
         <!-- Activity Log - Super Admin Only -->
         @role('super_admin')
         <a href="{{ route('admin.activity-log') }}" @click="setActiveMenu('activity-log')"
-            :class="activeMenu === 'activity-log' ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-            class="flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group">
-            <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                :class="activeMenu === 'activity-log' ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                <i class="fas fa-history text-sm" :class="activeMenu === 'activity-log' ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+            :class="activeMenu === 'activity-log' && 'active'"
+            class="nav-btn"
+            :data-tooltip="!sidebarOpen ? 'Activity Log' : null">
+            <span class="nav-btn-notch"></span>
+            <div class="nav-btn-icon">
+                <i class="fas fa-history"></i>
             </div>
-            <span class="ml-3 text-sm font-medium" x-show="sidebarOpen" x-transition>Activity Log</span>
+            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Activity Log</span>
         </a>
         @endrole
 
     </nav>
 
-    <!-- Bottom Actions -->
-    <div class="px-3 py-3 mt-auto border-t border-gray-200 dark:border-gray-800">
-        <div :class="sidebarOpen ? 'flex items-center justify-between' : 'flex flex-col items-center space-y-2'">
-            <a href="{{ url('/profile') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Profile">
-                <i class="fas fa-user text-gray-600 dark:text-gray-400"></i>
-            </a>
-            @can('settings.manage')
-            <a href="{{ url('/settings') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Settings">
-                <i class="fas fa-cog text-gray-600 dark:text-gray-400"></i>
-            </a>
-            @endcan
-            @can('reports.view')
-            <a href="{{ url('/report') }}" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Report">
-                <i class="fas fa-flag text-gray-600 dark:text-gray-400"></i>
-            </a>
-            @endcan
-        </div>
-    </div>
 </aside>
 
 <script>
