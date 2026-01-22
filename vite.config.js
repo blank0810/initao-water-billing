@@ -10,14 +10,18 @@ export default defineConfig({
                 'resources/js/chart-dash.js',
                 'resources/js/utils/print-form.js',
                 'resources/js/payment.js',
+                'resources/js/network-detector.js',
             ],
             refresh: true,
         }),
     ],
     server: {
         host: '0.0.0.0',
+        cors: true,
         hmr: {
-            host: 'localhost'
-        }
-    }
+            host: 'localhost',
+        },
+        // Override the URL written to the hot file
+        origin: 'http://localhost:5173',
+    },
 });

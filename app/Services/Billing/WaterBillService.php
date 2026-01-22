@@ -3,16 +3,18 @@
 namespace App\Services\Billing;
 
 use App\Models\CustomerLedger;
-use App\Models\MeterAssignment;
 use App\Models\MeterReading;
 use App\Models\Period;
+use App\Models\ReadingSchedule;
 use App\Models\ServiceConnection;
 use App\Models\Status;
+use App\Models\UploadedReading;
 use App\Models\WaterBillHistory;
 use App\Models\WaterRate;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class WaterBillService
 {
@@ -571,7 +573,7 @@ class WaterBillService
             ->whereNull('ended_at')
             ->orderBy('account_no')
             ->get()
-            ->map(function ($connection) use ($activeStatusId, $paidStatusId, $overdueStatusId) {
+            ->map(function ($connection) use ($activeStatusId, $overdueStatusId) {
                 $customer = $connection->customer;
                 $customerName = $customer
                     ? trim($customer->cust_first_name.' '.$customer->cust_last_name)
@@ -670,7 +672,7 @@ class WaterBillService
         $unpaidBillsCount = $bills->whereIn('stat_id', [$activeStatusId, $overdueStatusId])->count();
 
         // Map bills to consumer data
-        $consumers = $bills->map(function ($bill) use ($activeStatusId, $paidStatusId, $overdueStatusId) {
+        $consumers = $bills->map(function ($bill) use ($activeStatusId, $overdueStatusId) {
             $connection = $bill->serviceConnection;
             if (! $connection) {
                 return null;
@@ -757,5 +759,228 @@ class WaterBillService
             'overdue_bills' => $overdueBillsCount,
             'total_adjustments' => round((float) abs($totalAdjustments), 2),
         ];
+    }
+
+    /**
+     * Process uploaded readings into MeterReading and WaterBillHistory records.
+     *
+     * @param  array  $uploadedReadingIds  Array of uploaded_reading_id values to process
+     * @return array Result with success status, processed count, and any errors
+     */
+    public function processUploadedReadings(array $uploadedReadingIds): array
+    {
+        // Ensure we get a valid Active status ID (fallback to 2 if lookup fails)
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE) ?? 2;
+        $userId = Auth::id() ?? 1;
+
+        $processed = 0;
+        $skipped = 0;
+        $errors = [];
+
+        // Get uploaded readings that are not yet processed
+        $uploadedReadings = UploadedReading::whereIn('uploaded_reading_id', $uploadedReadingIds)
+            ->where('is_processed', false)
+            ->whereNotNull('present_reading')
+            ->whereNotNull('previous_reading')
+            ->whereNotNull('connection_id')
+            ->get();
+
+        if ($uploadedReadings->isEmpty()) {
+            return [
+                'success' => false,
+                'message' => 'No valid unprocessed readings found.',
+                'processed' => 0,
+                'skipped' => count($uploadedReadingIds),
+                'errors' => [],
+            ];
+        }
+
+        foreach ($uploadedReadings as $uploadedReading) {
+            try {
+                $result = $this->processSingleUploadedReading($uploadedReading, $activeStatusId, $userId);
+
+                if ($result['success']) {
+                    $processed++;
+                } else {
+                    $skipped++;
+                    $errors[] = [
+                        'uploaded_reading_id' => $uploadedReading->uploaded_reading_id,
+                        'account_no' => $uploadedReading->account_no,
+                        'message' => $result['message'],
+                    ];
+                }
+            } catch (\Exception $e) {
+                $skipped++;
+                $errors[] = [
+                    'uploaded_reading_id' => $uploadedReading->uploaded_reading_id,
+                    'account_no' => $uploadedReading->account_no,
+                    'message' => 'Processing error: '.$e->getMessage(),
+                ];
+                Log::error('Error processing uploaded reading', [
+                    'uploaded_reading_id' => $uploadedReading->uploaded_reading_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return [
+            'success' => $processed > 0,
+            'message' => $processed > 0
+                ? "Successfully processed {$processed} reading(s)."
+                : 'No readings were processed.',
+            'processed' => $processed,
+            'skipped' => $skipped,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Process a single uploaded reading into MeterReading and WaterBillHistory.
+     */
+    private function processSingleUploadedReading(UploadedReading $uploadedReading, int $activeStatusId, int $userId): array
+    {
+        // Get the service connection
+        $connection = ServiceConnection::with([
+            'accountType',
+            'meterAssignments' => function ($query) {
+                $query->whereNull('removed_at');
+            },
+        ])->find($uploadedReading->connection_id);
+
+        if (! $connection) {
+            return ['success' => false, 'message' => 'Service connection not found.'];
+        }
+
+        // Get the active meter assignment
+        $assignment = $connection->meterAssignments->first();
+        if (! $assignment) {
+            return ['success' => false, 'message' => 'No active meter assignment found.'];
+        }
+
+        // Get the period from the reading schedule
+        $schedule = ReadingSchedule::find($uploadedReading->schedule_id);
+        if (! $schedule || ! $schedule->period_id) {
+            return ['success' => false, 'message' => 'Reading schedule or period not found.'];
+        }
+
+        $periodId = $schedule->period_id;
+        $period = Period::find($periodId);
+
+        if (! $period) {
+            return ['success' => false, 'message' => 'Billing period not found.'];
+        }
+
+        if ($period->is_closed) {
+            return ['success' => false, 'message' => 'Cannot process for a closed period.'];
+        }
+
+        // Check if bill already exists for this connection and period
+        $existingBill = WaterBillHistory::where('connection_id', $uploadedReading->connection_id)
+            ->where('period_id', $periodId)
+            ->first();
+
+        if ($existingBill) {
+            return ['success' => false, 'message' => 'Bill already exists for this connection and period.'];
+        }
+
+        // Validate readings
+        $prevReading = (float) $uploadedReading->previous_reading;
+        $currReading = (float) $uploadedReading->present_reading;
+
+        if ($currReading < $prevReading) {
+            return ['success' => false, 'message' => 'Current reading cannot be less than previous reading.'];
+        }
+
+        $consumption = $currReading - $prevReading;
+
+        // Calculate bill amount
+        $calculation = $this->calculateBillAmount(
+            $consumption,
+            $connection->account_type_id,
+            $periodId
+        );
+
+        if (! $calculation['success']) {
+            return $calculation;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Get the meter reader ID from the schedule
+            $meterReaderId = $schedule->reader_id ?? 1;
+
+            // Create previous reading record
+            $prevReadingRecord = MeterReading::create([
+                'assignment_id' => $assignment->assignment_id,
+                'period_id' => $periodId,
+                'reading_date' => $uploadedReading->reading_date ?? now()->format('Y-m-d'),
+                'reading_value' => $prevReading,
+                'is_estimated' => false,
+                'meter_reader_id' => $meterReaderId,
+                'created_at' => now(),
+            ]);
+
+            // Create current reading record
+            $currReadingRecord = MeterReading::create([
+                'assignment_id' => $assignment->assignment_id,
+                'period_id' => $periodId,
+                'reading_date' => $uploadedReading->reading_date ?? now()->format('Y-m-d'),
+                'reading_value' => $currReading,
+                'is_estimated' => false,
+                'meter_reader_id' => $meterReaderId,
+                'created_at' => now(),
+            ]);
+
+            // Create water bill history
+            $bill = WaterBillHistory::create([
+                'connection_id' => $uploadedReading->connection_id,
+                'period_id' => $periodId,
+                'prev_reading_id' => $prevReadingRecord->reading_id,
+                'curr_reading_id' => $currReadingRecord->reading_id,
+                'consumption' => $consumption,
+                'water_amount' => $calculation['amount'],
+                'due_date' => now()->addDays(15)->format('Y-m-d'),
+                'adjustment_total' => 0,
+                'stat_id' => $activeStatusId,
+            ]);
+
+            // Create CustomerLedger debit entry for the bill
+            CustomerLedger::create([
+                'customer_id' => $connection->customer_id,
+                'connection_id' => $uploadedReading->connection_id,
+                'period_id' => $periodId,
+                'txn_date' => now()->format('Y-m-d'),
+                'post_ts' => now(),
+                'source_type' => 'BILL',
+                'source_id' => $bill->bill_id,
+                'source_line_no' => 1,
+                'description' => 'Water Bill - '.$period->per_name.' (Consumption: '.$consumption.' cu.m)',
+                'debit' => $calculation['amount'],
+                'credit' => 0,
+                'user_id' => $userId,
+                'stat_id' => $activeStatusId,
+            ]);
+
+            // Update the uploaded reading as processed
+            $uploadedReading->update([
+                'is_processed' => true,
+                'processed_at' => now(),
+                'processed_by' => $userId,
+                'bill_id' => $bill->bill_id,
+                'computed_amount' => $calculation['amount'],
+            ]);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Bill generated successfully.',
+                'bill_id' => $bill->bill_id,
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }

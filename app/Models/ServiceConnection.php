@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ServiceConnection extends Model
 {
+    use HasFactory;
+
     protected $table = 'ServiceConnection';
 
     protected $primaryKey = 'connection_id';

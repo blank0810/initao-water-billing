@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class BillAdjustmentType extends Model
 {
+    use HasFactory;
+
     protected $table = 'BillAdjustmentType';
 
     protected $primaryKey = 'bill_adjustment_type_id';

@@ -7,6 +7,7 @@ use App\Models\Period;
 use App\Models\ReadingSchedule;
 use App\Models\ReadingScheduleEntry;
 use App\Models\Status;
+use App\Models\WaterBillHistory;
 use App\Models\WaterRate;
 
 class MeterReadingDownloadService
@@ -82,19 +83,34 @@ class MeterReadingDownloadService
             $activeMeterAssignment = $connection?->meterAssignments->first();
             $meter = $activeMeterAssignment?->meter;
 
-            // Get previous reading value from meterReadings relationship
+            // Get previous reading value from the previous period's bill current reading
             // Fall back to install_read from MeterAssignment if no previous reading exists
             $previousReadingValue = null;
-            if ($activeMeterAssignment) {
+            if ($connectionId) {
                 if ($previousPeriod) {
-                    $previousReading = $activeMeterAssignment->meterReadings
+                    // Get the current reading from the previous period's water bill
+                    // This is the most accurate source since it was the actual reading used for billing
+                    $previousBill = WaterBillHistory::where('connection_id', $connectionId)
                         ->where('period_id', $previousPeriod->per_id)
+                        ->with('currentReading')
                         ->first();
-                    $previousReadingValue = $previousReading?->reading_value;
+
+                    if ($previousBill && $previousBill->currentReading) {
+                        $previousReadingValue = $previousBill->currentReading->reading_value;
+                    }
                 }
 
-                // If no previous reading found, use install_read as fallback
-                if ($previousReadingValue === null) {
+                // If no previous bill found, try to get the latest reading from any period
+                if ($previousReadingValue === null && $activeMeterAssignment) {
+                    $latestReading = $activeMeterAssignment->meterReadings()
+                        ->whereNotNull('period_id')
+                        ->orderBy('reading_id', 'desc')
+                        ->first();
+                    $previousReadingValue = $latestReading?->reading_value;
+                }
+
+                // If still no reading found, use install_read as fallback
+                if ($previousReadingValue === null && $activeMeterAssignment) {
                     $previousReadingValue = $activeMeterAssignment->install_read;
                 }
             }
@@ -106,13 +122,15 @@ class MeterReadingDownloadService
                 // Get total debits (bills) from CustomerLedger for previous periods
                 $totalDebits = CustomerLedger::where('connection_id', $connectionId)
                     ->where('period_id', '<', $periodId)
-                    ->where('source_type', 'BILL')
+                    ->where('stat_id', '=', 2)
+                    //->where('source_type', 'BILL')
                     ->sum('debit');
 
                 // Get total credits (payments) from CustomerLedger for previous periods
                 $totalCredits = CustomerLedger::where('connection_id', $connectionId)
                     ->where('period_id', '<', $periodId)
-                    ->where('source_type', 'PAYMENT')
+                    ->where('stat_id', '=', 2)
+                    //->where('source_type', 'PAYMENT')
                     ->sum('credit');
 
                 $arrear = max(0, (float) $totalDebits - (float) $totalCredits);
