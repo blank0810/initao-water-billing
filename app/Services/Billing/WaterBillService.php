@@ -983,4 +983,45 @@ class WaterBillService
             throw $e;
         }
     }
+
+    /**
+     * Get processing status summary for uploaded readings.
+     *
+     * @param  int|null  $periodId  Filter by period (through schedule relationship)
+     * @param  int|null  $scheduleId  Filter by schedule
+     * @return array Processing statistics
+     */
+    public function getUploadedReadingsProcessingStats(?int $periodId = null, ?int $scheduleId = null): array
+    {
+        $query = UploadedReading::query();
+
+        // Filter by period (through schedule relationship)
+        if ($periodId) {
+            $query->whereHas('schedule', function ($q) use ($periodId) {
+                $q->where('period_id', $periodId);
+            });
+        }
+
+        // Filter by schedule if provided
+        if ($scheduleId) {
+            $query->where('schedule_id', $scheduleId);
+        }
+
+        $total = (clone $query)->count();
+        $processed = (clone $query)->where('is_processed', true)->count();
+        $unprocessed = (clone $query)->where('is_processed', false)->count();
+        $canProcess = (clone $query)
+            ->where('is_processed', false)
+            ->whereNotNull('present_reading')
+            ->whereNotNull('previous_reading')
+            ->whereNotNull('connection_id')
+            ->count();
+
+        return [
+            'total' => $total,
+            'processed' => $processed,
+            'unprocessed' => $unprocessed,
+            'can_process' => $canProcess,
+        ];
+    }
 }

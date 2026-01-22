@@ -136,38 +136,14 @@ class UploadedReadingController extends Controller
      */
     public function processingStats(Request $request): JsonResponse
     {
-        $query = UploadedReading::query();
-
-        // Filter by period (through schedule relationship)
-        if ($request->has('period_id') && $request->period_id) {
-            $query->whereHas('schedule', function ($q) use ($request) {
-                $q->where('period_id', $request->period_id);
-            });
-        }
-
-        // Filter by schedule if provided
-        if ($request->has('schedule_id') && $request->schedule_id) {
-            $query->where('schedule_id', $request->schedule_id);
-        }
-
-        $total = (clone $query)->count();
-        $processed = (clone $query)->where('is_processed', true)->count();
-        $unprocessed = (clone $query)->where('is_processed', false)->count();
-        $canProcess = (clone $query)
-            ->where('is_processed', false)
-            ->whereNotNull('present_reading')
-            ->whereNotNull('previous_reading')
-            ->whereNotNull('connection_id')
-            ->count();
+        $stats = $this->billService->getUploadedReadingsProcessingStats(
+            $request->input('period_id'),
+            $request->input('schedule_id')
+        );
 
         return response()->json([
             'success' => true,
-            'stats' => [
-                'total' => $total,
-                'processed' => $processed,
-                'unprocessed' => $unprocessed,
-                'can_process' => $canProcess,
-            ],
+            'stats' => $stats,
         ]);
     }
 }

@@ -13,6 +13,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Service for handling bill adjustments.
+ *
+ * NOTE: Bill adjustments are intentionally allowed on closed periods.
+ * This is a business decision to support customer dispute resolution
+ * and corrections that may be raised after a billing period is closed.
+ * The period closure rule applies to routine billing operations (generating
+ * new bills, standard processing) but not to adjustments/corrections.
+ */
 class BillAdjustmentService
 {
     public function __construct(
@@ -346,24 +355,34 @@ class BillAdjustmentService
         try {
             DB::beginTransaction();
 
-            // Determine the reversal amount
-            $direction = $adjustment->billAdjustmentType?->direction ?? 'debit';
+            // Determine the reversal amount and direction
+            $originalDirection = $adjustment->billAdjustmentType?->direction ?? 'debit';
             $reversalAmount = (float) $adjustment->amount;
+            $reversalDirection = 'debit'; // Will be set correctly below
 
             if ($adjustment->adjustment_category === BillAdjustment::CATEGORY_CONSUMPTION) {
-                // For consumption adjustments, we need to reverse the bill changes
-                // This is complex - we would need to restore old consumption and amount
-                // For now, we'll just reverse the financial impact
-                $amountDiff = $adjustment->amount_difference ?? 0;
-                $reversalAmount = -$amountDiff;
+                // For consumption adjustments, reverse the financial impact
+                // If original adjustment increased bill (debit), void should decrease (credit)
+                // If original adjustment decreased bill (credit), void should increase (debit)
+                $amountDiff = (float) ($adjustment->amount_difference ?? 0);
+                $reversalAmount = abs($amountDiff);
+
+                // Original was debit (bill increased) -> void is credit (reduce customer debt)
+                // Original was credit (bill decreased) -> void is debit (increase customer debt)
+                $originalWasDebit = $amountDiff > 0;
+                $reversalDirection = $originalWasDebit ? 'credit' : 'debit';
             } else {
-                // For amount adjustments, reverse the direction
-                $reversalAmount = $direction === 'credit' ? $adjustment->amount : -$adjustment->amount;
+                // For amount adjustments, reverse the original direction
+                // Original debit -> void is credit
+                // Original credit -> void is debit
+                $reversalDirection = $originalDirection === 'debit' ? 'credit' : 'debit';
             }
 
             // Update bill adjustment_total
             if ($adjustment->adjustment_category === BillAdjustment::CATEGORY_AMOUNT) {
-                $newAdjustmentTotal = (float) $bill->adjustment_total + $reversalAmount;
+                // Apply reversal: credit reduces total, debit increases total
+                $reversalImpact = $reversalDirection === 'credit' ? -$reversalAmount : $reversalAmount;
+                $newAdjustmentTotal = (float) $bill->adjustment_total + $reversalImpact;
                 $bill->update(['adjustment_total' => $newAdjustmentTotal]);
             }
 
@@ -373,13 +392,13 @@ class BillAdjustmentService
                 'remarks' => $adjustment->remarks.' [VOIDED: '.($reason ?? 'No reason provided').']',
             ]);
 
-            // Create reversal ledger entry
+            // Create reversal ledger entry with correct direction
             $description = 'VOID: '.$adjustment->billAdjustmentType?->name.' - '.$bill->period?->per_name;
             if ($reason) {
                 $description .= ' (Reason: '.$reason.')';
             }
 
-            $this->createAdjustmentLedgerEntry($bill, $adjustment, $reversalAmount, $description);
+            $this->createAdjustmentLedgerEntry($bill, $adjustment, $reversalAmount, $description, $reversalDirection);
 
             DB::commit();
 
@@ -389,6 +408,7 @@ class BillAdjustmentService
                 'data' => [
                     'adjustment_id' => $adjustmentId,
                     'reversal_amount' => $reversalAmount,
+                    'reversal_direction' => $reversalDirection,
                 ],
             ];
         } catch (\Exception $e) {
