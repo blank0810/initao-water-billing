@@ -290,6 +290,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/uploaded-readings', [\App\Http\Controllers\UploadedReadingController::class, 'index'])->name('uploaded-readings.index');
         Route::get('/uploaded-readings/schedule/{scheduleId}', [\App\Http\Controllers\UploadedReadingController::class, 'bySchedule'])->name('uploaded-readings.by-schedule');
         Route::get('/uploaded-readings/user/{userId}', [\App\Http\Controllers\UploadedReadingController::class, 'byUser'])->name('uploaded-readings.by-user');
+        Route::get('/uploaded-readings/processing-stats', [\App\Http\Controllers\UploadedReadingController::class, 'processingStats'])->name('uploaded-readings.processing-stats');
+        Route::post('/uploaded-readings/process', [\App\Http\Controllers\UploadedReadingController::class, 'processReadings'])->name('uploaded-readings.process');
+
+        // Bill Adjustment API
+        Route::get('/bill-adjustments', [\App\Http\Controllers\BillAdjustmentController::class, 'index'])->name('bill-adjustments.index');
+        Route::get('/bill-adjustments/types', [\App\Http\Controllers\BillAdjustmentController::class, 'types'])->name('bill-adjustments.types');
+        Route::get('/bill-adjustments/lookup/{billId}', [\App\Http\Controllers\BillAdjustmentController::class, 'lookupBill'])->name('bill-adjustments.lookup');
+        Route::get('/bill-adjustments/bill/{billId}', [\App\Http\Controllers\BillAdjustmentController::class, 'forBill'])->name('bill-adjustments.for-bill');
+        Route::get('/bill-adjustments/summary/{billId}', [\App\Http\Controllers\BillAdjustmentController::class, 'summary'])->name('bill-adjustments.summary');
+        Route::post('/bill-adjustments/consumption', [\App\Http\Controllers\BillAdjustmentController::class, 'adjustConsumption'])->name('bill-adjustments.consumption');
+        Route::post('/bill-adjustments/amount', [\App\Http\Controllers\BillAdjustmentController::class, 'adjustAmount'])->name('bill-adjustments.amount');
+        Route::post('/bill-adjustments/{adjustmentId}/void', [\App\Http\Controllers\BillAdjustmentController::class, 'void'])->name('bill-adjustments.void');
     });
 
     // -------------------------------------------------------------------------

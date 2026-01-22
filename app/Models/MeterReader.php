@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class MeterReader extends Model
 {
+    use HasFactory;
+
     protected $table = 'meter_readers';
 
     protected $primaryKey = 'mr_id';
@@ -17,9 +20,17 @@ class MeterReader extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'mr_name',
+        'user_id', // Changed from mr_name
         'stat_id',
     ];
+
+    /**
+     * Get the user that owns the meter reader
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 
     /**
      * Get the status associated with the meter reader
