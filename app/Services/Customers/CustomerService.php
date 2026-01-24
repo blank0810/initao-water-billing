@@ -6,6 +6,7 @@ use App\Http\Helpers\CustomerHelper;
 use App\Models\ConsumerAddress;
 use App\Models\Customer;
 use App\Models\CustomerCharge;
+use App\Models\CustomerLedger;
 use App\Models\ServiceApplication;
 use App\Models\Status;
 use Illuminate\Database\Eloquent\Builder;
@@ -179,9 +180,6 @@ class CustomerService
 
     /**
      * Search customers by name, phone, or ID for service application
-     *
-     * @param string $query
-     * @return array
      */
     public function searchCustomers(string $query): array
     {
@@ -428,5 +426,59 @@ class CustomerService
 
             return true;
         });
+    }
+
+    /**
+     * Get customer statistics for dashboard cards
+     */
+    public function getCustomerStats(): array
+    {
+        // 1. Total Customers
+        $totalCustomers = Customer::count();
+
+        // 2. Residential Count
+        $residentialCount = Customer::where('c_type', 'RESIDENTIAL')->count();
+
+        // 3. Total Current Bill - Sum of unpaid bills from CustomerLedger
+        // In CustomerLedger, bills are recorded as debits (source_type = 'BILL')
+        // To find unpaid bills, we need to check if the bill amount has been credited (paid)
+        // We'll sum all bill debits and subtract all payment credits for bills
+        $totalBillDebits = DB::table('CustomerLedger')
+            ->where('source_type', 'BILL')
+            ->sum('debit');
+
+        $totalBillCredits = DB::table('CustomerLedger')
+            ->where('source_type', 'PAYMENT')
+            ->sum('credit');
+
+        $totalCurrentBill = max(0, $totalBillDebits - $totalBillCredits);
+
+        // 4. Overdue Count - Count distinct customers with unpaid bills past due date
+        // Join CustomerLedger with WaterBillHistory to check due_date
+        // source_id points to bill_id in water_bill_history when source_type = 'BILL'
+        $overdueCount = DB::table('CustomerLedger as cl')
+            ->join('water_bill_history as wbh', function ($join) {
+                $join->on('cl.source_id', '=', 'wbh.bill_id')
+                    ->where('cl.source_type', '=', 'BILL');
+            })
+            ->where('wbh.due_date', '<', now())
+            ->whereNotExists(function ($query) {
+                // Check if this bill has been fully paid
+                $query->select(DB::raw(1))
+                    ->from('CustomerLedger as payment')
+                    ->whereColumn('payment.customer_id', 'cl.customer_id')
+                    ->whereColumn('payment.source_id', 'cl.source_id')
+                    ->where('payment.source_type', 'PAYMENT')
+                    ->whereRaw('payment.credit >= cl.debit');
+            })
+            ->distinct('cl.customer_id')
+            ->count('cl.customer_id');
+
+        return [
+            'total_customers' => $totalCustomers,
+            'residential_count' => $residentialCount,
+            'total_current_bill' => number_format($totalCurrentBill, 2, '.', ''),
+            'overdue_count' => $overdueCount,
+        ];
     }
 }
