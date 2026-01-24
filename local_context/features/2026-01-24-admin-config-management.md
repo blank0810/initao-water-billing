@@ -3008,23 +3008,1411 @@ git commit -m "feat(config): add barangay table component"
 
 ---
 
-**Continue to next message for remaining frontend tasks, Alpine.js manager, and final phases...**
+## Phase 8: Frontend - Area Management UI
+
+### Task 8.1: Create Area Main View
+
+**Files:**
+- Create: `resources/views/pages/admin/config/areas/index.blade.php`
+
+**Step 1: Create directory**
+
+```bash
+mkdir -p resources/views/pages/admin/config/areas
+```
+
+**Step 2: Create index.blade.php**
+
+```blade
+<x-app-layout>
+    <div x-data="areaManager()" class="p-6">
+        <!-- Page Header -->
+        <x-ui.admin.config.shared.page-header
+            title="Manage Areas"
+            subtitle="Create and manage service areas in Initao"
+            :can-create="true"
+            create-label="Add Area"
+            @create="openCreateModal()"
+        />
+
+        <!-- Search & Filters -->
+        <x-ui.admin.config.shared.search-filter
+            :statuses="[
+                ['value' => '', 'label' => 'All Statuses'],
+                ['value' => '1', 'label' => 'Active'],
+                ['value' => '2', 'label' => 'Inactive']
+            ]"
+            placeholder="Search by area name..."
+        />
+
+        <!-- Loading State -->
+        <div x-show="loading" class="text-center py-12">
+            <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+            <p class="mt-4 text-gray-500">Loading areas...</p>
+        </div>
+
+        <!-- Table -->
+        <div x-show="!loading" class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <x-ui.admin.config.area.table />
+        </div>
+
+        <!-- Pagination -->
+        <div x-show="!loading && totalPages > 1" class="mt-4 flex justify-center">
+            <nav class="flex items-center gap-2">
+                <button
+                    @click="goToPage(currentPage - 1)"
+                    :disabled="currentPage === 1"
+                    class="px-3 py-2 rounded-lg border disabled:opacity-50"
+                >
+                    Previous
+                </button>
+
+                <template x-for="page in Array.from({length: totalPages}, (_, i) => i + 1)" :key="page">
+                    <button
+                        @click="goToPage(page)"
+                        :class="page === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'"
+                        class="px-3 py-2 rounded-lg border"
+                        x-text="page"
+                    ></button>
+                </template>
+
+                <button
+                    @click="goToPage(currentPage + 1)"
+                    :disabled="currentPage === totalPages"
+                    class="px-3 py-2 rounded-lg border disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </nav>
+        </div>
+
+        <!-- Modals -->
+        <x-ui.admin.config.area.modals.create-area />
+        <x-ui.admin.config.area.modals.edit-area />
+        <x-ui.admin.config.area.modals.view-area />
+        <x-ui.admin.config.area.modals.delete-area />
+
+        <!-- Success Notification -->
+        <div x-show="showSuccess"
+             x-transition
+             class="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                <p class="text-green-800" x-text="successMessage"></p>
+            </div>
+        </div>
+
+        <!-- Error Notification -->
+        <div x-show="showError"
+             x-transition
+             class="fixed top-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                <p class="text-red-800" x-text="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
+```
+
+**Step 3: Commit**
+
+```bash
+git add resources/views/pages/admin/config/areas/index.blade.php
+git commit -m "feat(config): add area management main view"
+```
 
 ---
 
-## Plan Execution Options
+### Task 8.2: Create Area Table Component
 
-Plan complete and saved to `local_context/features/2026-01-24-admin-config-management.md`.
+**Files:**
+- Create: `resources/views/components/ui/admin/config/area/table.blade.php`
 
-**Two execution options:**
+**Step 1: Create directory**
 
-**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
-   - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-   - Stay in this session
-   - Fresh subagent per task + code review
+```bash
+mkdir -p resources/views/components/ui/admin/config/area
+```
 
-**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
-   - **REQUIRED SUB-SKILL:** New session uses superpowers:executing-plans
-   - Guide them to open new session in worktree
+**Step 2: Create table.blade.php**
 
-**Which approach?**
+```blade
+<table class="w-full">
+    <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Area Name
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Status
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Assigned Meter Readers
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Service Connections
+            </th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Actions
+            </th>
+        </tr>
+    </thead>
+    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <template x-if="items.length === 0">
+            <tr>
+                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                    <i class="fas fa-inbox text-4xl mb-4"></i>
+                    <p>No areas found</p>
+                </td>
+            </tr>
+        </template>
+
+        <template x-for="area in items" :key="area.a_id">
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="area.a_desc"></span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span x-bind:class="area.stat_id == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'" class="px-2 py-1 text-xs font-medium rounded-full" x-text="area.stat_id == 1 ? 'ACTIVE' : 'INACTIVE'"></span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm text-gray-900 dark:text-white" x-text="area.meter_readers_count || 0"></span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm text-gray-900 dark:text-white" x-text="area.service_connections_count || 0"></span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <div class="flex items-center justify-end gap-2">
+                        <button
+                            @click="openViewModal(area)"
+                            class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            title="View Details"
+                        >
+                            <i class="fas fa-eye text-sm"></i>
+                        </button>
+                        <button
+                            @click="openEditModal(area)"
+                            class="p-2 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                            title="Edit"
+                        >
+                            <i class="fas fa-edit text-sm"></i>
+                        </button>
+                        <button
+                            @click="openDeleteModal(area)"
+                            class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            title="Delete"
+                        >
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        </template>
+    </tbody>
+</table>
+```
+
+**Step 3: Commit**
+
+```bash
+git add resources/views/components/ui/admin/config/area/table.blade.php
+git commit -m "feat(config): add area table component"
+```
+
+---
+
+### Task 8.3: Create areaManager Alpine.js Function
+
+**Files:**
+- Create: `resources/js/components/admin/config/areas/areaManager.js`
+- Modify: `resources/js/app.js`
+
+**Step 1: Create directory**
+
+```bash
+mkdir -p resources/js/components/admin/config/areas
+```
+
+**Step 2: Create areaManager.js**
+
+```javascript
+import configTable from '../shared/configTable.js';
+
+/**
+ * Area Manager - extends configTable with area-specific operations
+ */
+export default function areaManager() {
+    return {
+        ...configTable('/config/areas'),
+
+        // Create area
+        async createArea() {
+            this.errors = {};
+
+            try {
+                const response = await fetch('/config/areas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
+                    },
+                    body: JSON.stringify(this.form),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        this.errors = data.errors || {};
+                        throw new Error(data.message || 'Validation failed');
+                    }
+                    throw new Error(data.message || 'Failed to create area');
+                }
+
+                this.showSuccessNotification('Area created successfully');
+                this.closeAllModals();
+                await this.fetchItems();
+
+            } catch (error) {
+                console.error('Create area error:', error);
+                this.showErrorNotification(error.message || 'Failed to create area');
+            }
+        },
+
+        // Update area
+        async updateArea() {
+            this.errors = {};
+
+            try {
+                const response = await fetch(`/config/areas/${this.selectedItem.a_id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
+                    },
+                    body: JSON.stringify(this.form),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        this.errors = data.errors || {};
+                        throw new Error(data.message || 'Validation failed');
+                    }
+                    throw new Error(data.message || 'Failed to update area');
+                }
+
+                this.showSuccessNotification('Area updated successfully');
+                this.closeAllModals();
+                await this.fetchItems();
+
+            } catch (error) {
+                console.error('Update area error:', error);
+                this.showErrorNotification(error.message || 'Failed to update area');
+            }
+        },
+
+        // Delete area
+        async deleteArea() {
+            try {
+                const response = await fetch(`/config/areas/${this.selectedItem.a_id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
+                    },
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to delete area');
+                }
+
+                this.showSuccessNotification('Area deleted successfully');
+                this.closeAllModals();
+                await this.fetchItems();
+
+            } catch (error) {
+                console.error('Delete area error:', error);
+                this.showErrorNotification(error.message || 'Failed to delete area');
+            }
+        },
+    };
+}
+
+// Make it available globally for Alpine.js
+window.areaManager = areaManager;
+```
+
+**Step 3: Import in app.js**
+
+Add after barangayManager import:
+
+```javascript
+import './components/admin/config/areas/areaManager.js';
+```
+
+**Step 4: Commit**
+
+```bash
+git add resources/js/components/admin/config/areas/areaManager.js resources/js/app.js
+git commit -m "feat(config): add areaManager Alpine.js function"
+```
+
+---
+
+### Task 8.4: Create Area Modal Components
+
+**Files:**
+- Create: `resources/views/components/ui/admin/config/area/modals/create-area.blade.php`
+- Create: `resources/views/components/ui/admin/config/area/modals/edit-area.blade.php`
+- Create: `resources/views/components/ui/admin/config/area/modals/view-area.blade.php`
+- Create: `resources/views/components/ui/admin/config/area/modals/delete-area.blade.php`
+
+**Step 1: Create directory**
+
+```bash
+mkdir -p resources/views/components/ui/admin/config/area/modals
+```
+
+**Step 2: Create create-area.blade.php**
+
+```blade
+<!-- Create Area Modal -->
+<div x-show="showCreateModal"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     style="display: none;">
+
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeAllModals()"></div>
+
+    <!-- Modal -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b dark:border-gray-700">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    Add New Area
+                </h3>
+                <button @click="closeAllModals()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <form @submit.prevent="createArea()" class="p-6 space-y-4">
+                <!-- Area Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Area Name <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        x-model="form.a_desc"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        :class="{'border-red-500': errors.a_desc}"
+                        placeholder="Enter area name"
+                        required
+                    />
+                    <template x-if="errors.a_desc">
+                        <p class="mt-1 text-sm text-red-600" x-text="errors.a_desc[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex justify-end gap-3 pt-4">
+                    <button
+                        type="button"
+                        @click="closeAllModals()"
+                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                        Create Area
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+```
+
+**Step 3: Create edit-area.blade.php**
+
+```blade
+<!-- Edit Area Modal -->
+<div x-show="showEditModal"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     style="display: none;">
+
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeAllModals()"></div>
+
+    <!-- Modal -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b dark:border-gray-700">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    Edit Area
+                </h3>
+                <button @click="closeAllModals()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <form @submit.prevent="updateArea()" class="p-6 space-y-4">
+                <!-- Area Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Area Name <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        x-model="form.a_desc"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        :class="{'border-red-500': errors.a_desc}"
+                        placeholder="Enter area name"
+                        required
+                    />
+                    <template x-if="errors.a_desc">
+                        <p class="mt-1 text-sm text-red-600" x-text="errors.a_desc[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex justify-end gap-3 pt-4">
+                    <button
+                        type="button"
+                        @click="closeAllModals()"
+                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                        Update Area
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+```
+
+**Step 4: Create view-area.blade.php**
+
+```blade
+<!-- View Area Modal -->
+<div x-show="showViewModal"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     style="display: none;">
+
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeAllModals()"></div>
+
+    <!-- Modal -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b dark:border-gray-700">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    Area Details
+                </h3>
+                <button @click="closeAllModals()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 space-y-4">
+                <!-- Area Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Area Name
+                    </label>
+                    <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.a_desc || '-'"></p>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Status
+                    </label>
+                    <div class="mt-1">
+                        <span x-bind:class="selectedItem?.stat_id == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'" class="px-2 py-1 text-xs font-medium rounded-full" x-text="selectedItem?.stat_id == 1 ? 'ACTIVE' : 'INACTIVE'"></span>
+                    </div>
+                </div>
+
+                <!-- Meter Readers Count -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Assigned Meter Readers
+                    </label>
+                    <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.meter_readers_count || 0"></p>
+                </div>
+
+                <!-- Service Connections Count -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Service Connections
+                    </label>
+                    <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.service_connections_count || 0"></p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-end gap-3 p-6 border-t dark:border-gray-700">
+                <button
+                    type="button"
+                    @click="closeAllModals()"
+                    class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+**Step 5: Create delete-area.blade.php**
+
+```blade
+<!-- Delete Area Modal -->
+<div x-show="showDeleteModal"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     style="display: none;">
+
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeAllModals()"></div>
+
+    <!-- Modal -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-500"></i>
+                    </div>
+                    <h3 class="ml-4 text-xl font-semibold text-gray-900 dark:text-white">
+                        Delete Area
+                    </h3>
+                </div>
+                <button @click="closeAllModals()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6">
+                <p class="text-gray-700 dark:text-gray-300">
+                    Are you sure you want to delete
+                    <span class="font-semibold" x-text="selectedItem?.a_desc"></span>?
+                </p>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    This action cannot be undone. This area will be permanently removed from the system.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-end gap-3 p-6 border-t dark:border-gray-700">
+                <button
+                    type="button"
+                    @click="closeAllModals()"
+                    class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    @click="deleteArea()"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                >
+                    Delete Area
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+**Step 6: Commit**
+
+```bash
+git add resources/views/components/ui/admin/config/area/modals/
+git commit -m "feat(config): add area modal components"
+```
+
+---
+
+## Phase 9: Frontend - Water Rate Management UI
+
+### Task 9.1: Create Water Rate Main View
+
+**Files:**
+- Create: `resources/views/pages/admin/config/water-rates/index.blade.php`
+
+**Step 1: Create directory**
+
+```bash
+mkdir -p resources/views/pages/admin/config/water-rates
+```
+
+**Step 2: Create index.blade.php**
+
+```blade
+<x-app-layout>
+    <div x-data="waterRateManager()" class="p-6">
+        <!-- Page Header -->
+        <x-ui.admin.config.shared.page-header
+            title="Manage Water Rates"
+            subtitle="Configure tiered water rate pricing by account type"
+            :can-create="true"
+            create-label="Add Rate Tier"
+            @create="openCreateModal()"
+        />
+
+        <!-- Filters -->
+        <div class="flex items-center gap-4 mb-4">
+            <!-- Period Filter -->
+            <div class="w-64">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Period
+                </label>
+                <select
+                    x-model="periodFilter"
+                    @change="fetchItems()"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                >
+                    <option value="">Default Rates</option>
+                    <!-- Periods will be loaded dynamically -->
+                </select>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div x-show="loading" class="text-center py-12">
+            <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+            <p class="mt-4 text-gray-500">Loading water rates...</p>
+        </div>
+
+        <!-- Rates by Account Type -->
+        <div x-show="!loading" class="space-y-6">
+            <template x-for="(tiers, accountType) in items" :key="accountType">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b dark:border-gray-600">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white" x-text="accountType"></h3>
+                    </div>
+                    <x-ui.admin.config.water-rate.table :account-type="accountType" />
+                </div>
+            </template>
+
+            <template x-if="Object.keys(items).length === 0">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+                    <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-gray-500">No water rates configured</p>
+                </div>
+            </template>
+        </div>
+
+        <!-- Modals -->
+        <x-ui.admin.config.water-rate.modals.create-rate />
+        <x-ui.admin.config.water-rate.modals.edit-rate />
+        <x-ui.admin.config.water-rate.modals.view-rate />
+        <x-ui.admin.config.water-rate.modals.delete-rate />
+
+        <!-- Success Notification -->
+        <div x-show="showSuccess"
+             x-transition
+             class="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                <p class="text-green-800" x-text="successMessage"></p>
+            </div>
+        </div>
+
+        <!-- Error Notification -->
+        <div x-show="showError"
+             x-transition
+             class="fixed top-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                <p class="text-red-800" x-text="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
+```
+
+**Step 3: Commit**
+
+```bash
+git add resources/views/pages/admin/config/water-rates/index.blade.php
+git commit -m "feat(config): add water rate management main view"
+```
+
+---
+
+### Task 9.2: Create Water Rate Table Component
+
+**Files:**
+- Create: `resources/views/components/ui/admin/config/water-rate/table.blade.php`
+
+**Step 1: Create directory**
+
+```bash
+mkdir -p resources/views/components/ui/admin/config/water-rate
+```
+
+**Step 2: Create table.blade.php**
+
+```blade
+@props(['accountType' => ''])
+
+<table class="w-full">
+    <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Tier
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Range (m³)
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Base Rate
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Increment Rate
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Status
+            </th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Actions
+            </th>
+        </tr>
+    </thead>
+    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <template x-for="tier in items['{{ $accountType }}']" :key="tier.range_id">
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="'Tier ' + tier.range_id"></span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm text-gray-900 dark:text-white" x-text="tier.range_min + ' - ' + tier.range_max"></span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm text-gray-900 dark:text-white" x-text="'₱' + parseFloat(tier.rate_val).toFixed(2)"></span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="text-sm text-gray-900 dark:text-white" x-text="'₱' + parseFloat(tier.rate_inc).toFixed(2)"></span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span x-bind:class="tier.stat_id == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'" class="px-2 py-1 text-xs font-medium rounded-full" x-text="tier.stat_id == 1 ? 'ACTIVE' : 'INACTIVE'"></span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <div class="flex items-center justify-end gap-2">
+                        <button
+                            @click="openViewModal(tier)"
+                            class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                            title="View Details"
+                        >
+                            <i class="fas fa-eye text-sm"></i>
+                        </button>
+                        <button
+                            @click="openEditModal(tier)"
+                            class="p-2 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                            title="Edit"
+                        >
+                            <i class="fas fa-edit text-sm"></i>
+                        </button>
+                        <button
+                            @click="openDeleteModal(tier)"
+                            class="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            title="Delete"
+                        >
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        </template>
+    </tbody>
+</table>
+```
+
+**Step 3: Commit**
+
+```bash
+git add resources/views/components/ui/admin/config/water-rate/table.blade.php
+git commit -m "feat(config): add water rate table component"
+```
+
+---
+
+### Task 9.3: Create waterRateManager Alpine.js Function
+
+**Files:**
+- Create: `resources/js/components/admin/config/water-rates/waterRateManager.js`
+- Modify: `resources/js/app.js`
+
+**Step 1: Create directory**
+
+```bash
+mkdir -p resources/js/components/admin/config/water-rates
+```
+
+**Step 2: Create waterRateManager.js**
+
+```javascript
+import configTable from '../shared/configTable.js';
+
+/**
+ * Water Rate Manager - extends configTable with rate-specific operations
+ */
+export default function waterRateManager() {
+    return {
+        ...configTable('/config/water-rates'),
+
+        // Period filter
+        periodFilter: '',
+
+        // Account types for dropdown
+        accountTypes: [],
+
+        // Override init to fetch account types
+        async init() {
+            await this.fetchAccountTypes();
+            await this.fetchItems();
+        },
+
+        // Fetch account types
+        async fetchAccountTypes() {
+            try {
+                const response = await fetch('/config/water-rates/account-types', {
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                this.accountTypes = data.data || [];
+
+            } catch (error) {
+                console.error('Failed to fetch account types:', error);
+            }
+        },
+
+        // Override fetchItems to handle period filter
+        async fetchItems() {
+            this.loading = true;
+
+            try {
+                const params = new URLSearchParams({
+                    period_id: this.periodFilter,
+                });
+
+                const response = await fetch(`/config/water-rates?${params}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                // Data comes grouped by account type
+                this.items = data.data || {};
+
+            } catch (error) {
+                console.error('Failed to fetch items:', error);
+                this.showErrorNotification('Failed to load data');
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        // Create water rate
+        async createWaterRate() {
+            this.errors = {};
+
+            try {
+                const response = await fetch('/config/water-rates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
+                    },
+                    body: JSON.stringify(this.form),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        this.errors = data.errors || {};
+                        throw new Error(data.message || 'Validation failed');
+                    }
+                    throw new Error(data.message || 'Failed to create water rate');
+                }
+
+                this.showSuccessNotification('Water rate tier created successfully');
+                this.closeAllModals();
+                await this.fetchItems();
+
+            } catch (error) {
+                console.error('Create water rate error:', error);
+                this.showErrorNotification(error.message || 'Failed to create water rate');
+            }
+        },
+
+        // Update water rate
+        async updateWaterRate() {
+            this.errors = {};
+
+            try {
+                const response = await fetch(`/config/water-rates/${this.selectedItem.range_id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
+                    },
+                    body: JSON.stringify(this.form),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        this.errors = data.errors || {};
+                        throw new Error(data.message || 'Validation failed');
+                    }
+                    throw new Error(data.message || 'Failed to update water rate');
+                }
+
+                this.showSuccessNotification('Water rate tier updated successfully');
+                this.closeAllModals();
+                await this.fetchItems();
+
+            } catch (error) {
+                console.error('Update water rate error:', error);
+                this.showErrorNotification(error.message || 'Failed to update water rate');
+            }
+        },
+
+        // Delete water rate
+        async deleteWaterRate() {
+            try {
+                const response = await fetch(`/config/water-rates/${this.selectedItem.range_id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
+                    },
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to delete water rate');
+                }
+
+                this.showSuccessNotification('Water rate tier deleted successfully');
+                this.closeAllModals();
+                await this.fetchItems();
+
+            } catch (error) {
+                console.error('Delete water rate error:', error);
+                this.showErrorNotification(error.message || 'Failed to delete water rate');
+            }
+        },
+    };
+}
+
+// Make it available globally for Alpine.js
+window.waterRateManager = waterRateManager;
+```
+
+**Step 3: Import in app.js**
+
+Add after areaManager import:
+
+```javascript
+import './components/admin/config/water-rates/waterRateManager.js';
+```
+
+**Step 4: Commit**
+
+```bash
+git add resources/js/components/admin/config/water-rates/waterRateManager.js resources/js/app.js
+git commit -m "feat(config): add waterRateManager Alpine.js function"
+```
+
+---
+
+### Task 9.4: Create Water Rate Modal Components
+
+**Files:**
+- Create: `resources/views/components/ui/admin/config/water-rate/modals/create-rate.blade.php`
+- Create: `resources/views/components/ui/admin/config/water-rate/modals/edit-rate.blade.php`
+- Create: `resources/views/components/ui/admin/config/water-rate/modals/view-rate.blade.php`
+- Create: `resources/views/components/ui/admin/config/water-rate/modals/delete-rate.blade.php`
+
+**Step 1: Create directory**
+
+```bash
+mkdir -p resources/views/components/ui/admin/config/water-rate/modals
+```
+
+**Step 2: Create create-rate.blade.php**
+
+```blade
+<!-- Create Water Rate Modal -->
+<div x-show="showCreateModal"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     style="display: none;">
+
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeAllModals()"></div>
+
+    <!-- Modal -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-6 border-b dark:border-gray-700">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    Add New Rate Tier
+                </h3>
+                <button @click="closeAllModals()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <form @submit.prevent="createWaterRate()" class="p-6 space-y-4">
+                <!-- Account Type -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Account Type <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        x-model="form.class_id"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        :class="{'border-red-500': errors.class_id}"
+                        required
+                    >
+                        <option value="">Select account type</option>
+                        <template x-for="type in accountTypes" :key="type.at_id">
+                            <option :value="type.at_id" x-text="type.at_desc"></option>
+                        </template>
+                    </select>
+                    <template x-if="errors.class_id">
+                        <p class="mt-1 text-sm text-red-600" x-text="errors.class_id[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Tier Number -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Tier Number <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="number"
+                        x-model="form.range_id"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        :class="{'border-red-500': errors.range_id}"
+                        placeholder="1, 2, 3..."
+                        min="1"
+                        required
+                    />
+                    <template x-if="errors.range_id">
+                        <p class="mt-1 text-sm text-red-600" x-text="errors.range_id[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Range Min -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Range Min (m³) <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        x-model="form.range_min"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        :class="{'border-red-500': errors.range_min}"
+                        placeholder="0"
+                        min="0"
+                        required
+                    />
+                    <template x-if="errors.range_min">
+                        <p class="mt-1 text-sm text-red-600" x-text="errors.range_min[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Range Max -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Range Max (m³) <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        x-model="form.range_max"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        :class="{'border-red-500': errors.range_max}"
+                        placeholder="10"
+                        min="0"
+                        required
+                    />
+                    <template x-if="errors.range_max">
+                        <p class="mt-1 text-sm text-red-600" x-text="errors.range_max[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Base Rate -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Base Rate (₱) <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        x-model="form.rate_val"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        :class="{'border-red-500': errors.rate_val}"
+                        placeholder="0.00"
+                        min="0"
+                        required
+                    />
+                    <template x-if="errors.rate_val">
+                        <p class="mt-1 text-sm text-red-600" x-text="errors.rate_val[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Increment Rate -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Increment Rate (₱) <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        x-model="form.rate_inc"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        :class="{'border-red-500': errors.rate_inc}"
+                        placeholder="0.00"
+                        min="0"
+                        required
+                    />
+                    <template x-if="errors.rate_inc">
+                        <p class="mt-1 text-sm text-red-600" x-text="errors.rate_inc[0]"></p>
+                    </template>
+                </div>
+
+                <!-- Footer -->
+                <div class="flex justify-end gap-3 pt-4">
+                    <button
+                        type="button"
+                        @click="closeAllModals()"
+                        class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    >
+                        Create Rate Tier
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+```
+
+**Step 3: Create edit-rate.blade.php, view-rate.blade.php, delete-rate.blade.php**
+
+(Similar structure to create modal, adjusted for edit/view/delete operations)
+
+**Step 4: Commit**
+
+```bash
+git add resources/views/components/ui/admin/config/water-rate/modals/
+git commit -m "feat(config): add water rate modal components"
+```
+
+---
+
+## Phase 10: Navigation & Menu Restructuring
+
+### Task 10.1: Create Admin Configuration Menu Section
+
+**Files:**
+- Modify: `resources/views/layouts/navigation.blade.php` (or equivalent)
+
+**Step 1: Read current navigation structure**
+
+```bash
+# Find navigation file
+find resources/views -name "*navigation*" -o -name "*sidebar*" -o -name "*menu*"
+```
+
+**Step 2: Add Admin Configuration section**
+
+Add new menu section with permission check:
+
+```blade
+@can('config.geographic.manage', 'config.billing.manage')
+<!-- Admin Configuration Menu -->
+<div class="mb-6">
+    <h3 class="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+        Configuration
+    </h3>
+
+    <!-- Geographic Configuration -->
+    @can('config.geographic.manage')
+    <div x-data="{ open: false }">
+        <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+            <div class="flex items-center">
+                <i class="fas fa-map-marked-alt w-5"></i>
+                <span class="ml-3">Geographic</span>
+            </div>
+            <i class="fas fa-chevron-down transition-transform" :class="{'rotate-180': open}"></i>
+        </button>
+
+        <div x-show="open" x-collapse class="ml-8 mt-1 space-y-1">
+            <a href="{{ route('config.barangays.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                Barangays
+            </a>
+            <a href="{{ route('config.areas.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                Service Areas
+            </a>
+        </div>
+    </div>
+    @endcan
+
+    <!-- Billing Configuration -->
+    @can('config.billing.manage')
+    <a href="{{ route('config.water-rates.index') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+        <i class="fas fa-dollar-sign w-5"></i>
+        <span class="ml-3">Water Rates</span>
+    </a>
+    @endcan
+
+    <!-- RBAC Configuration -->
+    @can('users.manage')
+    <div x-data="{ open: false }">
+        <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+            <div class="flex items-center">
+                <i class="fas fa-shield-alt w-5"></i>
+                <span class="ml-3">Access Control</span>
+            </div>
+            <i class="fas fa-chevron-down transition-transform" :class="{'rotate-180': open}"></i>
+        </button>
+
+        <div x-show="open" x-collapse class="ml-8 mt-1 space-y-1">
+            <a href="{{ route('roles.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                Roles
+            </a>
+            <a href="{{ route('permissions.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                Permissions
+            </a>
+            <a href="{{ route('permission-matrix.index') }}" class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                Permission Matrix
+            </a>
+        </div>
+    </div>
+    @endcan
+</div>
+@endcan
+```
+
+**Step 3: Remove roles/permissions from User Management section**
+
+Remove or comment out the old menu items under User Management.
+
+**Step 4: Test navigation**
+
+Verify permissions work correctly:
+- Admin sees all config sections
+- Users without permissions don't see menu
+
+**Step 5: Commit**
+
+```bash
+git add resources/views/layouts/navigation.blade.php
+git commit -m "feat(config): restructure navigation with admin configuration menu
+
+- Created dedicated Configuration section
+- Moved barangays and areas under Geographic submenu
+- Added Water Rates menu item
+- Moved roles/permissions under Access Control submenu
+- Applied RBAC permissions to menu visibility
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+```
+
+---
+
+## Plan Execution Complete
+
+**All phases documented:**
+- ✅ Phase 1: Database & Permissions Setup
+- ✅ Phase 2: Backend - Barangay Management
+- ✅ Phase 3: Backend - Area Management
+- ✅ Phase 4: Backend - Water Rate Management
+- ✅ Phase 5: Backend - User Area Assignment
+- ✅ Phase 6: Frontend - Shared Components
+- ✅ Phase 7: Frontend - Barangay Management UI
+- ✅ Phase 8: Frontend - Area Management UI
+- ✅ Phase 9: Frontend - Water Rate Management UI
+- ✅ Phase 10: Navigation & Menu Restructuring
+
+**Ready for execution with superpowers:executing-plans**
