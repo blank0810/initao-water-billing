@@ -7,6 +7,7 @@ import collapse from '@alpinejs/collapse';
 import './components/admin/config/barangays/barangayManager.js';
 import './components/admin/config/areas/areaManager.js';
 import './components/admin/config/water-rates/waterRateManager.js';
+import './components/admin/config/puroks/purokManager.js';
 
 Alpine.plugin(collapse);
 
