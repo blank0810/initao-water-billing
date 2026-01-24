@@ -1112,7 +1112,7 @@
             const row = document.createElement('tr');
             row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
 
-            const initials = customer.first_name.charAt(0) + customer.last_name.charAt(0);
+            const initials = customer.cust_first_name.charAt(0) + customer.cust_last_name.charAt(0);
 
             // Check if customer is new (created within last 24 hours)
             const createdDate = new Date(customer.created_at);
