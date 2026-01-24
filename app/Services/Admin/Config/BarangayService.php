@@ -3,6 +3,7 @@
 namespace App\Services\Admin\Config;
 
 use App\Models\Barangay;
+use App\Models\Status;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class BarangayService
@@ -45,5 +46,49 @@ class BarangayService
                 'total' => $paginated->total(),
             ],
         ];
+    }
+
+    public function createBarangay(array $data): Barangay
+    {
+        $data['stat_id'] = Status::getIdByDescription(Status::ACTIVE);
+
+        return Barangay::create($data);
+    }
+
+    public function updateBarangay(int $id, array $data): Barangay
+    {
+        $barangay = Barangay::findOrFail($id);
+        $barangay->update($data);
+
+        return $barangay->fresh();
+    }
+
+    public function deleteBarangay(int $id): void
+    {
+        $barangay = Barangay::findOrFail($id);
+
+        // Check for dependencies
+        $puroksCount = $barangay->puroks()->count();
+        if ($puroksCount > 0) {
+            throw new \DomainException(
+                "Cannot delete barangay '{$barangay->b_desc}' because it has {$puroksCount} associated puroks."
+            );
+        }
+
+        $addressesCount = $barangay->consumerAddresses()->count();
+        if ($addressesCount > 0) {
+            throw new \DomainException(
+                "Cannot delete barangay '{$barangay->b_desc}' because it is used in {$addressesCount} consumer addresses."
+            );
+        }
+
+        $barangay->delete();
+    }
+
+    public function getBarangayDetails(int $id): Barangay
+    {
+        return Barangay::with('status', 'puroks')
+            ->withCount(['puroks', 'consumerAddresses as addresses_count'])
+            ->findOrFail($id);
     }
 }
