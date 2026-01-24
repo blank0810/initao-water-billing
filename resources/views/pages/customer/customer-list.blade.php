@@ -485,6 +485,7 @@
     </div>
 
     @push('scripts')
+    @vite(['resources/js/utils/customer-print.js'])
     <script>
         // ============================================
         // STATE MANAGEMENT
