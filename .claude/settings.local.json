@@ -40,7 +40,11 @@
       "Bash(mysql:*)",
       "Bash(docker-compose exec:*)",
       "Bash(docker compose:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git restore:*)",
+      "Bash(node --check:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)"
     ]
   },
   "enabledMcpjsonServers": [
