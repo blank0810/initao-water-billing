@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Services\Customers\CustomerService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -252,6 +253,26 @@ class CustomerController extends Controller
                 'success' => true,
                 'message' => 'Customer deleted successfully',
             ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get customer statistics for dashboard cards
+     *
+     * @return JsonResponse
+     */
+    public function getStats(): JsonResponse
+    {
+        try {
+            $stats = $this->customerService->getCustomerStats();
+
+            return response()->json($stats);
 
         } catch (\Exception $e) {
             return response()->json([
