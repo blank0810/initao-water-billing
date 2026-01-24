@@ -18,7 +18,6 @@ if (!window.__alpineStarted) {
 // Initialize chart
 document.addEventListener('DOMContentLoaded', () => {
     initializeCharts();
-    // Customer-list specific script was moved to `resources/js/data/customer/customer.js`.
 });
 
 // --- Chart initialization (placeholder) ---
