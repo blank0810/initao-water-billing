@@ -1,0 +1,89 @@
+<x-app-layout>
+    <div x-data="barangayManager()" class="p-6">
+        <!-- Page Header -->
+        <x-ui.admin.config.shared.page-header
+            title="Manage Barangays"
+            subtitle="Create and manage barangays in Initao"
+            :can-create="true"
+            create-label="Add Barangay"
+            @create="openCreateModal()"
+        />
+
+        <!-- Search & Filters -->
+        <x-ui.admin.config.shared.search-filter
+            :statuses="[
+                ['value' => '', 'label' => 'All Statuses'],
+                ['value' => '1', 'label' => 'Active'],
+                ['value' => '2', 'label' => 'Inactive']
+            ]"
+            placeholder="Search by name or code..."
+        />
+
+        <!-- Loading State -->
+        <div x-show="loading" class="text-center py-12">
+            <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+            <p class="mt-4 text-gray-500">Loading barangays...</p>
+        </div>
+
+        <!-- Table -->
+        <div x-show="!loading" class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <x-ui.admin.config.barangay.table />
+        </div>
+
+        <!-- Pagination -->
+        <div x-show="!loading && totalPages > 1" class="mt-4 flex justify-center">
+            <nav class="flex items-center gap-2">
+                <button
+                    @click="goToPage(currentPage - 1)"
+                    :disabled="currentPage === 1"
+                    class="px-3 py-2 rounded-lg border disabled:opacity-50"
+                >
+                    Previous
+                </button>
+
+                <template x-for="page in Array.from({length: totalPages}, (_, i) => i + 1)" :key="page">
+                    <button
+                        @click="goToPage(page)"
+                        :class="page === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'"
+                        class="px-3 py-2 rounded-lg border"
+                        x-text="page"
+                    ></button>
+                </template>
+
+                <button
+                    @click="goToPage(currentPage + 1)"
+                    :disabled="currentPage === totalPages"
+                    class="px-3 py-2 rounded-lg border disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </nav>
+        </div>
+
+        <!-- Modals -->
+        <x-ui.admin.config.barangay.modals.create-barangay />
+        <x-ui.admin.config.barangay.modals.edit-barangay />
+        <x-ui.admin.config.barangay.modals.view-barangay />
+        <x-ui.admin.config.barangay.modals.delete-barangay />
+
+        <!-- Success Notification -->
+        <div x-show="showSuccess"
+             x-transition
+             class="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                <p class="text-green-800" x-text="successMessage"></p>
+            </div>
+        </div>
+
+        <!-- Error Notification -->
+        <div x-show="showError"
+             x-transition
+             class="fixed top-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                <p class="text-red-800" x-text="errorMessage"></p>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
