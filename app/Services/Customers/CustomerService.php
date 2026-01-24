@@ -93,9 +93,6 @@ class CustomerService
             return [
                 'cust_id' => $customer->cust_id,
                 'customer_name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
-                'first_name' => $customer->cust_first_name,
-                'middle_name' => $customer->cust_middle_name,
-                'last_name' => $customer->cust_last_name,
                 'cust_first_name' => $customer->cust_first_name,
                 'cust_middle_name' => $customer->cust_middle_name ?? '',
                 'cust_last_name' => $customer->cust_last_name,
