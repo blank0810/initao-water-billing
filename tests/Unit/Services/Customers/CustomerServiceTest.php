@@ -2,18 +2,18 @@
 
 namespace Tests\Unit\Services\Customers;
 
-use App\Models\Customer;
-use App\Models\Status;
-use App\Models\ConsumerAddress;
 use App\Models\Barangay;
-use App\Models\Purok;
-use App\Models\Town;
+use App\Models\ConsumerAddress;
+use App\Models\Customer;
 use App\Models\Province;
+use App\Models\Purok;
+use App\Models\Status;
+use App\Models\Town;
 use App\Services\Customers\CustomerService;
 use Illuminate\Http\Request;
 
 beforeEach(function () {
-    $this->service = new CustomerService();
+    $this->service = new CustomerService;
 });
 
 test('getCustomerList returns all required fields', function () {
@@ -61,7 +61,7 @@ test('getCustomerList returns all required fields', function () {
         'create_date' => now(),
     ]);
 
-    $request = new Request();
+    $request = new Request;
     $result = $this->service->getCustomerList($request);
 
     expect($result)->toHaveKey('data')
@@ -130,7 +130,7 @@ test('getCustomerList handles empty contact_number and middle_name', function ()
         'create_date' => now(),
     ]);
 
-    $request = new Request();
+    $request = new Request;
     $result = $this->service->getCustomerList($request);
 
     $customerData = $result['data']->firstWhere('cust_id', $customer->cust_id);
@@ -138,4 +138,63 @@ test('getCustomerList handles empty contact_number and middle_name', function ()
     // Verify empty fields return empty strings
     expect($customerData['cust_middle_name'])->toBe('')
         ->and($customerData['contact_number'])->toBe('');
+});
+
+test('getCustomerList includes meter_no and current_bill fields', function () {
+    // Get or create Town and Province
+    $province = Province::firstOrCreate(
+        ['prov_desc' => 'Test Province'],
+        ['stat_id' => Status::getIdByDescription(Status::ACTIVE)]
+    );
+
+    $town = Town::firstOrCreate(
+        ['t_desc' => 'Test Town'],
+        ['prov_id' => $province->prov_id, 'stat_id' => Status::getIdByDescription(Status::ACTIVE)]
+    );
+
+    // Create barangay
+    $barangay = Barangay::factory()->create();
+
+    // Create purok
+    $purok = Purok::create([
+        'p_desc' => 'Test Purok 3',
+        'b_id' => $barangay->b_id,
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+    ]);
+
+    // Create consumer address
+    $address = ConsumerAddress::create([
+        'p_id' => $purok->p_id,
+        'b_id' => $barangay->b_id,
+        't_id' => $town->t_id,
+        'prov_id' => $province->prov_id,
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+    ]);
+
+    // Create a customer
+    $customer = Customer::create([
+        'cust_first_name' => 'MARIA',
+        'cust_middle_name' => 'DELA',
+        'cust_last_name' => 'CRUZ',
+        'contact_number' => '09181234567',
+        'land_mark' => 'NEAR MARKET',
+        'c_type' => 'RESIDENTIAL',
+        'resolution_no' => 'INITAO-MDC-1111111111',
+        'ca_id' => $address->ca_id,
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'create_date' => now(),
+    ]);
+
+    $request = new Request;
+    $result = $this->service->getCustomerList($request);
+
+    $customerData = $result['data']->firstWhere('cust_id', $customer->cust_id);
+
+    // Verify meter_no and current_bill fields are present
+    expect($customerData)->toHaveKey('meter_no')
+        ->and($customerData)->toHaveKey('current_bill');
+
+    // Verify default values when no meter/bill exists
+    expect($customerData['meter_no'])->toBe('N/A')
+        ->and($customerData['current_bill'])->toBe('₱0.00');
 });

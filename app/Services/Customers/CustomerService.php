@@ -20,7 +20,15 @@ class CustomerService
      */
     public function getCustomerList(Request $request): array
     {
-        $query = Customer::with(['status', 'address.purok', 'address.barangay', 'address.town', 'address.province']);
+        $query = Customer::with([
+            'status',
+            'address.purok',
+            'address.barangay',
+            'address.town',
+            'address.province',
+            'serviceConnections.meterAssignment.meter',
+            'customerLedgerEntries',
+        ]);
 
         // Apply search filter (support both DataTables and direct search)
         $search = $request->input('search');
@@ -105,6 +113,8 @@ class CustomerService
                 'status_badge' => $this->getStatusBadge($statusDescription),
                 'resolution_no' => $customer->resolution_no ?? 'N/A',
                 'c_type' => $customer->c_type ?? 'N/A',
+                'meter_no' => $this->getCustomerMeterNumber($customer),
+                'current_bill' => $this->getCustomerCurrentBill($customer),
             ];
         });
 
@@ -153,6 +163,56 @@ class CustomerService
         }
 
         return ! empty($parts) ? implode(', ', $parts) : 'N/A';
+    }
+
+    /**
+     * Get customer's meter number from active service connection
+     */
+    private function getCustomerMeterNumber(Customer $customer): string
+    {
+        // Find the customer's active ServiceConnection
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        $activeConnection = $customer->serviceConnections
+            ->where('stat_id', $activeStatusId)
+            ->first();
+
+        if (! $activeConnection) {
+            return 'N/A';
+        }
+
+        // Get the current meter assignment
+        $meterAssignment = $activeConnection->meterAssignment;
+
+        if (! $meterAssignment || ! $meterAssignment->meter) {
+            return 'N/A';
+        }
+
+        // Return meter serial number
+        return $meterAssignment->meter->mtr_serial ?? 'N/A';
+    }
+
+    /**
+     * Get customer's current unpaid bill amount
+     */
+    private function getCustomerCurrentBill(Customer $customer): string
+    {
+        // Calculate total unpaid amount from CustomerLedger
+        // Debit/Credit accounting: unpaid balance = sum(debits) - sum(credits)
+        // where debits are from BILL entries and credits are from PAYMENT entries
+
+        $totalDebits = $customer->customerLedgerEntries
+            ->where('source_type', 'BILL')
+            ->sum('debit');
+
+        $totalCredits = $customer->customerLedgerEntries
+            ->where('source_type', 'PAYMENT')
+            ->sum('credit');
+
+        $unpaidBalance = max(0, $totalDebits - $totalCredits);
+
+        // Format as Philippine Peso
+        return '₱'.number_format($unpaidBalance, 2, '.', ',');
     }
 
     /**
