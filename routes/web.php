@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\Config\AreaController;
 use App\Http\Controllers\Admin\Config\BarangayController;
+use App\Http\Controllers\Admin\Config\WaterRateController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\RolePermissionController;
@@ -514,6 +515,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/areas/{id}', [AreaController::class, 'show'])->name('config.areas.show');
         Route::put('/areas/{id}', [AreaController::class, 'update'])->name('config.areas.update');
         Route::delete('/areas/{id}', [AreaController::class, 'destroy'])->name('config.areas.destroy');
+    });
+
+    // -------------------------------------------------------------------------
+    // Billing Configuration - Water Rate Management
+    // -------------------------------------------------------------------------
+    Route::middleware(['permission:config.billing.manage'])->prefix('config')->group(function () {
+        Route::get('/water-rates', [WaterRateController::class, 'index'])->name('config.water-rates.index');
+        Route::get('/water-rates/account-types', [WaterRateController::class, 'getAccountTypes'])->name('config.water-rates.account-types');
+        Route::post('/water-rates', [WaterRateController::class, 'store'])->name('config.water-rates.store');
+        Route::put('/water-rates/{id}', [WaterRateController::class, 'update'])->name('config.water-rates.update');
+        Route::delete('/water-rates/{id}', [WaterRateController::class, 'destroy'])->name('config.water-rates.destroy');
     });
 
     // -------------------------------------------------------------------------

@@ -134,4 +134,15 @@ class WaterRateService
         return WaterRate::with(['accountType', 'status', 'period'])
             ->findOrFail($rateId);
     }
+
+    /**
+     * Get all account types.
+     */
+    public function getAccountTypes(): array
+    {
+        return \App\Models\AccountType::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->orderBy('at_desc')
+            ->get(['at_id', 'at_desc'])
+            ->toArray();
+    }
 }
