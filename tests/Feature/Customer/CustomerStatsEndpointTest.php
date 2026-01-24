@@ -76,3 +76,38 @@ test('customer stats endpoint returns non-negative values', function () {
     expect($data['total_current_bill'])->toBeGreaterThanOrEqual(0);
     expect($data['overdue_count'])->toBeGreaterThanOrEqual(0);
 });
+
+test('customer stats endpoint returns zero values when no data exists', function () {
+    $user = User::factory()->create();
+    $permission = Permission::firstOrCreate(['name' => 'customers.view']);
+    $user->givePermissionTo($permission);
+
+    $response = $this->actingAs($user)
+        ->getJson('/customer/stats');
+
+    $response->assertStatus(200);
+
+    $data = $response->json();
+
+    expect($data['total_customers'])->toBe(0);
+    expect($data['residential_count'])->toBe(0);
+    expect($data['total_current_bill'])->toBe('0.00');
+    expect($data['overdue_count'])->toBe(0);
+});
+
+test('customer stats endpoint formats total_current_bill with decimal places', function () {
+    $user = User::factory()->create();
+    $permission = Permission::firstOrCreate(['name' => 'customers.view']);
+    $user->givePermissionTo($permission);
+
+    $response = $this->actingAs($user)
+        ->getJson('/customer/stats');
+
+    $response->assertStatus(200);
+
+    $data = $response->json();
+
+    // Should be a string with 2 decimal places
+    expect($data['total_current_bill'])->toBeString();
+    expect($data['total_current_bill'])->toMatch('/^\d+\.\d{2}$/');
+});

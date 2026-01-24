@@ -367,3 +367,154 @@ test('customer list per_page parameter controls items per page', function () {
         ->and($response->json('total'))->toBe(20)
         ->and($response->json('last_page'))->toBe(4);
 });
+
+test('customer list includes meter_no field in response', function () {
+    $customer = Customer::factory()->create();
+
+    $response = $this->getJson(route('customer.list'));
+
+    $response->assertOk();
+    $data = $response->json('data');
+
+    expect($data[0])->toHaveKey('meter_no')
+        ->and($data[0]['meter_no'])->toBeString();
+});
+
+test('customer list includes current_bill field in response', function () {
+    $customer = Customer::factory()->create();
+
+    $response = $this->getJson(route('customer.list'));
+
+    $response->assertOk();
+    $data = $response->json('data');
+
+    expect($data[0])->toHaveKey('current_bill')
+        ->and($data[0]['current_bill'])->toBeString()
+        ->and($data[0]['current_bill'])->toContain('₱');
+});
+
+test('customer list shows meter number for customer with active meter', function () {
+    $customer = Customer::factory()->create();
+
+    // Create account_type
+    $accountTypeId = \DB::table('account_type')->insertGetId([
+        'at_desc' => 'RESIDENTIAL',
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    // Create active service connection
+    $serviceConnection = \DB::table('ServiceConnection')->insertGetId([
+        'customer_id' => $customer->cust_id,
+        'address_id' => $customer->ca_id,
+        'account_no' => 'ACC-TEST-001',
+        'account_type_id' => $accountTypeId,
+        'started_at' => now(),
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    // Create meter
+    $meter = \DB::table('Meter')->insertGetId([
+        'mtr_serial' => 'MTR-FEATURE-001',
+        'mtr_brand' => 'Test Brand',
+        'mtr_size' => '1/2"',
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    // Create meter assignment
+    \DB::table('MeterAssignment')->insert([
+        'connection_id' => $serviceConnection,
+        'meter_id' => $meter,
+        'assignment_date' => now(),
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $response = $this->getJson(route('customer.list'));
+
+    $response->assertOk();
+    $data = $response->json('data');
+
+    expect($data[0]['meter_no'])->toBe('MTR-FEATURE-001');
+});
+
+test('customer list shows unpaid bill amount correctly', function () {
+    $customer = Customer::factory()->create();
+
+    // Create unpaid bills in CustomerLedger
+    \DB::table('CustomerLedger')->insert([
+        [
+            'customer_id' => $customer->cust_id,
+            'source_type' => 'BILL',
+            'source_id' => 1,
+            'txn_date' => now(),
+            'debit' => 1250.50,
+            'credit' => 0,
+            'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'customer_id' => $customer->cust_id,
+            'source_type' => 'BILL',
+            'source_id' => 2,
+            'txn_date' => now(),
+            'debit' => 350.00,
+            'credit' => 0,
+            'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+    ]);
+
+    // Create partial payment
+    \DB::table('CustomerLedger')->insert([
+        'customer_id' => $customer->cust_id,
+        'source_type' => 'PAYMENT',
+        'source_id' => 1,
+        'txn_date' => now(),
+        'debit' => 0,
+        'credit' => 500.00,
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $response = $this->getJson(route('customer.list'));
+
+    $response->assertOk();
+    $data = $response->json('data');
+
+    // Total debits: 1250.50 + 350.00 = 1600.50
+    // Total credits: 500.00
+    // Unpaid: 1600.50 - 500.00 = 1100.50
+    expect($data[0]['current_bill'])->toBe('₱1,100.50');
+});
+
+test('customer list shows N/A meter_no when customer has no service connection', function () {
+    $customer = Customer::factory()->create();
+
+    $response = $this->getJson(route('customer.list'));
+
+    $response->assertOk();
+    $data = $response->json('data');
+
+    expect($data[0]['meter_no'])->toBe('N/A');
+});
+
+test('customer list shows zero balance when no bills exist', function () {
+    $customer = Customer::factory()->create();
+
+    $response = $this->getJson(route('customer.list'));
+
+    $response->assertOk();
+    $data = $response->json('data');
+
+    expect($data[0]['current_bill'])->toBe('₱0.00');
+});

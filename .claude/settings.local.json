@@ -36,7 +36,11 @@
       "Bash(git stash:*)",
       "Skill(superpowers:writing-plans)",
       "Bash(find:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(mysql:*)",
+      "Bash(docker-compose exec:*)",
+      "Bash(docker compose:*)",
+      "Bash(curl:*)"
     ]
   },
   "enabledMcpjsonServers": [
