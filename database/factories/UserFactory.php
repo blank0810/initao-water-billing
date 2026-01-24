@@ -31,7 +31,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'u_type' => 3, // Default to ADMIN type
-            'stat_id' => 2, // Default to ACTIVE status
+            'stat_id' => 1, // Default to ACTIVE status
         ];
     }
 

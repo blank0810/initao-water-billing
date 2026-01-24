@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\Config\BarangayController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\RolePermissionController;
@@ -493,6 +494,17 @@ Route::middleware('auth')->group(function () {
         // Service Connections
         Route::get('/service-connections/status/{status}', [ServiceConnectionController::class, 'getByStatus'])->name('service-connections.by-status');
         Route::get('/service-connections/customer/{customerId}', [ServiceConnectionController::class, 'customerConnections'])->name('service-connections.customer');
+    });
+
+    // -------------------------------------------------------------------------
+    // Geographic Configuration - Barangay Management
+    // -------------------------------------------------------------------------
+    Route::middleware(['permission:config.geographic.manage'])->prefix('config')->group(function () {
+        Route::get('/barangays', [BarangayController::class, 'index'])->name('config.barangays.index');
+        Route::post('/barangays', [BarangayController::class, 'store'])->name('config.barangays.store');
+        Route::get('/barangays/{id}', [BarangayController::class, 'show'])->name('config.barangays.show');
+        Route::put('/barangays/{id}', [BarangayController::class, 'update'])->name('config.barangays.update');
+        Route::delete('/barangays/{id}', [BarangayController::class, 'destroy'])->name('config.barangays.destroy');
     });
 
     // -------------------------------------------------------------------------
