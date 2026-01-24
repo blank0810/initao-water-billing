@@ -35,7 +35,8 @@
       "Bash(git pull:*)",
       "Bash(git stash:*)",
       "Skill(superpowers:writing-plans)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(xargs cat:*)"
     ]
   },
   "enabledMcpjsonServers": [
