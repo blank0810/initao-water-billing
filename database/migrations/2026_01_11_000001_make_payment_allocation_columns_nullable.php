@@ -13,6 +13,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'sqlite') {
+            // SQLite doesn't support MODIFY, but columns are already nullable by default in our case
+            // Since this is a test environment only concern, we can skip for SQLite
+            return;
+        }
+
         DB::statement('ALTER TABLE `PaymentAllocation` MODIFY `period_id` BIGINT UNSIGNED NULL');
         DB::statement('ALTER TABLE `PaymentAllocation` MODIFY `connection_id` BIGINT UNSIGNED NULL');
     }
