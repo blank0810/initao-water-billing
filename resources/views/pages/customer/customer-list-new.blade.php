@@ -51,7 +51,7 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody id="customer-list-tbody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody id="customerTableBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {{-- Loading State - Will be replaced by JavaScript --}}
                     <tr>
                         <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
