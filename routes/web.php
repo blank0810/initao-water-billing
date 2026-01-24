@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\Config\AccountTypeController;
+use App\Http\Controllers\Admin\Config\ChargeItemController;
 use App\Http\Controllers\Admin\Config\AreaController;
 use App\Http\Controllers\Admin\Config\BarangayController;
 use App\Http\Controllers\Admin\Config\PurokController;
@@ -543,6 +544,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/account-types/{id}', [AccountTypeController::class, 'show'])->name('config.account-types.show');
         Route::put('/account-types/{id}', [AccountTypeController::class, 'update'])->name('config.account-types.update');
         Route::delete('/account-types/{id}', [AccountTypeController::class, 'destroy'])->name('config.account-types.destroy');
+
+        // Charge Items (Application Fee Templates)
+        Route::get('/charge-items', [ChargeItemController::class, 'index'])->name('config.charge-items.index');
+        Route::post('/charge-items', [ChargeItemController::class, 'store'])->name('config.charge-items.store');
+        Route::get('/charge-items/{id}', [ChargeItemController::class, 'show'])->name('config.charge-items.show');
+        Route::put('/charge-items/{id}', [ChargeItemController::class, 'update'])->name('config.charge-items.update');
+        Route::delete('/charge-items/{id}', [ChargeItemController::class, 'destroy'])->name('config.charge-items.destroy');
     });
 
     // -------------------------------------------------------------------------
