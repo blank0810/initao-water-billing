@@ -76,26 +76,6 @@ $user = Auth::user() ?? (object) [
                     <i class="fas fa-list w-4 text-xs mr-2.5"></i>
                     <span>User List</span>
                 </a>
-                @can('settings.manage')
-                <a href="{{ route('admin.roles.index') }}" @click="setActiveMenu('user-roles')"
-                    :class="activeMenu === 'user-roles' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-user-shield w-4 text-xs mr-2.5"></i>
-                    <span>Roles</span>
-                </a>
-                <a href="{{ route('admin.permissions.index') }}" @click="setActiveMenu('user-permissions')"
-                    :class="activeMenu === 'user-permissions' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-key w-4 text-xs mr-2.5"></i>
-                    <span>Permissions</span>
-                </a>
-                <a href="{{ route('admin.role-permissions.matrix') }}" @click="setActiveMenu('user-matrix')"
-                    :class="activeMenu === 'user-matrix' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-th w-4 text-xs mr-2.5"></i>
-                    <span>Permission Matrix</span>
-                </a>
-                @endcan
             </div>
         </div>
         @endcan
@@ -265,6 +245,104 @@ $user = Auth::user() ?? (object) [
         </a>
         @endcan
 
+        <!-- Admin Configuration -->
+        @canany(['config.geographic.manage', 'config.billing.manage', 'config.access.manage'])
+        <div class="space-y-1">
+            <button @click="toggleSubmenu('adminConfig')"
+                :class="(activeMenu.startsWith('config-') || openSubmenus.adminConfig) ? 'bg-blue-600 dark:bg-blue-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
+                <div class="flex items-center min-w-0">
+                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                        :class="(activeMenu.startsWith('config-') || openSubmenus.adminConfig) ? 'bg-blue-500' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                        <i class="fas fa-cogs text-sm" :class="(activeMenu.startsWith('config-') || openSubmenus.adminConfig) ? 'text-white' : 'text-gray-600 dark:text-gray-400'"></i>
+                    </div>
+                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Admin Configuration</span>
+                </div>
+                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.adminConfig }" x-show="sidebarOpen" x-transition></i>
+            </button>
+
+            <div x-show="openSubmenus.adminConfig && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
+
+                <!-- Geographic Submenu -->
+                @can('config.geographic.manage')
+                <div class="space-y-1">
+                    <button @click="toggleSubmenu('geographic')"
+                        :class="(activeMenu.startsWith('config-geographic-') || openSubmenus.geographic) ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        class="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marked-alt w-4 text-xs mr-2.5"></i>
+                            <span>Geographic</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.geographic }"></i>
+                    </button>
+
+                    <div x-show="openSubmenus.geographic" x-collapse class="ml-6 space-y-1 mt-1">
+                        <a href="{{ route('config.barangays.index') }}" @click="setActiveMenu('config-geographic-barangays')"
+                            :class="activeMenu === 'config-geographic-barangays' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-map-marker-alt w-4 text-xs mr-2.5"></i>
+                            <span>Barangays</span>
+                        </a>
+                        <a href="{{ route('config.areas.index') }}" @click="setActiveMenu('config-geographic-areas')"
+                            :class="activeMenu === 'config-geographic-areas' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-layer-group w-4 text-xs mr-2.5"></i>
+                            <span>Areas</span>
+                        </a>
+                    </div>
+                </div>
+                @endcan
+
+                <!-- Water Rates -->
+                @can('config.billing.manage')
+                <a href="{{ route('config.water-rates.index') }}" @click="setActiveMenu('config-water-rates')"
+                    :class="activeMenu === 'config-water-rates' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                    <i class="fas fa-dollar-sign w-4 text-xs mr-2.5"></i>
+                    <span>Water Rates</span>
+                </a>
+                @endcan
+
+                <!-- Access Control Submenu -->
+                @can('config.access.manage')
+                <div class="space-y-1">
+                    <button @click="toggleSubmenu('accessControl')"
+                        :class="(activeMenu.startsWith('config-access-') || openSubmenus.accessControl) ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        class="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-shield-alt w-4 text-xs mr-2.5"></i>
+                            <span>Access Control</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.accessControl }"></i>
+                    </button>
+
+                    <div x-show="openSubmenus.accessControl" x-collapse class="ml-6 space-y-1 mt-1">
+                        <a href="{{ route('admin.roles.index') }}" @click="setActiveMenu('config-access-roles')"
+                            :class="activeMenu === 'config-access-roles' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-user-shield w-4 text-xs mr-2.5"></i>
+                            <span>Roles</span>
+                        </a>
+                        <a href="{{ route('admin.permissions.index') }}" @click="setActiveMenu('config-access-permissions')"
+                            :class="activeMenu === 'config-access-permissions' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-key w-4 text-xs mr-2.5"></i>
+                            <span>Permissions</span>
+                        </a>
+                        <a href="{{ route('admin.role-permissions.matrix') }}" @click="setActiveMenu('config-access-matrix')"
+                            :class="activeMenu === 'config-access-matrix' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-th w-4 text-xs mr-2.5"></i>
+                            <span>Permission Matrix</span>
+                        </a>
+                    </div>
+                </div>
+                @endcan
+
+            </div>
+        </div>
+        @endcanany
+
         <!-- Activity Log - Super Admin Only -->
         @role('super_admin')
         <a href="{{ route('admin.activity-log') }}" @click="setActiveMenu('activity-log')"
@@ -308,7 +386,10 @@ $user = Auth::user() ?? (object) [
             openSubmenus: {
                 userManagement: {{ session('active_menu') && str_starts_with(session('active_menu'), 'user-') ? 'true' : 'false' }},
                 customerManagement: {{ session('active_menu') && (str_starts_with(session('active_menu'), 'customer-')) ? 'true' : 'false' }},
-                connectionManagement: {{ session('active_menu') && str_starts_with(session('active_menu'), 'connection-') ? 'true' : 'false' }}
+                connectionManagement: {{ session('active_menu') && str_starts_with(session('active_menu'), 'connection-') ? 'true' : 'false' }},
+                adminConfig: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-') ? 'true' : 'false' }},
+                geographic: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-geographic-') ? 'true' : 'false' }},
+                accessControl: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-access-') ? 'true' : 'false' }}
             },
 
             init() {
@@ -336,9 +417,12 @@ $user = Auth::user() ?? (object) [
                     '/rate/management': 'rate-management',
                     '/ledger/management': 'ledger-management',
                     '/analytics': 'analytics',
-                    '/admin/roles': 'user-roles',
-                    '/admin/permissions': 'user-permissions',
-                    '/admin/role-permissions': 'user-matrix',
+                    '/config/barangays': 'config-geographic-barangays',
+                    '/config/areas': 'config-geographic-areas',
+                    '/config/water-rates': 'config-water-rates',
+                    '/admin/roles': 'config-access-roles',
+                    '/admin/permissions': 'config-access-permissions',
+                    '/admin/role-permissions': 'config-access-matrix',
                     '/admin/activity-log': 'activity-log'
                 };
 
@@ -356,6 +440,13 @@ $user = Auth::user() ?? (object) [
                     this.openSubmenus.customerManagement = true;
                 } else if (this.activeMenu.startsWith('connection-')) {
                     this.openSubmenus.connectionManagement = true;
+                } else if (this.activeMenu.startsWith('config-')) {
+                    this.openSubmenus.adminConfig = true;
+                    if (this.activeMenu.startsWith('config-geographic-')) {
+                        this.openSubmenus.geographic = true;
+                    } else if (this.activeMenu.startsWith('config-access-')) {
+                        this.openSubmenus.accessControl = true;
+                    }
                 }
 
                 if (window.appState) {
@@ -395,6 +486,9 @@ $user = Auth::user() ?? (object) [
                 this.openSubmenus.userManagement = false;
                 this.openSubmenus.customerManagement = false;
                 this.openSubmenus.connectionManagement = false;
+                this.openSubmenus.adminConfig = false;
+                this.openSubmenus.geographic = false;
+                this.openSubmenus.accessControl = false;
                 // Open the appropriate submenu
                 if (menu.startsWith('user-')) {
                     this.openSubmenus.userManagement = true;
@@ -402,6 +496,13 @@ $user = Auth::user() ?? (object) [
                     this.openSubmenus.customerManagement = true;
                 } else if (menu.startsWith('connection-')) {
                     this.openSubmenus.connectionManagement = true;
+                } else if (menu.startsWith('config-')) {
+                    this.openSubmenus.adminConfig = true;
+                    if (menu.startsWith('config-geographic-')) {
+                        this.openSubmenus.geographic = true;
+                    } else if (menu.startsWith('config-access-')) {
+                        this.openSubmenus.accessControl = true;
+                    }
                 }
             },
 
