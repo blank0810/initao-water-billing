@@ -3,6 +3,9 @@ import './theme.js';
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
 
+// Admin Config Components
+import './components/admin/config/barangays/barangayManager.js';
+
 Alpine.plugin(collapse);
 
 window.Alpine = Alpine;
