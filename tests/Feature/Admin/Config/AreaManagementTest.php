@@ -61,7 +61,7 @@ test('admin can create new area', function () {
 
     $this->assertDatabaseHas('area', [
         'a_desc' => 'Downtown Area',
-        'stat_id' => 1, // Active status
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
     ]);
 });
 
