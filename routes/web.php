@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\Config\AccountTypeController;
 use App\Http\Controllers\Admin\Config\AreaController;
 use App\Http\Controllers\Admin\Config\BarangayController;
 use App\Http\Controllers\Admin\Config\PurokController;
@@ -535,6 +536,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/water-rates', [WaterRateController::class, 'store'])->name('config.water-rates.store');
         Route::put('/water-rates/{id}', [WaterRateController::class, 'update'])->name('config.water-rates.update');
         Route::delete('/water-rates/{id}', [WaterRateController::class, 'destroy'])->name('config.water-rates.destroy');
+
+        // Account Types
+        Route::get('/account-types', [AccountTypeController::class, 'index'])->name('config.account-types.index');
+        Route::post('/account-types', [AccountTypeController::class, 'store'])->name('config.account-types.store');
+        Route::get('/account-types/{id}', [AccountTypeController::class, 'show'])->name('config.account-types.show');
+        Route::put('/account-types/{id}', [AccountTypeController::class, 'update'])->name('config.account-types.update');
+        Route::delete('/account-types/{id}', [AccountTypeController::class, 'destroy'])->name('config.account-types.destroy');
     });
 
     // -------------------------------------------------------------------------
