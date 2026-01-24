@@ -45,7 +45,7 @@ class CustomerService
         $statusFilter = $request->input('status_filter') ?? $request->input('status');
         if (! empty($statusFilter)) {
             $query->whereHas('status', function (Builder $q) use ($statusFilter) {
-                $q->where('stat_description', $statusFilter);
+                $q->where('stat_desc', $statusFilter);
             });
         }
 
