@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\Config\AreaController;
 use App\Http\Controllers\Admin\Config\BarangayController;
+use App\Http\Controllers\Admin\Config\PurokController;
 use App\Http\Controllers\Admin\Config\WaterRateController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -516,6 +517,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/areas/{id}', [AreaController::class, 'show'])->name('config.areas.show');
         Route::put('/areas/{id}', [AreaController::class, 'update'])->name('config.areas.update');
         Route::delete('/areas/{id}', [AreaController::class, 'destroy'])->name('config.areas.destroy');
+
+        // Puroks
+        Route::get('/puroks', [PurokController::class, 'index'])->name('config.puroks.index');
+        Route::post('/puroks', [PurokController::class, 'store'])->name('config.puroks.store');
+        Route::get('/puroks/{id}', [PurokController::class, 'show'])->name('config.puroks.show');
+        Route::put('/puroks/{id}', [PurokController::class, 'update'])->name('config.puroks.update');
+        Route::delete('/puroks/{id}', [PurokController::class, 'destroy'])->name('config.puroks.destroy');
     });
 
     // -------------------------------------------------------------------------
