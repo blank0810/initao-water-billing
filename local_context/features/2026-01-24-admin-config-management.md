@@ -12,134 +12,9 @@
 
 ## Phase 1: Database & Permissions Setup
 
-### Task 1.1: Create Barangay Code Column Migration
+> **Note:** The barangay table already has all required columns (`b_id`, `b_desc`, `b_code`, `stat_id`, `created_at`, `updated_at`) from existing migrations. No new migrations needed!
 
-**Files:**
-- Create: `database/migrations/2026_01_24_000001_ensure_barangay_code_column.php`
-
-**Step 1: Create migration file**
-
-```bash
-docker compose exec water_billing_app php artisan make:migration ensure_barangay_code_column
-```
-
-**Step 2: Write migration code**
-
-```php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::table('barangay', function (Blueprint $table) {
-            if (!Schema::hasColumn('barangay', 'b_code')) {
-                $table->string('b_code', 20)->nullable()->after('b_desc');
-                $table->unique('b_code');
-            }
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('barangay', function (Blueprint $table) {
-            if (Schema::hasColumn('barangay', 'b_code')) {
-                $table->dropUnique(['b_code']);
-                $table->dropColumn('b_code');
-            }
-        });
-    }
-};
-```
-
-**Step 3: Commit**
-
-```bash
-git add database/migrations/2026_01_24_000001_ensure_barangay_code_column.php
-git commit -m "feat(config): add barangay code column migration"
-```
-
----
-
-### Task 1.2: Create Barangay Timestamps Migration
-
-**Files:**
-- Create: `database/migrations/2026_01_24_000002_add_timestamps_to_barangay.php`
-
-**Step 1: Create migration file**
-
-```bash
-docker compose exec water_billing_app php artisan make:migration add_timestamps_to_barangay
-```
-
-**Step 2: Write migration code**
-
-```php
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::table('barangay', function (Blueprint $table) {
-            if (!Schema::hasColumn('barangay', 'created_at')) {
-                $table->timestamps();
-            }
-        });
-
-        // Update existing records to have timestamps
-        DB::table('barangay')
-            ->whereNull('created_at')
-            ->update([
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-    }
-
-    public function down(): void
-    {
-        Schema::table('barangay', function (Blueprint $table) {
-            $table->dropTimestamps();
-        });
-    }
-};
-```
-
-**Step 3: Run migrations**
-
-```bash
-docker compose exec water_billing_app php artisan migrate
-```
-
-Expected: "Migration complete" with 2 new migrations run
-
-**Step 4: Verify migrations**
-
-```bash
-docker compose exec water_billing_app php artisan migrate:status
-```
-
-Expected: Both migrations shown as "Ran"
-
-**Step 5: Commit**
-
-```bash
-git add database/migrations/2026_01_24_000002_add_timestamps_to_barangay.php
-git commit -m "feat(config): add timestamps to barangay table"
-```
-
----
-
-### Task 1.3: Update Permission Seeder
+### Task 1.1: Update Permission Seeder
 
 **Files:**
 - Modify: `database/seeders/PermissionSeeder.php`
@@ -192,7 +67,7 @@ git commit -m "feat(config): add configuration management permissions"
 
 ---
 
-### Task 1.4: Update Role Permission Seeder
+### Task 1.2: Update Role Permission Seeder
 
 **Files:**
 - Modify: `database/seeders/RolePermissionSeeder.php`
