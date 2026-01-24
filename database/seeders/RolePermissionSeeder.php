@@ -27,6 +27,7 @@ class RolePermissionSeeder extends Seeder
                 Permission::METERS_VIEW, Permission::METERS_READ, Permission::METERS_MANAGE,
                 Permission::REPORTS_VIEW, Permission::REPORTS_EXPORT,
                 Permission::SETTINGS_MANAGE,
+                'config.geographic.manage', 'config.billing.manage',
             ],
 
             Role::BILLING_OFFICER => [
