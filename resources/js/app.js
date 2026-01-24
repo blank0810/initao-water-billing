@@ -8,6 +8,7 @@ import './components/admin/config/barangays/barangayManager.js';
 import './components/admin/config/areas/areaManager.js';
 import './components/admin/config/water-rates/waterRateManager.js';
 import './components/admin/config/puroks/purokManager.js';
+import './components/admin/config/account-types/accountTypeManager.js';
 
 Alpine.plugin(collapse);
 
