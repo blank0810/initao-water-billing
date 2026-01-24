@@ -5,6 +5,7 @@ import collapse from '@alpinejs/collapse';
 
 // Admin Config Components
 import './components/admin/config/barangays/barangayManager.js';
+import './components/admin/config/areas/areaManager.js';
 
 Alpine.plugin(collapse);
 
