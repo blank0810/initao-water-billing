@@ -48,7 +48,7 @@ export default function chargeItemManager() {
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
                     },
                     body: JSON.stringify(this.form),
                 });
@@ -56,23 +56,30 @@ export default function chargeItemManager() {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    if (data.errors) {
-                        this.errors = data.errors;
+                    if (response.status === 422) {
+                        this.errors = data.errors || {};
+                        throw new Error(data.message || 'Validation failed');
                     }
                     throw new Error(data.message || 'Failed to create charge item');
                 }
 
-                this.showNotification('Charge item created successfully', 'success');
+                this.showSuccessNotification('Charge item created successfully');
                 this.closeAllModals();
                 await this.fetchItems();
             } catch (error) {
                 console.error('Failed to create charge item:', error);
-                this.showNotification(error.message, 'error');
+                this.showErrorNotification(error.message || 'Failed to create charge item');
             }
         },
 
         async updateChargeItem() {
             this.errors = {};
+
+            if (!this.selectedItem || !this.selectedItem.charge_item_id) {
+                console.error('No charge item selected for update');
+                this.showErrorNotification('No charge item selected for update');
+                return;
+            }
 
             try {
                 const response = await fetch(`${this.apiUrl}/${this.selectedItem.charge_item_id}`, {
@@ -80,7 +87,7 @@ export default function chargeItemManager() {
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
                     },
                     body: JSON.stringify(this.form),
                 });
@@ -88,28 +95,35 @@ export default function chargeItemManager() {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    if (data.errors) {
-                        this.errors = data.errors;
+                    if (response.status === 422) {
+                        this.errors = data.errors || {};
+                        throw new Error(data.message || 'Validation failed');
                     }
                     throw new Error(data.message || 'Failed to update charge item');
                 }
 
-                this.showNotification('Charge item updated successfully', 'success');
+                this.showSuccessNotification('Charge item updated successfully');
                 this.closeAllModals();
                 await this.fetchItems();
             } catch (error) {
                 console.error('Failed to update charge item:', error);
-                this.showNotification(error.message, 'error');
+                this.showErrorNotification(error.message || 'Failed to update charge item');
             }
         },
 
         async deleteChargeItem() {
+            if (!this.selectedItem || !this.selectedItem.charge_item_id) {
+                console.error('No charge item selected for deletion');
+                this.showErrorNotification('No charge item selected for deletion');
+                return;
+            }
+
             try {
                 const response = await fetch(`${this.apiUrl}/${this.selectedItem.charge_item_id}`, {
                     method: 'DELETE',
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-CSRF-TOKEN': this.getCsrfToken(),
                     },
                 });
 
@@ -119,12 +133,12 @@ export default function chargeItemManager() {
                     throw new Error(data.message || 'Failed to delete charge item');
                 }
 
-                this.showNotification('Charge item deleted successfully', 'success');
+                this.showSuccessNotification('Charge item deleted successfully');
                 this.closeAllModals();
                 await this.fetchItems();
             } catch (error) {
                 console.error('Failed to delete charge item:', error);
-                this.showNotification(error.message, 'error');
+                this.showErrorNotification(error.message || 'Failed to delete charge item');
             }
         },
     };

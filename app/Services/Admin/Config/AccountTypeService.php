@@ -23,7 +23,9 @@ class AccountTypeService
         }
 
         $perPage = $filters['per_page'] ?? 15;
-        $paginated = $query->orderBy('at_desc')->paginate($perPage);
+        $paginated = $query->withCount('serviceConnections as connections_count')
+            ->orderBy('at_desc')
+            ->paginate($perPage);
 
         return [
             'data' => $paginated->items(),

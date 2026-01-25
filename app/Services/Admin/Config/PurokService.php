@@ -9,17 +9,12 @@ class PurokService
 {
     public function getAllPuroks(array $filters): array
     {
-        $query = Purok::query()->with(['status', 'barangay']);
+        $query = Purok::query()->with('status');
 
         // Search filter
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where('p_desc', 'like', "%{$search}%");
-        }
-
-        // Barangay filter
-        if (!empty($filters['barangay_id'])) {
-            $query->where('b_id', $filters['barangay_id']);
         }
 
         // Status filter
@@ -28,7 +23,7 @@ class PurokService
         }
 
         $perPage = $filters['per_page'] ?? 15;
-        $paginated = $query->orderBy('b_id')->orderBy('p_desc')->paginate($perPage);
+        $paginated = $query->orderBy('p_desc')->paginate($perPage);
 
         return [
             'data' => $paginated->items(),
@@ -81,7 +76,7 @@ class PurokService
 
     public function getPurokDetails(int $id): Purok
     {
-        return Purok::with(['status', 'barangay'])
+        return Purok::with('status')
             ->withCount(['consumerAddresses as addresses_count'])
             ->findOrFail($id);
     }

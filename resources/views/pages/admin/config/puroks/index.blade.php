@@ -6,7 +6,6 @@
             subtitle="Configure sub-barangay areas for address management"
             :can-create="true"
             create-label="Add Purok"
-            @create="openCreateModal()"
         />
 
         <!-- Filters -->
@@ -25,23 +24,6 @@
                 />
             </div>
 
-            <!-- Barangay Filter -->
-            <div class="w-64">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Barangay
-                </label>
-                <select
-                    x-model="barangayFilter"
-                    @change="fetchItems()"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                    <option value="">All Barangays</option>
-                    <template x-for="barangay in barangays" :key="barangay.b_id">
-                        <option :value="barangay.b_id" x-text="barangay.b_desc"></option>
-                    </template>
-                </select>
-            </div>
-
             <!-- Status Filter -->
             <div class="w-48">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -53,8 +35,8 @@
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                     <option value="">All Status</option>
-                    <option value="1">Active</option>
-                    <option value="2">Inactive</option>
+                    <option value="2">Active</option>
+                    <option value="3">Inactive</option>
                 </select>
             </div>
         </div>
@@ -77,5 +59,25 @@
         <x-ui.admin.config.purok.modals.edit-purok />
         <x-ui.admin.config.purok.modals.view-purok />
         <x-ui.admin.config.purok.modals.delete-purok />
+
+        <!-- Success Notification -->
+        <div x-show="showSuccess"
+             x-transition
+             class="fixed top-4 right-4 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                <p class="text-green-800" x-text="successMessage"></p>
+            </div>
+        </div>
+
+        <!-- Error Notification -->
+        <div x-show="showError"
+             x-transition
+             class="fixed top-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                <p class="text-red-800" x-text="errorMessage"></p>
+            </div>
+        </div>
     </div>
 </x-app-layout>

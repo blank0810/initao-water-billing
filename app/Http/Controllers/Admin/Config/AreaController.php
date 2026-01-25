@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\Config\StoreAreaRequest;
 use App\Http\Requests\Admin\Config\UpdateAreaRequest;
 use App\Services\Admin\Config\AreaService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -16,8 +17,35 @@ class AreaController extends Controller
         private AreaService $areaService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View|JsonResponse
     {
+        // If JSON is requested, return data for AJAX requests
+        if ($request->wantsJson()) {
+            try {
+                $filters = [
+                    'search' => $request->input('search', ''),
+                    'status' => $request->input('status', ''),
+                    'per_page' => $request->input('per_page', 15),
+                ];
+
+                $result = $this->areaService->getAllAreas($filters);
+
+                return response()->json($result);
+
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch areas', [
+                    'error' => $e->getMessage(),
+                    'filters' => $filters ?? [],
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch areas',
+                ], 500);
+            }
+        }
+
+        // Otherwise return the view
         return view('pages.admin.config.areas.index');
     }
 

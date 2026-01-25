@@ -6,7 +6,6 @@
             subtitle="Create and manage barangays in Initao"
             :can-create="true"
             create-label="Add Barangay"
-            @create="openCreateModal()"
         />
 
         <!-- Search & Filters -->

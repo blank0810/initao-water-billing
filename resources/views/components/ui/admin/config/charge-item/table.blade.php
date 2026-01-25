@@ -61,9 +61,9 @@
                         <!-- Status -->
                         <td class="px-6 py-4">
                             <span
-                                x-bind:class="chargeItem.stat_id == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'"
+                                x-bind:class="chargeItem.stat_id == 2 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'"
                                 class="px-2 py-1 text-xs font-medium rounded-full"
-                                x-text="chargeItem.stat_id == 1 ? 'ACTIVE' : 'INACTIVE'"
+                                x-text="chargeItem.stat_id == 2 ? 'ACTIVE' : 'INACTIVE'"
                             ></span>
                         </td>
 

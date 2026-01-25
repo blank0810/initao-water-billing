@@ -46,6 +46,12 @@ export default function areaManager() {
         async updateArea() {
             this.errors = {};
 
+            if (!this.selectedItem || !this.selectedItem.a_id) {
+                console.error('No area selected for update');
+                this.showErrorNotification('No area selected for update');
+                return;
+            }
+
             try {
                 const response = await fetch(`/config/areas/${this.selectedItem.a_id}`, {
                     method: 'PUT',
@@ -79,6 +85,12 @@ export default function areaManager() {
 
         // Delete area
         async deleteArea() {
+            if (!this.selectedItem || !this.selectedItem.a_id) {
+                console.error('No area selected for deletion');
+                this.showErrorNotification('No area selected for deletion');
+                return;
+            }
+
             try {
                 const response = await fetch(`/config/areas/${this.selectedItem.a_id}`, {
                     method: 'DELETE',

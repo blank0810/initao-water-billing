@@ -17,8 +17,36 @@ class ChargeItemController extends Controller
         private ChargeItemService $chargeItemService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View|JsonResponse
     {
+        // If JSON is requested, return data for AJAX requests
+        if ($request->wantsJson()) {
+            try {
+                $filters = [
+                    'search' => $request->input('search', ''),
+                    'status' => $request->input('status', ''),
+                    'charge_type' => $request->input('charge_type', ''),
+                    'per_page' => $request->input('per_page', 15),
+                ];
+
+                $result = $this->chargeItemService->getAllChargeItems($filters);
+
+                return response()->json($result);
+
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch charge items', [
+                    'error' => $e->getMessage(),
+                    'filters' => $filters ?? [],
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch charge items',
+                ], 500);
+            }
+        }
+
+        // Otherwise return the view
         return view('pages.admin.config.charge-items.index');
     }
 

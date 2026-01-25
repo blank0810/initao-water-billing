@@ -15,7 +15,6 @@ class StorePurokRequest extends FormRequest
     {
         return [
             'p_desc' => ['required', 'string', 'max:255'],
-            'b_id' => ['required', 'integer', 'exists:barangay,b_id'],
         ];
     }
 
@@ -24,8 +23,6 @@ class StorePurokRequest extends FormRequest
         return [
             'p_desc.required' => 'Purok name is required',
             'p_desc.max' => 'Purok name must not exceed 255 characters',
-            'b_id.required' => 'Barangay is required',
-            'b_id.exists' => 'Selected barangay does not exist',
         ];
     }
 }

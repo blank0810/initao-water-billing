@@ -15,7 +15,7 @@
 
     @if($canCreate)
     <button
-        @click="$dispatch('create')"
+        @click="openCreateModal()"
         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
     >
         <i class="fas fa-plus text-sm"></i>

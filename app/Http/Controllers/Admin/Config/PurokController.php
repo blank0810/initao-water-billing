@@ -17,8 +17,35 @@ class PurokController extends Controller
         private PurokService $purokService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View|JsonResponse
     {
+        // If JSON is requested, return data for AJAX requests
+        if ($request->wantsJson()) {
+            try {
+                $filters = [
+                    'search' => $request->input('search', ''),
+                    'status' => $request->input('status', ''),
+                    'per_page' => $request->input('per_page', 15),
+                ];
+
+                $result = $this->purokService->getAllPuroks($filters);
+
+                return response()->json($result);
+
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch puroks', [
+                    'error' => $e->getMessage(),
+                    'filters' => $filters ?? [],
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch puroks',
+                ], 500);
+            }
+        }
+
+        // Otherwise return the view
         return view('pages.admin.config.puroks.index');
     }
 
@@ -30,7 +57,7 @@ class PurokController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Purok created successfully',
-                'data' => $purok->load(['barangay', 'status']),
+                'data' => $purok->load('status'),
             ], 201);
 
         } catch (\Exception $e) {
@@ -71,7 +98,7 @@ class PurokController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Purok updated successfully',
-                'data' => $purok->load(['barangay', 'status']),
+                'data' => $purok->load('status'),
             ]);
 
         } catch (\Exception $e) {

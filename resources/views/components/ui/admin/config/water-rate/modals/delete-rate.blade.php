@@ -38,19 +38,19 @@
                 <div class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-2">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Account Type:</span>
-                        <span class="font-medium text-gray-900 dark:text-white" x-text="selectedItem?.accounttype"></span>
+                        <span class="font-medium text-gray-900 dark:text-white" x-text="selectedItem?.account_type?.at_desc || '-'"></span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Tier:</span>
-                        <span class="font-medium text-gray-900 dark:text-white" x-text="selectedItem?.wr_tier"></span>
+                        <span class="font-medium text-gray-900 dark:text-white" x-text="selectedItem?.range_id || '-'"></span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Range:</span>
-                        <span class="font-medium text-gray-900 dark:text-white" x-text="(selectedItem?.wr_rangemin || 0) + ' - ' + (selectedItem?.wr_rangemax || 0) + ' m³'"></span>
+                        <span class="font-medium text-gray-900 dark:text-white" x-text="(selectedItem?.range_min || 0) + ' - ' + (selectedItem?.range_max || 0) + ' m³'"></span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500 dark:text-gray-400">Base Rate:</span>
-                        <span class="font-medium text-gray-900 dark:text-white" x-text="'₱' + parseFloat(selectedItem?.wr_baserate || 0).toFixed(2)"></span>
+                        <span class="font-medium text-gray-900 dark:text-white" x-text="'₱' + parseFloat(selectedItem?.rate_val || 0).toFixed(2)"></span>
                     </div>
                 </div>
                 <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">

@@ -34,10 +34,10 @@
                     <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="area.a_desc"></span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span x-bind:class="area.stat_id == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'" class="px-2 py-1 text-xs font-medium rounded-full" x-text="area.stat_id == 1 ? 'ACTIVE' : 'INACTIVE'"></span>
+                    <span x-bind:class="area.stat_id == 2 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'" class="px-2 py-1 text-xs font-medium rounded-full" x-text="area.stat_id == 2 ? 'ACTIVE' : 'INACTIVE'"></span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="text-sm text-gray-900 dark:text-white" x-text="area.meter_readers_count || 0"></span>
+                    <span class="text-sm text-gray-900 dark:text-white" x-text="area.active_area_assignments_count || 0"></span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="text-sm text-gray-900 dark:text-white" x-text="area.service_connections_count || 0"></span>

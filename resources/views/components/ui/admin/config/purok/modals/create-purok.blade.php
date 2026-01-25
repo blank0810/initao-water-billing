@@ -40,27 +40,6 @@
                     </template>
                 </div>
 
-                <!-- Barangay -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Barangay <span class="text-red-500">*</span>
-                    </label>
-                    <select
-                        x-model="form.b_id"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        :class="{'border-red-500': errors.b_id}"
-                        required
-                    >
-                        <option value="">Select Barangay</option>
-                        <template x-for="barangay in barangays" :key="barangay.b_id">
-                            <option :value="barangay.b_id" x-text="barangay.b_desc"></option>
-                        </template>
-                    </select>
-                    <template x-if="errors.b_id">
-                        <p class="mt-1 text-sm text-red-600" x-text="errors.b_id[0]"></p>
-                    </template>
-                </div>
-
                 <!-- Footer -->
                 <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-700">
                     <button

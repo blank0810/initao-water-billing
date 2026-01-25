@@ -17,8 +17,35 @@ class BarangayController extends Controller
         private BarangayService $barangayService
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View|JsonResponse
     {
+        // If JSON is requested, return data for AJAX requests
+        if ($request->wantsJson()) {
+            try {
+                $filters = [
+                    'search' => $request->input('search', ''),
+                    'status' => $request->input('status', ''),
+                    'per_page' => $request->input('per_page', 15),
+                ];
+
+                $result = $this->barangayService->getAllBarangays($filters);
+
+                return response()->json($result);
+
+            } catch (\Exception $e) {
+                Log::error('Failed to fetch barangays', [
+                    'error' => $e->getMessage(),
+                    'filters' => $filters ?? [],
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch barangays',
+                ], 500);
+            }
+        }
+
+        // Otherwise return the view
         return view('pages.admin.config.barangays.index');
     }
 

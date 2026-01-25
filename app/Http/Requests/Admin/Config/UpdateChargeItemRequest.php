@@ -35,7 +35,7 @@ class UpdateChargeItemRequest extends FormRequest
             'default_amount' => ['sometimes', 'required', 'numeric', 'min:0'],
             'charge_type' => ['sometimes', 'required', 'string', 'in:one_time,recurring,per_unit'],
             'is_taxable' => ['sometimes', 'boolean'],
-            'stat_id' => ['sometimes', 'required', 'integer', 'exists:status,stat_id'],
+            'stat_id' => ['sometimes', 'required', 'integer', 'exists:statuses,stat_id'],
         ];
     }
 

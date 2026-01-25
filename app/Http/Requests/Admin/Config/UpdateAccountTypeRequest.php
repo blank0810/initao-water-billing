@@ -24,7 +24,7 @@ class UpdateAccountTypeRequest extends FormRequest
                 'max:255',
                 Rule::unique('account_type', 'at_desc')->ignore($accountTypeId, 'at_id'),
             ],
-            'stat_id' => ['sometimes', 'required', 'integer', 'exists:status,stat_id'],
+            'stat_id' => ['sometimes', 'required', 'integer', 'exists:statuses,stat_id'],
         ];
     }
 

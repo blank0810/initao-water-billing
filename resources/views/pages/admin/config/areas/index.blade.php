@@ -6,7 +6,6 @@
             subtitle="Create and manage service areas in Initao"
             :can-create="true"
             create-label="Add Area"
-            @create="openCreateModal()"
         />
 
         <!-- Search & Filters -->

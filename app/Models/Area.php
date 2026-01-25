@@ -40,11 +40,14 @@ class Area extends Model
     }
 
     /**
-     * Get active area assignments (where effective_to is null)
+     * Get active area assignments (where effective_to is null or not yet reached)
      */
     public function activeAreaAssignments()
     {
-        return $this->areaAssignments()->whereNull('effective_to');
+        return $this->areaAssignments()->where(function ($q) {
+            $q->whereNull('effective_to')
+                ->orWhere('effective_to', '>=', now()->format('Y-m-d'));
+        });
     }
 
     /**

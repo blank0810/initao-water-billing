@@ -4,6 +4,7 @@ use App\Models\Customer;
 use App\Models\Status;
 use App\Services\Customers\CustomerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 

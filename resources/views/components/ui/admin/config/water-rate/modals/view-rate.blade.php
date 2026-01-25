@@ -33,7 +33,7 @@
                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
                             Account Type
                         </label>
-                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.accounttype || '-'"></p>
+                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.account_type?.at_desc || '-'"></p>
                     </div>
 
                     <!-- Tier -->
@@ -41,7 +41,7 @@
                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
                             Tier
                         </label>
-                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.wr_tier || '-'"></p>
+                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.range_id || '-'"></p>
                     </div>
 
                     <!-- Status -->
@@ -51,27 +51,11 @@
                         </label>
                         <div class="mt-1">
                             <span
-                                x-bind:class="selectedItem?.stat_id == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'"
+                                x-bind:class="selectedItem?.stat_id == 2 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'"
                                 class="px-2 py-1 text-xs font-medium rounded-full"
-                                x-text="selectedItem?.stat_id == 1 ? 'ACTIVE' : 'INACTIVE'"
+                                x-text="selectedItem?.stat_id == 2 ? 'ACTIVE' : 'INACTIVE'"
                             ></span>
                         </div>
-                    </div>
-
-                    <!-- Range Minimum -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Range Min (m³)
-                        </label>
-                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.wr_rangemin || '-'"></p>
-                    </div>
-
-                    <!-- Range Maximum -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Range Max (m³)
-                        </label>
-                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.wr_rangemax || '-'"></p>
                     </div>
 
                     <!-- Range Display -->
@@ -79,7 +63,7 @@
                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
                             Consumption Range
                         </label>
-                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="(selectedItem?.wr_rangemin || 0) + ' - ' + (selectedItem?.wr_rangemax || 0) + ' m³'"></p>
+                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="(selectedItem?.range_min || 0) + ' - ' + (selectedItem?.range_max || 0) + ' m³'"></p>
                     </div>
 
                     <!-- Base Rate -->
@@ -87,7 +71,7 @@
                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
                             Base Rate
                         </label>
-                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="'₱' + parseFloat(selectedItem?.wr_baserate || 0).toFixed(2)"></p>
+                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="'₱' + parseFloat(selectedItem?.rate_val || 0).toFixed(2)"></p>
                     </div>
 
                     <!-- Increment Rate -->
@@ -95,7 +79,7 @@
                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
                             Increment Rate
                         </label>
-                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="'₱' + parseFloat(selectedItem?.wr_incrate || 0).toFixed(2)"></p>
+                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="'₱' + parseFloat(selectedItem?.rate_inc || 0).toFixed(2)"></p>
                     </div>
 
                     <!-- Period -->
@@ -103,7 +87,7 @@
                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
                             Period
                         </label>
-                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.p_id ? 'Period-specific rate' : 'Default rate'"></p>
+                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="selectedItem?.period_id ? 'Period-specific rate' : 'Default rate'"></p>
                     </div>
                 </div>
 
@@ -113,12 +97,12 @@
                         <i class="fas fa-calculator mr-2"></i>Rate Calculation Example
                     </h4>
                     <p class="text-sm text-blue-800 dark:text-blue-400">
-                        For consumption within <span x-text="selectedItem?.wr_rangemin || 0"></span>-<span x-text="selectedItem?.wr_rangemax || 0"></span> m³:
+                        For consumption within <span x-text="selectedItem?.range_min || 0"></span>-<span x-text="selectedItem?.range_max || 0"></span> m³:
                     </p>
                     <p class="text-sm text-blue-800 dark:text-blue-400 mt-1">
-                        Bill = ₱<span x-text="parseFloat(selectedItem?.wr_baserate || 0).toFixed(2)"></span> (base) +
-                        (consumption - <span x-text="selectedItem?.wr_rangemin || 0"></span>) ×
-                        ₱<span x-text="parseFloat(selectedItem?.wr_incrate || 0).toFixed(2)"></span>
+                        Bill = ₱<span x-text="parseFloat(selectedItem?.rate_val || 0).toFixed(2)"></span> (base) +
+                        (consumption - <span x-text="selectedItem?.range_min || 0"></span>) ×
+                        ₱<span x-text="parseFloat(selectedItem?.rate_inc || 0).toFixed(2)"></span>
                     </p>
                 </div>
             </div>

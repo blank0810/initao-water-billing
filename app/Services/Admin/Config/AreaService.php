@@ -65,7 +65,7 @@ class AreaService
         $area = Area::findOrFail($id);
 
         // Check for active assignments
-        $activeAssignments = $area->areaAssignments()->whereNull('effective_to')->count();
+        $activeAssignments = $area->activeAreaAssignments()->count();
         if ($activeAssignments > 0) {
             throw new \DomainException(
                 "Cannot delete area '{$area->a_desc}' because it has {$activeAssignments} active meter reader assignments."
@@ -88,8 +88,10 @@ class AreaService
         $area = Area::with([
             'status',
             'areaAssignments' => function ($query) {
-                $query->whereNull('effective_to')
-                    ->with('user:id,name,email');
+                $query->where(function ($q) {
+                    $q->whereNull('effective_to')
+                        ->orWhere('effective_to', '>=', now()->format('Y-m-d'));
+                })->with('user:id,name,email');
             }
         ])
         ->withCount(['serviceConnections', 'consumers'])

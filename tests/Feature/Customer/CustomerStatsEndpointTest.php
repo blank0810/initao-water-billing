@@ -3,6 +3,7 @@
 use App\Models\Status;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -13,7 +14,7 @@ beforeEach(function () {
     Status::create(['stat_id' => 3, 'stat_desc' => 'PENDING']);
 
     // Create required user type
-    \DB::table('user_types')->insert([
+    DB::table('user_types')->insert([
         'ut_id' => 3,
         'ut_desc' => 'ADMIN',
         'stat_id' => 1,

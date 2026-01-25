@@ -4,14 +4,24 @@
  */
 export default function configTable(fetchUrl) {
     return {
+        // API URL
+        apiUrl: fetchUrl,
+
         // Data
         items: [],
         search: '',
         statusFilter: '',
-        currentPage: 1,
-        totalPages: 1,
-        perPage: 15,
         loading: false,
+
+        // Pagination state
+        pagination: {
+            currentPage: 1,
+            lastPage: 1,
+            perPage: 15,
+            total: 0,
+            from: 0,
+            to: 0,
+        },
 
         // Modal states
         showCreateModal: false,
@@ -45,8 +55,8 @@ export default function configTable(fetchUrl) {
                 const params = new URLSearchParams({
                     search: this.search,
                     status: this.statusFilter,
-                    page: this.currentPage,
-                    per_page: this.perPage,
+                    page: this.pagination.currentPage,
+                    per_page: this.pagination.perPage,
                 });
 
                 const response = await fetch(`${fetchUrl}?${params}`, {
@@ -58,13 +68,27 @@ export default function configTable(fetchUrl) {
                 const data = await response.json();
 
                 this.items = data.data || [];
-                this.totalPages = data.meta?.last_page || 1;
+                this.updatePagination(data.meta);
 
             } catch (error) {
                 console.error('Failed to fetch items:', error);
                 this.showErrorNotification('Failed to load data');
             } finally {
                 this.loading = false;
+            }
+        },
+
+        // Update pagination data
+        updatePagination(meta) {
+            if (meta) {
+                this.pagination = {
+                    currentPage: meta.current_page || 1,
+                    lastPage: meta.last_page || 1,
+                    perPage: meta.per_page || 15,
+                    total: meta.total || 0,
+                    from: meta.from || 0,
+                    to: meta.to || 0,
+                };
             }
         },
 
@@ -100,6 +124,46 @@ export default function configTable(fetchUrl) {
             this.selectedItem = null;
         },
 
+        // Helper methods to fetch item and open modal
+        async viewItem(id) {
+            try {
+                const response = await fetch(`${this.apiUrl}/${id}`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                const result = await response.json();
+                this.openViewModal(result.data);
+            } catch (error) {
+                console.error('Failed to fetch item:', error);
+                this.showErrorNotification('Failed to load item details');
+            }
+        },
+
+        async editItem(id) {
+            try {
+                const response = await fetch(`${this.apiUrl}/${id}`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                const result = await response.json();
+                this.openEditModal(result.data);
+            } catch (error) {
+                console.error('Failed to fetch item:', error);
+                this.showErrorNotification('Failed to load item details');
+            }
+        },
+
+        async deleteItem(id) {
+            try {
+                const response = await fetch(`${this.apiUrl}/${id}`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                const result = await response.json();
+                this.openDeleteModal(result.data);
+            } catch (error) {
+                console.error('Failed to fetch item:', error);
+                this.showErrorNotification('Failed to load item details');
+            }
+        },
+
         // Notifications
         showSuccessNotification(message) {
             this.successMessage = message;
@@ -113,10 +177,19 @@ export default function configTable(fetchUrl) {
             setTimeout(() => { this.showError = false; }, 5000);
         },
 
+        // Generic notification method for backward compatibility
+        showNotification(message, type = 'success') {
+            if (type === 'success') {
+                this.showSuccessNotification(message);
+            } else {
+                this.showErrorNotification(message);
+            }
+        },
+
         // Pagination
         goToPage(page) {
-            if (page >= 1 && page <= this.totalPages) {
-                this.currentPage = page;
+            if (page >= 1 && page <= this.pagination.lastPage) {
+                this.pagination.currentPage = page;
                 this.fetchItems();
             }
         },

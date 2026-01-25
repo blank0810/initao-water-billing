@@ -7,11 +7,35 @@ export default function waterRateManager() {
         // Additional state for water rates
         periodFilter: '',
         periods: [],
+        accountTypes: [],
 
-        // Override init to load periods
+        // Override init to load periods and account types
         async init() {
-            await this.loadPeriods();
+            await Promise.all([
+                this.loadPeriods(),
+                this.loadAccountTypes(),
+            ]);
             await this.fetchItems();
+        },
+
+        // Load account types for dropdowns
+        async loadAccountTypes() {
+            try {
+                const response = await fetch('/config/account-types?per_page=100', {
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load account types');
+                }
+
+                const data = await response.json();
+                this.accountTypes = data.data || [];
+            } catch (error) {
+                console.error('Error loading account types:', error);
+            }
         },
 
         // Load available periods for filtering
@@ -186,14 +210,14 @@ export default function waterRateManager() {
         // Override openCreateModal to initialize rate-specific form
         openCreateModal() {
             this.form = {
-                wr_tier: '',
-                wr_rangemin: '',
-                wr_rangemax: '',
-                wr_baserate: '',
-                wr_incrate: '',
-                accounttype: '',
-                p_id: this.periodFilter || null,
-                stat_id: 1,
+                range_id: '',
+                range_min: '',
+                range_max: '',
+                rate_val: '',
+                rate_inc: '',
+                class_id: '',
+                period_id: this.periodFilter || null,
+                stat_id: 2,
             };
             this.errors = {};
             this.showCreateModal = true;
@@ -203,13 +227,13 @@ export default function waterRateManager() {
         openEditModal(item) {
             this.selectedItem = item;
             this.form = {
-                wr_tier: item.wr_tier,
-                wr_rangemin: item.wr_rangemin,
-                wr_rangemax: item.wr_rangemax,
-                wr_baserate: item.wr_baserate,
-                wr_incrate: item.wr_incrate,
-                accounttype: item.accounttype,
-                p_id: item.p_id,
+                range_id: item.range_id,
+                range_min: item.range_min,
+                range_max: item.range_max,
+                rate_val: item.rate_val,
+                rate_inc: item.rate_inc,
+                class_id: item.class_id,
+                period_id: item.period_id,
                 stat_id: item.stat_id,
             };
             this.errors = {};
