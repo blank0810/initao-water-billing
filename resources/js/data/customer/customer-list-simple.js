@@ -229,14 +229,14 @@
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-                            ${getInitials(customer.name)}
+                            ${getInitials(customer.customer_name)}
                         </div>
                         <div>
                             <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                ${escapeHtml(customer.name)}
+                                ${escapeHtml(customer.customer_name)}
                             </div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">
-                                ID: ${escapeHtml(customer.customer_id || 'N/A')}
+                                ID: ${escapeHtml(customer.cust_id || 'N/A')}
                             </div>
                         </div>
                     </div>
@@ -252,7 +252,7 @@
                 <!-- Meter Number -->
                 <td class="px-4 py-3">
                     <div class="text-sm font-mono text-gray-900 dark:text-gray-100">
-                        ${escapeHtml(customer.meter_number || 'N/A')}
+                        ${escapeHtml(customer.meter_no || 'N/A')}
                     </div>
                 </td>
 
@@ -271,7 +271,7 @@
                 <!-- Actions -->
                 <td class="px-4 py-3 text-center">
                     <div class="flex justify-center gap-2">
-                        <a href="/customer/${customer.id}"
+                        <a href="/customer/${customer.cust_id}"
                            class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                            title="View Details">
                             <i class="fas fa-eye"></i>
