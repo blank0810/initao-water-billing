@@ -64,35 +64,35 @@
                     </table>
                 </div>
 
-        <!-- Pagination -->
-        <div class="flex justify-between items-center mt-4 flex-wrap gap-4">
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-gray-600 dark:text-gray-400">Show</span>
-                <select id="customerPageSize" onchange="customerPagination.updatePageSize(this.value)" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                    <option value="5">5</option>
-                    <option value="10" selected>10</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                </select>
-                <span class="text-sm text-gray-600 dark:text-gray-400">entries</span>
-            </div>
+                {{-- Pagination --}}
+                <div class="flex justify-between items-center mt-4 flex-wrap gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Show</span>
+                        <select id="customerPageSize" onchange="customerPagination.updatePageSize(this.value)" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">entries</span>
+                    </div>
 
-            <div class="flex items-center gap-2">
-                <button id="customerPrevBtn" onclick="customerPagination.prevPage()" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                    <i class="fas fa-chevron-left mr-1"></i>Previous
-                </button>
-                <div class="text-sm text-gray-700 dark:text-gray-300 px-3 font-medium">
-                    Page <span id="customerCurrentPage">1</span> of <span id="customerTotalPages">1</span>
+                    <div class="flex items-center gap-2">
+                        <button id="customerPrevBtn" onclick="customerPagination.prevPage()" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                            <i class="fas fa-chevron-left mr-1"></i>Previous
+                        </button>
+                        <div class="text-sm text-gray-700 dark:text-gray-300 px-3 font-medium">
+                            Page <span id="customerCurrentPage">1</span> of <span id="customerTotalPages">1</span>
+                        </div>
+                        <button id="customerNextBtn" onclick="customerPagination.nextPage()" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                            Next<i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Showing <span class="font-semibold text-gray-900 dark:text-white" id="customerTotalRecords">0</span> results
+                    </div>
                 </div>
-                <button id="customerNextBtn" onclick="customerPagination.nextPage()" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                    Next<i class="fas fa-chevron-right ml-1"></i>
-                </button>
-            </div>
-
-            <div class="text-sm text-gray-600 dark:text-gray-400">
-                Showing <span class="font-semibold text-gray-900 dark:text-white" id="customerTotalRecords">0</span> results
-            </div>
-        </div>
             </div>
 
         </div>
