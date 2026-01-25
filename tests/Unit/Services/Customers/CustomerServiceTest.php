@@ -229,10 +229,9 @@ test('getCustomerList includes meter_no from active service connection', functio
     ]);
 
     // Create meter
-    $meter = \DB::table('Meter')->insertGetId([
+    $meter = \DB::table('meter')->insertGetId([
         'mtr_serial' => 'MTR-123456789',
         'mtr_brand' => 'Test Brand',
-        'mtr_size' => '1/2"',
         'stat_id' => Status::getIdByDescription(Status::ACTIVE),
         'created_at' => now(),
         'updated_at' => now(),
@@ -242,8 +241,8 @@ test('getCustomerList includes meter_no from active service connection', functio
     \DB::table('MeterAssignment')->insert([
         'connection_id' => $serviceConnection,
         'meter_id' => $meter,
-        'assignment_date' => now(),
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'installed_at' => now(),
+        'install_read' => 0.000,
         'created_at' => now(),
         'updated_at' => now(),
     ]);
@@ -407,8 +406,8 @@ test('getCustomerList returns N/A for inactive service connection', function () 
     \DB::table('MeterAssignment')->insert([
         'connection_id' => $serviceConnection,
         'meter_id' => $meter,
-        'assignment_date' => now(),
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'installed_at' => now(),
+        'install_read' => 0.000,
         'created_at' => now(),
         'updated_at' => now(),
     ]);

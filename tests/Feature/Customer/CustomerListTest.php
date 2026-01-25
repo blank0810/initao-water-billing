@@ -417,10 +417,9 @@ test('customer list shows meter number for customer with active meter', function
     ]);
 
     // Create meter
-    $meter = \DB::table('Meter')->insertGetId([
+    $meter = \DB::table('meter')->insertGetId([
         'mtr_serial' => 'MTR-FEATURE-001',
         'mtr_brand' => 'Test Brand',
-        'mtr_size' => '1/2"',
         'stat_id' => Status::getIdByDescription(Status::ACTIVE),
         'created_at' => now(),
         'updated_at' => now(),
@@ -430,8 +429,8 @@ test('customer list shows meter number for customer with active meter', function
     \DB::table('MeterAssignment')->insert([
         'connection_id' => $serviceConnection,
         'meter_id' => $meter,
-        'assignment_date' => now(),
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'installed_at' => now(),
+        'install_read' => 0.000,
         'created_at' => now(),
         'updated_at' => now(),
     ]);
