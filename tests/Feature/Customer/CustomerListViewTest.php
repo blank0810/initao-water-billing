@@ -29,7 +29,7 @@ test('customer list new view contains required elements', function () {
     expect($html)->toContain('id="customer-stats"');
 
     // Check for table body
-    expect($html)->toContain('id="customer-list-tbody"');
+    expect($html)->toContain('id="customerTableBody"');
 
     // Check for pagination elements
     expect($html)->toContain('id="customerCurrentPage"');
@@ -114,9 +114,9 @@ test('customer list javascript references correct element IDs', function () {
     expect($jsContent)->toContain("'customerTotalRecords'");
     expect($jsContent)->toContain("'customerPrevBtn'");
     expect($jsContent)->toContain("'customerNextBtn'");
-    expect($jsContent)->toContain("'customerSearch'");
-    expect($jsContent)->toContain("'customerStatusFilter'");
-    expect($jsContent)->toContain("'customerClearBtn'");
+    expect($jsContent)->toContain("'customer-list-tbody_search'");
+    expect($jsContent)->toContain("'customer-list-tbody_filter'");
+    expect($jsContent)->toContain("'customer-list-tbody_clearBtn'");
     expect($jsContent)->toContain("'customerPageSize'");
 });
 
