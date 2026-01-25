@@ -64,47 +64,35 @@
                     </table>
                 </div>
 
-                {{-- Pagination Controls --}}
-                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-t border-gray-200 dark:border-gray-600 sm:px-6">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        {{-- Left: Page Size Selector --}}
-                        <div class="flex items-center gap-2">
-                            <label for="customerPageSize" class="text-sm text-gray-700 dark:text-gray-300">Show:</label>
-                            <select id="customerPageSize" class="border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="5">5</option>
-                                <option value="10" selected>10</option>
-                                <option value="20">20</option>
-                                <option value="50">50</option>
-                            </select>
-                            <span class="text-sm text-gray-700 dark:text-gray-300">entries</span>
-                        </div>
+        <!-- Pagination -->
+        <div class="flex justify-between items-center mt-4 flex-wrap gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-600 dark:text-gray-400">Show</span>
+                <select id="customerPageSize" onchange="customerPagination.updatePageSize(this.value)" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+                <span class="text-sm text-gray-600 dark:text-gray-400">entries</span>
+            </div>
 
-                        {{-- Center: Page Counter --}}
-                        <div class="text-sm text-gray-700 dark:text-gray-300">
-                            Page <span id="customerCurrentPage">1</span> of <span id="customerTotalPages">1</span>
-                        </div>
-
-                        {{-- Right: Navigation Buttons --}}
-                        <div class="flex items-center gap-2">
-                            <button id="customerPrevBtn"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled>
-                                Previous
-                            </button>
-                            <button id="customerNextBtn"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                                Next
-                            </button>
-                        </div>
-                    </div>
-
-                    {{-- Total Records Display --}}
-                    <div class="mt-2 text-center">
-                        <span class="text-sm text-gray-600 dark:text-gray-400">
-                            Showing <span id="customerTotalRecords">0</span> results
-                        </span>
-                    </div>
+            <div class="flex items-center gap-2">
+                <button id="customerPrevBtn" onclick="customerPagination.prevPage()" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                    <i class="fas fa-chevron-left mr-1"></i>Previous
+                </button>
+                <div class="text-sm text-gray-700 dark:text-gray-300 px-3 font-medium">
+                    Page <span id="customerCurrentPage">1</span> of <span id="customerTotalPages">1</span>
                 </div>
+                <button id="customerNextBtn" onclick="customerPagination.nextPage()" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                    Next<i class="fas fa-chevron-right ml-1"></i>
+                </button>
+            </div>
+
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+                Showing <span class="font-semibold text-gray-900 dark:text-white" id="customerTotalRecords">0</span> results
+            </div>
+        </div>
             </div>
 
         </div>
