@@ -226,7 +226,7 @@
         tbody.innerHTML = customers.map(customer => `
             <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <!-- Customer Name & Avatar -->
-                <td class="px-6 py-4">
+                <td class="px-4 py-3">
                     <div class="flex items-center">
                         <div class="flex-shrink-0 h-10 w-10">
                             <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
@@ -245,7 +245,7 @@
                 </td>
 
                 <!-- Location -->
-                <td class="px-6 py-4">
+                <td class="px-4 py-3">
                     <div class="text-sm text-gray-900 dark:text-white">
                         ${escapeHtml(customer.location || 'N/A')}
                     </div>
@@ -255,26 +255,26 @@
                 </td>
 
                 <!-- Meter Number -->
-                <td class="px-6 py-4">
+                <td class="px-4 py-3">
                     <div class="text-sm font-mono text-gray-900 dark:text-white">
                         ${escapeHtml(customer.meter_number || 'N/A')}
                     </div>
                 </td>
 
                 <!-- Current Bill -->
-                <td class="px-6 py-4 text-right">
+                <td class="px-4 py-3 text-right">
                     <div class="text-sm font-medium text-gray-900 dark:text-white">
                         ${customer.current_bill ? '₱' + parseFloat(customer.current_bill).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '₱0.00'}
                     </div>
                 </td>
 
                 <!-- Status -->
-                <td class="px-6 py-4">
+                <td class="px-4 py-3 text-center">
                     ${getStatusBadge(customer.status)}
                 </td>
 
                 <!-- Actions -->
-                <td class="px-6 py-4 text-right">
+                <td class="px-4 py-3 text-center">
                     <a href="/customer/${customer.id}"
                        class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium text-sm">
                         View
