@@ -275,10 +275,13 @@
 
                 <!-- Actions -->
                 <td class="px-4 py-3 text-center">
-                    <a href="/customer/${customer.id}"
-                       class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium text-sm">
-                        View
-                    </a>
+                    <div class="flex justify-center gap-2">
+                        <a href="/customer/${customer.id}"
+                           class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                           title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
                 </td>
             </tr>
         `).join('');
