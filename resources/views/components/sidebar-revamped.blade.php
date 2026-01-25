@@ -289,6 +289,12 @@ $user = Auth::user() ?? (object) [
                             <i class="fas fa-layer-group w-4 text-xs mr-2.5"></i>
                             <span>Areas</span>
                         </a>
+                        <a href="{{ route('config.puroks.index') }}" @click="setActiveMenu('config-geographic-puroks')"
+                            :class="activeMenu === 'config-geographic-puroks' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-house-user w-4 text-xs mr-2.5"></i>
+                            <span>Puroks</span>
+                        </a>
                     </div>
                 </div>
                 @endcan
@@ -301,6 +307,34 @@ $user = Auth::user() ?? (object) [
                     <i class="fas fa-dollar-sign w-4 text-xs mr-2.5"></i>
                     <span>Water Rates</span>
                 </a>
+
+                <!-- Billing Configuration Submenu -->
+                <div class="space-y-1">
+                    <button @click="toggleSubmenu('billingConfig')"
+                        :class="(activeMenu.startsWith('config-billing-') || openSubmenus.billingConfig) ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        class="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-receipt w-4 text-xs mr-2.5"></i>
+                            <span>Billing Configuration</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.billingConfig }"></i>
+                    </button>
+
+                    <div x-show="openSubmenus.billingConfig" x-collapse class="ml-6 space-y-1 mt-1">
+                        <a href="{{ route('config.account-types.index') }}" @click="setActiveMenu('config-billing-account-types')"
+                            :class="activeMenu === 'config-billing-account-types' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-users-cog w-4 text-xs mr-2.5"></i>
+                            <span>Account Types</span>
+                        </a>
+                        <a href="{{ route('config.charge-items.index') }}" @click="setActiveMenu('config-billing-charge-items')"
+                            :class="activeMenu === 'config-billing-charge-items' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-file-invoice-dollar w-4 text-xs mr-2.5"></i>
+                            <span>Application Fee Templates</span>
+                        </a>
+                    </div>
+                </div>
                 @endcan
 
                 <!-- Access Control Submenu -->
@@ -389,6 +423,7 @@ $user = Auth::user() ?? (object) [
                 connectionManagement: {{ session('active_menu') && str_starts_with(session('active_menu'), 'connection-') ? 'true' : 'false' }},
                 adminConfig: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-') ? 'true' : 'false' }},
                 geographic: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-geographic-') ? 'true' : 'false' }},
+                billingConfig: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-billing-') ? 'true' : 'false' }},
                 accessControl: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-access-') ? 'true' : 'false' }}
             },
 
@@ -419,7 +454,10 @@ $user = Auth::user() ?? (object) [
                     '/analytics': 'analytics',
                     '/config/barangays': 'config-geographic-barangays',
                     '/config/areas': 'config-geographic-areas',
+                    '/config/puroks': 'config-geographic-puroks',
                     '/config/water-rates': 'config-water-rates',
+                    '/config/account-types': 'config-billing-account-types',
+                    '/config/charge-items': 'config-billing-charge-items',
                     '/admin/roles': 'config-access-roles',
                     '/admin/permissions': 'config-access-permissions',
                     '/admin/role-permissions': 'config-access-matrix',
@@ -444,6 +482,8 @@ $user = Auth::user() ?? (object) [
                     this.openSubmenus.adminConfig = true;
                     if (this.activeMenu.startsWith('config-geographic-')) {
                         this.openSubmenus.geographic = true;
+                    } else if (this.activeMenu.startsWith('config-billing-')) {
+                        this.openSubmenus.billingConfig = true;
                     } else if (this.activeMenu.startsWith('config-access-')) {
                         this.openSubmenus.accessControl = true;
                     }
@@ -488,6 +528,7 @@ $user = Auth::user() ?? (object) [
                 this.openSubmenus.connectionManagement = false;
                 this.openSubmenus.adminConfig = false;
                 this.openSubmenus.geographic = false;
+                this.openSubmenus.billingConfig = false;
                 this.openSubmenus.accessControl = false;
                 // Open the appropriate submenu
                 if (menu.startsWith('user-')) {
@@ -500,6 +541,8 @@ $user = Auth::user() ?? (object) [
                     this.openSubmenus.adminConfig = true;
                     if (menu.startsWith('config-geographic-')) {
                         this.openSubmenus.geographic = true;
+                    } else if (menu.startsWith('config-billing-')) {
+                        this.openSubmenus.billingConfig = true;
                     } else if (menu.startsWith('config-access-')) {
                         this.openSubmenus.accessControl = true;
                     }
