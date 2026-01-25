@@ -35,6 +35,18 @@ class CustomerController extends Controller
     }
 
     /**
+     * Get customer statistics for dashboard/list page
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function stats(): JsonResponse
+    {
+        $stats = $this->customerService->getCustomerStats();
+
+        return response()->json($stats);
+    }
+
+    /**
      * Validation rules for customer creation with service application
      */
     protected function validationRules(): array

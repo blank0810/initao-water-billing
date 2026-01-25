@@ -5,12 +5,31 @@
             <x-ui.page-header title="Customer List" icon="fas fa-users" />
 
             {{-- Stats Cards --}}
-            <div id="customer-stats" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                {{-- Loading Skeletons - Will be replaced by JavaScript --}}
-                <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg h-24"></div>
-                <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg h-24"></div>
-                <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg h-24"></div>
-                <div class="animate-pulse bg-white dark:bg-gray-800 rounded-lg h-24"></div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div id="stat-total">
+                    <x-ui.stat-card
+                        title="Total Customers"
+                        value="0"
+                        icon="user" />
+                </div>
+                <div id="stat-residential">
+                    <x-ui.stat-card
+                        title="Residential Type"
+                        value="0"
+                        icon="home" />
+                </div>
+                <div id="stat-bill">
+                    <x-ui.stat-card
+                        title="Total Current Bill"
+                        value="₱0.00"
+                        icon="file-invoice-dollar" />
+                </div>
+                <div id="stat-overdue">
+                    <x-ui.stat-card
+                        title="Overdue"
+                        value="0"
+                        icon="exclamation-triangle" />
+                </div>
             </div>
 
             {{-- Action Functions --}}

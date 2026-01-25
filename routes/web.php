@@ -105,7 +105,7 @@ Route::middleware('auth')->group(function () {
     // -------------------------------------------------------------------------
     Route::middleware(['permission:customers.view'])->group(function () {
         Route::get('/customer/list', [CustomerController::class, 'index'])->name('customer.list');
-        Route::get('/customer/stats', [CustomerController::class, 'getStats'])->name('customer.stats');
+        Route::get('/customer/stats', [CustomerController::class, 'stats'])->name('customer.stats');
         Route::get('/customer/{id}/print-count', [CustomerController::class, 'printCount'])->name('customer.print-count');
         Route::get('/customer/invoice-list', function () {
             session(['active_menu' => 'invoice-list']);
