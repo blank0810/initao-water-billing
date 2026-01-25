@@ -9,20 +9,20 @@
  */
 
 test('customer list new view exists and can be compiled', function () {
-    $viewPath = resource_path('views/pages/customer/customer-list-new.blade.php');
+    $viewPath = resource_path('views/pages/customer/customer-list.blade.php');
 
     expect(file_exists($viewPath))
         ->toBeTrue('View file does not exist at: '.$viewPath);
 
     // Test that the view can be compiled without errors
-    $view = view('pages.customer.customer-list-new');
+    $view = view('pages.customer.customer-list');
     $html = $view->render();
 
     expect($html)->toBeString();
 });
 
 test('customer list new view contains required elements', function () {
-    $view = view('pages.customer.customer-list-new');
+    $view = view('pages.customer.customer-list');
     $html = $view->render();
 
     // Check for stats container
@@ -41,7 +41,7 @@ test('customer list new view contains required elements', function () {
 });
 
 test('customer list new view includes javascript file', function () {
-    $view = view('pages.customer.customer-list-new');
+    $view = view('pages.customer.customer-list');
     $html = $view->render();
 
     // Check for Vite directive with JavaScript file
@@ -49,7 +49,7 @@ test('customer list new view includes javascript file', function () {
 });
 
 test('customer list new view has proper table structure', function () {
-    $view = view('pages.customer.customer-list-new');
+    $view = view('pages.customer.customer-list');
     $html = $view->render();
 
     // Check for table headers (6 columns)
@@ -62,7 +62,7 @@ test('customer list new view has proper table structure', function () {
 });
 
 test('customer list new view includes action functions component', function () {
-    $view = view('pages.customer.customer-list-new');
+    $view = view('pages.customer.customer-list');
     $html = $view->render();
 
     // The action-functions component should render search, filter, and clear elements

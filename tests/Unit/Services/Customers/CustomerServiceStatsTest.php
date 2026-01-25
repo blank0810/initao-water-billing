@@ -156,32 +156,44 @@ test('getCustomerStats counts overdue bills correctly', function () {
 
     // Create overdue bills in water_bill_history
     $overdueBill1 = \DB::table('water_bill_history')->insertGetId([
-        'bill_no' => 'BILL-001',
         'connection_id' => 1,
         'period_id' => 1,
+        'prev_reading_id' => 1,
+        'curr_reading_id' => 2,
+        'consumption' => 10.000,
+        'water_amount' => 500.00,
         'due_date' => now()->subDays(10), // Overdue
-        'total_amount_due' => 500.00,
+        'adjustment_total' => 0.00,
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
         'created_at' => now(),
         'updated_at' => now(),
     ]);
 
     $overdueBill2 = \DB::table('water_bill_history')->insertGetId([
-        'bill_no' => 'BILL-002',
         'connection_id' => 2,
-        'period_id' => 1,
+        'period_id' => 2,
+        'prev_reading_id' => 3,
+        'curr_reading_id' => 4,
+        'consumption' => 15.000,
+        'water_amount' => 750.00,
         'due_date' => now()->subDays(5), // Overdue
-        'total_amount_due' => 750.00,
+        'adjustment_total' => 0.00,
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
         'created_at' => now(),
         'updated_at' => now(),
     ]);
 
     // Create current bill (not overdue)
     $currentBill = \DB::table('water_bill_history')->insertGetId([
-        'bill_no' => 'BILL-003',
         'connection_id' => 3,
-        'period_id' => 1,
+        'period_id' => 3,
+        'prev_reading_id' => 5,
+        'curr_reading_id' => 6,
+        'consumption' => 6.000,
+        'water_amount' => 300.00,
         'due_date' => now()->addDays(5), // Not overdue
-        'total_amount_due' => 300.00,
+        'adjustment_total' => 0.00,
+        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
         'created_at' => now(),
         'updated_at' => now(),
     ]);
