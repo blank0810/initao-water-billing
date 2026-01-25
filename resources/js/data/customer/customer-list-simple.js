@@ -244,11 +244,8 @@
 
                 <!-- Location -->
                 <td class="px-4 py-3">
-                    <div class="text-sm text-gray-900 dark:text-white">
+                    <div class="text-sm text-gray-900 dark:text-gray-100">
                         ${escapeHtml(customer.location || 'N/A')}
-                    </div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400">
-                        ${escapeHtml(customer.c_type || 'N/A')}
                     </div>
                 </td>
 
