@@ -227,18 +227,16 @@
             <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <!-- Customer Name & Avatar -->
                 <td class="px-4 py-3">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 h-10 w-10">
-                            <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                                ${getInitials(customer.name)}
-                            </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                            ${getInitials(customer.name)}
                         </div>
-                        <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                 ${escapeHtml(customer.name)}
                             </div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">
-                                ${escapeHtml(customer.customer_id || 'N/A')}
+                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                ID: ${escapeHtml(customer.customer_id || 'N/A')}
                             </div>
                         </div>
                     </div>
