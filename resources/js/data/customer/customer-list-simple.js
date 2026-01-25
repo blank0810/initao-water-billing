@@ -251,14 +251,14 @@
 
                 <!-- Meter Number -->
                 <td class="px-4 py-3">
-                    <div class="text-sm font-mono text-gray-900 dark:text-white">
+                    <div class="text-sm font-mono text-gray-900 dark:text-gray-100">
                         ${escapeHtml(customer.meter_number || 'N/A')}
                     </div>
                 </td>
 
                 <!-- Current Bill -->
                 <td class="px-4 py-3 text-right">
-                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         ${customer.current_bill ? '₱' + parseFloat(customer.current_bill).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '₱0.00'}
                     </div>
                 </td>
