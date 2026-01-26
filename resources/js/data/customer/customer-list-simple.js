@@ -259,7 +259,7 @@
                 <!-- Current Bill -->
                 <td class="px-4 py-3 text-right">
                     <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        ${customer.current_bill ? '₱' + parseFloat(customer.current_bill).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '₱0.00'}
+                        ${formatCurrency(customer.current_bill)}
                     </div>
                 </td>
 
@@ -360,6 +360,29 @@
             "'": '&#039;'
         };
         return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+
+    /**
+     * Format currency value with validation
+     */
+    function formatCurrency(value) {
+        // Handle undefined, null, or empty values
+        if (value === undefined || value === null || value === '') {
+            return '₱0.00';
+        }
+
+        // Parse and validate number
+        const amount = parseFloat(value);
+        if (isNaN(amount)) {
+            console.warn('Invalid currency value:', value);
+            return '₱0.00';
+        }
+
+        // Format as currency
+        return '₱' + amount.toLocaleString('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
     }
 
     /**
