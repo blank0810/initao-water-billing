@@ -293,4 +293,27 @@ class CustomerController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get customer details for details page
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getDetails(int $id): JsonResponse
+    {
+        try {
+            $details = $this->customerService->getCustomerDetails($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $details,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getMessage() === 'Customer not found' ? 404 : 500);
+        }
+    }
 }

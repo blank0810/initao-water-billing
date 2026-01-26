@@ -541,4 +541,240 @@ class CustomerService
             'overdue_count' => $overdueCount,
         ];
     }
+
+    /**
+     * Get comprehensive customer details for details page
+     *
+     * @param  int  $customerId
+     * @return array
+     *
+     * @throws \Exception
+     */
+    public function getCustomerDetails(int $customerId): array
+    {
+        // Query customer with all necessary relationships
+        $customer = Customer::with([
+            'status',
+            'address.purok',
+            'address.barangay',
+            'address.town',
+            'address.province',
+            'serviceConnections' => function ($query) {
+                $query->with([
+                    'status',
+                    'accountType',
+                    'meterAssignments.meter',
+                    'area',
+                ]);
+            },
+            'customerLedgerEntries',
+        ])->find($customerId);
+
+        if (! $customer) {
+            throw new \Exception('Customer not found');
+        }
+
+        // Build response data
+        return [
+            'customer_info' => $this->buildCustomerInfo($customer),
+            'meter_billing' => $this->buildMeterBilling($customer),
+            'account_status' => $this->buildAccountStatus($customer),
+            'service_connections' => $this->buildServiceConnections($customer),
+        ];
+    }
+
+    /**
+     * Build customer information section
+     *
+     * @param  Customer  $customer
+     * @return array
+     */
+    private function buildCustomerInfo(Customer $customer): array
+    {
+        $fullName = trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}");
+        $address = $this->formatLocation($customer);
+
+        return [
+            'cust_id' => $customer->cust_id,
+            'customer_code' => $customer->resolution_no ?? "CUST-{$customer->cust_id}",
+            'full_name' => $fullName,
+            'first_name' => $customer->cust_first_name,
+            'middle_name' => $customer->cust_middle_name ?? '',
+            'last_name' => $customer->cust_last_name,
+            'address' => $address,
+        ];
+    }
+
+    /**
+     * Build meter and billing section
+     *
+     * @param  Customer  $customer
+     * @return array
+     */
+    private function buildMeterBilling(Customer $customer): array
+    {
+        // Get active service connection
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $activeConnection = $customer->serviceConnections
+            ->where('stat_id', $activeStatusId)
+            ->first();
+
+        if (! $activeConnection) {
+            return [
+                'meter_no' => 'Not Assigned',
+                'rate_class' => 'N/A',
+                'total_bill' => '0.00',
+                'total_bill_formatted' => '₱0.00',
+                'has_active_connection' => false,
+            ];
+        }
+
+        // Get meter information from latest meter assignment
+        $latestAssignment = $activeConnection->meterAssignments()
+            ->orderBy('assigned_at', 'desc')
+            ->first();
+
+        $meterNo = ($latestAssignment && $latestAssignment->meter)
+            ? $latestAssignment->meter->mtr_serial
+            : 'Not Assigned';
+
+        // Get rate class from account type
+        $rateClass = $activeConnection->accountType
+            ? $activeConnection->accountType->at_description
+            : 'N/A';
+
+        // Calculate total unpaid bills
+        $totalBill = $this->calculateTotalUnpaidBills($customer);
+
+        return [
+            'meter_no' => $meterNo,
+            'rate_class' => $rateClass,
+            'total_bill' => number_format($totalBill, 2, '.', ''),
+            'total_bill_formatted' => '₱'.number_format($totalBill, 2, '.', ','),
+            'has_active_connection' => true,
+            'connection_id' => $activeConnection->connection_id,
+            'account_no' => $activeConnection->account_no,
+        ];
+    }
+
+    /**
+     * Build account status section
+     *
+     * @param  Customer  $customer
+     * @return array
+     */
+    private function buildAccountStatus(Customer $customer): array
+    {
+        $status = $customer->status?->stat_desc ?? 'UNKNOWN';
+        $ledgerBalance = $this->calculateLedgerBalance($customer);
+        $lastUpdated = $customer->updated_at ?? $customer->create_date;
+
+        return [
+            'status' => $status,
+            'status_badge' => $this->getStatusBadgeData($status),
+            'ledger_balance' => number_format($ledgerBalance, 2, '.', ''),
+            'ledger_balance_formatted' => '₱'.number_format($ledgerBalance, 2, '.', ','),
+            'last_updated' => $lastUpdated ? $lastUpdated->format('Y-m-d') : 'N/A',
+            'last_updated_formatted' => $lastUpdated ? $lastUpdated->format('M d, Y') : 'N/A',
+            'created_at' => $customer->create_date ? $customer->create_date->format('M d, Y') : 'N/A',
+        ];
+    }
+
+    /**
+     * Build service connections list
+     *
+     * @param  Customer  $customer
+     * @return array
+     */
+    private function buildServiceConnections(Customer $customer): array
+    {
+        return $customer->serviceConnections->map(function ($connection) {
+            $latestAssignment = $connection->meterAssignments()
+                ->orderBy('assigned_at', 'desc')
+                ->first();
+
+            $meterNo = ($latestAssignment && $latestAssignment->meter)
+                ? $latestAssignment->meter->mtr_serial
+                : 'Not Assigned';
+
+            return [
+                'connection_id' => $connection->connection_id,
+                'account_no' => $connection->account_no,
+                'connection_type' => $connection->accountType?->at_description ?? 'N/A',
+                'meter_no' => $meterNo,
+                'status' => $connection->status?->stat_desc ?? 'UNKNOWN',
+                'status_badge' => $this->getStatusBadgeData($connection->status?->stat_desc ?? 'UNKNOWN'),
+                'started_at' => $connection->started_at ? $connection->started_at->format('M d, Y') : 'N/A',
+                'area' => $connection->area?->a_desc ?? 'N/A',
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Calculate total unpaid bills
+     *
+     * @param  Customer  $customer
+     * @return float
+     */
+    private function calculateTotalUnpaidBills(Customer $customer): float
+    {
+        $totalDebits = $customer->customerLedgerEntries
+            ->where('source_type', 'BILL')
+            ->sum('debit');
+
+        $totalCredits = $customer->customerLedgerEntries
+            ->where('source_type', 'PAYMENT')
+            ->sum('credit');
+
+        return max(0, $totalDebits - $totalCredits);
+    }
+
+    /**
+     * Calculate ledger balance (all entries)
+     *
+     * @param  Customer  $customer
+     * @return float
+     */
+    private function calculateLedgerBalance(Customer $customer): float
+    {
+        $totalDebits = $customer->customerLedgerEntries->sum('debit');
+        $totalCredits = $customer->customerLedgerEntries->sum('credit');
+
+        return $totalDebits - $totalCredits;
+    }
+
+    /**
+     * Get status badge data for frontend
+     *
+     * @param  string  $status
+     * @return array
+     */
+    private function getStatusBadgeData(string $status): array
+    {
+        $badges = [
+            'ACTIVE' => [
+                'text' => 'Active',
+                'color' => 'green',
+                'classes' => 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300',
+            ],
+            'PENDING' => [
+                'text' => 'Pending',
+                'color' => 'orange',
+                'classes' => 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-300',
+            ],
+            'INACTIVE' => [
+                'text' => 'Inactive',
+                'color' => 'gray',
+                'classes' => 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
+            ],
+        ];
+
+        $statusUpper = strtoupper($status);
+
+        return $badges[$statusUpper] ?? [
+            'text' => 'Unknown',
+            'color' => 'gray',
+            'classes' => 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
+        ];
+    }
 }
