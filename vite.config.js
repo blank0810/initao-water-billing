@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/payment.js',
                 'resources/js/network-detector.js',
                 'resources/js/data/customer/customer-list-simple.js',
+                'resources/js/data/customer/customer-details-data.js',
                 'resources/js/data/consumer/consumer-list.js',
                 'resources/js/utils/action-functions.js',
             ],
