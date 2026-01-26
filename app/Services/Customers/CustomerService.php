@@ -790,7 +790,7 @@ class CustomerService
     {
         $customer = Customer::with([
             'serviceConnections' => function ($query) {
-                $query->with(['accountType', 'status']);
+                $query->with(['accountType', 'status', 'serviceApplication']);
             },
         ])->find($customerId);
 
@@ -844,30 +844,46 @@ class CustomerService
     private function getConnectionDocuments($connection): array
     {
         $docs = [];
+        $application = $connection->serviceApplication;
 
-        // Service Application (if has application date)
-        if ($connection->application_date) {
-            $docs[] = [
-                'type' => 'application',
-                'name' => 'Service Application',
-                'date' => $connection->application_date->format('Y-m-d'),
-                'view_url' => url("/customer/service-connection/{$connection->connection_id}"),
-                'print_url' => url("/customer/service-connection/{$connection->connection_id}"),
-                'icon' => 'fa-file-alt',
-            ];
+        // Only show documents if service application exists
+        if (! $application) {
+            return $docs;
         }
 
+        $applicationId = $application->application_id;
+
+        // Service Application (always available if application exists)
+        $docs[] = [
+            'type' => 'application',
+            'name' => 'Service Application',
+            'date' => $application->created_at->format('Y-m-d'),
+            'view_url' => url("/connection/service-application/{$applicationId}"),
+            'print_url' => url("/connection/service-application/{$applicationId}/print"),
+            'icon' => 'fa-file-alt',
+        ];
+
         // Service Contract (if approved)
-        if ($connection->approved_at) {
+        if ($application->approved_at) {
             $docs[] = [
                 'type' => 'contract',
                 'name' => 'Service Contract',
-                'date' => $connection->approved_at->format('Y-m-d'),
-                'view_url' => url("/customer/service-connection/{$connection->connection_id}"),
-                'print_url' => url("/customer/service-connection/{$connection->connection_id}"),
+                'date' => $application->approved_at->format('Y-m-d'),
+                'view_url' => url("/connection/service-application/{$applicationId}/contract"),
+                'print_url' => url("/connection/service-application/{$applicationId}/contract"),
                 'icon' => 'fa-file-contract',
             ];
         }
+
+        // Order of Payment (always available if application exists)
+        $docs[] = [
+            'type' => 'payment_order',
+            'name' => 'Order of Payment',
+            'date' => $application->created_at->format('Y-m-d'),
+            'view_url' => url("/connection/service-application/{$applicationId}/order-of-payment"),
+            'print_url' => url("/connection/service-application/{$applicationId}/order-of-payment"),
+            'icon' => 'fa-money-bill',
+        ];
 
         // Connection Statement (available for active connections)
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
@@ -881,16 +897,6 @@ class CustomerService
                 'icon' => 'fa-file-invoice',
             ];
         }
-
-        // Order of Payment (if connection exists - can always generate)
-        $docs[] = [
-            'type' => 'payment_order',
-            'name' => 'Order of Payment',
-            'date' => now()->format('Y-m-d'),
-            'view_url' => url("/customer/service-connection/{$connection->connection_id}"),
-            'print_url' => url("/customer/service-connection/{$connection->connection_id}"),
-            'icon' => 'fa-money-bill',
-        ];
 
         return $docs;
     }
