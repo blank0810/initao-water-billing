@@ -631,7 +631,7 @@ class CustomerService
 
         // Get meter information from latest meter assignment
         $latestAssignment = $activeConnection->meterAssignments()
-            ->orderBy('assigned_at', 'desc')
+            ->orderBy('installed_at', 'desc')
             ->first();
 
         $meterNo = ($latestAssignment && $latestAssignment->meter)
@@ -690,7 +690,7 @@ class CustomerService
     {
         return $customer->serviceConnections->map(function ($connection) {
             $latestAssignment = $connection->meterAssignments()
-                ->orderBy('assigned_at', 'desc')
+                ->orderBy('installed_at', 'desc')
                 ->first();
 
             $meterNo = ($latestAssignment && $latestAssignment->meter)
