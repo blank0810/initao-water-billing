@@ -863,12 +863,18 @@ class CustomerService
             'icon' => 'fa-file-alt',
         ];
 
-        // Service Contract (if approved)
-        if ($application->approved_at) {
+        // Service Contract (if approved or scheduled)
+        // Contract is available if application has been approved OR scheduled
+        // (scheduled implies approval, even if approved_at is not set)
+        if ($application->approved_at || $application->scheduled_at) {
+            $contractDate = $application->approved_at
+                ? $application->approved_at->format('Y-m-d')
+                : $application->scheduled_at->format('Y-m-d');
+
             $docs[] = [
                 'type' => 'contract',
                 'name' => 'Service Contract',
-                'date' => $application->approved_at->format('Y-m-d'),
+                'date' => $contractDate,
                 'view_url' => url("/connection/service-application/{$applicationId}/contract"),
                 'print_url' => url("/connection/service-application/{$applicationId}/contract"),
                 'icon' => 'fa-file-contract',
