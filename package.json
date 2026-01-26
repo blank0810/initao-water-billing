@@ -5,6 +5,8 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "sync": "composer install && npm install && php artisan migrate && php artisan config:clear && php artisan view:clear && npm run build",
+        "sync:docker": "composer install && npm install && docker compose exec water_billing_app php artisan migrate && docker compose exec water_billing_app php artisan config:clear && docker compose exec water_billing_app php artisan view:clear && npm run build",
         "deploy": "vite build && php artisan migrate --force",
         "deploy:fresh": "vite build && php artisan migrate:fresh --seed --force"
     },

@@ -5,14 +5,18 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
+use App\Models\Role;
 use App\Models\Status;
+use App\Services\AreaAssignmentService;
 use App\Services\Users\UserService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
     public function __construct(
-        protected UserService $userService
+        protected UserService $userService,
+        protected AreaAssignmentService $areaAssignmentService
     ) {}
 
     /**
@@ -58,13 +62,32 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
-        $user = $this->userService->createUser($request->validated());
+        DB::beginTransaction();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'User created successfully',
-            'data' => $this->userService->formatUserForResponse($user),
-        ], 201);
+        try {
+            $user = $this->userService->createUser($request->validated());
+
+            // If user has meter_reader role, assign areas
+            if ($this->isMeterReaderRole($request->input('role_id'))) {
+                if ($request->has('meter_reader_areas')) {
+                    $this->areaAssignmentService->assignAreasToUser(
+                        $user->id,
+                        $request->input('meter_reader_areas')
+                    );
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully',
+                'data' => $this->userService->formatUserForResponse($user),
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -150,5 +173,15 @@ class UserController extends Controller
             'success' => true,
             'data' => $stats,
         ]);
+    }
+
+    /**
+     * Check if the given role ID is a meter reader role
+     */
+    private function isMeterReaderRole(int $roleId): bool
+    {
+        $role = Role::find($roleId);
+
+        return $role && $role->role_name === Role::METER_READER;
     }
 }

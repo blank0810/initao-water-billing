@@ -52,18 +52,32 @@ return new class extends Migration
         }
 
         // Check if foreign key already exists before adding
-        $foreignKeyExists = DB::select("
-            SELECT COUNT(*) as count
-            FROM information_schema.TABLE_CONSTRAINTS
-            WHERE CONSTRAINT_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'BillAdjustment'
-            AND CONSTRAINT_NAME = 'billadjustment_stat_id_foreign'
-        ");
+        $driver = DB::connection()->getDriverName();
 
-        if ($foreignKeyExists[0]->count == 0) {
-            Schema::table('BillAdjustment', function (Blueprint $table) {
-                $table->foreign('stat_id')->references('stat_id')->on('statuses')->onDelete('set null');
-            });
+        if ($driver === 'sqlite') {
+            // SQLite: Just add the foreign key, Laravel handles duplicates gracefully
+            try {
+                Schema::table('BillAdjustment', function (Blueprint $table) {
+                    $table->foreign('stat_id')->references('stat_id')->on('statuses')->onDelete('set null');
+                });
+            } catch (\Exception $e) {
+                // Foreign key already exists, skip
+            }
+        } else {
+            // MySQL: Check information_schema first
+            $foreignKeyExists = DB::select("
+                SELECT COUNT(*) as count
+                FROM information_schema.TABLE_CONSTRAINTS
+                WHERE CONSTRAINT_SCHEMA = DATABASE()
+                AND TABLE_NAME = 'BillAdjustment'
+                AND CONSTRAINT_NAME = 'billadjustment_stat_id_foreign'
+            ");
+
+            if ($foreignKeyExists[0]->count == 0) {
+                Schema::table('BillAdjustment', function (Blueprint $table) {
+                    $table->foreign('stat_id')->references('stat_id')->on('statuses')->onDelete('set null');
+                });
+            }
         }
     }
 
@@ -73,18 +87,32 @@ return new class extends Migration
     public function down(): void
     {
         // Check if foreign key exists before dropping
-        $foreignKeyExists = DB::select("
-            SELECT COUNT(*) as count
-            FROM information_schema.TABLE_CONSTRAINTS
-            WHERE CONSTRAINT_SCHEMA = DATABASE()
-            AND TABLE_NAME = 'BillAdjustment'
-            AND CONSTRAINT_NAME = 'billadjustment_stat_id_foreign'
-        ");
+        $driver = DB::connection()->getDriverName();
 
-        if ($foreignKeyExists[0]->count > 0) {
-            Schema::table('BillAdjustment', function (Blueprint $table) {
-                $table->dropForeign(['stat_id']);
-            });
+        if ($driver === 'sqlite') {
+            // SQLite: Just try to drop, ignore if doesn't exist
+            try {
+                Schema::table('BillAdjustment', function (Blueprint $table) {
+                    $table->dropForeign(['stat_id']);
+                });
+            } catch (\Exception $e) {
+                // Foreign key doesn't exist, skip
+            }
+        } else {
+            // MySQL: Check information_schema first
+            $foreignKeyExists = DB::select("
+                SELECT COUNT(*) as count
+                FROM information_schema.TABLE_CONSTRAINTS
+                WHERE CONSTRAINT_SCHEMA = DATABASE()
+                AND TABLE_NAME = 'BillAdjustment'
+                AND CONSTRAINT_NAME = 'billadjustment_stat_id_foreign'
+            ");
+
+            if ($foreignKeyExists[0]->count > 0) {
+                Schema::table('BillAdjustment', function (Blueprint $table) {
+                    $table->dropForeign(['stat_id']);
+                });
+            }
         }
 
         Schema::table('BillAdjustment', function (Blueprint $table) {

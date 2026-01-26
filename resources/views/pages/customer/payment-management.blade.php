@@ -195,5 +195,5 @@
         </div>
     </div>
 
-    @vite(['resources/js/data/customer/customer.js', 'resources/js/data/customer/payment.js'])
+    @vite(['resources/js/data/customer/payment.js', 'resources/js/utils/workflow-statuses.js'])
 </x-app-layout>

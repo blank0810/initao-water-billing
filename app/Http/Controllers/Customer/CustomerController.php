@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Services\Customers\CustomerService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -31,6 +32,18 @@ class CustomerController extends Controller
 
         // If not AJAX, return the view
         return view('pages.customer.customer-list');
+    }
+
+    /**
+     * Get customer statistics for dashboard/list page
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function stats(): JsonResponse
+    {
+        $stats = $this->customerService->getCustomerStats();
+
+        return response()->json($stats);
     }
 
     /**
@@ -258,6 +271,72 @@ class CustomerController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Get customer statistics for dashboard cards
+     *
+     * @return JsonResponse
+     */
+    public function getStats(): JsonResponse
+    {
+        try {
+            $stats = $this->customerService->getCustomerStats();
+
+            return response()->json($stats);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get customer details for details page
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getDetails(int $id): JsonResponse
+    {
+        try {
+            $details = $this->customerService->getCustomerDetails($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $details,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getMessage() === 'Customer not found' ? 404 : 500);
+        }
+    }
+
+    /**
+     * Get customer documents from all service connections
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getDocuments(int $id): JsonResponse
+    {
+        try {
+            $documents = $this->customerService->getCustomerDocuments($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $documents,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], $e->getMessage() === 'Customer not found' ? 404 : 500);
         }
     }
 }
