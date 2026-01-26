@@ -45,33 +45,81 @@
     }
 
     /**
-     * Render stats cards
+     * Render stats cards with defensive programming
      */
     function renderStats(stats) {
-        // Update Total Customers stat
-        const totalEl = document.querySelector('#stat-total .text-2xl');
-        if (totalEl) {
-            totalEl.textContent = stats.total_customers?.toLocaleString() || 0;
+        // Validate stats object
+        if (!stats || typeof stats !== 'object') {
+            console.error('Invalid stats data received:', stats);
+            showStatsError();
+            return;
         }
+
+        // Update Total Customers stat
+        updateStatCard('#stat-total', stats.total_customers, 'number');
 
         // Update Residential Type stat
-        const residentialEl = document.querySelector('#stat-residential .text-2xl');
-        if (residentialEl) {
-            residentialEl.textContent = stats.residential_count?.toLocaleString() || 0;
-        }
+        updateStatCard('#stat-residential', stats.residential_count, 'number');
 
         // Update Total Current Bill stat
-        const billEl = document.querySelector('#stat-bill .text-2xl');
-        if (billEl) {
-            const billAmount = parseFloat(stats.total_current_bill) || 0;
-            billEl.textContent = '₱' + billAmount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
+        updateStatCard('#stat-bill', stats.total_current_bill, 'currency');
 
         // Update Overdue stat
-        const overdueEl = document.querySelector('#stat-overdue .text-2xl');
-        if (overdueEl) {
-            overdueEl.textContent = stats.overdue_count?.toLocaleString() || 0;
+        updateStatCard('#stat-overdue', stats.overdue_count, 'number');
+    }
+
+    /**
+     * Helper function to update individual stat card with validation
+     */
+    function updateStatCard(selector, value, type) {
+        const el = document.querySelector(`${selector} .text-2xl`);
+        if (!el) {
+            console.warn(`Stat card element not found: ${selector}`);
+            return;
         }
+
+        // Handle undefined/null values
+        if (value === undefined || value === null) {
+            console.warn(`Stat value is missing for ${selector}:`, value);
+            el.textContent = type === 'currency' ? '₱0.00' : '0';
+            return;
+        }
+
+        // Format based on type
+        if (type === 'currency') {
+            const amount = parseFloat(value);
+            if (isNaN(amount)) {
+                console.error(`Invalid currency value for ${selector}:`, value);
+                el.textContent = '₱0.00';
+                return;
+            }
+            el.textContent = '₱' + amount.toLocaleString('en-PH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } else {
+            // Number type
+            const num = parseInt(value);
+            if (isNaN(num)) {
+                console.error(`Invalid number value for ${selector}:`, value);
+                el.textContent = '0';
+                return;
+            }
+            el.textContent = num.toLocaleString();
+        }
+    }
+
+    /**
+     * Show error state for stats cards
+     */
+    function showStatsError() {
+        const selectors = ['#stat-total', '#stat-residential', '#stat-bill', '#stat-overdue'];
+        selectors.forEach(selector => {
+            const el = document.querySelector(`${selector} .text-2xl`);
+            if (el) {
+                el.textContent = selector === '#stat-bill' ? '₱0.00' : '0';
+            }
+        });
     }
 
     /**
@@ -223,7 +271,7 @@
                 <!-- Actions -->
                 <td class="px-4 py-3 text-center">
                     <div class="flex justify-center gap-2">
-                        <a href="/customer/${customer.cust_id}"
+                        <a href="/customer/details/${customer.cust_id}"
                            class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                            title="View Details">
                             <i class="fas fa-eye"></i>

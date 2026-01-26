@@ -537,7 +537,7 @@ class CustomerService
         return [
             'total_customers' => $totalCustomers,
             'residential_count' => $residentialCount,
-            'total_current_bill' => number_format($totalCurrentBill, 2, '.', ''),
+            'total_current_bill' => (float) $totalCurrentBill,
             'overdue_count' => $overdueCount,
         ];
     }
