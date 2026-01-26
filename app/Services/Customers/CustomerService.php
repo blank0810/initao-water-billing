@@ -777,4 +777,140 @@ class CustomerService
             'classes' => 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
         ];
     }
+
+    /**
+     * Get all documents from all service connections for a customer
+     *
+     * @param  int  $customerId
+     * @return array
+     *
+     * @throws \Exception
+     */
+    public function getCustomerDocuments(int $customerId): array
+    {
+        $customer = Customer::with([
+            'serviceConnections' => function ($query) {
+                $query->with(['accountType', 'status']);
+            },
+        ])->find($customerId);
+
+        if (! $customer) {
+            throw new \Exception('Customer not found');
+        }
+
+        $documents = [];
+
+        // Aggregate documents from all service connections
+        foreach ($customer->serviceConnections as $connection) {
+            $connectionDocs = $this->getConnectionDocuments($connection);
+
+            foreach ($connectionDocs as $doc) {
+                $documents[] = [
+                    'connection_id' => $connection->connection_id,
+                    'account_no' => $connection->account_no,
+                    'connection_type' => $connection->accountType?->at_description ?? 'N/A',
+                    'connection_status' => $connection->status?->stat_desc ?? 'UNKNOWN',
+                    'document_type' => $doc['type'],
+                    'document_name' => $doc['name'],
+                    'generated_at' => $doc['date'],
+                    'generated_at_formatted' => \Carbon\Carbon::parse($doc['date'])->format('M d, Y'),
+                    'view_url' => $doc['view_url'],
+                    'print_url' => $doc['print_url'],
+                    'icon' => $doc['icon'],
+                    'status_badge' => $this->getStatusBadgeData($connection->status?->stat_desc ?? 'UNKNOWN'),
+                ];
+            }
+        }
+
+        // Sort by date descending (most recent first)
+        usort($documents, function ($a, $b) {
+            return strtotime($b['generated_at']) - strtotime($a['generated_at']);
+        });
+
+        return [
+            'connections' => $this->buildConnectionsForFilter($customer),
+            'documents' => $documents,
+            'total_documents' => count($documents),
+            'total_connections' => $customer->serviceConnections->count(),
+        ];
+    }
+
+    /**
+     * Get available documents for a service connection
+     *
+     * @param  \App\Models\ServiceConnection  $connection
+     * @return array
+     */
+    private function getConnectionDocuments($connection): array
+    {
+        $docs = [];
+
+        // Service Application (if has application date)
+        if ($connection->application_date) {
+            $docs[] = [
+                'type' => 'application',
+                'name' => 'Service Application',
+                'date' => $connection->application_date->format('Y-m-d'),
+                'view_url' => url("/customer/service-connection/{$connection->connection_id}"),
+                'print_url' => url("/customer/service-connection/{$connection->connection_id}"),
+                'icon' => 'fa-file-alt',
+            ];
+        }
+
+        // Service Contract (if approved)
+        if ($connection->approved_at) {
+            $docs[] = [
+                'type' => 'contract',
+                'name' => 'Service Contract',
+                'date' => $connection->approved_at->format('Y-m-d'),
+                'view_url' => url("/customer/service-connection/{$connection->connection_id}"),
+                'print_url' => url("/customer/service-connection/{$connection->connection_id}"),
+                'icon' => 'fa-file-contract',
+            ];
+        }
+
+        // Connection Statement (available for active connections)
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        if ($connection->stat_id == $activeStatusId) {
+            $docs[] = [
+                'type' => 'statement',
+                'name' => 'Connection Statement',
+                'date' => now()->format('Y-m-d'),
+                'view_url' => url("/customer/service-connection/{$connection->connection_id}/statement"),
+                'print_url' => url("/customer/service-connection/{$connection->connection_id}/statement"),
+                'icon' => 'fa-file-invoice',
+            ];
+        }
+
+        // Order of Payment (if connection exists - can always generate)
+        $docs[] = [
+            'type' => 'payment_order',
+            'name' => 'Order of Payment',
+            'date' => now()->format('Y-m-d'),
+            'view_url' => url("/customer/service-connection/{$connection->connection_id}"),
+            'print_url' => url("/customer/service-connection/{$connection->connection_id}"),
+            'icon' => 'fa-money-bill',
+        ];
+
+        return $docs;
+    }
+
+    /**
+     * Build connections list for filter dropdown
+     *
+     * @param  Customer  $customer
+     * @return array
+     */
+    private function buildConnectionsForFilter(Customer $customer): array
+    {
+        return $customer->serviceConnections->map(function ($connection) {
+            return [
+                'connection_id' => $connection->connection_id,
+                'account_no' => $connection->account_no,
+                'connection_type' => $connection->accountType?->at_description ?? 'N/A',
+                'status' => $connection->status?->stat_desc ?? 'UNKNOWN',
+                'display_label' => "{$connection->account_no} ({$connection->accountType?->at_description})",
+            ];
+        })->toArray();
+    }
 }

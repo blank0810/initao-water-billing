@@ -221,11 +221,124 @@
     };
 
     /**
+     * Fetch customer documents from API
+     */
+    async function loadCustomerDocuments() {
+        try {
+            const response = await fetch(`/api/customer/${customerId}/documents`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Customer not found');
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to load customer documents');
+            }
+
+            populateDocumentsTable(result.data.documents);
+
+        } catch (error) {
+            console.error('Error loading customer documents:', error);
+            showDocumentsErrorState(error.message);
+        }
+    }
+
+    /**
+     * Populate documents table with API data
+     */
+    function populateDocumentsTable(documents) {
+        const tbody = document.getElementById('documents-tbody');
+        if (!tbody) return;
+
+        if (!documents || documents.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-file-alt text-4xl mb-2 text-gray-300 dark:text-gray-600"></i>
+                        <p>No documents found</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = documents.map(doc => `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <td class="px-4 py-3">
+                    <div class="flex items-center">
+                        <i class="fas ${escapeHtml(doc.icon)} text-blue-600 dark:text-blue-400 mr-2"></i>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(doc.document_name)}</span>
+                    </div>
+                </td>
+                <td class="px-4 py-3">
+                    <div class="text-sm text-gray-900 dark:text-white">
+                        <p class="font-medium">${escapeHtml(doc.account_no)}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${escapeHtml(doc.connection_type)}</p>
+                    </div>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                    ${escapeHtml(doc.generated_at_formatted)}
+                </td>
+                <td class="px-4 py-3">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${doc.status_badge?.classes || 'bg-gray-100 text-gray-800'}">
+                        ${escapeHtml(doc.status_badge?.text || doc.connection_status || 'Unknown')}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <div class="flex justify-center gap-2">
+                        <a href="${escapeHtml(doc.view_url)}"
+                           class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                           title="View Document">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="${escapeHtml(doc.print_url)}"
+                           class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                           title="Print Document"
+                           target="_blank">
+                            <i class="fas fa-print"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    /**
+     * Show error state for documents
+     */
+    function showDocumentsErrorState(message) {
+        const tbody = document.getElementById('documents-tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="px-4 py-8 text-center">
+                    <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-2"></i>
+                    <p class="text-red-600 dark:text-red-400 font-medium">${escapeHtml(message)}</p>
+                </td>
+            </tr>
+        `;
+    }
+
+    /**
      * Initialize on DOM ready
      */
     function init() {
         // Load customer details from API
         loadCustomerDetails();
+
+        // Load customer documents
+        loadCustomerDocuments();
     }
 
     // Initialize when DOM is ready

@@ -111,6 +111,7 @@ Route::middleware('auth')->group(function () {
             return view('pages.customer.customer-details', ['customer_id' => $id]);
         })->name('customer.details');
         Route::get('/api/customer/{id}/details', [CustomerController::class, 'getDetails'])->name('customer.details.api');
+        Route::get('/api/customer/{id}/documents', [CustomerController::class, 'getDocuments'])->name('customer.documents.api');
         Route::get('/customer/{id}/print-count', [CustomerController::class, 'printCount'])->name('customer.print-count');
         Route::get('/customer/invoice-list', function () {
             session(['active_menu' => 'invoice-list']);
