@@ -3,6 +3,14 @@ import './theme.js';
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
 
+// Admin Config Components
+import './components/admin/config/barangays/barangayManager.js';
+import './components/admin/config/areas/areaManager.js';
+import './components/admin/config/water-rates/waterRateManager.js';
+import './components/admin/config/puroks/purokManager.js';
+import './components/admin/config/account-types/accountTypeManager.js';
+import './components/admin/config/charge-items/chargeItemManager.js';
+
 Alpine.plugin(collapse);
 
 window.Alpine = Alpine;
@@ -18,7 +26,6 @@ if (!window.__alpineStarted) {
 // Initialize chart
 document.addEventListener('DOMContentLoaded', () => {
     initializeCharts();
-    // Customer-list specific script was moved to `resources/js/data/customer/customer.js`.
 });
 
 // --- Chart initialization (placeholder) ---

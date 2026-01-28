@@ -392,7 +392,7 @@
                    ($application->address->barangay?->b_desc ?? '') . ', Initao, Misamis Oriental')
             : '';
         $accountType = $application->serviceConnection?->accountType?->at_desc ?? '';
-        $meterSerial = $meterAssignment?->meter?->meter_serial_no ?? '';
+        $meterSerial = $meterAssignment?->meter?->mtr_serial ?? '';
     @endphp
 
     <div class="contract">
@@ -445,11 +445,11 @@
             <div class="service-info">
                 <div class="info-row">
                     <span class="label">Meter Serial No:</span>
-                    <span class="value">{{ $meterAssignment?->meter?->meter_serial_no ?? '' }}</span>
+                    <span class="value">{{ $meterAssignment?->meter?->mtr_serial ?? '' }}</span>
                 </div>
                 <div class="info-row">
                     <span class="label">Meter Brand:</span>
-                    <span class="value">{{ $meterAssignment?->meter?->meter_brand ?? '' }}</span>
+                    <span class="value">{{ $meterAssignment?->meter?->mtr_brand ?? '' }}</span>
                 </div>
                 <div class="info-row">
                     <span class="label">Kind of Service:</span>

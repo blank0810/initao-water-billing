@@ -69,7 +69,7 @@ class WaterBillController extends Controller
     {
         $validated = $request->validate([
             'connection_id' => 'required|integer|exists:ServiceConnection,connection_id',
-            'period_id' => 'nullable|integer|exists:Period,per_id',
+            'period_id' => 'nullable|integer|exists:period,per_id',
             'prev_reading' => 'required|numeric|min:0',
             'curr_reading' => 'required|numeric|min:0',
         ]);
@@ -86,7 +86,7 @@ class WaterBillController extends Controller
     {
         $validated = $request->validate([
             'connection_id' => 'required|integer|exists:ServiceConnection,connection_id',
-            'period_id' => 'required|integer|exists:Period,per_id',
+            'period_id' => 'required|integer|exists:period,per_id',
             'prev_reading' => 'required|numeric|min:0',
             'curr_reading' => 'required|numeric|min:0',
             'reading_date' => 'nullable|date',
@@ -121,7 +121,7 @@ class WaterBillController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading billing details: '.$e->getMessage(),
+                'message' => 'Error loading billing details: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -141,7 +141,7 @@ class WaterBillController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading consumer list: '.$e->getMessage(),
+                'message' => 'Error loading consumer list: ' . $e->getMessage(),
                 'data' => [],
             ], 500);
         }
@@ -165,7 +165,7 @@ class WaterBillController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading billed consumers: '.$e->getMessage(),
+                'message' => 'Error loading billed consumers: ' . $e->getMessage(),
                 'data' => [],
                 'statistics' => [],
             ], 500);
@@ -187,7 +187,7 @@ class WaterBillController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading billing summary: '.$e->getMessage(),
+                'message' => 'Error loading billing summary: ' . $e->getMessage(),
                 'data' => [],
             ], 500);
         }

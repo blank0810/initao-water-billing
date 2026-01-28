@@ -25,17 +25,8 @@ class Purok extends Model
 
     protected $fillable = [
         'p_desc',
-        'b_id',
         'stat_id',
     ];
-
-    /**
-     * Get the barangay that owns the purok
-     */
-    public function barangay()
-    {
-        return $this->belongsTo(Barangay::class, 'b_id', 'b_id');
-    }
 
     /**
      * Get the status associated with the purok

@@ -1,6 +1,12 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\Config\AccountTypeController;
+use App\Http\Controllers\Admin\Config\ChargeItemController;
+use App\Http\Controllers\Admin\Config\AreaController;
+use App\Http\Controllers\Admin\Config\BarangayController;
+use App\Http\Controllers\Admin\Config\PurokController;
+use App\Http\Controllers\Admin\Config\WaterRateController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\RolePermissionController;
@@ -99,6 +105,13 @@ Route::middleware('auth')->group(function () {
     // -------------------------------------------------------------------------
     Route::middleware(['permission:customers.view'])->group(function () {
         Route::get('/customer/list', [CustomerController::class, 'index'])->name('customer.list');
+        Route::get('/customer/stats', [CustomerController::class, 'stats'])->name('customer.stats');
+        Route::get('/customer/details/{id}', function ($id) {
+            session(['active_menu' => 'customer-list']);
+            return view('pages.customer.customer-details', ['customer_id' => $id]);
+        })->name('customer.details');
+        Route::get('/api/customer/{id}/details', [CustomerController::class, 'getDetails'])->name('customer.details.api');
+        Route::get('/api/customer/{id}/documents', [CustomerController::class, 'getDocuments'])->name('customer.documents.api');
         Route::get('/customer/{id}/print-count', [CustomerController::class, 'printCount'])->name('customer.print-count');
         Route::get('/customer/invoice-list', function () {
             session(['active_menu' => 'invoice-list']);
@@ -495,6 +508,57 @@ Route::middleware('auth')->group(function () {
         // Service Connections
         Route::get('/service-connections/status/{status}', [ServiceConnectionController::class, 'getByStatus'])->name('service-connections.by-status');
         Route::get('/service-connections/customer/{customerId}', [ServiceConnectionController::class, 'customerConnections'])->name('service-connections.customer');
+    });
+
+    // -------------------------------------------------------------------------
+    // Geographic Configuration - Barangay & Area Management
+    // -------------------------------------------------------------------------
+    Route::middleware(['permission:config.geographic.manage'])->prefix('config')->group(function () {
+        // Barangays
+        Route::get('/barangays', [BarangayController::class, 'index'])->name('config.barangays.index');
+        Route::post('/barangays', [BarangayController::class, 'store'])->name('config.barangays.store');
+        Route::get('/barangays/{id}', [BarangayController::class, 'show'])->name('config.barangays.show');
+        Route::put('/barangays/{id}', [BarangayController::class, 'update'])->name('config.barangays.update');
+        Route::delete('/barangays/{id}', [BarangayController::class, 'destroy'])->name('config.barangays.destroy');
+
+        // Areas
+        Route::get('/areas', [AreaController::class, 'index'])->name('config.areas.index');
+        Route::post('/areas', [AreaController::class, 'store'])->name('config.areas.store');
+        Route::get('/areas/{id}', [AreaController::class, 'show'])->name('config.areas.show');
+        Route::put('/areas/{id}', [AreaController::class, 'update'])->name('config.areas.update');
+        Route::delete('/areas/{id}', [AreaController::class, 'destroy'])->name('config.areas.destroy');
+
+        // Puroks
+        Route::get('/puroks', [PurokController::class, 'index'])->name('config.puroks.index');
+        Route::post('/puroks', [PurokController::class, 'store'])->name('config.puroks.store');
+        Route::get('/puroks/{id}', [PurokController::class, 'show'])->name('config.puroks.show');
+        Route::put('/puroks/{id}', [PurokController::class, 'update'])->name('config.puroks.update');
+        Route::delete('/puroks/{id}', [PurokController::class, 'destroy'])->name('config.puroks.destroy');
+    });
+
+    // -------------------------------------------------------------------------
+    // Billing Configuration - Water Rate Management
+    // -------------------------------------------------------------------------
+    Route::middleware(['permission:config.billing.manage'])->prefix('config')->group(function () {
+        Route::get('/water-rates', [WaterRateController::class, 'index'])->name('config.water-rates.index');
+        Route::get('/water-rates/account-types', [WaterRateController::class, 'getAccountTypes'])->name('config.water-rates.account-types');
+        Route::post('/water-rates', [WaterRateController::class, 'store'])->name('config.water-rates.store');
+        Route::put('/water-rates/{id}', [WaterRateController::class, 'update'])->name('config.water-rates.update');
+        Route::delete('/water-rates/{id}', [WaterRateController::class, 'destroy'])->name('config.water-rates.destroy');
+
+        // Account Types
+        Route::get('/account-types', [AccountTypeController::class, 'index'])->name('config.account-types.index');
+        Route::post('/account-types', [AccountTypeController::class, 'store'])->name('config.account-types.store');
+        Route::get('/account-types/{id}', [AccountTypeController::class, 'show'])->name('config.account-types.show');
+        Route::put('/account-types/{id}', [AccountTypeController::class, 'update'])->name('config.account-types.update');
+        Route::delete('/account-types/{id}', [AccountTypeController::class, 'destroy'])->name('config.account-types.destroy');
+
+        // Charge Items (Application Fee Templates)
+        Route::get('/charge-items', [ChargeItemController::class, 'index'])->name('config.charge-items.index');
+        Route::post('/charge-items', [ChargeItemController::class, 'store'])->name('config.charge-items.store');
+        Route::get('/charge-items/{id}', [ChargeItemController::class, 'show'])->name('config.charge-items.show');
+        Route::put('/charge-items/{id}', [ChargeItemController::class, 'update'])->name('config.charge-items.update');
+        Route::delete('/charge-items/{id}', [ChargeItemController::class, 'destroy'])->name('config.charge-items.destroy');
     });
 
     // -------------------------------------------------------------------------

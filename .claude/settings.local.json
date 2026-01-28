@@ -30,7 +30,23 @@
       "Bash(git -C /home/blank/Desktop/Projects/Personal_Projects/Water_Billing/initao-water-billing status --porcelain database/migrations/)",
       "Skill(superpowers:brainstorming)",
       "Skill(superpowers:execute-plan)",
-      "Skill(superpowers:executing-plans)"
+      "Skill(superpowers:executing-plans)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Skill(superpowers:writing-plans)",
+      "Bash(find:*)",
+      "Bash(xargs cat:*)",
+      "Bash(mysql:*)",
+      "Bash(docker-compose exec:*)",
+      "Bash(docker compose:*)",
+      "Bash(curl:*)",
+      "Bash(git restore:*)",
+      "Bash(node --check:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(git log:*)",
+      "Bash(npm run build:*)"
     ]
   },
   "enabledMcpjsonServers": [

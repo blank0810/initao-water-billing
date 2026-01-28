@@ -1,5 +1,5 @@
 import '../data/customer/area-config.js'
-import '../data/customer/customer.js'
+import './workflow-statuses.js'
 import '../data/customer/enhanced-customer-data.js'
 import '../data/customer/invoice-data.js'
 import '../data/customer/simple-customer-list.js'

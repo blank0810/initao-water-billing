@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Area extends Model
 {
+    use HasFactory;
     protected $table = 'area';
 
     protected $primaryKey = 'a_id';
@@ -35,6 +37,17 @@ class Area extends Model
     public function areaAssignments()
     {
         return $this->hasMany(AreaAssignment::class, 'area_id', 'a_id');
+    }
+
+    /**
+     * Get active area assignments (where effective_to is null or not yet reached)
+     */
+    public function activeAreaAssignments()
+    {
+        return $this->areaAssignments()->where(function ($q) {
+            $q->whereNull('effective_to')
+                ->orWhere('effective_to', '>=', now()->format('Y-m-d'));
+        });
     }
 
     /**
