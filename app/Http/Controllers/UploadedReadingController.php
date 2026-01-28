@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\UploadedReading;
+use App\Services\Billing\UploadedReadingService;
 use App\Services\Billing\WaterBillService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,7 +11,8 @@ use Illuminate\Http\Request;
 class UploadedReadingController extends Controller
 {
     public function __construct(
-        private WaterBillService $billService
+        private WaterBillService $billService,
+        private UploadedReadingService $uploadedReadingService
     ) {}
 
     /**
@@ -77,6 +79,8 @@ class UploadedReadingController extends Controller
                     'processed_at' => $reading->processed_at?->format('Y-m-d H:i:s'),
                     'bill_id' => $reading->bill_id,
                     'user_id' => $reading->user_id,
+                    'photo_url' => $reading->photo_url,
+                    'has_photo' => $reading->has_photo,
                     'created_at' => $reading->created_at?->format('Y-m-d H:i:s'),
                 ];
             }),
@@ -145,5 +149,61 @@ class UploadedReadingController extends Controller
             'success' => true,
             'stats' => $stats,
         ]);
+    }
+
+    /**
+     * Get a single uploaded reading detail.
+     */
+    public function show(int $uploadedReadingId): JsonResponse
+    {
+        $reading = UploadedReading::find($uploadedReadingId);
+
+        if (! $reading) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reading not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'uploaded_reading_id' => $reading->uploaded_reading_id,
+                'schedule_id' => $reading->schedule_id,
+                'connection_id' => $reading->connection_id,
+                'account_no' => $reading->account_no,
+                'customer_name' => $reading->customer_name,
+                'address' => $reading->address,
+                'area_desc' => $reading->area_desc,
+                'account_type_desc' => $reading->account_type_desc,
+                'connection_status' => $reading->connection_status,
+                'meter_serial' => $reading->meter_serial,
+                'previous_reading' => $reading->previous_reading,
+                'present_reading' => $reading->present_reading,
+                'consumption' => $reading->consumption,
+                'arrear' => $reading->arrear,
+                'penalty' => $reading->penalty,
+                'reading_date' => $reading->reading_date?->format('Y-m-d'),
+                'site_bill_amount' => $reading->site_bill_amount,
+                'computed_amount' => $reading->computed_amount,
+                'is_printed' => $reading->is_printed,
+                'is_scanned' => $reading->is_scanned,
+                'is_processed' => $reading->is_processed ?? false,
+                'processed_at' => $reading->processed_at?->format('Y-m-d H:i:s'),
+                'photo_url' => $reading->photo_url,
+                'has_photo' => $reading->has_photo,
+                'created_at' => $reading->created_at?->format('Y-m-d H:i:s'),
+            ],
+        ]);
+    }
+
+    /**
+     * Delete an uploaded reading.
+     */
+    public function destroy(int $uploadedReadingId): JsonResponse
+    {
+        $result = $this->uploadedReadingService->deleteUploadedReading($uploadedReadingId);
+
+        return response()->json($result, $result['success'] ? 200 : 422);
     }
 }

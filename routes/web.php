@@ -292,6 +292,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/uploaded-readings/user/{userId}', [\App\Http\Controllers\UploadedReadingController::class, 'byUser'])->name('uploaded-readings.by-user');
         Route::get('/uploaded-readings/processing-stats', [\App\Http\Controllers\UploadedReadingController::class, 'processingStats'])->name('uploaded-readings.processing-stats');
         Route::post('/uploaded-readings/process', [\App\Http\Controllers\UploadedReadingController::class, 'processReadings'])->name('uploaded-readings.process');
+        Route::get('/uploaded-readings/{uploadedReadingId}', [\App\Http\Controllers\UploadedReadingController::class, 'show'])->name('uploaded-readings.show');
+        Route::delete('/uploaded-readings/{uploadedReadingId}', [\App\Http\Controllers\UploadedReadingController::class, 'destroy'])->name('uploaded-readings.destroy');
 
         // Bill Adjustment API
         Route::get('/bill-adjustments', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'index'])->name('bill-adjustments.index');
