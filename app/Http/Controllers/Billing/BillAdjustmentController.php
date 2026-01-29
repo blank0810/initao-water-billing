@@ -143,4 +143,48 @@ class BillAdjustmentController extends Controller
             'data' => $summary,
         ]);
     }
+
+    /**
+     * Recompute a single bill.
+     *
+     * This modifies the actual bill record (water_amount, consumption)
+     * based on the current meter readings. Only works on OPEN periods.
+     *
+     * Optionally accepts new reading values to update before recomputing.
+     */
+    public function recomputeBill(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'bill_id' => 'required|integer|exists:water_bill_history,bill_id',
+            'new_prev_reading' => 'nullable|numeric|min:0',
+            'new_curr_reading' => 'nullable|numeric|min:0',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        $result = $this->adjustmentService->recomputeBill(
+            $validated['bill_id'],
+            $validated['remarks'] ?? null,
+            $validated['new_prev_reading'] ?? null,
+            $validated['new_curr_reading'] ?? null
+        );
+
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * Recompute all bills in a period.
+     *
+     * This recalculates all bills based on their current meter readings.
+     * Only works on OPEN periods.
+     */
+    public function recomputePeriod(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'period_id' => 'required|integer|exists:period,per_id',
+        ]);
+
+        $result = $this->adjustmentService->recomputePeriodBills($validated['period_id']);
+
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
 }

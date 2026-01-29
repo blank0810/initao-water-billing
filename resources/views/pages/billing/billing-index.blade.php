@@ -96,6 +96,7 @@
     @include('components.ui.billing.adjustment-modal')
     @include('components.ui.billing.bill-details-modal')
     @include('components.ui.billing.generate-bill-modal')
+    @include('components.ui.billing.recompute-modal')
 
     @vite(['resources/js/data/billing/billing.js'])
 

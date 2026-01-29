@@ -88,6 +88,7 @@
     @include('components.ui.billing.generate-bill-modal')
     @include('components.ui.billing.preview-bill-modal')
     @include('components.ui.billing.receipt-modal')
+    @include('components.ui.billing.recompute-modal')
 
     @vite([
         'resources/js/utils/action-functions.js',
