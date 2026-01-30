@@ -230,6 +230,9 @@ async function loadOpenPeriods() {
 
     try {
         const response = await fetch('/water-bills/billing-periods');
+        if (!response.ok) {
+            throw new Error('Failed to fetch periods');
+        }
         const result = await response.json();
 
         if (result.success && result.data) {
