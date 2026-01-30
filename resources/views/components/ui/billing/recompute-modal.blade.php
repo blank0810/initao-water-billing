@@ -468,6 +468,22 @@ async function submitRecompute() {
             return;
         }
 
+        // Check response status before parsing JSON
+        if (!response.ok) {
+            const errorText = await response.text();
+            let errorMessage = 'Recomputation failed';
+            try {
+                const errorJson = JSON.parse(errorText);
+                errorMessage = errorJson.message || errorMessage;
+            } catch {
+                // Response was not JSON (e.g., HTML error page)
+            }
+            showRecomputeMessage(errorMessage, 'error');
+            btn.disabled = false;
+            icon.className = 'fas fa-calculator mr-2';
+            return;
+        }
+
         const result = await response.json();
 
         if (result.success) {
