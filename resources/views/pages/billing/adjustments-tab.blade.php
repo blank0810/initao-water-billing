@@ -312,7 +312,7 @@ function viewAdjustmentTab(adjustmentId) {
         if (typeof window.viewAdjustmentDetail === 'function') {
             window.viewAdjustmentDetail(adj);
         } else {
-            alert('Adjustment ID: ' + adj.bill_adjustment_id + '\nType: ' + (adj.type_name || adj.direction) + '\nAmount: ₱' + adj.amount.toFixed(2) + '\nRemarks: ' + (adj.remarks || 'N/A'));
+            alert('Adjustment ID: ' + adj.bill_adjustment_id + '\nType: ' + (adj.type_name || adj.direction) + '\nAmount: ₱' + (adj.amount ?? 0).toFixed(2) + '\nRemarks: ' + (adj.remarks || 'N/A'));
         }
     }
 }
