@@ -270,6 +270,10 @@ async function lookupBillForRecompute() {
 
     try {
         const response = await fetch(`/bill-adjustments/lookup/${billId}`);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Bill not found');
+        }
         const result = await response.json();
 
         if (result.success && result.data) {
