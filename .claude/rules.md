@@ -3,6 +3,21 @@
 > **Goal:** Deliver a maintainable, modular, and production-ready Laravel Water Billing System in ≤90 days using clean service-layer architecture — without unnecessary abstractions like full DDD or repository layers.
 
 ---
+# Code Efficiency Guidelines
+
+<token_optimization>
+When writing code:
+- **Plan first**: Outline the most direct path to the solution
+- **Minimize verbosity**: Remove unnecessary comments, whitespace, and redundant code
+- **Leverage built-ins**: Prefer standard library over custom implementations
+- **Avoid repetition**: Extract common patterns into reusable functions/methods
+- **Optimal algorithms**: Choose O(n) over O(n²) where practical
+- **Context-aware**: Provide only requested code sections, not entire files unless needed
+
+Balance: Optimize for tokens while maintaining code clarity and correctness.
+</token_optimization>
+
+--
 
 ## 🧭 1. Core Development Philosophy
 

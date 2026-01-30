@@ -6,6 +6,7 @@ use App\Models\BillAdjustment;
 use App\Models\BillAdjustmentType;
 use App\Models\CustomerLedger;
 use App\Models\MeterReading;
+use App\Models\Period;
 use App\Models\Status;
 use App\Models\WaterBillHistory;
 use Illuminate\Support\Collection;
@@ -47,14 +48,17 @@ class BillAdjustmentService
     }
 
     /**
-     * Create a consumption adjustment.
+     * Create a consumption adjustment (ledger-only approach).
      *
      * This will:
-     * 1. Update the current reading value
-     * 2. Recalculate the bill amount based on new consumption
-     * 3. Create a BillAdjustment record tracking old/new values
-     * 4. Update the bill's water_amount and adjustment_total
-     * 5. Create a CustomerLedger entry for the difference
+     * 1. Update the MeterReading records (to correct source data)
+     * 2. Calculate the bill amount difference based on new consumption
+     * 3. Create a BillAdjustment record tracking old/new values for audit
+     * 4. Create a CustomerLedger entry (ADJUST) for the difference
+     *
+     * NOTE: This method does NOT modify water_bill_history.water_amount or consumption.
+     * The original bill amount is preserved as a historical record.
+     * Use recomputeBill() if actual bill modification is needed before period closure.
      */
     public function adjustConsumption(array $data): array
     {
@@ -130,11 +134,8 @@ class BillAdjustmentService
                 $bill->previousReading->update(['reading_value' => $newPrevReading]);
             }
 
-            // Update the bill
-            $bill->update([
-                'consumption' => $newConsumption,
-                'water_amount' => $newAmount,
-            ]);
+            // NOTE: Bill record (water_bill_history) is NOT modified.
+            // The ledger entry handles the financial adjustment.
 
             // Create BillAdjustment record
             $adjustment = BillAdjustment::create([
@@ -171,7 +172,7 @@ class BillAdjustmentService
 
             return [
                 'success' => true,
-                'message' => 'Consumption adjustment applied successfully.',
+                'message' => 'Consumption adjustment recorded. A ledger entry has been created for the difference of ₱'.number_format(abs($amountDifference), 2).'.',
                 'data' => [
                     'adjustment_id' => $adjustment->bill_adjustment_id,
                     'bill_id' => $bill->bill_id,
@@ -180,6 +181,7 @@ class BillAdjustmentService
                     'old_amount' => $oldAmount,
                     'new_amount' => $newAmount,
                     'difference' => $amountDifference,
+                    'ledger_only' => true,
                 ],
             ];
         } catch (\Exception $e) {
@@ -651,5 +653,243 @@ class BillAdjustmentService
             ->first();
 
         return $type?->bill_adjustment_type_id;
+    }
+
+    /**
+     * Recompute a bill's water_amount based on current readings.
+     *
+     * This is a RECALCULATION (not an adjustment) and should only be used:
+     * - Before period closure (ONLY works on OPEN periods)
+     * - When the bill itself needs to be corrected
+     * - To update readings and recalculate the bill amount
+     *
+     * This method directly modifies:
+     * - MeterReading records (if new reading values provided)
+     * - water_bill_history (consumption, water_amount)
+     * - CustomerLedger BILL entry (debit amount, description)
+     *
+     * Changes are logged to activity_log for audit purposes.
+     *
+     * @param  int  $billId  The bill to recompute
+     * @param  string|null  $remarks  Optional remarks for audit log
+     * @param  float|null  $newPrevReading  Optional new previous reading value to set
+     * @param  float|null  $newCurrReading  Optional new current reading value to set
+     * @return array Result with success status and data
+     */
+    public function recomputeBill(int $billId, ?string $remarks = null, ?float $newPrevReading = null, ?float $newCurrReading = null): array
+    {
+
+        // Validate bill exists with relationships
+        $bill = WaterBillHistory::with(['currentReading', 'previousReading', 'period', 'serviceConnection.accountType'])
+            ->find($billId);
+
+        if (! $bill) {
+            return ['success' => false, 'message' => 'Bill not found.'];
+        }
+
+        // CRITICAL: Check period is OPEN
+        if ($bill->period?->is_closed) {
+            return ['success' => false, 'message' => 'Cannot recompute bill for a closed period. Use adjustments instead.'];
+        }
+
+        $connection = $bill->serviceConnection;
+        if (! $connection) {
+            return ['success' => false, 'message' => 'Service connection not found.'];
+        }
+
+        // Capture original reading values for audit trail
+        $originalPrevReading = (float) ($bill->previousReading?->reading_value ?? 0);
+        $originalCurrReading = (float) ($bill->currentReading?->reading_value ?? 0);
+        $readingsUpdated = false;
+
+        // Determine which reading values to use
+        $prevReading = $newPrevReading ?? $originalPrevReading;
+        $currReading = $newCurrReading ?? $originalCurrReading;
+        $newConsumption = $currReading - $prevReading;
+
+        if ($newConsumption < 0) {
+            return ['success' => false, 'message' => 'Invalid reading values: current reading is less than previous.'];
+        }
+
+        // Check if readings will be updated
+        $readingsUpdated = ($newPrevReading !== null && abs($newPrevReading - $originalPrevReading) > 0.001) ||
+                          ($newCurrReading !== null && abs($newCurrReading - $originalCurrReading) > 0.001);
+
+        // Check if there's actually a difference in consumption
+        $oldConsumption = (float) $bill->consumption;
+        $oldAmount = (float) $bill->water_amount;
+
+        if (! $readingsUpdated && abs($newConsumption - $oldConsumption) < 0.001) {
+            return ['success' => false, 'message' => 'No change in consumption detected. Bill is already up to date.'];
+        }
+
+        // Calculate new bill amount
+        $calculation = $this->waterBillService->calculateBillAmount(
+            $newConsumption,
+            $connection->account_type_id,
+            $bill->period_id
+        );
+
+        if (! $calculation['success']) {
+            return $calculation;
+        }
+
+        $newAmount = $calculation['amount'];
+        $amountDifference = $newAmount - $oldAmount;
+
+        try {
+            DB::beginTransaction();
+
+            // Update MeterReading records if new values are provided (inside transaction)
+            if ($newPrevReading !== null && $bill->previousReading) {
+                $bill->previousReading->update(['reading_value' => $newPrevReading]);
+            }
+
+            if ($newCurrReading !== null && $bill->currentReading) {
+                $bill->currentReading->update(['reading_value' => $newCurrReading]);
+            }
+
+            // Update the bill record
+            $bill->update([
+                'consumption' => $newConsumption,
+                'water_amount' => $newAmount,
+            ]);
+
+            // Update the associated CustomerLedger entry (BILL entry)
+            $ledgerEntry = CustomerLedger::where('source_type', 'BILL')
+                ->where('source_id', $bill->bill_id)
+                ->first();
+
+            if ($ledgerEntry) {
+                $ledgerEntry->update([
+                    'debit' => $newAmount,
+                    'description' => 'Water Bill - '.$bill->period?->per_name.' (Consumption: '.$newConsumption.' cu.m)',
+                ]);
+            }
+
+            // Log to activity_log for audit trail
+            activity('billing')
+                ->performedOn($bill)
+                ->withProperties([
+                    'action' => 'bill_recomputation',
+                    'bill_id' => $bill->bill_id,
+                    'ledger_id' => $ledgerEntry?->ledger_id,
+                    'period' => $bill->period?->per_name,
+                    'old_prev_reading' => $originalPrevReading,
+                    'new_prev_reading' => $prevReading,
+                    'old_curr_reading' => $originalCurrReading,
+                    'new_curr_reading' => $currReading,
+                    'old_consumption' => $oldConsumption,
+                    'new_consumption' => $newConsumption,
+                    'old_amount' => $oldAmount,
+                    'new_amount' => $newAmount,
+                    'difference' => $amountDifference,
+                    'readings_updated' => $readingsUpdated,
+                    'ledger_updated' => $ledgerEntry !== null,
+                    'remarks' => $remarks,
+                ])
+                ->log('Bill recomputed: consumption '.$oldConsumption.' → '.$newConsumption.', amount ₱'.number_format($oldAmount, 2).' → ₱'.number_format($newAmount, 2));
+
+            DB::commit();
+
+            $message = 'Bill recomputed successfully. Amount changed from ₱'.number_format($oldAmount, 2).' to ₱'.number_format($newAmount, 2).'.';
+            if ($readingsUpdated) {
+                $message .= ' Readings updated.';
+            }
+            if ($ledgerEntry) {
+                $message .= ' Ledger updated.';
+            }
+
+            return [
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'bill_id' => $bill->bill_id,
+                    'old_consumption' => $oldConsumption,
+                    'new_consumption' => $newConsumption,
+                    'old_amount' => $oldAmount,
+                    'new_amount' => $newAmount,
+                    'difference' => $amountDifference,
+                    'readings_updated' => $readingsUpdated,
+                    'ledger_updated' => $ledgerEntry !== null,
+                    'original_prev_reading' => $originalPrevReading,
+                    'original_curr_reading' => $originalCurrReading,
+                    'final_prev_reading' => $prevReading,
+                    'final_curr_reading' => $currReading,
+                ],
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bill recomputation failed', [
+                'bill_id' => $billId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'message' => 'Recomputation failed: '.$e->getMessage()];
+        }
+    }
+
+    /**
+     * Recompute all bills in a period.
+     *
+     * This will recalculate all bills based on their current meter readings.
+     * Only works on OPEN periods. Changes are logged to activity_log.
+     *
+     * @param  int  $periodId  The period to recompute
+     * @return array Result with success count and errors
+     */
+    public function recomputePeriodBills(int $periodId): array
+    {
+        $period = Period::find($periodId);
+
+        if (! $period) {
+            return ['success' => false, 'message' => 'Period not found.'];
+        }
+
+        if ($period->is_closed) {
+            return ['success' => false, 'message' => 'Cannot recompute bills for a closed period.'];
+        }
+
+        $bills = WaterBillHistory::where('period_id', $periodId)->get();
+
+        if ($bills->isEmpty()) {
+            return ['success' => false, 'message' => 'No bills found for this period.'];
+        }
+
+        $processed = 0;
+        $skipped = 0;
+        $errors = [];
+
+        foreach ($bills as $bill) {
+            $result = $this->recomputeBill($bill->bill_id, 'Batch recomputation - '.$period->per_name);
+
+            if ($result['success']) {
+                $processed++;
+            } else {
+                if (str_contains($result['message'], 'No change')) {
+                    $skipped++;
+                } else {
+                    $errors[] = [
+                        'bill_id' => $bill->bill_id,
+                        'message' => $result['message'],
+                    ];
+                }
+            }
+        }
+
+        $totalBills = $bills->count();
+        $errorCount = count($errors);
+
+        return [
+            'success' => true,
+            'message' => "Recomputation complete: {$processed} bill(s) updated, {$skipped} skipped (no changes), {$errorCount} error(s).",
+            'data' => [
+                'total_bills' => $totalBills,
+                'processed' => $processed,
+                'skipped' => $skipped,
+                'error_count' => $errorCount,
+                'errors' => $errors,
+            ],
+        ];
     }
 }

@@ -48,6 +48,9 @@
             <button onclick="openPreviewBillModal()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition">
                 <i class="fas fa-eye mr-2"></i>Preview
             </button>
+            <button onclick="openRecomputeModal()" class="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition">
+                <i class="fas fa-calculator mr-2"></i>Recompute Bills
+            </button>
             <span class="text-sm text-gray-500 dark:text-gray-400 ml-auto">
                 <i class="fas fa-clock mr-1"></i>Last generated: Jan 29, 2024
             </span>

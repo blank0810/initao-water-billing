@@ -2,9 +2,9 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\Config\AccountTypeController;
-use App\Http\Controllers\Admin\Config\ChargeItemController;
 use App\Http\Controllers\Admin\Config\AreaController;
 use App\Http\Controllers\Admin\Config\BarangayController;
+use App\Http\Controllers\Admin\Config\ChargeItemController;
 use App\Http\Controllers\Admin\Config\PurokController;
 use App\Http\Controllers\Admin\Config\WaterRateController;
 use App\Http\Controllers\Admin\PermissionController;
@@ -108,6 +108,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/stats', [CustomerController::class, 'stats'])->name('customer.stats');
         Route::get('/customer/details/{id}', function ($id) {
             session(['active_menu' => 'customer-list']);
+
             return view('pages.customer.customer-details', ['customer_id' => $id]);
         })->name('customer.details');
         Route::get('/api/customer/{id}/details', [CustomerController::class, 'getDetails'])->name('customer.details.api');
@@ -305,6 +306,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/uploaded-readings/user/{userId}', [\App\Http\Controllers\UploadedReadingController::class, 'byUser'])->name('uploaded-readings.by-user');
         Route::get('/uploaded-readings/processing-stats', [\App\Http\Controllers\UploadedReadingController::class, 'processingStats'])->name('uploaded-readings.processing-stats');
         Route::post('/uploaded-readings/process', [\App\Http\Controllers\UploadedReadingController::class, 'processReadings'])->name('uploaded-readings.process');
+        Route::get('/uploaded-readings/{uploadedReadingId}', [\App\Http\Controllers\UploadedReadingController::class, 'show'])->name('uploaded-readings.show');
+        Route::delete('/uploaded-readings/{uploadedReadingId}', [\App\Http\Controllers\UploadedReadingController::class, 'destroy'])->name('uploaded-readings.destroy');
 
         // Bill Adjustment API
         Route::get('/bill-adjustments', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'index'])->name('bill-adjustments.index');
@@ -315,6 +318,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/bill-adjustments/consumption', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'adjustConsumption'])->name('bill-adjustments.consumption');
         Route::post('/bill-adjustments/amount', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'adjustAmount'])->name('bill-adjustments.amount');
         Route::post('/bill-adjustments/{adjustmentId}/void', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'void'])->name('bill-adjustments.void');
+        Route::post('/bill-adjustments/recompute', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'recomputeBill'])->name('bill-adjustments.recompute');
+        Route::post('/bill-adjustments/recompute-period', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'recomputePeriod'])->name('bill-adjustments.recompute-period');
     });
 
     // -------------------------------------------------------------------------

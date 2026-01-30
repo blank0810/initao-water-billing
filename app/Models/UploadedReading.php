@@ -35,6 +35,7 @@ class UploadedReading extends Model
         'computed_amount',
         'is_printed',
         'is_scanned',
+        'photo_path',
         'is_processed',
         'processed_at',
         'processed_by',
@@ -108,6 +109,26 @@ class UploadedReading extends Model
         }
 
         return max(0, (float) $this->present_reading - (float) $this->previous_reading);
+    }
+
+    /**
+     * Get the full URL for the photo.
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (! $this->photo_path) {
+            return null;
+        }
+
+        return asset($this->photo_path);
+    }
+
+    /**
+     * Check if this reading has a photo.
+     */
+    public function getHasPhotoAttribute(): bool
+    {
+        return ! empty($this->photo_path);
     }
 
     /**

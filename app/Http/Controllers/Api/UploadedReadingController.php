@@ -8,6 +8,7 @@ use App\Models\UploadedReading;
 use App\Services\Billing\UploadedReadingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class UploadedReadingController extends Controller
@@ -44,6 +45,7 @@ class UploadedReadingController extends Controller
             'readings.*.computed_amount' => ['nullable', 'numeric'],
             'readings.*.is_printed' => ['nullable', 'boolean'],
             'readings.*.is_scanned' => ['nullable', 'boolean'],
+            'readings.*.photo' => ['nullable', 'string'], // Base64 encoded image data
         ]);
 
         if ($validator->fails()) {
@@ -57,8 +59,19 @@ class UploadedReadingController extends Controller
         // Use authenticated user's ID instead of client-supplied value
         $authUserId = $request->user()->id;
 
+        // Log incoming readings data for debugging photo uploads
+        $readings = $request->input('readings');
+        foreach ($readings as $index => $reading) {
+            Log::debug('UploadedReadingController: Incoming reading data', [
+                'index' => $index,
+                'connection_id' => $reading['connection_id'] ?? null,
+                'has_photo' => isset($reading['photo']) && ! empty($reading['photo']),
+                'photo_length' => isset($reading['photo']) ? strlen($reading['photo']) : 0,
+            ]);
+        }
+
         $result = $this->uploadedReadingService->processUploadedReadings(
-            $request->input('readings'),
+            $readings,
             $authUserId
         );
 

@@ -129,7 +129,6 @@
                                 class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         </th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Prev Reading</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Present Reading</th>
@@ -138,6 +137,7 @@
                         <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Computed</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="uploadedReadingsBody" class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -176,6 +176,123 @@
             <p class="text-gray-600 dark:text-gray-400" id="processingStatus">Please wait...</p>
         </div>
     </div>
+</div>
+
+<!-- Reading Detail Modal -->
+<div id="readingDetailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <i class="fas fa-file-alt mr-2 text-blue-600"></i>Reading Details
+            </h3>
+            <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="px-6 py-4 overflow-y-auto max-h-[calc(90vh-8rem)]">
+            <!-- Loading State -->
+            <div id="detailLoading" class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-3xl text-blue-600 mb-4"></i>
+                <p class="text-gray-500">Loading details...</p>
+            </div>
+
+            <!-- Content -->
+            <div id="detailContent" class="hidden">
+                <!-- Photo Section -->
+                <div id="photoSection" class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meter Reading Photo</label>
+                    <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                        <img id="readingPhoto" src="" alt="Meter Reading" class="max-w-full h-auto rounded-lg mx-auto cursor-pointer max-h-64 object-contain" onclick="openPhotoFullscreen(this.src)">
+                    </div>
+                </div>
+                <div id="noPhotoSection" class="hidden mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meter Reading Photo</label>
+                    <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                        <i class="fas fa-image text-4xl text-gray-400 mb-2"></i>
+                        <p class="text-gray-500">No photo available</p>
+                    </div>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Customer Information</label>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white" id="detailCustomerName">-</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400" id="detailAddress">-</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            Account: <span class="font-medium text-gray-700 dark:text-gray-300" id="detailAccountNo">-</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Reading Details Grid -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Area</label>
+                        <p class="text-gray-900 dark:text-white font-medium" id="detailArea">-</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Meter Serial</label>
+                        <p class="text-gray-900 dark:text-white font-medium" id="detailMeterSerial">-</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Previous Reading</label>
+                        <p class="text-gray-900 dark:text-white font-medium" id="detailPrevReading">-</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Present Reading</label>
+                        <p class="text-gray-900 dark:text-white font-medium" id="detailPresentReading">-</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Consumption</label>
+                        <p class="text-blue-600 dark:text-blue-400 font-bold" id="detailConsumption">-</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <label class="block text-xs font-medium text-gray-500 uppercase mb-1">Reading Date</label>
+                        <p class="text-gray-900 dark:text-white font-medium" id="detailReadingDate">-</p>
+                    </div>
+                </div>
+
+                <!-- Amounts -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4">
+                        <label class="block text-xs font-medium text-amber-600 uppercase mb-1">Site Amount</label>
+                        <p class="text-amber-700 dark:text-amber-400 font-bold text-lg" id="detailSiteAmount">-</p>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                        <label class="block text-xs font-medium text-green-600 uppercase mb-1">Computed Amount</label>
+                        <p class="text-green-700 dark:text-green-400 font-bold text-lg" id="detailComputedAmount">-</p>
+                    </div>
+                </div>
+
+                <!-- Status and Meta -->
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <div class="flex items-center justify-between text-sm">
+                        <div id="detailStatus" class="flex gap-2"></div>
+                        <span class="text-gray-500" id="detailCreatedAt">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+            <button onclick="closeDetailModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Photo Modal -->
+<div id="fullscreenPhotoModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-[60] flex items-center justify-center" onclick="closeFullscreenPhoto()">
+    <button class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300" onclick="closeFullscreenPhoto()">
+        <i class="fas fa-times"></i>
+    </button>
+    <img id="fullscreenPhoto" src="" alt="Meter Reading" class="max-w-[90vw] max-h-[90vh] object-contain">
 </div>
 
 <script>
@@ -422,10 +539,6 @@
                     <td class="px-4 py-3">
                         <span class="font-medium text-gray-900 dark:text-white">${reading.account_no || '-'}</span>
                     </td>
-                    <td class="px-4 py-3">
-                        <p class="text-gray-900 dark:text-white">${reading.customer_name || '-'}</p>
-                        <p class="text-xs text-gray-500">${reading.address || '-'}</p>
-                    </td>
                     <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${reading.area_desc || '-'}</td>
                     <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">${reading.previous_reading ?? '-'}</td>
                     <td class="px-4 py-3 text-center font-medium text-gray-900 dark:text-white">${reading.present_reading ?? '-'}</td>
@@ -438,6 +551,20 @@
                         <div class="flex flex-wrap gap-1 justify-center">${statusBadges.join('')}</div>
                     </td>
                     <td class="px-4 py-3 text-center text-xs text-gray-500">${reading.reading_date || '-'}</td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="viewReadingDetail(${reading.uploaded_reading_id})"
+                                class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${!reading.is_processed ? `
+                                <button onclick="deleteReading(${reading.uploaded_reading_id}, '${(reading.account_no || '').replace(/'/g, "\\'")}')"
+                                    class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
                 </tr>
             `;
         }).join('');
@@ -631,5 +758,137 @@
             currency: 'PHP',
             minimumFractionDigits: 2
         }).format(value);
+    }
+
+    // View reading detail
+    async function viewReadingDetail(readingId) {
+        const modal = document.getElementById('readingDetailModal');
+        const loading = document.getElementById('detailLoading');
+        const content = document.getElementById('detailContent');
+
+        modal.classList.remove('hidden');
+        loading.classList.remove('hidden');
+        content.classList.add('hidden');
+
+        try {
+            const response = await fetch(`/uploaded-readings/${readingId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                populateDetailModal(result.data);
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+            } else {
+                closeDetailModal();
+                if (window.showToast) {
+                    window.showToast('Error', result.message || 'Failed to load details.', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading reading details:', error);
+            closeDetailModal();
+            if (window.showToast) {
+                window.showToast('Error', 'Failed to load reading details.', 'error');
+            }
+        }
+    }
+
+    function populateDetailModal(data) {
+        // Photo
+        const photoSection = document.getElementById('photoSection');
+        const noPhotoSection = document.getElementById('noPhotoSection');
+
+        if (data.photo_url) {
+            document.getElementById('readingPhoto').src = data.photo_url;
+            photoSection.classList.remove('hidden');
+            noPhotoSection.classList.add('hidden');
+        } else {
+            photoSection.classList.add('hidden');
+            noPhotoSection.classList.remove('hidden');
+        }
+
+        // Customer info
+        document.getElementById('detailCustomerName').textContent = data.customer_name || '-';
+        document.getElementById('detailAddress').textContent = data.address || '-';
+        document.getElementById('detailAccountNo').textContent = data.account_no || '-';
+
+        // Reading details
+        document.getElementById('detailArea').textContent = data.area_desc || '-';
+        document.getElementById('detailMeterSerial').textContent = data.meter_serial || '-';
+        document.getElementById('detailPrevReading').textContent = data.previous_reading ?? '-';
+        document.getElementById('detailPresentReading').textContent = data.present_reading ?? '-';
+
+        const consumption = data.present_reading !== null && data.previous_reading !== null
+            ? (parseFloat(data.present_reading) - parseFloat(data.previous_reading)).toFixed(3)
+            : '-';
+        document.getElementById('detailConsumption').textContent = consumption;
+        document.getElementById('detailReadingDate').textContent = data.reading_date || '-';
+
+        // Amounts
+        document.getElementById('detailSiteAmount').textContent = data.site_bill_amount ? formatCurrency(data.site_bill_amount) : '-';
+        document.getElementById('detailComputedAmount').textContent = data.computed_amount ? formatCurrency(data.computed_amount) : '-';
+
+        // Status badges
+        const statusContainer = document.getElementById('detailStatus');
+        const badges = [];
+        if (data.is_processed) {
+            badges.push('<span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800"><i class="fas fa-check mr-1"></i>Processed</span>');
+        } else {
+            if (data.is_printed) badges.push('<span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">Printed</span>');
+            if (data.is_scanned) badges.push('<span class="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-800">Scanned</span>');
+            if (badges.length === 0) badges.push('<span class="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800">Pending</span>');
+        }
+        statusContainer.innerHTML = badges.join('');
+
+        // Created at
+        document.getElementById('detailCreatedAt').textContent = data.created_at ? `Uploaded: ${data.created_at}` : '';
+    }
+
+    function closeDetailModal() {
+        document.getElementById('readingDetailModal').classList.add('hidden');
+    }
+
+    function openPhotoFullscreen(src) {
+        document.getElementById('fullscreenPhoto').src = src;
+        document.getElementById('fullscreenPhotoModal').classList.remove('hidden');
+    }
+
+    function closeFullscreenPhoto() {
+        document.getElementById('fullscreenPhotoModal').classList.add('hidden');
+    }
+
+    // Delete reading
+    async function deleteReading(readingId, accountNo) {
+        if (!confirm(`Are you sure you want to delete the reading for account ${accountNo}? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/uploaded-readings/${readingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                if (window.showToast) {
+                    window.showToast('Success', result.message, 'success');
+                }
+                loadUploadedReadings();
+            } else {
+                if (window.showToast) {
+                    window.showToast('Error', result.message || 'Failed to delete reading.', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting reading:', error);
+            if (window.showToast) {
+                window.showToast('Error', 'An error occurred while deleting the reading.', 'error');
+            }
+        }
     }
 </script>

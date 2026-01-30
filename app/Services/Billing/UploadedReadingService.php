@@ -7,12 +7,16 @@ use App\Models\ReadingScheduleEntry;
 use App\Models\ServiceConnection;
 use App\Models\Status;
 use App\Models\UploadedReading;
+use App\Services\FileUploadService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class UploadedReadingService
 {
     public function __construct(
-        private WaterBillService $waterBillService
+        private WaterBillService $waterBillService,
+        private FileUploadService $fileUploadService
     ) {}
 
     /**
@@ -86,6 +90,35 @@ class UploadedReadingService
         // Calculate computed_amount using WaterBillService
         $computedAmount = $this->calculateBillAmount($readingData);
 
+        // Process photo if provided
+        $photoPath = null;
+        if (! empty($readingData['photo'])) {
+            $photoResult = $this->processReadingPhoto(
+                $readingData['photo'],
+                $readingData['schedule_id'],
+                $readingData['connection_id']
+            );
+
+            if ($photoResult['success']) {
+                $photoPath = $photoResult['path'];
+                Log::info('Photo saved successfully', [
+                    'path' => $photoPath,
+                    'connection_id' => $readingData['connection_id'],
+                    'schedule_id' => $readingData['schedule_id'],
+                ]);
+            } else {
+                Log::error('Failed to save reading photo', [
+                    'error' => $photoResult['error'] ?? 'Unknown error',
+                    'connection_id' => $readingData['connection_id'],
+                    'schedule_id' => $readingData['schedule_id'],
+                    'photo_data_length' => strlen($readingData['photo']),
+                ]);
+            }
+        }
+
+        // Get existing photo path to preserve if not replacing
+        $existingPhotoPath = $this->getExistingPhotoPath($readingData);
+
         // Use updateOrCreate to handle duplicates
         $uploadedReading = UploadedReading::updateOrCreate(
             [
@@ -111,6 +144,7 @@ class UploadedReadingService
                 'computed_amount' => $computedAmount,
                 'is_printed' => $readingData['is_printed'] ?? false,
                 'is_scanned' => $readingData['is_scanned'] ?? false,
+                'photo_path' => $photoPath ?? $existingPhotoPath,
                 'user_id' => $userId,
             ]
         );
@@ -127,6 +161,27 @@ class UploadedReadingService
                 'account_no' => $uploadedReading->account_no,
             ],
         ];
+    }
+
+    /**
+     * Process and store a reading photo.
+     */
+    private function processReadingPhoto(string $base64Data, int $scheduleId, int $connectionId): array
+    {
+        $directory = sprintf('reading-photos/%s/schedule-%d', date('Y/m'), $scheduleId);
+        $filename = sprintf('reading-%d-%s', $connectionId, Str::random(8));
+
+        return $this->fileUploadService->storeBase64Image($base64Data, $directory, $filename);
+    }
+
+    /**
+     * Get existing photo path for updates (preserve if not replacing).
+     */
+    private function getExistingPhotoPath(array $readingData): ?string
+    {
+        return UploadedReading::where('schedule_id', $readingData['schedule_id'])
+            ->where('connection_id', $readingData['connection_id'])
+            ->value('photo_path');
     }
 
     /**
@@ -185,6 +240,53 @@ class UploadedReadingService
         foreach ($scheduleUploadCounts as $scheduleId => $count) {
             ReadingSchedule::where('schedule_id', $scheduleId)
                 ->increment('meters_read', $count);
+        }
+    }
+
+    /**
+     * Delete an uploaded reading.
+     */
+    public function deleteUploadedReading(int $uploadedReadingId): array
+    {
+        $reading = UploadedReading::find($uploadedReadingId);
+
+        if (! $reading) {
+            return ['success' => false, 'message' => 'Reading not found.'];
+        }
+
+        if ($reading->is_processed) {
+            return ['success' => false, 'message' => 'Cannot delete a processed reading.'];
+        }
+
+        DB::beginTransaction();
+        try {
+            // Delete associated photo
+            if ($reading->photo_path) {
+                $this->fileUploadService->deleteFile($reading->photo_path);
+            }
+
+            // Update schedule meters_read count
+            ReadingSchedule::where('schedule_id', $reading->schedule_id)
+                ->where('meters_read', '>', 0)
+                ->decrement('meters_read');
+
+            // Reset entry status back to pending
+            $pendingStatusId = Status::getIdByDescription(Status::PENDING);
+            if ($pendingStatusId) {
+                ReadingScheduleEntry::where('schedule_id', $reading->schedule_id)
+                    ->where('connection_id', $reading->connection_id)
+                    ->update(['status_id' => $pendingStatusId]);
+            }
+
+            $reading->delete();
+
+            DB::commit();
+
+            return ['success' => true, 'message' => 'Reading deleted successfully.'];
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return ['success' => false, 'message' => 'Failed to delete reading: '.$e->getMessage()];
         }
     }
 }

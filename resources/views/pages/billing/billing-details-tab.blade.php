@@ -69,9 +69,15 @@
                     <option value="Overdue">Overdue</option>
                 </select>
             </div>
-            <div class="sm:w-32">
-                <button onclick="openGenerateBillModal()" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
+            <div class="flex gap-2">
+                <button @click="loadData()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm" title="Reload bill data">
+                    <i class="fas fa-sync-alt mr-2" :class="{ 'animate-spin': loading }"></i>Reload
+                </button>
+                <button onclick="openGenerateBillModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
                     <i class="fas fa-plus mr-2"></i>Generate
+                </button>
+                <button onclick="openRecomputeModal()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm" title="Recompute bills based on current readings (open periods only)">
+                    <i class="fas fa-calculator mr-2"></i>Recompute
                 </button>
             </div>
         </div>
@@ -210,8 +216,9 @@ function billingDetailsData() {
             this.$watch('statusFilter', () => this.currentPage = 1);
             this.$watch('pageSize', () => this.currentPage = 1);
 
-            // Listen for bill generation events
+            // Listen for bill generation and recomputation events
             document.addEventListener('bill-generated', () => this.loadData());
+            document.addEventListener('bill-recomputed', () => this.loadData());
         },
 
         async loadPeriods() {

@@ -48,99 +48,95 @@
         </div>
     </div>
 
-    <!-- Loading State -->
-    <template x-if="loading">
-        <div class="flex items-center justify-center py-12">
-            <i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i>
-            <span class="ml-3 text-gray-600 dark:text-gray-400">Loading adjustments...</span>
-        </div>
-    </template>
-
     <!-- Data Table -->
-    <template x-if="!loading">
-        <x-ui.card>
-            <div id="adjustmentsTableWrapper" class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead>
-                            <tr class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
-                                <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Bill ID</th>
-                                <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Consumer</th>
-                                <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Period</th>
-                                <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Area</th>
-                                <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Type</th>
-                                <th class="px-4 py-3.5 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Amount</th>
-                                <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Remarks</th>
-                                <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Date</th>
+    <x-ui.card>
+        <div id="adjustmentsTableWrapper" class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
+                            <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Bill ID</th>
+                            <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Consumer</th>
+                            <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Period</th>
+                            <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Area</th>
+                            <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Type</th>
+                            <th class="px-4 py-3.5 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Amount</th>
+                            <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Remarks</th>
+                            <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <!-- Loading State -->
+                        <tr x-show="loading">
+                            <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading adjustments...
+                            </td>
+                        </tr>
+                        <!-- Empty State -->
+                        <tr x-show="!loading && paginatedData.length === 0">
+                            <td colspan="8" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-inbox text-3xl mb-2 opacity-50"></i>
+                                <p>No adjustments found</p>
+                            </td>
+                        </tr>
+                        <!-- Data Rows -->
+                        <template x-for="adj in paginatedData" :key="adj.bill_adjustment_id">
+                            <tr x-show="!loading" class="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-all duration-150">
+                                <td class="px-4 py-3 text-sm font-mono text-gray-900 dark:text-gray-100" x-text="adj.bill_id"></td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                    <div x-text="adj.consumer_name"></div>
+                                    <div class="text-xs text-gray-500" x-text="adj.account_no"></div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="adj.period_name"></td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="adj.area_desc"></td>
+                                <td class="px-4 py-3 text-sm">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" :class="adj.direction === 'debit' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'" x-text="adj.type_name"></span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-right font-medium" :class="adj.direction === 'debit' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
+                                    <span class="inline-flex items-center">
+                                        <i class="fas mr-1 text-xs" :class="adj.direction === 'debit' ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                                        <span x-text="(adj.direction === 'debit' ? '+' : '-') + '₱' + Math.abs(adj.amount).toFixed(2)"></span>
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate" x-text="adj.remarks" :title="adj.remarks"></td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="adj.created_at"></td>
                             </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                            <template x-for="adj in paginatedData" :key="adj.bill_adjustment_id">
-                                <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-all duration-150">
-                                    <td class="px-4 py-3 text-sm font-mono text-gray-900 dark:text-gray-100" x-text="adj.bill_id"></td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                                        <div x-text="adj.consumer_name"></div>
-                                        <div class="text-xs text-gray-500" x-text="adj.account_no"></div>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="adj.period_name"></td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="adj.area_desc"></td>
-                                    <td class="px-4 py-3 text-sm">
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" :class="adj.direction === 'debit' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'" x-text="adj.type_name"></span>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-right font-medium" :class="adj.direction === 'debit' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
-                                        <span class="inline-flex items-center">
-                                            <i class="fas mr-1 text-xs" :class="adj.direction === 'debit' ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
-                                            <span x-text="(adj.direction === 'debit' ? '+' : '-') + '₱' + Math.abs(adj.amount).toFixed(2)"></span>
-                                        </span>
-                                    </td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate" x-text="adj.remarks" :title="adj.remarks"></td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="adj.created_at"></td>
-                                </tr>
-                            </template>
-                            <template x-if="paginatedData.length === 0">
-                                <tr>
-                                    <td colspan="8" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                                        <i class="fas fa-inbox text-3xl mb-2 opacity-50"></i>
-                                        <p>No adjustments found</p>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div x-show="!loading && data.length > 0" x-cloak class="flex justify-between items-center mt-4 flex-wrap gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-600 dark:text-gray-400">Show</span>
+                <select x-model.number="pageSize" @change="currentPage = 1" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+                <span class="text-sm text-gray-600 dark:text-gray-400">entries</span>
             </div>
 
-            <!-- Pagination -->
-            <div class="flex justify-between items-center mt-4 flex-wrap gap-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Show</span>
-                    <select x-model.number="pageSize" @change="currentPage = 1" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                    </select>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">entries</span>
+            <div class="flex items-center gap-2">
+                <button @click="prevPage()" :disabled="currentPage === 1" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                    <i class="fas fa-chevron-left mr-1"></i>Previous
+                </button>
+                <div class="text-sm text-gray-700 dark:text-gray-300 px-3 font-medium">
+                    Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
                 </div>
-
-                <div class="flex items-center gap-2">
-                    <button @click="prevPage()" :disabled="currentPage === 1" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                        <i class="fas fa-chevron-left mr-1"></i>Previous
-                    </button>
-                    <div class="text-sm text-gray-700 dark:text-gray-300 px-3 font-medium">
-                        Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
-                    </div>
-                    <button @click="nextPage()" :disabled="currentPage === totalPages" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                        Next<i class="fas fa-chevron-right ml-1"></i>
-                    </button>
-                </div>
-
-                <div class="text-sm text-gray-600 dark:text-gray-400">
-                    Showing <span class="font-semibold text-gray-900 dark:text-white" x-text="startRecord"></span> to <span class="font-semibold text-gray-900 dark:text-white" x-text="endRecord"></span> of <span class="font-semibold text-gray-900 dark:text-white" x-text="totalRecords"></span> results
-                </div>
+                <button @click="nextPage()" :disabled="currentPage === totalPages" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                    Next<i class="fas fa-chevron-right ml-1"></i>
+                </button>
             </div>
-        </x-ui.card>
-    </template>
+
+            <div class="text-sm text-gray-600 dark:text-gray-400">
+                Showing <span class="font-semibold text-gray-900 dark:text-white" x-text="startRecord"></span> to <span class="font-semibold text-gray-900 dark:text-white" x-text="endRecord"></span> of <span class="font-semibold text-gray-900 dark:text-white" x-text="totalRecords"></span> results
+            </div>
+        </div>
+    </x-ui.card>
 </div>
 
 <script>

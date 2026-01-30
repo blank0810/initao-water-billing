@@ -64,6 +64,17 @@
 
                 <!-- Consumption Adjustment Panel -->
                 <div id="panelConsumption" class="space-y-4">
+                    <!-- Ledger-Only Info Note -->
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 mt-0.5"></i>
+                            <div class="text-sm text-blue-700 dark:text-blue-300">
+                                <strong>Ledger Adjustment:</strong> This creates a ledger entry for the difference without modifying the original bill amount.
+                                To modify the actual bill record, use <strong>Recompute Bill</strong> (only available for open periods).
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Current Readings (readonly) -->
                     <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Readings</h4>
