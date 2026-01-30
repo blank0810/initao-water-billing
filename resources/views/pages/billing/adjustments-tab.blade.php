@@ -329,14 +329,23 @@ async function voidAdjustmentTab(adjustmentId) {
     }
 
     try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        if (!csrfToken) {
+            throw new Error('CSRF token not found');
+        }
+
         const response = await fetch(`/bill-adjustments/${adjustmentId}/void`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': csrfToken
             },
             body: JSON.stringify({ reason })
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
 
         const result = await response.json();
 
