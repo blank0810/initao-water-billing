@@ -370,15 +370,7 @@ window.refreshAdjustmentsTab = function() {
 };
 
 // Auto-init if not in a tabbed interface
-if (typeof window.initAdjustmentsTab === 'function') {
-    // Will be called by tab system
-} else {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (!adjustmentsTabInitialized) {
-            loadAdjustmentsTab();
-            setupAdjustmentsTabListeners();
-            adjustmentsTabInitialized = true;
-        }
-    });
-}
+// The tab system will call initAdjustmentsTab() when needed
+// For standalone usage, uncomment the following:
+// document.addEventListener('DOMContentLoaded', () => initAdjustmentsTab());
 </script>
