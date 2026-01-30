@@ -152,6 +152,9 @@ async function loadAdjustmentsTab() {
 
     try {
         const response = await fetch('/bill-adjustments');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         const result = await response.json();
 
         if (result.success) {
