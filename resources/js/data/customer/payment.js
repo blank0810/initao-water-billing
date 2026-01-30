@@ -92,7 +92,11 @@ class PaymentManager {
         this.currentInvoice.paid_amount = this.currentInvoice.total_amount;
         this.currentInvoice.paid_at = new Date().toISOString();
 
-        // Update customer workflow in the global data
+        // Update customer workflow status
+        this.selectedCustomer.workflow_status = 'PAYMENT_COMPLETED';
+        this.selectedCustomer.payment_completed_at = new Date().toISOString();
+
+        // Update global data if available (for backward compatibility)
         if (window.customerAllData) {
             const globalCustomer = window.customerAllData.find(c => c.customer_code === this.selectedCustomer.customer_code);
             if (globalCustomer) {
@@ -128,39 +132,44 @@ function initializePaymentSystem() {
     console.log('PaymentSystem: Initializing...');
     paymentManager = new PaymentManager();
     
-    // Wait for customer data to be available
-    function waitForCustomerData() {
-        if (window.customerAllData && window.customerAllData.length > 0) {
-            console.log('PaymentSystem: Customer data found, loading...');
-            paymentManager.loadCustomerData(window.customerAllData);
-            
-            // Check sessionStorage first
-            const storedCustomer = sessionStorage.getItem('selectedCustomer');
-            const storedCode = sessionStorage.getItem('paymentCustomerCode');
-            
-            if (storedCustomer && storedCode) {
-                console.log('PaymentSystem: Loading from sessionStorage:', storedCode);
-                loadCustomerFromCode(storedCode);
-            } else {
-                // Check if we have a customer code in the URL
-                const customerCode = extractCustomerCodeFromURL();
-                console.log('PaymentSystem: Extracted customer code:', customerCode);
-                
-                if (customerCode) {
-                    loadCustomerFromCode(customerCode);
-                } else {
-                    showSearchPanel();
-                }
-            }
-            
-            paymentInitialized = true;
+    // Load customer data if available (for search functionality)
+    if (window.customerAllData && window.customerAllData.length > 0) {
+        console.log('PaymentSystem: Customer data found, loading...');
+        paymentManager.loadCustomerData(window.customerAllData);
+    }
+
+    // Check sessionStorage first
+    const storedCustomer = sessionStorage.getItem('selectedCustomer');
+    const storedCode = sessionStorage.getItem('paymentCustomerCode');
+
+    if (storedCustomer && storedCode) {
+        console.log('PaymentSystem: Loading from sessionStorage:', storedCode);
+        loadCustomerFromCode(storedCode);
+    } else if (storedCustomer) {
+        // Load directly from sessionStorage without needing customer code
+        try {
+            const customer = JSON.parse(storedCustomer);
+            paymentManager.selectedCustomer = customer;
+            paymentManager.currentInvoice = paymentManager.generateInvoice(customer);
+            loadCustomerPayment(customer);
+            console.log('PaymentSystem: Customer loaded directly from sessionStorage');
+        } catch (e) {
+            console.error('PaymentSystem: Error parsing stored customer:', e);
+            showSearchPanel();
+        }
+    } else {
+        // Check if we have a customer code in the URL
+        const customerCode = extractCustomerCodeFromURL();
+        console.log('PaymentSystem: Extracted customer code:', customerCode);
+
+        if (customerCode) {
+            loadCustomerFromCode(customerCode);
         } else {
-            console.log('PaymentSystem: Waiting for customer data...');
-            setTimeout(waitForCustomerData, 100);
+            showSearchPanel();
         }
     }
-    
-    waitForCustomerData();
+
+    paymentInitialized = true;
 }
 
 // Extract customer code from URL

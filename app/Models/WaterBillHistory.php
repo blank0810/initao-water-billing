@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class WaterBillHistory extends Model
 {
+    use HasFactory;
+
     protected $table = 'water_bill_history';
 
     protected $primaryKey = 'bill_id';

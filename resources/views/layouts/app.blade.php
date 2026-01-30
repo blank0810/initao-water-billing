@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -73,9 +73,16 @@
             }
 
             /* Fix scroll issues */
-            body, html {
+            html {
                 overflow-x: hidden;
-                height: 100%;
+                min-height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                overflow-x: hidden;
+                min-height: 100%;
                 margin: 0;
                 padding: 0;
             }
@@ -126,7 +133,7 @@
             }
         </style>
     </head>
-    <body class="font-sans antialiased h-full">
+    <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-50 dark:bg-gray-900" x-data="appState()">
             @include('components.sidebar-revamped')
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\Billing\MeterReadingDownloadService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class MeterReadingDownloadController extends Controller
 {
@@ -16,14 +17,16 @@ class MeterReadingDownloadController extends Controller
     }
 
     /**
-     * Get consumer information for active reading schedules assigned to a user.
+     * Get consumer information for active reading schedules assigned to the authenticated user.
      *
      * Returns consumer details for all connections in active schedules (pending/in_progress)
-     * assigned to the specified user, including customer name, account number, address,
+     * assigned to the authenticated user, including customer name, account number, address,
      * meter serial, and previous reading.
      */
-    public function getConsumerInfo(int $userId): JsonResponse
+    public function getConsumerInfo(Request $request): JsonResponse
     {
+        $userId = $request->user()->id;
+
         $result = $this->downloadService->getConsumerInfoByUser($userId);
 
         if (empty($result['schedules'])) {

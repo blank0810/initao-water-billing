@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class MeterAssignment extends Model
 {
+    use HasFactory;
+
     protected $table = 'MeterAssignment';
 
     protected $primaryKey = 'assignment_id';

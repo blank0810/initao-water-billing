@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\ServiceApplication;
 
 class ServiceApplicationController extends Controller
 {
@@ -157,7 +158,7 @@ class ServiceApplicationController extends Controller
                 'data' => [
                     'application' => $result['application']->load(['customer', 'status']),
                     'charges' => $result['charges'],
-                    'total_amount' => $result['charges']->sum(fn ($c) => $c->total_amount),
+                    'total_amount' => $result['charges']->sum(fn($c) => $c->total_amount),
                 ],
             ]);
         } catch (\Exception $e) {

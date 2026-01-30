@@ -3,17 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\UploadedReading;
+use App\Services\Billing\WaterBillService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class UploadedReadingController extends Controller
 {
+    public function __construct(
+        private WaterBillService $billService
+    ) {}
+
     /**
      * Get all uploaded readings with optional filters.
      */
     public function index(Request $request): JsonResponse
     {
         $query = UploadedReading::query();
+
+        // Filter by period (through schedule relationship)
+        if ($request->has('period_id') && $request->period_id) {
+            $query->whereHas('schedule', function ($q) use ($request) {
+                $q->where('period_id', $request->period_id);
+            });
+        }
 
         // Filter by schedule
         if ($request->has('schedule_id') && $request->schedule_id) {
@@ -61,6 +73,9 @@ class UploadedReadingController extends Controller
                     'computed_amount' => $reading->computed_amount,
                     'is_printed' => $reading->is_printed,
                     'is_scanned' => $reading->is_scanned,
+                    'is_processed' => $reading->is_processed ?? false,
+                    'processed_at' => $reading->processed_at?->format('Y-m-d H:i:s'),
+                    'bill_id' => $reading->bill_id,
                     'user_id' => $reading->user_id,
                     'created_at' => $reading->created_at?->format('Y-m-d H:i:s'),
                 ];
@@ -98,6 +113,37 @@ class UploadedReadingController extends Controller
             'success' => true,
             'data' => $readings,
             'count' => $readings->count(),
+        ]);
+    }
+
+    /**
+     * Process selected uploaded readings into bills.
+     */
+    public function processReadings(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'reading_ids' => 'required|array|min:1',
+            'reading_ids.*' => 'integer|exists:uploaded_readings,uploaded_reading_id',
+        ]);
+
+        $result = $this->billService->processUploadedReadings($validated['reading_ids']);
+
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
+
+    /**
+     * Get processing status summary for uploaded readings.
+     */
+    public function processingStats(Request $request): JsonResponse
+    {
+        $stats = $this->billService->getUploadedReadingsProcessingStats(
+            $request->input('period_id'),
+            $request->input('schedule_id')
+        );
+
+        return response()->json([
+            'success' => true,
+            'stats' => $stats,
         ]);
     }
 }

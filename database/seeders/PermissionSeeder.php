@@ -47,6 +47,10 @@ class PermissionSeeder extends Seeder
 
             // Settings Module
             ['permission_name' => Permission::SETTINGS_MANAGE, 'description' => 'Manage system settings and configuration'],
+
+            // Configuration Module
+            ['permission_name' => 'config.geographic.manage', 'description' => 'Manage geographic configuration (barangays, areas)'],
+            ['permission_name' => 'config.billing.manage', 'description' => 'Manage billing configuration (water rates)'],
         ];
 
         foreach ($permissions as $permission) {

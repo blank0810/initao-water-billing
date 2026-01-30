@@ -45,12 +45,14 @@ $user = Auth::user() ?? (object) [
         @can('users.view')
         <div>
             <button @click="toggleSubmenu('userManagement')"
-                :class="openSubmenus.userManagement && 'icon-glow'"
-                class="nav-btn w-full"
-                :data-tooltip="!sidebarOpen ? 'User Management' : null">
-                <span class="nav-btn-notch"></span>
-                <div class="nav-btn-icon">
-                    <i class="fas fa-users"></i>
+                :class="activeMenu.startsWith('user-') ? 'bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
+                <div class="flex items-center min-w-0">
+                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                        :class="activeMenu.startsWith('user-') ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                        <i class="fas fa-users text-sm" :class="activeMenu.startsWith('user-') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"></i>
+                    </div>
+                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>User Management</span>
                 </div>
                 <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>User Management</span>
                 <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.userManagement && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
@@ -73,29 +75,6 @@ $user = Auth::user() ?? (object) [
                     <i class="fas fa-list"></i>
                     <span>User List</span>
                 </a>
-                @can('settings.manage')
-                <a href="{{ route('admin.roles.index') }}" @click="setActiveMenu('user-roles')"
-                    :class="activeMenu === 'user-roles' && 'active'"
-                    class="nav-submenu-item">
-                    <span class="nav-submenu-notch"></span>
-                    <i class="fas fa-user-shield"></i>
-                    <span>Roles</span>
-                </a>
-                <a href="{{ route('admin.permissions.index') }}" @click="setActiveMenu('user-permissions')"
-                    :class="activeMenu === 'user-permissions' && 'active'"
-                    class="nav-submenu-item">
-                    <span class="nav-submenu-notch"></span>
-                    <i class="fas fa-key"></i>
-                    <span>Permissions</span>
-                </a>
-                <a href="{{ route('admin.role-permissions.matrix') }}" @click="setActiveMenu('user-matrix')"
-                    :class="activeMenu === 'user-matrix' && 'active'"
-                    class="nav-submenu-item">
-                    <span class="nav-submenu-notch"></span>
-                    <i class="fas fa-th"></i>
-                    <span>Permission Matrix</span>
-                </a>
-                @endcan
             </div>
         </div>
         @endcan
@@ -104,12 +83,14 @@ $user = Auth::user() ?? (object) [
         @can('customers.manage')
         <div>
             <button @click="toggleSubmenu('connectionManagement')"
-                :class="openSubmenus.connectionManagement && 'icon-glow'"
-                class="nav-btn w-full"
-                :data-tooltip="!sidebarOpen ? 'Connections' : null">
-                <span class="nav-btn-notch"></span>
-                <div class="nav-btn-icon">
-                    <i class="fas fa-plug"></i>
+                :class="activeMenu.startsWith('connection-') ? 'bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
+                <div class="flex items-center min-w-0">
+                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                        :class="activeMenu.startsWith('connection-') ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                        <i class="fas fa-plug text-sm" :class="activeMenu.startsWith('connection-') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"></i>
+                    </div>
+                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Connection Management</span>
                 </div>
                 <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Connection Management</span>
                 <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.connectionManagement && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
@@ -145,12 +126,14 @@ $user = Auth::user() ?? (object) [
         @can('customers.view')
         <div>
             <button @click="toggleSubmenu('customerManagement')"
-                :class="openSubmenus.customerManagement && 'icon-glow'"
-                class="nav-btn w-full"
-                :data-tooltip="!sidebarOpen ? 'Customers' : null">
-                <span class="nav-btn-notch"></span>
-                <div class="nav-btn-icon">
-                    <i class="fas fa-user-tie"></i>
+                :class="activeMenu.startsWith('customer-') ? 'bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
+                <div class="flex items-center min-w-0">
+                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                        :class="activeMenu.startsWith('customer-') ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                        <i class="fas fa-user-tie text-sm" :class="activeMenu.startsWith('customer-') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"></i>
+                    </div>
+                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Customer Management</span>
                 </div>
                 <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Customer Management</span>
                 <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.customerManagement && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
@@ -261,6 +244,138 @@ $user = Auth::user() ?? (object) [
         </a>
         @endcan
 
+        <!-- Admin Configuration -->
+        @canany(['config.geographic.manage', 'config.billing.manage', 'config.access.manage'])
+        <div class="space-y-1">
+            <button @click="toggleSubmenu('adminConfig')"
+                :class="activeMenu.startsWith('config-') ? 'bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
+                <div class="flex items-center min-w-0">
+                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
+                        :class="activeMenu.startsWith('config-') ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
+                        <i class="fas fa-cogs text-sm" :class="activeMenu.startsWith('config-') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"></i>
+                    </div>
+                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Admin Configuration</span>
+                </div>
+                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.adminConfig }" x-show="sidebarOpen" x-transition></i>
+            </button>
+
+            <div x-show="openSubmenus.adminConfig && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
+
+                <!-- Geographic Submenu -->
+                @can('config.geographic.manage')
+                <div class="space-y-1">
+                    <button @click="toggleSubmenu('geographic')"
+                        :class="activeMenu.startsWith('config-geographic-') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 font-medium' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        class="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marked-alt w-4 text-xs mr-2.5"></i>
+                            <span>Geographic</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.geographic }"></i>
+                    </button>
+
+                    <div x-show="openSubmenus.geographic" x-collapse class="ml-6 space-y-1 mt-1 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
+                        <a href="{{ route('config.barangays.index') }}" @click="setActiveMenu('config-geographic-barangays')"
+                            :class="activeMenu === 'config-geographic-barangays' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-map-marker-alt w-4 text-xs mr-2.5"></i>
+                            <span>Barangays</span>
+                        </a>
+                        <a href="{{ route('config.areas.index') }}" @click="setActiveMenu('config-geographic-areas')"
+                            :class="activeMenu === 'config-geographic-areas' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-layer-group w-4 text-xs mr-2.5"></i>
+                            <span>Areas</span>
+                        </a>
+                        <a href="{{ route('config.puroks.index') }}" @click="setActiveMenu('config-geographic-puroks')"
+                            :class="activeMenu === 'config-geographic-puroks' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-house-user w-4 text-xs mr-2.5"></i>
+                            <span>Puroks</span>
+                        </a>
+                    </div>
+                </div>
+                @endcan
+
+                <!-- Water Rates -->
+                @can('config.billing.manage')
+                <a href="{{ route('config.water-rates.index') }}" @click="setActiveMenu('config-water-rates')"
+                    :class="activeMenu === 'config-water-rates' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                    <i class="fas fa-dollar-sign w-4 text-xs mr-2.5"></i>
+                    <span>Water Rates</span>
+                </a>
+
+                <!-- Billing Configuration Submenu -->
+                <div class="space-y-1">
+                    <button @click="toggleSubmenu('billingConfig')"
+                        :class="activeMenu.startsWith('config-billing-') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 font-medium' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        class="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-receipt w-4 text-xs mr-2.5"></i>
+                            <span>Billing Configuration</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.billingConfig }"></i>
+                    </button>
+
+                    <div x-show="openSubmenus.billingConfig" x-collapse class="ml-6 space-y-1 mt-1 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
+                        <a href="{{ route('config.account-types.index') }}" @click="setActiveMenu('config-billing-account-types')"
+                            :class="activeMenu === 'config-billing-account-types' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-users-cog w-4 text-xs mr-2.5"></i>
+                            <span>Account Types</span>
+                        </a>
+                        <a href="{{ route('config.charge-items.index') }}" @click="setActiveMenu('config-billing-charge-items')"
+                            :class="activeMenu === 'config-billing-charge-items' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-file-invoice-dollar w-4 text-xs mr-2.5"></i>
+                            <span>Application Fee Templates</span>
+                        </a>
+                    </div>
+                </div>
+                @endcan
+
+                <!-- Access Control Submenu -->
+                @can('config.access.manage')
+                <div class="space-y-1">
+                    <button @click="toggleSubmenu('accessControl')"
+                        :class="activeMenu.startsWith('config-access-') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 font-medium' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        class="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-shield-alt w-4 text-xs mr-2.5"></i>
+                            <span>Access Control</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.accessControl }"></i>
+                    </button>
+
+                    <div x-show="openSubmenus.accessControl" x-collapse class="ml-6 space-y-1 mt-1 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
+                        <a href="{{ route('admin.roles.index') }}" @click="setActiveMenu('config-access-roles')"
+                            :class="activeMenu === 'config-access-roles' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-user-shield w-4 text-xs mr-2.5"></i>
+                            <span>Roles</span>
+                        </a>
+                        <a href="{{ route('admin.permissions.index') }}" @click="setActiveMenu('config-access-permissions')"
+                            :class="activeMenu === 'config-access-permissions' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-key w-4 text-xs mr-2.5"></i>
+                            <span>Permissions</span>
+                        </a>
+                        <a href="{{ route('admin.role-permissions.matrix') }}" @click="setActiveMenu('config-access-matrix')"
+                            :class="activeMenu === 'config-access-matrix' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-th w-4 text-xs mr-2.5"></i>
+                            <span>Permission Matrix</span>
+                        </a>
+                    </div>
+                </div>
+                @endcan
+
+            </div>
+        </div>
+        @endcanany
+
         <!-- Activity Log - Super Admin Only -->
         @role('super_admin')
         <a href="{{ route('admin.activity-log') }}" @click="setActiveMenu('activity-log')"
@@ -287,7 +402,11 @@ $user = Auth::user() ?? (object) [
             openSubmenus: {
                 userManagement: {{ session('active_menu') && str_starts_with(session('active_menu'), 'user-') ? 'true' : 'false' }},
                 customerManagement: {{ session('active_menu') && (str_starts_with(session('active_menu'), 'customer-')) ? 'true' : 'false' }},
-                connectionManagement: {{ session('active_menu') && str_starts_with(session('active_menu'), 'connection-') ? 'true' : 'false' }}
+                connectionManagement: {{ session('active_menu') && str_starts_with(session('active_menu'), 'connection-') ? 'true' : 'false' }},
+                adminConfig: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-') ? 'true' : 'false' }},
+                geographic: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-geographic-') ? 'true' : 'false' }},
+                billingConfig: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-billing-') ? 'true' : 'false' }},
+                accessControl: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-access-') ? 'true' : 'false' }}
             },
 
             init() {
@@ -315,9 +434,15 @@ $user = Auth::user() ?? (object) [
                     '/rate/management': 'rate-management',
                     '/ledger/management': 'ledger-management',
                     '/analytics': 'analytics',
-                    '/admin/roles': 'user-roles',
-                    '/admin/permissions': 'user-permissions',
-                    '/admin/role-permissions': 'user-matrix',
+                    '/config/barangays': 'config-geographic-barangays',
+                    '/config/areas': 'config-geographic-areas',
+                    '/config/puroks': 'config-geographic-puroks',
+                    '/config/water-rates': 'config-water-rates',
+                    '/config/account-types': 'config-billing-account-types',
+                    '/config/charge-items': 'config-billing-charge-items',
+                    '/admin/roles': 'config-access-roles',
+                    '/admin/permissions': 'config-access-permissions',
+                    '/admin/role-permissions': 'config-access-matrix',
                     '/admin/activity-log': 'activity-log'
                 };
 
@@ -335,6 +460,15 @@ $user = Auth::user() ?? (object) [
                     this.openSubmenus.customerManagement = true;
                 } else if (this.activeMenu.startsWith('connection-')) {
                     this.openSubmenus.connectionManagement = true;
+                } else if (this.activeMenu.startsWith('config-')) {
+                    this.openSubmenus.adminConfig = true;
+                    if (this.activeMenu.startsWith('config-geographic-')) {
+                        this.openSubmenus.geographic = true;
+                    } else if (this.activeMenu.startsWith('config-billing-')) {
+                        this.openSubmenus.billingConfig = true;
+                    } else if (this.activeMenu.startsWith('config-access-')) {
+                        this.openSubmenus.accessControl = true;
+                    }
                 }
 
                 if (window.appState) {
@@ -359,12 +493,55 @@ $user = Auth::user() ?? (object) [
                     this.sidebarOpen = true;
                     return;
                 }
+
+                // Define parent-child relationships
+                const childSubmenus = {
+                    'adminConfig': ['geographic', 'billingConfig', 'accessControl']
+                };
+
+                // Check if this is a child submenu
+                let parentSubmenu = null;
+                for (const [parent, children] of Object.entries(childSubmenus)) {
+                    if (children.includes(submenu)) {
+                        parentSubmenu = parent;
+                        break;
+                    }
+                }
+
+                // Get list of all child submenus
+                const allChildren = Object.values(childSubmenus).flat();
+
+                // Close logic based on hierarchy
                 Object.keys(this.openSubmenus).forEach(key => {
                     if (key !== submenu) {
-                        this.openSubmenus[key] = false;
+                        // If toggling a child submenu, keep parent open
+                        if (parentSubmenu && key === parentSubmenu) {
+                            return; // Don't close parent
+                        }
+                        // If toggling a child, close only sibling children
+                        if (parentSubmenu && childSubmenus[parentSubmenu]?.includes(key)) {
+                            this.openSubmenus[key] = false; // Close siblings
+                        }
+                        // If toggling a parent, close all other top-level submenus (but not children yet)
+                        else if (!parentSubmenu && !allChildren.includes(key)) {
+                            this.openSubmenus[key] = false;
+                            // Also close children of other parents
+                            if (childSubmenus[key]) {
+                                childSubmenus[key].forEach(child => {
+                                    this.openSubmenus[child] = false;
+                                });
+                            }
+                        }
                     }
                 });
+
+                // Toggle the requested submenu
                 this.openSubmenus[submenu] = !this.openSubmenus[submenu];
+
+                // If opening a child, ensure parent is open
+                if (parentSubmenu && this.openSubmenus[submenu]) {
+                    this.openSubmenus[parentSubmenu] = true;
+                }
             },
 
             setActiveMenu(menu) {
@@ -374,6 +551,10 @@ $user = Auth::user() ?? (object) [
                 this.openSubmenus.userManagement = false;
                 this.openSubmenus.customerManagement = false;
                 this.openSubmenus.connectionManagement = false;
+                this.openSubmenus.adminConfig = false;
+                this.openSubmenus.geographic = false;
+                this.openSubmenus.billingConfig = false;
+                this.openSubmenus.accessControl = false;
                 // Open the appropriate submenu
                 if (menu.startsWith('user-')) {
                     this.openSubmenus.userManagement = true;
@@ -381,6 +562,15 @@ $user = Auth::user() ?? (object) [
                     this.openSubmenus.customerManagement = true;
                 } else if (menu.startsWith('connection-')) {
                     this.openSubmenus.connectionManagement = true;
+                } else if (menu.startsWith('config-')) {
+                    this.openSubmenus.adminConfig = true;
+                    if (menu.startsWith('config-geographic-')) {
+                        this.openSubmenus.geographic = true;
+                    } else if (menu.startsWith('config-billing-')) {
+                        this.openSubmenus.billingConfig = true;
+                    } else if (menu.startsWith('config-access-')) {
+                        this.openSubmenus.accessControl = true;
+                    }
                 }
             },
 

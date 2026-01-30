@@ -35,6 +35,10 @@ class UploadedReading extends Model
         'computed_amount',
         'is_printed',
         'is_scanned',
+        'is_processed',
+        'processed_at',
+        'processed_by',
+        'bill_id',
         'user_id',
     ];
 
@@ -48,6 +52,8 @@ class UploadedReading extends Model
         'reading_date' => 'date',
         'is_printed' => 'boolean',
         'is_scanned' => 'boolean',
+        'is_processed' => 'boolean',
+        'processed_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -74,6 +80,22 @@ class UploadedReading extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    /**
+     * Get the user who processed this reading.
+     */
+    public function processedByUser()
+    {
+        return $this->belongsTo(User::class, 'processed_by', 'id');
+    }
+
+    /**
+     * Get the generated water bill.
+     */
+    public function waterBill()
+    {
+        return $this->belongsTo(WaterBillHistory::class, 'bill_id', 'bill_id');
     }
 
     /**
@@ -118,5 +140,32 @@ class UploadedReading extends Model
     public function scopeScanned($query)
     {
         return $query->where('is_scanned', true);
+    }
+
+    /**
+     * Scope for processed readings.
+     */
+    public function scopeProcessed($query)
+    {
+        return $query->where('is_processed', true);
+    }
+
+    /**
+     * Scope for unprocessed readings.
+     */
+    public function scopeUnprocessed($query)
+    {
+        return $query->where('is_processed', false);
+    }
+
+    /**
+     * Check if reading can be processed.
+     */
+    public function canBeProcessed(): bool
+    {
+        return ! $this->is_processed
+            && $this->present_reading !== null
+            && $this->previous_reading !== null
+            && $this->connection_id !== null;
     }
 }
