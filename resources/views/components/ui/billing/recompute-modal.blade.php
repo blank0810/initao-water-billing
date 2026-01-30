@@ -441,15 +441,32 @@ async function submitRecompute() {
             };
         }
 
+        // Validate CSRF token presence
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        if (!csrfToken) {
+            showRecomputeMessage('Session error. Please refresh the page.', 'error');
+            btn.disabled = false;
+            icon.className = 'fas fa-calculator mr-2';
+            return;
+        }
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                'X-CSRF-TOKEN': csrfToken
             },
             body: JSON.stringify(payload)
         });
+
+        // Handle 419 CSRF token mismatch
+        if (response.status === 419) {
+            showRecomputeMessage('Session expired. Please refresh the page.', 'error');
+            btn.disabled = false;
+            icon.className = 'fas fa-calculator mr-2';
+            return;
+        }
 
         const result = await response.json();
 
