@@ -138,6 +138,7 @@ class PaymentController extends Controller
 
     /**
      * Process water bill payment
+     * Supports both AJAX (JSON) and form submission
      */
     public function storeWaterBillPayment(int $id, Request $request)
     {
@@ -152,11 +153,33 @@ class PaymentController extends Controller
                 auth()->id()
             );
 
+            // Return JSON for AJAX requests
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Payment processed successfully',
+                    'data' => [
+                        'payment' => $result['payment'],
+                        'receipt_no' => $result['payment']->receipt_no,
+                        'total_paid' => $result['total_paid'],
+                        'amount_received' => $result['amount_received'],
+                        'change' => $result['change'],
+                    ],
+                ]);
+            }
+
             return redirect()
                 ->route('payment.receipt', $result['payment']->payment_id)
                 ->with('success', 'Payment processed successfully. Change: ₱'.number_format($result['change'], 2));
 
         } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
             return back()
                 ->withInput()
                 ->with('error', $e->getMessage());

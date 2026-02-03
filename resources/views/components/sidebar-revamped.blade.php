@@ -45,14 +45,12 @@ $user = Auth::user() ?? (object) [
         @can('users.view')
         <div>
             <button @click="toggleSubmenu('userManagement')"
-                :class="activeMenu.startsWith('user-') ? 'bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
-                <div class="flex items-center min-w-0">
-                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                        :class="activeMenu.startsWith('user-') ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                        <i class="fas fa-users text-sm" :class="activeMenu.startsWith('user-') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"></i>
-                    </div>
-                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>User Management</span>
+                :class="[activeMenu.startsWith('user-') && 'active', openSubmenus.userManagement && 'icon-glow']"
+                class="nav-btn w-full"
+                :data-tooltip="!sidebarOpen ? 'Users' : null">
+                <span class="nav-btn-notch"></span>
+                <div class="nav-btn-icon">
+                    <i class="fas fa-users"></i>
                 </div>
                 <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>User Management</span>
                 <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.userManagement && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
@@ -83,14 +81,12 @@ $user = Auth::user() ?? (object) [
         @can('customers.manage')
         <div>
             <button @click="toggleSubmenu('connectionManagement')"
-                :class="activeMenu.startsWith('connection-') ? 'bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
-                <div class="flex items-center min-w-0">
-                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                        :class="activeMenu.startsWith('connection-') ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                        <i class="fas fa-plug text-sm" :class="activeMenu.startsWith('connection-') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"></i>
-                    </div>
-                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Connection Management</span>
+                :class="[activeMenu.startsWith('connection-') && 'active', openSubmenus.connectionManagement && 'icon-glow']"
+                class="nav-btn w-full"
+                :data-tooltip="!sidebarOpen ? 'Connections' : null">
+                <span class="nav-btn-notch"></span>
+                <div class="nav-btn-icon">
+                    <i class="fas fa-plug"></i>
                 </div>
                 <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Connection Management</span>
                 <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.connectionManagement && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
@@ -126,14 +122,12 @@ $user = Auth::user() ?? (object) [
         @can('customers.view')
         <div>
             <button @click="toggleSubmenu('customerManagement')"
-                :class="activeMenu.startsWith('customer-') ? 'bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
-                <div class="flex items-center min-w-0">
-                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                        :class="activeMenu.startsWith('customer-') ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                        <i class="fas fa-user-tie text-sm" :class="activeMenu.startsWith('customer-') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"></i>
-                    </div>
-                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Customer Management</span>
+                :class="[activeMenu.startsWith('customer-') && 'active', openSubmenus.customerManagement && 'icon-glow']"
+                class="nav-btn w-full"
+                :data-tooltip="!sidebarOpen ? 'Customers' : null">
+                <span class="nav-btn-notch"></span>
+                <div class="nav-btn-icon">
+                    <i class="fas fa-user-tie"></i>
                 </div>
                 <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Customer Management</span>
                 <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.customerManagement && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
@@ -246,18 +240,17 @@ $user = Auth::user() ?? (object) [
 
         <!-- Admin Configuration -->
         @canany(['config.geographic.manage', 'config.billing.manage', 'config.access.manage'])
-        <div class="space-y-1">
+        <div>
             <button @click="toggleSubmenu('adminConfig')"
-                :class="activeMenu.startsWith('config-') ? 'bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                class="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 group">
-                <div class="flex items-center min-w-0">
-                    <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200"
-                        :class="activeMenu.startsWith('config-') ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'">
-                        <i class="fas fa-cogs text-sm" :class="activeMenu.startsWith('config-') ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'"></i>
-                    </div>
-                    <span class="ml-3 text-sm font-medium truncate" x-show="sidebarOpen" x-transition>Admin Configuration</span>
+                :class="[activeMenu.startsWith('config-') && 'active', openSubmenus.adminConfig && 'icon-glow']"
+                class="nav-btn w-full"
+                :data-tooltip="!sidebarOpen ? 'Config' : null">
+                <span class="nav-btn-notch"></span>
+                <div class="nav-btn-icon">
+                    <i class="fas fa-cogs"></i>
                 </div>
-                <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.adminConfig }" x-show="sidebarOpen" x-transition></i>
+                <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Admin Configuration</span>
+                <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.adminConfig && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
             </button>
 
             <div x-show="openSubmenus.adminConfig && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">

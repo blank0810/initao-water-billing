@@ -339,4 +339,58 @@ class CustomerController extends Controller
             ], $e->getMessage() === 'Customer not found' ? 404 : 500);
         }
     }
+
+    /**
+     * Get customer ledger data with filters
+     *
+     * @param  int  $id  Customer ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getLedger(int $id, Request $request): JsonResponse
+    {
+        try {
+            $filters = [
+                'connection_id' => $request->query('connection_id'),
+                'period_id' => $request->query('period_id'),
+                'source_type' => $request->query('source_type'),
+                'per_page' => $request->query('per_page', 20),
+                'page' => $request->query('page', 1),
+            ];
+
+            $data = $this->customerService->getLedgerData($id, $filters);
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get ledger entry details with source document information
+     *
+     * @param  int  $entryId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getLedgerEntryDetails(int $entryId): JsonResponse
+    {
+        try {
+            $data = $this->customerService->getLedgerEntryDetails($entryId);
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 404);
+        }
+    }
 }

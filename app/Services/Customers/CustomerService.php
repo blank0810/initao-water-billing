@@ -925,4 +925,383 @@ class CustomerService
             ];
         })->toArray();
     }
+
+    /**
+     * Get customer ledger data with filters and pagination
+     *
+     * @param  int  $customerId
+     * @param  array  $filters  ['connection_id', 'period_id', 'source_type', 'per_page', 'page']
+     * @return array
+     */
+    public function getLedgerData(int $customerId, array $filters = []): array
+    {
+        $perPage = $filters['per_page'] ?? 20;
+        $connectionId = $filters['connection_id'] ?? null;
+        $periodId = $filters['period_id'] ?? null;
+        $sourceType = $filters['source_type'] ?? null;
+
+        // Build query with filters
+        $query = CustomerLedger::with([
+            'serviceConnection',
+            'period',
+            'status',
+            'user',
+        ])
+            ->where('customer_id', $customerId);
+
+        if ($connectionId) {
+            $query->where('connection_id', $connectionId);
+        }
+
+        if ($periodId) {
+            $query->where('period_id', $periodId);
+        }
+
+        if ($sourceType) {
+            $query->where('source_type', $sourceType);
+        }
+
+        // Order by date descending for display
+        $entries = $query->orderBy('txn_date', 'desc')
+            ->orderBy('post_ts', 'desc')
+            ->paginate($perPage);
+
+        // Calculate running balance (oldest to newest for calculation)
+        $allEntries = CustomerLedger::where('customer_id', $customerId)
+            ->orderBy('txn_date', 'asc')
+            ->orderBy('post_ts', 'asc')
+            ->get();
+
+        $runningBalances = $this->calculateRunningBalances($allEntries);
+
+        // Map entries with running balance
+        $entriesWithBalance = $entries->getCollection()->map(function ($entry) use ($runningBalances) {
+            return $this->formatLedgerEntry($entry, $runningBalances[$entry->ledger_entry_id] ?? 0);
+        });
+
+        // Calculate summary
+        $summary = $this->calculateLedgerSummary($customerId);
+
+        // Get filter options
+        $filterOptions = $this->getLedgerFilterOptions($customerId);
+
+        return [
+            'entries' => $entriesWithBalance,
+            'pagination' => [
+                'current_page' => $entries->currentPage(),
+                'per_page' => $entries->perPage(),
+                'total' => $entries->total(),
+                'last_page' => $entries->lastPage(),
+            ],
+            'summary' => $summary,
+            'filters' => $filterOptions,
+        ];
+    }
+
+    /**
+     * Calculate running balances for all entries
+     */
+    private function calculateRunningBalances($entries): array
+    {
+        $balances = [];
+        $runningBalance = 0;
+
+        foreach ($entries as $entry) {
+            $runningBalance += ($entry->debit - $entry->credit);
+            $balances[$entry->ledger_entry_id] = $runningBalance;
+        }
+
+        return $balances;
+    }
+
+    /**
+     * Format a single ledger entry for API response
+     */
+    private function formatLedgerEntry(CustomerLedger $entry, float $runningBalance): array
+    {
+        return [
+            'ledger_entry_id' => $entry->ledger_entry_id,
+            'txn_date' => $entry->txn_date->format('Y-m-d'),
+            'txn_date_formatted' => $entry->txn_date->format('M d, Y'),
+            'post_ts' => $entry->post_ts?->format('Y-m-d H:i:s'),
+            'source_type' => $entry->source_type,
+            'source_type_label' => $this->getSourceTypeLabel($entry->source_type),
+            'source_type_badge' => $this->getSourceTypeBadge($entry->source_type),
+            'source_id' => $entry->source_id,
+            'description' => $entry->description ?? $this->getDefaultDescription($entry),
+            'debit' => (float) $entry->debit,
+            'debit_formatted' => $entry->debit > 0 ? '₱'.number_format($entry->debit, 2) : '-',
+            'credit' => (float) $entry->credit,
+            'credit_formatted' => $entry->credit > 0 ? '₱'.number_format($entry->credit, 2) : '-',
+            'running_balance' => $runningBalance,
+            'running_balance_formatted' => '₱'.number_format($runningBalance, 2),
+            'balance_class' => $runningBalance > 0 ? 'text-red-600' : ($runningBalance < 0 ? 'text-blue-600' : 'text-green-600'),
+            'connection' => $entry->serviceConnection ? [
+                'connection_id' => $entry->serviceConnection->connection_id,
+                'account_no' => $entry->serviceConnection->account_no ?? 'N/A',
+            ] : null,
+            'period' => $entry->period ? [
+                'per_id' => $entry->period->per_id,
+                'period_label' => $entry->period->per_month.' '.$entry->period->per_year,
+            ] : null,
+        ];
+    }
+
+    /**
+     * Get source type display label
+     */
+    private function getSourceTypeLabel(string $sourceType): string
+    {
+        return match ($sourceType) {
+            'BILL' => 'Water Bill',
+            'CHARGE' => 'Charge',
+            'PAYMENT' => 'Payment',
+            'REFUND' => 'Refund',
+            'ADJUST' => 'Adjustment',
+            'WRITE_OFF' => 'Write-Off',
+            'TRANSFER' => 'Transfer',
+            'REVERSAL' => 'Reversal',
+            default => $sourceType,
+        };
+    }
+
+    /**
+     * Get source type badge CSS classes
+     */
+    private function getSourceTypeBadge(string $sourceType): array
+    {
+        return match ($sourceType) {
+            'BILL' => ['bg' => 'bg-blue-100 dark:bg-blue-900', 'text' => 'text-blue-800 dark:text-blue-300'],
+            'CHARGE' => ['bg' => 'bg-orange-100 dark:bg-orange-900', 'text' => 'text-orange-800 dark:text-orange-300'],
+            'PAYMENT' => ['bg' => 'bg-green-100 dark:bg-green-900', 'text' => 'text-green-800 dark:text-green-300'],
+            'REFUND' => ['bg' => 'bg-purple-100 dark:bg-purple-900', 'text' => 'text-purple-800 dark:text-purple-300'],
+            'ADJUST' => ['bg' => 'bg-yellow-100 dark:bg-yellow-900', 'text' => 'text-yellow-800 dark:text-yellow-300'],
+            'WRITE_OFF' => ['bg' => 'bg-gray-100 dark:bg-gray-700', 'text' => 'text-gray-800 dark:text-gray-300'],
+            default => ['bg' => 'bg-gray-100 dark:bg-gray-700', 'text' => 'text-gray-800 dark:text-gray-300'],
+        };
+    }
+
+    /**
+     * Get default description based on source type
+     */
+    private function getDefaultDescription(CustomerLedger $entry): string
+    {
+        $periodLabel = $entry->period ? $entry->period->per_month.' '.$entry->period->per_year : '';
+
+        return match ($entry->source_type) {
+            'BILL' => "Water Bill - {$periodLabel}",
+            'CHARGE' => 'Service Charge',
+            'PAYMENT' => 'Payment Received',
+            'REFUND' => 'Refund Issued',
+            'ADJUST' => 'Balance Adjustment',
+            'WRITE_OFF' => 'Amount Written Off',
+            default => $entry->source_type,
+        };
+    }
+
+    /**
+     * Calculate ledger summary totals
+     */
+    private function calculateLedgerSummary(int $customerId): array
+    {
+        $totals = CustomerLedger::where('customer_id', $customerId)
+            ->selectRaw('SUM(debit) as total_debit, SUM(credit) as total_credit')
+            ->first();
+
+        $totalDebit = (float) ($totals->total_debit ?? 0);
+        $totalCredit = (float) ($totals->total_credit ?? 0);
+        $netBalance = $totalDebit - $totalCredit;
+
+        return [
+            'total_debit' => $totalDebit,
+            'total_debit_formatted' => '₱'.number_format($totalDebit, 2),
+            'total_credit' => $totalCredit,
+            'total_credit_formatted' => '₱'.number_format($totalCredit, 2),
+            'net_balance' => $netBalance,
+            'net_balance_formatted' => '₱'.number_format($netBalance, 2),
+            'balance_class' => $netBalance > 0 ? 'text-red-600' : ($netBalance < 0 ? 'text-blue-600' : 'text-green-600'),
+        ];
+    }
+
+    /**
+     * Get filter options for ledger dropdown filters
+     */
+    private function getLedgerFilterOptions(int $customerId): array
+    {
+        // Get unique connections for this customer's ledger
+        $connections = CustomerLedger::where('customer_id', $customerId)
+            ->whereNotNull('connection_id')
+            ->with('serviceConnection')
+            ->get()
+            ->pluck('serviceConnection')
+            ->filter()
+            ->unique('connection_id')
+            ->map(fn ($conn) => [
+                'connection_id' => $conn->connection_id,
+                'account_no' => $conn->account_no ?? "Connection #{$conn->connection_id}",
+            ])
+            ->values();
+
+        // Get unique periods for this customer's ledger
+        $periods = CustomerLedger::where('customer_id', $customerId)
+            ->whereNotNull('period_id')
+            ->with('period')
+            ->get()
+            ->pluck('period')
+            ->filter()
+            ->unique('per_id')
+            ->sortByDesc('per_id')
+            ->map(fn ($period) => [
+                'per_id' => $period->per_id,
+                'label' => $period->per_month.' '.$period->per_year,
+            ])
+            ->values();
+
+        // Get unique source types
+        $types = CustomerLedger::where('customer_id', $customerId)
+            ->distinct()
+            ->pluck('source_type')
+            ->map(fn ($type) => [
+                'value' => $type,
+                'label' => $this->getSourceTypeLabel($type),
+            ]);
+
+        return [
+            'connections' => $connections,
+            'periods' => $periods,
+            'types' => $types,
+        ];
+    }
+
+    /**
+     * Get detailed ledger entry with source document information
+     *
+     * @param  int  $entryId
+     * @return array
+     *
+     * @throws \Exception
+     */
+    public function getLedgerEntryDetails(int $entryId): array
+    {
+        $entry = CustomerLedger::with([
+            'serviceConnection.customer',
+            'serviceConnection.accountType',
+            'period',
+            'status',
+            'user',
+        ])->find($entryId);
+
+        if (! $entry) {
+            throw new \Exception('Ledger entry not found');
+        }
+
+        $sourceDetails = $this->getSourceDocumentDetails($entry);
+
+        return [
+            'entry' => $this->formatLedgerEntry($entry, 0), // Balance not needed for detail view
+            'source_details' => $sourceDetails,
+            'connection_details' => $entry->serviceConnection ? [
+                'connection_id' => $entry->serviceConnection->connection_id,
+                'account_no' => $entry->serviceConnection->account_no,
+                'customer_name' => $entry->serviceConnection->customer
+                    ? trim("{$entry->serviceConnection->customer->cust_first_name} {$entry->serviceConnection->customer->cust_last_name}")
+                    : 'N/A',
+                'account_type' => $entry->serviceConnection->accountType?->at_description ?? 'N/A',
+            ] : null,
+            'audit_info' => [
+                'created_by' => $entry->user?->name ?? 'System',
+                'created_at' => $entry->created_at?->format('M d, Y H:i:s') ?? 'N/A',
+                'post_timestamp' => $entry->post_ts?->format('M d, Y H:i:s.u') ?? 'N/A',
+            ],
+        ];
+    }
+
+    /**
+     * Get source document details based on source_type
+     */
+    private function getSourceDocumentDetails(CustomerLedger $entry): ?array
+    {
+        return match ($entry->source_type) {
+            'BILL' => $this->getBillDetails($entry->source_id),
+            'CHARGE' => $this->getChargeDetails($entry->source_id),
+            'PAYMENT' => $this->getPaymentDetails($entry->source_id),
+            default => null,
+        };
+    }
+
+    /**
+     * Get water bill details
+     */
+    private function getBillDetails(int $billId): ?array
+    {
+        $bill = \App\Models\WaterBillHistory::with(['period', 'serviceConnection', 'currentReading', 'previousReading'])
+            ->find($billId);
+
+        if (! $bill) {
+            return null;
+        }
+
+        return [
+            'type' => 'BILL',
+            'bill_id' => $bill->bill_id,
+            'period' => $bill->period ? $bill->period->per_month.' '.$bill->period->per_year : 'N/A',
+            'consumption' => number_format($bill->consumption, 3).' m³',
+            'water_amount' => '₱'.number_format($bill->water_amount, 2),
+            'adjustment_total' => '₱'.number_format($bill->adjustment_total ?? 0, 2),
+            'total_amount' => '₱'.number_format($bill->total_amount, 2),
+            'due_date' => $bill->due_date?->format('M d, Y') ?? 'N/A',
+            'prev_reading' => $bill->previousReading?->reading_value ?? 'N/A',
+            'curr_reading' => $bill->currentReading?->reading_value ?? 'N/A',
+        ];
+    }
+
+    /**
+     * Get charge details
+     */
+    private function getChargeDetails(int $chargeId): ?array
+    {
+        $charge = CustomerCharge::with(['chargeItem', 'serviceConnection'])
+            ->find($chargeId);
+
+        if (! $charge) {
+            return null;
+        }
+
+        return [
+            'type' => 'CHARGE',
+            'charge_id' => $charge->charge_id,
+            'charge_item' => $charge->chargeItem?->name ?? 'Service Charge',
+            'description' => $charge->description,
+            'quantity' => number_format($charge->quantity, 3),
+            'unit_amount' => '₱'.number_format($charge->unit_amount, 2),
+            'total_amount' => '₱'.number_format($charge->total_amount, 2),
+            'due_date' => $charge->due_date?->format('M d, Y') ?? 'N/A',
+        ];
+    }
+
+    /**
+     * Get payment details
+     */
+    private function getPaymentDetails(int $paymentId): ?array
+    {
+        $payment = \App\Models\Payment::with(['payer', 'user', 'paymentAllocations'])
+            ->find($paymentId);
+
+        if (! $payment) {
+            return null;
+        }
+
+        return [
+            'type' => 'PAYMENT',
+            'payment_id' => $payment->payment_id,
+            'receipt_no' => $payment->receipt_no,
+            'payment_date' => $payment->payment_date?->format('M d, Y') ?? 'N/A',
+            'amount_received' => '₱'.number_format($payment->amount_received, 2),
+            'payer_name' => $payment->payer
+                ? trim("{$payment->payer->cust_first_name} {$payment->payer->cust_last_name}")
+                : 'N/A',
+            'processed_by' => $payment->user?->name ?? 'System',
+            'allocations_count' => $payment->paymentAllocations->count(),
+        ];
+    }
 }
