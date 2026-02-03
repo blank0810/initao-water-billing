@@ -16,6 +16,37 @@
                        x-model="selectedDate"
                        @change="loadMyTransactions(selectedDate)"
                        class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+
+                <!-- Export Dropdown -->
+                <div class="relative" x-data="{ exportOpen: false }">
+                    <button @click="exportOpen = !exportOpen"
+                            @click.away="exportOpen = false"
+                            class="px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg font-medium transition-colors flex items-center gap-2">
+                        <i class="fas fa-download"></i>
+                        Export
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </button>
+                    <div x-show="exportOpen"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95"
+                         class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10">
+                        <a :href="`/api/payments/my-transactions/export/pdf?date=${selectedDate || ''}`"
+                           target="_blank"
+                           class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg transition-colors">
+                            <i class="fas fa-file-pdf text-red-500"></i>
+                            Export as PDF
+                        </a>
+                        <a :href="`/api/payments/my-transactions/export/csv?date=${selectedDate || ''}`"
+                           class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg transition-colors">
+                            <i class="fas fa-file-csv text-green-500"></i>
+                            Export as CSV
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
