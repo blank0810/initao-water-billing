@@ -154,7 +154,9 @@ class PaymentManagementService
                 'date_formatted' => $bill->due_date?->format('M d, Y'),
                 'status' => $isOverdue ? 'Overdue' : 'Pending Payment',
                 'status_color' => $isOverdue ? 'red' : 'yellow',
+                'action_url' => route('payment.process.bill', $bill->bill_id),
                 'process_url' => route('payment.process.bill', $bill->bill_id),
+                'print_url' => null,
             ];
         });
     }

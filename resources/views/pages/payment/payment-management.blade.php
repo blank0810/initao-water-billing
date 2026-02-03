@@ -176,7 +176,7 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex items-center justify-center gap-2">
-                                                <a :href="payment.print_url" target="_blank"
+                                                <a x-show="payment.print_url" :href="payment.print_url" target="_blank"
                                                     class="p-2 text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
                                                     title="Print Order of Payment">
                                                     <i class="fas fa-print"></i>
