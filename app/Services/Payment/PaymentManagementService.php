@@ -34,14 +34,14 @@ class PaymentManagementService
             $payments = $payments->merge($applicationPayments);
         }
 
-        // Future: Get pending water bills
-        // if (!$type || $type === self::TYPE_WATER_BILL) {
-        //     $billPayments = $this->getPendingWaterBills($search);
-        //     $payments = $payments->merge($billPayments);
-        // }
+        // Get pending water bills (ACTIVE or OVERDUE status)
+        if (! $type || $type === self::TYPE_WATER_BILL) {
+            $billPayments = $this->getPendingWaterBills($search);
+            $payments = $payments->merge($billPayments);
+        }
 
-        // Sort by date (newest first)
-        return $payments->sortByDesc('date')->values();
+        // Sort by date (oldest first)
+        return $payments->sortBy('date')->values();
     }
 
     /**
@@ -210,8 +210,7 @@ class PaymentManagementService
         return [
             ['value' => '', 'label' => 'All Types'],
             ['value' => self::TYPE_APPLICATION_FEE, 'label' => 'Application Fee'],
-            // ['value' => self::TYPE_WATER_BILL, 'label' => 'Water Bill'],
-            // ['value' => self::TYPE_OTHER_CHARGE, 'label' => 'Other Charges'],
+            ['value' => self::TYPE_WATER_BILL, 'label' => 'Water Bill'],
         ];
     }
 
