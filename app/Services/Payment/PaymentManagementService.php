@@ -165,24 +165,32 @@ class PaymentManagementService
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Pre-fetch all application payment IDs in one query to avoid N+1
+        $applicationPaymentIds = ServiceApplication::whereIn(
+            'payment_id',
+            $payments->pluck('payment_id')
+        )->pluck('payment_id')->flip();
+
         // Calculate summary statistics
         $totalCollected = $payments->sum('amount_received');
         $transactionCount = $payments->count();
 
         // Group by payment type (derive from related data)
-        $byType = $this->groupPaymentsByType($payments);
+        $byType = $this->groupPaymentsByType($payments, $applicationPaymentIds);
 
         // Format transactions for display
-        $transactions = $payments->map(function ($payment) {
+        $transactions = $payments->map(function ($payment) use ($applicationPaymentIds) {
+            $paymentType = $this->getPaymentType($payment, $applicationPaymentIds);
+
             return [
                 'payment_id' => $payment->payment_id,
                 'receipt_no' => $payment->receipt_no,
                 'customer_name' => $this->formatCustomerName($payment->payer),
                 'customer_code' => $payment->payer->resolution_no ?? '-',
-                'payment_type' => $this->getPaymentType($payment),
-                'payment_type_label' => $this->getPaymentTypeLabel($payment),
+                'payment_type' => $paymentType,
+                'payment_type_label' => $this->getPaymentTypeLabelFromType($paymentType),
                 'amount' => $payment->amount_received,
-                'amount_formatted' => '₱ ' . number_format($payment->amount_received, 2),
+                'amount_formatted' => '₱ '.number_format($payment->amount_received, 2),
                 'time' => $payment->created_at->format('g:i A'),
                 'receipt_url' => route('payment.receipt', $payment->payment_id),
             ];
@@ -193,7 +201,7 @@ class PaymentManagementService
             'date_display' => $targetDate->format('F j, Y'),
             'summary' => [
                 'total_collected' => $totalCollected,
-                'total_collected_formatted' => '₱ ' . number_format($totalCollected, 2),
+                'total_collected_formatted' => '₱ '.number_format($totalCollected, 2),
                 'transaction_count' => $transactionCount,
                 'by_type' => $byType,
             ],
@@ -204,16 +212,17 @@ class PaymentManagementService
     /**
      * Group payments by type for summary breakdown
      */
-    protected function groupPaymentsByType($payments): array
+    protected function groupPaymentsByType($payments, $applicationPaymentIds): array
     {
         $grouped = [];
 
         foreach ($payments as $payment) {
-            $type = $this->getPaymentTypeLabel($payment);
-            if (!isset($grouped[$type])) {
-                $grouped[$type] = 0;
+            $paymentType = $this->getPaymentType($payment, $applicationPaymentIds);
+            $typeLabel = $this->getPaymentTypeLabelFromType($paymentType);
+            if (! isset($grouped[$typeLabel])) {
+                $grouped[$typeLabel] = 0;
             }
-            $grouped[$type] += $payment->amount_received;
+            $grouped[$typeLabel] += $payment->amount_received;
         }
 
         // Format for display
@@ -222,7 +231,7 @@ class PaymentManagementService
             $result[] = [
                 'type' => $type,
                 'amount' => $amount,
-                'amount_formatted' => '₱ ' . number_format($amount, 2),
+                'amount_formatted' => '₱ '.number_format($amount, 2),
             ];
         }
 
@@ -230,13 +239,12 @@ class PaymentManagementService
     }
 
     /**
-     * Determine payment type from payment record
+     * Determine payment type from payment record using pre-fetched lookup
      */
-    protected function getPaymentType(Payment $payment): string
+    protected function getPaymentType(Payment $payment, $applicationPaymentIds): string
     {
-        // Check if payment is linked to a service application
-        $application = ServiceApplication::where('payment_id', $payment->payment_id)->first();
-        if ($application) {
+        // Check if payment is linked to a service application (using in-memory lookup)
+        if (isset($applicationPaymentIds[$payment->payment_id])) {
             return self::TYPE_APPLICATION_FEE;
         }
 
@@ -247,12 +255,10 @@ class PaymentManagementService
     }
 
     /**
-     * Get human-readable payment type label
+     * Get human-readable payment type label from type constant
      */
-    protected function getPaymentTypeLabel(Payment $payment): string
+    protected function getPaymentTypeLabelFromType(string $type): string
     {
-        $type = $this->getPaymentType($payment);
-
         return match ($type) {
             self::TYPE_APPLICATION_FEE => 'Application Fee',
             self::TYPE_WATER_BILL => 'Water Bill',
