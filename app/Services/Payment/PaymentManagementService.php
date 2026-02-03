@@ -153,6 +153,121 @@ class PaymentManagementService
     }
 
     /**
+     * Get transactions processed by a specific cashier for a given date
+     */
+    public function getCashierTransactions(int $userId, ?string $date = null): array
+    {
+        $targetDate = $date ? \Carbon\Carbon::parse($date) : today();
+
+        $payments = Payment::with(['payer', 'status'])
+            ->where('user_id', $userId)
+            ->whereDate('payment_date', $targetDate)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Pre-fetch all application payment IDs in one query to avoid N+1
+        $applicationPaymentIds = ServiceApplication::whereIn(
+            'payment_id',
+            $payments->pluck('payment_id')
+        )->pluck('payment_id')->flip();
+
+        // Calculate summary statistics
+        $totalCollected = $payments->sum('amount_received');
+        $transactionCount = $payments->count();
+
+        // Group by payment type (derive from related data)
+        $byType = $this->groupPaymentsByType($payments, $applicationPaymentIds);
+
+        // Format transactions for display
+        $transactions = $payments->map(function ($payment) use ($applicationPaymentIds) {
+            $paymentType = $this->getPaymentType($payment, $applicationPaymentIds);
+
+            return [
+                'payment_id' => $payment->payment_id,
+                'receipt_no' => $payment->receipt_no,
+                'customer_name' => $this->formatCustomerName($payment->payer),
+                'customer_code' => $payment->payer->resolution_no ?? '-',
+                'payment_type' => $paymentType,
+                'payment_type_label' => $this->getPaymentTypeLabelFromType($paymentType),
+                'amount' => $payment->amount_received,
+                'amount_formatted' => '₱ '.number_format($payment->amount_received, 2),
+                'time' => $payment->created_at->format('g:i A'),
+                'receipt_url' => route('payment.receipt', $payment->payment_id),
+            ];
+        });
+
+        return [
+            'date' => $targetDate->format('Y-m-d'),
+            'date_display' => $targetDate->format('F j, Y'),
+            'summary' => [
+                'total_collected' => $totalCollected,
+                'total_collected_formatted' => '₱ '.number_format($totalCollected, 2),
+                'transaction_count' => $transactionCount,
+                'by_type' => $byType,
+            ],
+            'transactions' => $transactions,
+        ];
+    }
+
+    /**
+     * Group payments by type for summary breakdown
+     */
+    protected function groupPaymentsByType($payments, $applicationPaymentIds): array
+    {
+        $grouped = [];
+
+        foreach ($payments as $payment) {
+            $paymentType = $this->getPaymentType($payment, $applicationPaymentIds);
+            $typeLabel = $this->getPaymentTypeLabelFromType($paymentType);
+            if (! isset($grouped[$typeLabel])) {
+                $grouped[$typeLabel] = 0;
+            }
+            $grouped[$typeLabel] += $payment->amount_received;
+        }
+
+        // Format for display
+        $result = [];
+        foreach ($grouped as $type => $amount) {
+            $result[] = [
+                'type' => $type,
+                'amount' => $amount,
+                'amount_formatted' => '₱ '.number_format($amount, 2),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Determine payment type from payment record using pre-fetched lookup
+     */
+    protected function getPaymentType(Payment $payment, $applicationPaymentIds): string
+    {
+        // Check if payment is linked to a service application (using in-memory lookup)
+        if (isset($applicationPaymentIds[$payment->payment_id])) {
+            return self::TYPE_APPLICATION_FEE;
+        }
+
+        // Future: Check for water bill payments
+        // Future: Check for other charge payments
+
+        return self::TYPE_OTHER_CHARGE;
+    }
+
+    /**
+     * Get human-readable payment type label from type constant
+     */
+    protected function getPaymentTypeLabelFromType(string $type): string
+    {
+        return match ($type) {
+            self::TYPE_APPLICATION_FEE => 'Application Fee',
+            self::TYPE_WATER_BILL => 'Water Bill',
+            self::TYPE_OTHER_CHARGE => 'Other Charges',
+            default => 'Other',
+        };
+    }
+
+    /**
      * Format customer full name
      */
     protected function formatCustomerName($customer): string

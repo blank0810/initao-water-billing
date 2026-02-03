@@ -8,7 +8,9 @@ use App\Services\Payment\PaymentManagementService;
 use App\Services\ServiceApplication\ServiceApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentController extends Controller
 {
@@ -57,6 +59,24 @@ class PaymentController extends Controller
         return response()->json([
             'success' => true,
             'data' => $stats,
+        ]);
+    }
+
+    /**
+     * Get current cashier's transactions for a specific date
+     */
+    public function getMyTransactions(Request $request): JsonResponse
+    {
+        $date = $request->input('date');
+
+        $data = $this->paymentManagementService->getCashierTransactions(
+            auth()->id(),
+            $date
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
         ]);
     }
 
@@ -123,5 +143,75 @@ class PaymentController extends Controller
         $chargesData = $this->applicationService->getApplicationCharges($application->application_id);
 
         return view('pages.payment.payment-receipt', compact('payment', 'application', 'chargesData'));
+    }
+
+    /**
+     * Export cashier's transactions as CSV
+     */
+    public function exportMyTransactionsCsv(Request $request): StreamedResponse
+    {
+        $date = $request->input('date');
+        $data = $this->paymentManagementService->getCashierTransactions(
+            auth()->id(),
+            $date
+        );
+
+        $filename = 'my-transactions-' . $data['date'] . '.csv';
+
+        return response()->streamDownload(function () use ($data) {
+            $handle = fopen('php://output', 'w');
+
+            // Header row
+            fputcsv($handle, [
+                'Receipt #',
+                'Customer Name',
+                'Customer Code',
+                'Payment Type',
+                'Amount',
+                'Time',
+            ]);
+
+            // Data rows
+            foreach ($data['transactions'] as $tx) {
+                fputcsv($handle, [
+                    $tx['receipt_no'],
+                    $tx['customer_name'],
+                    $tx['customer_code'],
+                    $tx['payment_type_label'],
+                    $tx['amount'],
+                    $tx['time'],
+                ]);
+            }
+
+            // Summary footer
+            fputcsv($handle, []);
+            fputcsv($handle, ['Summary']);
+            fputcsv($handle, ['Total Collected', $data['summary']['total_collected']]);
+            fputcsv($handle, ['Transaction Count', $data['summary']['transaction_count']]);
+
+            foreach ($data['summary']['by_type'] as $type) {
+                fputcsv($handle, [$type['type'], $type['amount']]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    /**
+     * Export cashier's transactions as printable PDF report
+     */
+    public function exportMyTransactionsPdf(Request $request): View
+    {
+        $date = $request->input('date');
+        $data = $this->paymentManagementService->getCashierTransactions(
+            auth()->id(),
+            $date
+        );
+
+        $cashierName = auth()->user()->name;
+
+        return view('pages.payment.my-transactions-report', compact('data', 'cashierName'));
     }
 }
