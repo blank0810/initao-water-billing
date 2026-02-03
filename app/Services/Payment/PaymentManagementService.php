@@ -5,6 +5,7 @@ namespace App\Services\Payment;
 use App\Models\Payment;
 use App\Models\ServiceApplication;
 use App\Models\Status;
+use App\Models\WaterBillHistory;
 use Illuminate\Support\Collection;
 
 class PaymentManagementService
@@ -92,6 +93,68 @@ class PaymentManagementService
                 'action_url' => route('payment.process.application', $application->application_id),
                 'process_url' => route('payment.process.application', $application->application_id),
                 'print_url' => route('service.application.order-of-payment', $application->application_id),
+            ];
+        });
+    }
+
+    /**
+     * Get pending water bills (ACTIVE or OVERDUE status)
+     */
+    protected function getPendingWaterBills(?string $search = null): Collection
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $overdueStatusId = Status::getIdByDescription('OVERDUE');
+
+        $query = WaterBillHistory::with([
+            'serviceConnection.customer',
+            'serviceConnection.address.purok',
+            'serviceConnection.address.barangay',
+            'period',
+            'status',
+        ])
+            ->whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]));
+
+        // Apply search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('period', function ($pq) use ($search) {
+                    $pq->where('per_name', 'like', "%{$search}%");
+                })
+                    ->orWhereHas('serviceConnection', function ($cq) use ($search) {
+                        $cq->where('account_no', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('serviceConnection.customer', function ($custQ) use ($search) {
+                        $custQ->where('cust_first_name', 'like', "%{$search}%")
+                            ->orWhere('cust_last_name', 'like', "%{$search}%")
+                            ->orWhere('resolution_no', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $overdueId = $overdueStatusId;
+
+        return $query->orderBy('due_date', 'asc')->get()->map(function ($bill) use ($overdueId) {
+            $connection = $bill->serviceConnection;
+            $customer = $connection?->customer;
+            $totalAmount = $bill->water_amount + $bill->adjustment_total;
+            $isOverdue = $bill->stat_id === $overdueId;
+
+            return [
+                'id' => $bill->bill_id,
+                'type' => self::TYPE_WATER_BILL,
+                'type_label' => 'Water Bill',
+                'reference_number' => $bill->period?->per_name ?? 'Unknown Period',
+                'customer_id' => $customer?->cust_id,
+                'customer_name' => $this->formatCustomerName($customer),
+                'customer_code' => $customer?->resolution_no ?? '-',
+                'address' => $this->formatAddress($connection?->address),
+                'amount' => $totalAmount,
+                'amount_formatted' => '₱ '.number_format($totalAmount, 2),
+                'date' => $bill->due_date,
+                'date_formatted' => $bill->due_date?->format('M d, Y'),
+                'status' => $isOverdue ? 'Overdue' : 'Pending Payment',
+                'status_color' => $isOverdue ? 'red' : 'yellow',
+                'process_url' => route('payment.process.bill', $bill->bill_id),
             ];
         });
     }
