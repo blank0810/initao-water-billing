@@ -103,7 +103,7 @@ class PaymentManagementService
     protected function getPendingWaterBills(?string $search = null): Collection
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-        $overdueStatusId = Status::getIdByDescription('OVERDUE');
+        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
 
         $query = WaterBillHistory::with([
             'serviceConnection.customer',
@@ -165,7 +165,8 @@ class PaymentManagementService
     public function getStatistics(): array
     {
         $verifiedStatusId = Status::getIdByDescription(Status::VERIFIED);
-        $paidStatusId = Status::getIdByDescription(Status::PAID);
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
 
         // Pending application fees
         $pendingApplications = ServiceApplication::with('customerCharges')
@@ -173,11 +174,19 @@ class PaymentManagementService
             ->whereNull('payment_id')
             ->get();
 
-        $totalPending = $pendingApplications->sum(function ($app) {
+        $totalPendingApps = $pendingApplications->sum(function ($app) {
             return $app->customerCharges->sum(fn ($c) => $c->total_amount);
         });
+        $pendingAppCount = $pendingApplications->count();
 
-        $pendingCount = $pendingApplications->count();
+        // Pending water bills
+        $pendingBills = WaterBillHistory::whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))->get();
+        $totalPendingBills = $pendingBills->sum(fn ($b) => $b->water_amount + $b->adjustment_total);
+        $pendingBillCount = $pendingBills->count();
+
+        // Combined totals
+        $totalPending = $totalPendingApps + $totalPendingBills;
+        $pendingCount = $pendingAppCount + $pendingBillCount;
 
         // Today's collections
         $todayPayments = Payment::whereDate('payment_date', today())->get();
