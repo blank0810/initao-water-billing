@@ -194,6 +194,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/payment-management', [PaymentController::class, 'index'])->name('payment.management');
         Route::get('/api/payments/pending', [PaymentController::class, 'getPendingPayments'])->name('api.payments.pending');
         Route::get('/api/payments/statistics', [PaymentController::class, 'getStatistics'])->name('api.payments.statistics');
+        Route::get('/api/payments/my-transactions', [PaymentController::class, 'getMyTransactions'])->name('api.payments.my-transactions');
         Route::get('/payment/process/application/{id}', [PaymentController::class, 'processApplicationPayment'])->name('payment.process.application');
         Route::get('/payment/receipt/{id}', [PaymentController::class, 'showReceipt'])->name('payment.receipt');
     });

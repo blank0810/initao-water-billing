@@ -61,6 +61,34 @@ class PaymentController extends Controller
     }
 
     /**
+     * Get current cashier's transactions for a specific date
+     */
+    public function getMyTransactions(Request $request): JsonResponse
+    {
+        $date = $request->input('date');
+        $search = $request->input('search');
+
+        $data = $this->paymentManagementService->getCashierTransactions(
+            auth()->id(),
+            $date
+        );
+
+        // Apply client-side search filter if provided
+        if ($search) {
+            $searchLower = strtolower($search);
+            $data['transactions'] = $data['transactions']->filter(function ($tx) use ($searchLower) {
+                return str_contains(strtolower($tx['receipt_no']), $searchLower)
+                    || str_contains(strtolower($tx['customer_name']), $searchLower);
+            })->values();
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
      * Show create payment form
      */
     public function create($customerCode = null): View
