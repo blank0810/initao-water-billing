@@ -46,7 +46,9 @@
       "Bash(cat:*)",
       "Bash(ls:*)",
       "Bash(git log:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(gh pr create --title \"feat\\(payment\\): add cashier my-transactions view with export\" --body \"$\\(cat <<''EOF''\n## Summary\n- Add \"My Transactions\" tab for cashiers to view their own payment history\n- Add transaction detail modal with complete payment information\n- Add PDF and CSV export functionality for cashier transactions\n- Auto-populate cashier name in PDF export signature\n\n## Features\n- **My Transactions Tab**: Cashiers can view all payments they''ve processed\n- **Transaction Detail Modal**: View complete details including customer info, payment allocations, and OR number\n- **PDF Export**: Professional report with header, transaction table, and signature section\n- **CSV Export**: Raw data export for further analysis\n- **Date Range Filter**: Filter transactions by date range\n\n## Test plan\n- [ ] Login as cashier and verify \"My Transactions\" tab appears\n- [ ] Process a payment and verify it shows in My Transactions\n- [ ] Click on a transaction to view details modal\n- [ ] Test PDF export with date range filter\n- [ ] Test CSV export\n- [ ] Verify cashier name appears in PDF signature section\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\nEOF\n\\)\")",
+      "Bash(git rm:*)"
     ]
   },
   "enabledMcpjsonServers": [
