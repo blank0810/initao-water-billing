@@ -199,6 +199,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/api/payments/my-transactions/export/pdf', [PaymentController::class, 'exportMyTransactionsPdf'])->name('api.payments.my-transactions.pdf');
         Route::get('/payment/process/application/{id}', [PaymentController::class, 'processApplicationPayment'])->name('payment.process.application');
         Route::get('/payment/receipt/{id}', [PaymentController::class, 'showReceipt'])->name('payment.receipt');
+
+        // Water Bill Payment Processing
+        Route::get('/payment/process/bill/{id}', [PaymentController::class, 'processWaterBillPayment'])->name('payment.process.bill');
     });
 
     // Payment Processing - Process (payments.process permission)
@@ -211,6 +214,9 @@ Route::middleware('auth')->group(function () {
 
         // Service Application Payment Processing (for cashiers)
         Route::post('/connection/service-application/{id}/process-payment', [ServiceApplicationController::class, 'processPayment'])->name('service.application.process-payment');
+
+        // Water Bill Payment Processing (for cashiers)
+        Route::post('/payment/bill/{id}/process', [PaymentController::class, 'storeWaterBillPayment'])->name('payment.bill.store');
     });
 
     // -------------------------------------------------------------------------
