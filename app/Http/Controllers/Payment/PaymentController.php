@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Payment;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Services\Payment\PaymentManagementService;
+use App\Services\Payment\PaymentService;
 use App\Services\ServiceApplication\ServiceApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -16,7 +16,8 @@ class PaymentController extends Controller
 {
     public function __construct(
         protected PaymentManagementService $paymentManagementService,
-        protected ServiceApplicationService $applicationService
+        protected ServiceApplicationService $applicationService,
+        protected PaymentService $paymentService
     ) {}
 
     /**
@@ -117,6 +118,52 @@ class PaymentController extends Controller
     }
 
     /**
+     * Show water bill payment processing form
+     */
+    public function processWaterBillPayment(int $id)
+    {
+        $bill = $this->paymentService->getWaterBillDetails($id);
+
+        if (! $bill) {
+            abort(404, 'Bill not found or already paid.');
+        }
+
+        $totalAmount = $bill->water_amount + $bill->adjustment_total;
+
+        return view('pages.payment.process-water-bill', [
+            'bill' => $bill,
+            'totalAmount' => $totalAmount,
+        ]);
+    }
+
+    /**
+     * Process water bill payment
+     */
+    public function storeWaterBillPayment(int $id, Request $request)
+    {
+        $request->validate([
+            'amount_received' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            $result = $this->paymentService->processWaterBillPayment(
+                $id,
+                (float) $request->amount_received,
+                auth()->id()
+            );
+
+            return redirect()
+                ->route('payment.receipt', $result['payment']->payment_id)
+                ->with('success', 'Payment processed successfully. Change: ₱'.number_format($result['change'], 2));
+
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    /**
      * Show payment receipt
      * Enterprise-style receipt for printing
      */
@@ -156,7 +203,7 @@ class PaymentController extends Controller
             $date
         );
 
-        $filename = 'my-transactions-' . $data['date'] . '.csv';
+        $filename = 'my-transactions-'.$data['date'].'.csv';
 
         return response()->streamDownload(function () use ($data) {
             $handle = fopen('php://output', 'w');
