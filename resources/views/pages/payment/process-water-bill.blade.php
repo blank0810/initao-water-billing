@@ -6,9 +6,13 @@
         $customerName = $customer
             ? trim(($customer->cust_first_name ?? '') . ' ' . ($customer->cust_middle_name ? $customer->cust_middle_name[0] . '. ' : '') . ($customer->cust_last_name ?? ''))
             : '-';
-        $fullAddress = $connection?->address
-            ? trim(($connection->address->purok?->purok_name ?? '') . ', ' . ($connection->address->barangay->b_name ?? ''))
-            : '-';
+
+        // Build address properly - filter out empty parts
+        $addressParts = array_filter([
+            $connection?->address?->purok?->purok_name ?? '',
+            $connection?->address?->barangay?->b_name ?? '',
+        ]);
+        $fullAddress = count($addressParts) > 0 ? implode(', ', $addressParts) : '';
     @endphp
 
     <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"
@@ -82,8 +86,8 @@
                                 <div>
                                     <p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Account Holder</p>
                                     <p class="text-gray-900 dark:text-white font-semibold" x-text="bill.customer_name"></p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400" x-text="bill.full_address"></p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400" x-text="bill.barangay + ', Initao'"></p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400" x-text="bill.full_address || '-'"></p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400" x-text="(bill.barangay ? bill.barangay + ', ' : '') + 'Initao'"></p>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Account No.</p>

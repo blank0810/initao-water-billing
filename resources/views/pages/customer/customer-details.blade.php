@@ -89,6 +89,9 @@
                     <button onclick="switchTab('connections')" id="tab-connections" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
                         <i class="fas fa-plug mr-2"></i>Service Connections
                     </button>
+                    <button onclick="switchTab('ledger')" id="tab-ledger" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+                        <i class="fas fa-book mr-2"></i>Ledger
+                    </button>
                 </nav>
             </div>
         </div>
@@ -133,10 +136,13 @@
                 </table>
             </div>
         </div>
+
+        @include('pages.customer.tabs.ledger-tab')
     </div>
 </div>
 
 <x-ui.customer.modals.connection-details />
+<x-ui.customer.modals.ledger-entry-details />
 
-    @vite(['resources/js/data/customer/customer-details-data.js', 'resources/js/data/customer/enhanced-customer-data.js'])
+    @vite(['resources/js/data/customer/customer-details-data.js', 'resources/js/data/customer/enhanced-customer-data.js', 'resources/js/data/customer/customer-ledger-data.js'])
 </x-app-layout>
