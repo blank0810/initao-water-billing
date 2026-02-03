@@ -319,8 +319,14 @@ class PaymentManagementService
             return self::TYPE_APPLICATION_FEE;
         }
 
-        // Future: Check for water bill payments
-        // Future: Check for other charge payments
+        // Check if payment has allocations to water bills
+        $hasBillAllocation = $payment->paymentAllocations()
+            ->where('target_type', 'BILL')
+            ->exists();
+
+        if ($hasBillAllocation) {
+            return self::TYPE_WATER_BILL;
+        }
 
         return self::TYPE_OTHER_CHARGE;
     }
