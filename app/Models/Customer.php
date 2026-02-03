@@ -55,14 +55,6 @@ class Customer extends Model
     }
 
     /**
-     * Get the consumers for the customer
-     */
-    public function consumers()
-    {
-        return $this->hasMany(Consumer::class, 'cust_id', 'cust_id');
-    }
-
-    /**
      * Get the service applications for the customer
      */
     public function serviceApplications()

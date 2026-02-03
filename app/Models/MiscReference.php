@@ -28,12 +28,4 @@ class MiscReference extends Model
     {
         return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
     }
-
-    /**
-     * Get the misc bills for the misc reference
-     */
-    public function miscBills()
-    {
-        return $this->hasMany(MiscBill::class, 'mref_id', 'mref_id');
-    }
 }
