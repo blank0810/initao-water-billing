@@ -153,6 +153,115 @@ class PaymentManagementService
     }
 
     /**
+     * Get transactions processed by a specific cashier for a given date
+     */
+    public function getCashierTransactions(int $userId, ?string $date = null): array
+    {
+        $targetDate = $date ? \Carbon\Carbon::parse($date) : today();
+
+        $payments = Payment::with(['payer', 'status'])
+            ->where('user_id', $userId)
+            ->whereDate('payment_date', $targetDate)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Calculate summary statistics
+        $totalCollected = $payments->sum('amount_received');
+        $transactionCount = $payments->count();
+
+        // Group by payment type (derive from related data)
+        $byType = $this->groupPaymentsByType($payments);
+
+        // Format transactions for display
+        $transactions = $payments->map(function ($payment) {
+            return [
+                'payment_id' => $payment->payment_id,
+                'receipt_no' => $payment->receipt_no,
+                'customer_name' => $this->formatCustomerName($payment->payer),
+                'customer_code' => $payment->payer->resolution_no ?? '-',
+                'payment_type' => $this->getPaymentType($payment),
+                'payment_type_label' => $this->getPaymentTypeLabel($payment),
+                'amount' => $payment->amount_received,
+                'amount_formatted' => '₱ ' . number_format($payment->amount_received, 2),
+                'time' => $payment->created_at->format('g:i A'),
+                'receipt_url' => route('payment.receipt', $payment->payment_id),
+            ];
+        });
+
+        return [
+            'date' => $targetDate->format('Y-m-d'),
+            'date_display' => $targetDate->format('F j, Y'),
+            'summary' => [
+                'total_collected' => $totalCollected,
+                'total_collected_formatted' => '₱ ' . number_format($totalCollected, 2),
+                'transaction_count' => $transactionCount,
+                'by_type' => $byType,
+            ],
+            'transactions' => $transactions,
+        ];
+    }
+
+    /**
+     * Group payments by type for summary breakdown
+     */
+    protected function groupPaymentsByType($payments): array
+    {
+        $grouped = [];
+
+        foreach ($payments as $payment) {
+            $type = $this->getPaymentTypeLabel($payment);
+            if (!isset($grouped[$type])) {
+                $grouped[$type] = 0;
+            }
+            $grouped[$type] += $payment->amount_received;
+        }
+
+        // Format for display
+        $result = [];
+        foreach ($grouped as $type => $amount) {
+            $result[] = [
+                'type' => $type,
+                'amount' => $amount,
+                'amount_formatted' => '₱ ' . number_format($amount, 2),
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Determine payment type from payment record
+     */
+    protected function getPaymentType(Payment $payment): string
+    {
+        // Check if payment is linked to a service application
+        $application = ServiceApplication::where('payment_id', $payment->payment_id)->first();
+        if ($application) {
+            return self::TYPE_APPLICATION_FEE;
+        }
+
+        // Future: Check for water bill payments
+        // Future: Check for other charge payments
+
+        return self::TYPE_OTHER_CHARGE;
+    }
+
+    /**
+     * Get human-readable payment type label
+     */
+    protected function getPaymentTypeLabel(Payment $payment): string
+    {
+        $type = $this->getPaymentType($payment);
+
+        return match ($type) {
+            self::TYPE_APPLICATION_FEE => 'Application Fee',
+            self::TYPE_WATER_BILL => 'Water Bill',
+            self::TYPE_OTHER_CHARGE => 'Other Charges',
+            default => 'Other',
+        };
+    }
+
+    /**
      * Format customer full name
      */
     protected function formatCustomerName($customer): string
