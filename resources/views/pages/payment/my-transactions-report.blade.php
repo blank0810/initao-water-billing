@@ -313,10 +313,17 @@
             text-align: center;
         }
 
+        .signature-box .name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+            margin-top: 30px;
+            margin-bottom: 5px;
+        }
+
         .signature-box .line {
             border-top: 1px solid #333;
             margin-bottom: 4px;
-            margin-top: 40px;
         }
 
         .signature-box .label {
@@ -501,10 +508,12 @@
         <div class="footer">
             <div class="signature-section">
                 <div class="signature-box">
+                    <div class="name">{{ $cashierName }}</div>
                     <div class="line"></div>
                     <div class="label">Prepared By (Cashier)</div>
                 </div>
                 <div class="signature-box">
+                    <div class="name">&nbsp;</div>
                     <div class="line"></div>
                     <div class="label">Verified By (Supervisor)</div>
                 </div>
