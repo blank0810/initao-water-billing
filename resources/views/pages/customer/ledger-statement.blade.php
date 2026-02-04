@@ -631,7 +631,7 @@
                     <div class="brand-text">
                         <h1>Initao Water District</h1>
                         <div class="tagline">Municipal Water Utility Services</div>
-                        <div class="contact">Municipal Hall, Poblacion, Initao, Misamis Oriental 9022</div>
+                        <div class="contact">Jampason, Initao, Misamis Oriental</div>
                     </div>
                 </div>
                 <div class="statement-badge">
@@ -770,14 +770,14 @@
                 <div class="footer-section">
                     <div class="footer-title">Payment Instructions</div>
                     <div class="footer-text">
-                        Please pay at Municipal Hall, Poblacion, Initao during office hours (Mon-Fri, 8:00 AM - 5:00 PM).
+                        Please pay at our office in Jampason, Initao during office hours (Mon-Fri, 8:00 AM - 5:00 PM).
                         Bring this statement for reference.
                     </div>
                 </div>
                 <div class="footer-section">
                     <div class="footer-title">Questions?</div>
                     <div class="footer-text">
-                        Contact us at Municipal Hall, Poblacion, Initao, Misamis Oriental 9022 or call (088) 123-4567.
+                        Contact us at Jampason, Initao, Misamis Oriental or call (088) 123-4567.
                     </div>
                 </div>
                 <div class="footer-section qr-section">
