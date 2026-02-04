@@ -441,20 +441,88 @@ Route::middleware('auth')->group(function () {
     });
 
     // -------------------------------------------------------------------------
-    // Reports & Analytics - View (reports.view permission)
+    // Reports & Analytics - All authenticated users can view reports index
     // -------------------------------------------------------------------------
-    Route::middleware(['permission:reports.view'])->group(function () {
-        Route::get('/analytics', function () {
-            session(['active_menu' => 'analytics']);
+    Route::get('/reports', function () {
+        session(['active_menu' => 'reports']);
 
-            return view('pages.analytics.analytics');
-        })->name('analytics');
+        return view('pages.reports.index');
+    })->name('reports');
 
-        Route::get('/report', function () {
-            session(['active_menu' => 'report']);
+    Route::get('/report', function () {
+        session(['active_menu' => 'report']);
 
-            return view('pages.info-pages.report');
-        })->name('report');
+        return view('pages.info-pages.report');
+    })->name('report');
+
+    // Reports detail routes - all authenticated users
+    Route::prefix('reports')->name('reports.')->group(function () {
+        // Printables
+        Route::get('abstract-collection', function () {
+            return view('pages.reports.abstract-of-collection-print');
+        })->name('abstract-collection');
+
+        Route::get('water-bill-history', function () {
+            return view('pages.reports.water-bill-history-print');
+        })->name('water-bill-history');
+
+        Route::get('billing-statement', function () {
+            return view('pages.reports.billing-statement-print');
+        })->name('billing-statement');
+
+        // Report Templates
+        Route::get('aging-accounts', function () {
+            return view('pages.reports.aging-of-accounts');
+        })->name('aging-accounts');
+
+        Route::get('consumer-master-list', function () {
+            return view('pages.reports.consumer-master-list');
+        })->name('consumer-master-list');
+
+        Route::get('billing-summary', function () {
+            return view('pages.reports.billing-summary');
+        })->name('billing-summary');
+
+        Route::get('monthly-collection', function () {
+            return view('pages.reports.monthly-collection-summary');
+        })->name('monthly-collection');
+
+        Route::get('summary-status', function () {
+            return view('pages.reports.summary-status-report');
+        })->name('summary-status');
+
+        // Table Views (same tab navigation)
+        Route::get('tables/aging', function () {
+            return view('pages.reports.tables.aging-table');
+        })->name('tables.aging');
+
+        Route::get('tables/masterlist', function () {
+            return view('pages.reports.tables.masterlist-table');
+        })->name('tables.masterlist');
+
+        Route::get('tables/billing', function () {
+            return view('pages.reports.tables.billing-table');
+        })->name('tables.billing');
+
+        Route::get('tables/collection', function () {
+            return view('pages.reports.tables.collection-table');
+        })->name('tables.collection');
+
+        Route::get('tables/status', function () {
+            return view('pages.reports.tables.status-table');
+        })->name('tables.status');
+
+        Route::get('tables/abstract', function () {
+            return view('pages.reports.tables.abstract-table');
+        })->name('tables.abstract');
+
+        Route::get('tables/bill-history', function () {
+            return view('pages.reports.tables.bill-history-table');
+        })->name('tables.bill-history');
+
+        Route::get('tables/statement', function () {
+            return view('pages.reports.tables.statement-table');
+        })->name('tables.statement');
     });
 
     // -------------------------------------------------------------------------
