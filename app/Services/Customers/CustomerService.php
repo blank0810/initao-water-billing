@@ -925,7 +925,8 @@ class CustomerService
      */
     public function getLedgerData(int $customerId, array $filters = []): array
     {
-        $perPage = $filters['per_page'] ?? 20;
+        // Clamp per_page to safe range (1-100) to prevent abuse
+        $perPage = max(1, min(100, (int) ($filters['per_page'] ?? 20)));
         $connectionId = $filters['connection_id'] ?? null;
         $periodId = $filters['period_id'] ?? null;
         $sourceType = $filters['source_type'] ?? null;
