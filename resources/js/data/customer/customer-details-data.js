@@ -14,6 +14,9 @@
     const pathParts = window.location.pathname.split('/');
     const customerId = pathParts[pathParts.length - 1];
 
+    // Store customer ID globally for ledger tab and other components
+    window.currentCustomerId = customerId;
+
     /**
      * Fetch customer details from API
      */
@@ -217,6 +220,11 @@
         if (tabBtn) {
             tabBtn.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
             tabBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        }
+
+        // Initialize ledger tab when first activated
+        if (tab === 'ledger' && window.initializeLedgerTab && window.currentCustomerId) {
+            window.initializeLedgerTab(window.currentCustomerId);
         }
     };
 

@@ -16,36 +16,50 @@ class BarangaySeeder extends Seeder
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
         // All 16 barangays in Initao, Misamis Oriental
+        // Format: 'Name' => 'CODE' (4-letter code for account numbers)
         $barangays = [
-            'Aluna',
-            'Andales',
-            'Apas',
-            'Calacapan',
-            'Gimangpang',
-            'Jampason',
-            'Kamelon',
-            'Kanitoan',
-            'Oguis',
-            'Pagahan',
-            'Poblacion',
-            'Pontacon',
-            'San Pedro',
-            'Sinalac',
-            'Tawantawan',
-            'Tubigan',
+            'Aluna' => 'ALUN',
+            'Andales' => 'ANDA',
+            'Apas' => 'APAS',
+            'Calacapan' => 'CALA',
+            'Gimangpang' => 'GIMA',
+            'Jampason' => 'JAMP',
+            'Kamelon' => 'KAME',
+            'Kanitoan' => 'KANI',
+            'Oguis' => 'OGUI',
+            'Pagahan' => 'PAGA',
+            'Poblacion' => 'POBL',
+            'Pontacon' => 'PONT',
+            'San Pedro' => 'SANP',
+            'Sinalac' => 'SINA',
+            'Tawantawan' => 'TAWA',
+            'Tubigan' => 'TUBI',
         ];
 
         $insertCount = 0;
-        foreach ($barangays as $barangay) {
+        $updateCount = 0;
+        foreach ($barangays as $name => $code) {
             // Check if this barangay already exists
             $existing = DB::table('barangay')
-                ->where('b_desc', $barangay)
-                ->exists();
+                ->where('b_desc', $name)
+                ->first();
 
-            // Only insert if it doesn't exist
-            if (! $existing) {
+            if ($existing) {
+                // Update existing record with b_code if missing
+                if (empty($existing->b_code)) {
+                    DB::table('barangay')
+                        ->where('b_id', $existing->b_id)
+                        ->update([
+                            'b_code' => $code,
+                            'updated_at' => now(),
+                        ]);
+                    $updateCount++;
+                }
+            } else {
+                // Insert new record
                 DB::table('barangay')->insert([
-                    'b_desc' => $barangay,
+                    'b_desc' => $name,
+                    'b_code' => $code,
                     'stat_id' => $activeStatusId,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -54,6 +68,6 @@ class BarangaySeeder extends Seeder
             }
         }
 
-        $this->command->info('Barangays seeded: '.$insertCount.' new barangays in Initao');
+        $this->command->info("Barangays seeded: {$insertCount} new, {$updateCount} updated with b_code in Initao");
     }
 }
