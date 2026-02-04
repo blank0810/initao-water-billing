@@ -45,7 +45,7 @@ $user = Auth::user() ?? (object) [
         @can('users.view')
         <div>
             <button @click="toggleSubmenu('userManagement')"
-                :class="activeMenu.startsWith('user-') && 'active'"
+                :class="[activeMenu.startsWith('user-') && 'active', openSubmenus.userManagement && 'icon-glow']"
                 class="nav-btn nav-btn-submenu"
                 :data-tooltip="!sidebarOpen ? 'User Management' : null">
                 <span class="nav-btn-notch"></span>
@@ -81,7 +81,7 @@ $user = Auth::user() ?? (object) [
         @can('customers.manage')
         <div>
             <button @click="toggleSubmenu('connectionManagement')"
-                :class="activeMenu.startsWith('connection-') && 'active'"
+                :class="[activeMenu.startsWith('connection-') && 'active', openSubmenus.connectionManagement && 'icon-glow']"
                 class="nav-btn nav-btn-submenu"
                 :data-tooltip="!sidebarOpen ? 'Connection Management' : null">
                 <span class="nav-btn-notch"></span>
@@ -122,7 +122,7 @@ $user = Auth::user() ?? (object) [
         @can('customers.view')
         <div>
             <button @click="toggleSubmenu('customerManagement')"
-                :class="activeMenu.startsWith('customer-') && 'active'"
+                :class="[activeMenu.startsWith('customer-') && 'active', openSubmenus.customerManagement && 'icon-glow']"
                 class="nav-btn nav-btn-submenu"
                 :data-tooltip="!sidebarOpen ? 'Customer Management' : null">
                 <span class="nav-btn-notch"></span>
@@ -242,7 +242,7 @@ $user = Auth::user() ?? (object) [
         @canany(['config.geographic.manage', 'config.billing.manage', 'config.access.manage'])
         <div>
             <button @click="toggleSubmenu('adminConfig')"
-                :class="activeMenu.startsWith('config-') && 'active'"
+                :class="[activeMenu.startsWith('config-') && 'active', openSubmenus.adminConfig && 'icon-glow']"
                 class="nav-btn nav-btn-submenu"
                 :data-tooltip="!sidebarOpen ? 'Admin Configuration' : null">
                 <span class="nav-btn-notch"></span>

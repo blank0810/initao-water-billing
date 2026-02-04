@@ -448,16 +448,53 @@
                 </button>
             </div>
             <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Select Meter <span class="text-red-500">*</span>
-                    </label>
-                    <select id="meterSelect"
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                        <option value="">Loading available meters...</option>
-                    </select>
+                <!-- Tab Navigation -->
+                <div class="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1">
+                    <button type="button" id="tabSelectExisting"
+                        onclick="switchMeterTab('existing')"
+                        class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-400 shadow-sm">
+                        <i class="fas fa-list mr-2"></i>Select Existing
+                    </button>
+                    <button type="button" id="tabAddNew"
+                        onclick="switchMeterTab('new')"
+                        class="flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+                        <i class="fas fa-plus mr-2"></i>Add New
+                    </button>
                 </div>
-                <div>
+
+                <!-- Select Existing Tab Content -->
+                <div id="tabContentExisting" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Select Meter <span class="text-red-500">*</span>
+                        </label>
+                        <select id="meterSelect"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                            <option value="">Loading available meters...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Add New Tab Content -->
+                <div id="tabContentNew" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Serial Number <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="newMeterSerial" maxlength="50" placeholder="Enter meter serial number"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Brand <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="newMeterBrand" maxlength="100" placeholder="Enter meter brand"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+                </div>
+
+                <!-- Shared Initial Reading Field -->
+                <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Initial Reading <span class="text-red-500">*</span>
                     </label>
@@ -470,7 +507,7 @@
                     Cancel
                 </button>
                 <button onclick="submitAssignMeter()" id="assignMeterSubmitBtn" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors">
-                    <i class="fas fa-check mr-2"></i>Assign Meter
+                    <i class="fas fa-check mr-2"></i><span id="assignMeterBtnText">Assign Meter</span>
                 </button>
             </div>
         </div>
@@ -567,6 +604,44 @@
 
     function closeAssignMeterModal() {
         document.getElementById('assignMeterModal').classList.add('hidden');
+        // Reset to default tab
+        switchMeterTab('existing');
+        // Clear new meter fields
+        document.getElementById('newMeterSerial').value = '';
+        document.getElementById('newMeterBrand').value = '';
+    }
+
+    // Track current meter tab mode
+    let currentMeterTabMode = 'existing';
+
+    function switchMeterTab(tab) {
+        currentMeterTabMode = tab;
+
+        const tabExisting = document.getElementById('tabSelectExisting');
+        const tabNew = document.getElementById('tabAddNew');
+        const contentExisting = document.getElementById('tabContentExisting');
+        const contentNew = document.getElementById('tabContentNew');
+        const btnText = document.getElementById('assignMeterBtnText');
+
+        // Active tab styles
+        const activeClasses = 'bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-400 shadow-sm';
+        const inactiveClasses = 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white';
+
+        if (tab === 'existing') {
+            // Activate existing tab
+            tabExisting.className = `flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeClasses}`;
+            tabNew.className = `flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${inactiveClasses}`;
+            contentExisting.classList.remove('hidden');
+            contentNew.classList.add('hidden');
+            btnText.textContent = 'Assign Meter';
+        } else {
+            // Activate new tab
+            tabNew.className = `flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeClasses}`;
+            tabExisting.className = `flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${inactiveClasses}`;
+            contentNew.classList.remove('hidden');
+            contentExisting.classList.add('hidden');
+            btnText.textContent = 'Register & Assign';
+        }
     }
 
     async function loadAvailableMetersForConnection() {
@@ -700,14 +775,9 @@
     }
 
     async function submitAssignMeter() {
-        const meterId = document.getElementById('meterSelect').value;
         const initialReading = document.getElementById('meterInitialReading').value;
         const btn = document.getElementById('assignMeterSubmitBtn');
-
-        if (!meterId) {
-            alert('Please select a meter');
-            return;
-        }
+        const btnText = document.getElementById('assignMeterBtnText');
 
         if (!initialReading || parseFloat(initialReading) < 0) {
             alert('Please enter a valid initial reading');
@@ -720,6 +790,62 @@
         if (!connId) {
             alert('Connection ID not found');
             return;
+        }
+
+        let meterId;
+
+        // Check which mode we're in
+        if (currentMeterTabMode === 'existing') {
+            meterId = document.getElementById('meterSelect').value;
+            if (!meterId) {
+                alert('Please select a meter');
+                return;
+            }
+        } else {
+            // Add New mode - first create the meter
+            const serial = document.getElementById('newMeterSerial').value.trim();
+            const brand = document.getElementById('newMeterBrand').value.trim();
+
+            if (!serial) {
+                alert('Please enter a serial number');
+                return;
+            }
+            if (!brand) {
+                alert('Please enter a brand');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating meter...';
+
+            try {
+                const createResponse = await fetch('/meters', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        mtr_serial: serial,
+                        mtr_brand: brand
+                    })
+                });
+
+                const createData = await createResponse.json();
+
+                if (!createData.success) {
+                    throw new Error(createData.message || 'Failed to create meter');
+                }
+
+                meterId = createData.data.mtr_id;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Assigning meter...';
+            } catch (error) {
+                alert('Error creating meter: ' + error.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i><span id="assignMeterBtnText">Register & Assign</span>';
+                return;
+            }
         }
 
         btn.disabled = true;
@@ -744,7 +870,10 @@
             if (data.success) {
                 closeAssignMeterModal();
                 if (window.showToast) {
-                    window.showToast('Meter assigned successfully!', 'success');
+                    const message = currentMeterTabMode === 'new'
+                        ? 'Meter registered and assigned successfully!'
+                        : 'Meter assigned successfully!';
+                    window.showToast(message, 'success');
                 }
                 location.reload();
             } else {
@@ -753,7 +882,8 @@
         } catch (error) {
             alert('Error: ' + error.message);
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-check mr-2"></i>Assign Meter';
+            const resetText = currentMeterTabMode === 'new' ? 'Register & Assign' : 'Assign Meter';
+            btn.innerHTML = `<i class="fas fa-check mr-2"></i><span id="assignMeterBtnText">${resetText}</span>`;
         }
     }
     </script>
