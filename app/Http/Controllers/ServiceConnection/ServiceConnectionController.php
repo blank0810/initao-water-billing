@@ -249,16 +249,53 @@ class ServiceConnectionController extends Controller
     }
 
     /**
-     * Assign meter to connection
+     * Assign or replace meter on connection
      */
     public function assignMeter(Request $request, int $id): JsonResponse
     {
         $request->validate([
             'meter_id' => 'required|integer|exists:meter,mtr_id',
             'install_read' => 'required|numeric|min:0',
+            'removal_read' => 'nullable|numeric|min:0',
         ]);
 
         try {
+            // Check if connection has an existing meter
+            $currentAssignment = $this->meterService->getCurrentAssignment($id);
+
+            if ($currentAssignment) {
+                // Replacing existing meter - removal_read is required
+                if ($request->input('removal_read') === null) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please enter the old meter\'s final reading',
+                    ], 422);
+                }
+
+                // Validate removal_read >= install_read of current meter
+                if ($request->input('removal_read') < $currentAssignment->install_read) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Final reading cannot be less than the install reading (' . number_format($currentAssignment->install_read, 3) . ')',
+                    ], 422);
+                }
+
+                // Use replaceMeter for atomic replacement
+                $result = $this->meterService->replaceMeter(
+                    $id,
+                    $request->input('meter_id'),
+                    $request->input('removal_read'),
+                    $request->input('install_read')
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Meter replaced successfully',
+                    'data' => $result['new_assignment']->load('meter'),
+                ]);
+            }
+
+            // Fresh assignment - no existing meter
             $assignment = $this->meterService->assignMeter(
                 $id,
                 $request->input('meter_id'),

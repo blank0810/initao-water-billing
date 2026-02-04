@@ -431,7 +431,10 @@
     </div>
 
     <!-- Assign Meter Modal -->
-    <div id="assignMeterModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4" data-connection-id="{{ $connData?->connection_id }}">
+    <div id="assignMeterModal"
+         class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4"
+         data-connection-id="{{ $connData?->connection_id }}"
+         data-current-meter="{{ $meterData ? json_encode(['serial' => $meterData->meter->mtr_serial ?? '', 'brand' => $meterData->meter->mtr_brand ?? '', 'install_read' => $meterData->install_read ?? 0]) : '' }}">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full">
             <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -439,8 +442,8 @@
                         <i class="fas fa-tachometer-alt text-purple-600 dark:text-purple-400"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Assign Meter</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Assign a meter to this connection</p>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="assignMeterModalTitle">Assign Meter</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400" id="assignMeterModalSubtitle">Assign a meter to this connection</p>
                     </div>
                 </div>
                 <button onclick="closeAssignMeterModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -448,6 +451,31 @@
                 </button>
             </div>
             <div class="p-6 space-y-4">
+                <!-- Replacing Existing Meter Section (shown only when meter exists) -->
+                <div id="replacingMeterSection" class="hidden">
+                    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4 mb-4">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-exchange-alt text-amber-600 dark:text-amber-400 mt-0.5"></i>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-amber-800 dark:text-amber-200">Replacing Existing Meter</p>
+                                <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                                    Current: <span id="currentMeterInfo" class="font-mono font-medium">-</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Old Meter Final Reading <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" id="oldMeterFinalReading" step="0.001" min="0" placeholder="Enter final reading"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Must be >= install reading (<span id="minRemovalRead">0.000</span>)
+                        </p>
+                    </div>
+                </div>
+
                 <!-- Tab Navigation -->
                 <div class="flex rounded-lg bg-gray-100 dark:bg-gray-700 p-1">
                     <button type="button" id="tabSelectExisting"
@@ -496,7 +524,7 @@
                 <!-- Shared Initial Reading Field -->
                 <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Initial Reading <span class="text-red-500">*</span>
+                        <span id="initialReadingLabel">Initial Reading</span> <span class="text-red-500">*</span>
                     </label>
                     <input type="number" id="meterInitialReading" step="0.001" min="0" value="0.000"
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
@@ -551,6 +579,7 @@
             },
 
             openAssignMeterModal() {
+                initializeAssignMeterModal();
                 loadAvailableMetersForConnection();
                 document.getElementById('assignMeterModal').classList.remove('hidden');
             },
@@ -609,10 +638,85 @@
         // Clear new meter fields
         document.getElementById('newMeterSerial').value = '';
         document.getElementById('newMeterBrand').value = '';
+        // Clear old meter final reading
+        document.getElementById('oldMeterFinalReading').value = '';
+        // Reset initial reading
+        document.getElementById('meterInitialReading').value = '0.000';
     }
 
-    // Track current meter tab mode
+    // Track current meter tab mode and replacement mode
     let currentMeterTabMode = 'existing';
+    let isReplacingMeter = false;
+
+    /**
+     * Initialize the assign meter modal based on whether a meter already exists
+     */
+    function initializeAssignMeterModal() {
+        const modal = document.getElementById('assignMeterModal');
+        const currentMeterData = modal.dataset.currentMeter;
+        const replacingSection = document.getElementById('replacingMeterSection');
+        const modalTitle = document.getElementById('assignMeterModalTitle');
+        const modalSubtitle = document.getElementById('assignMeterModalSubtitle');
+        const initialReadingLabel = document.getElementById('initialReadingLabel');
+
+        if (currentMeterData) {
+            try {
+                const meter = JSON.parse(currentMeterData);
+                isReplacingMeter = true;
+
+                // Show replacement section
+                replacingSection.classList.remove('hidden');
+
+                // Update current meter info display
+                document.getElementById('currentMeterInfo').textContent =
+                    `${meter.serial} (${meter.brand})`;
+                document.getElementById('minRemovalRead').textContent =
+                    parseFloat(meter.install_read).toFixed(3);
+
+                // Update modal title/subtitle
+                modalTitle.textContent = 'Replace Meter';
+                modalSubtitle.textContent = 'Replace the current meter with a new one';
+
+                // Update label for clarity
+                initialReadingLabel.textContent = 'New Meter Initial Reading';
+
+            } catch (e) {
+                console.error('Error parsing current meter data:', e);
+                isReplacingMeter = false;
+                replacingSection.classList.add('hidden');
+            }
+        } else {
+            isReplacingMeter = false;
+            replacingSection.classList.add('hidden');
+            modalTitle.textContent = 'Assign Meter';
+            modalSubtitle.textContent = 'Assign a meter to this connection';
+            initialReadingLabel.textContent = 'Initial Reading';
+        }
+
+        // Update button text
+        updateMeterButtonText();
+    }
+
+    /**
+     * Update the submit button text based on current state
+     */
+    function updateMeterButtonText() {
+        const btnText = document.getElementById('assignMeterBtnText');
+
+        if (isReplacingMeter) {
+            if (currentMeterTabMode === 'existing') {
+                btnText.textContent = 'Replace Meter';
+            } else {
+                btnText.textContent = 'Register & Replace';
+            }
+        } else {
+            if (currentMeterTabMode === 'existing') {
+                btnText.textContent = 'Assign Meter';
+            } else {
+                btnText.textContent = 'Register & Assign';
+            }
+        }
+    }
 
     function switchMeterTab(tab) {
         currentMeterTabMode = tab;
@@ -621,7 +725,6 @@
         const tabNew = document.getElementById('tabAddNew');
         const contentExisting = document.getElementById('tabContentExisting');
         const contentNew = document.getElementById('tabContentNew');
-        const btnText = document.getElementById('assignMeterBtnText');
 
         // Active tab styles
         const activeClasses = 'bg-white dark:bg-gray-600 text-purple-600 dark:text-purple-400 shadow-sm';
@@ -633,15 +736,16 @@
             tabNew.className = `flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${inactiveClasses}`;
             contentExisting.classList.remove('hidden');
             contentNew.classList.add('hidden');
-            btnText.textContent = 'Assign Meter';
         } else {
             // Activate new tab
             tabNew.className = `flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeClasses}`;
             tabExisting.className = `flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${inactiveClasses}`;
             contentNew.classList.remove('hidden');
             contentExisting.classList.add('hidden');
-            btnText.textContent = 'Register & Assign';
         }
+
+        // Update button text based on replacement mode
+        updateMeterButtonText();
     }
 
     async function loadAvailableMetersForConnection() {
@@ -777,7 +881,6 @@
     async function submitAssignMeter() {
         const initialReading = document.getElementById('meterInitialReading').value;
         const btn = document.getElementById('assignMeterSubmitBtn');
-        const btnText = document.getElementById('assignMeterBtnText');
 
         if (!initialReading || parseFloat(initialReading) < 0) {
             alert('Please enter a valid initial reading');
@@ -791,6 +894,21 @@
         if (!connId) {
             alert('Connection ID not found');
             return;
+        }
+
+        // Handle replacement validation
+        let removalRead = null;
+        if (isReplacingMeter) {
+            const oldMeterFinalReading = document.getElementById('oldMeterFinalReading').value;
+            if (!oldMeterFinalReading || oldMeterFinalReading === '') {
+                alert('Please enter the old meter\'s final reading');
+                return;
+            }
+            removalRead = parseFloat(oldMeterFinalReading);
+            if (isNaN(removalRead) || removalRead < 0) {
+                alert('Please enter a valid final reading');
+                return;
+            }
         }
 
         let meterId;
@@ -840,17 +958,32 @@
                 }
 
                 meterId = createData.data.mtr_id;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Assigning meter...';
+                btn.innerHTML = isReplacingMeter
+                    ? '<i class="fas fa-spinner fa-spin mr-2"></i>Replacing meter...'
+                    : '<i class="fas fa-spinner fa-spin mr-2"></i>Assigning meter...';
             } catch (error) {
                 alert('Error creating meter: ' + error.message);
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-check mr-2"></i><span id="assignMeterBtnText">Register & Assign</span>';
+                resetMeterButtonState();
                 return;
             }
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+        btn.innerHTML = isReplacingMeter
+            ? '<i class="fas fa-spinner fa-spin mr-2"></i>Replacing meter...'
+            : '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+
+        // Build payload
+        const payload = {
+            meter_id: parseInt(meterId),
+            install_read: parseFloat(initialReading)
+        };
+
+        // Add removal_read if replacing
+        if (isReplacingMeter && removalRead !== null) {
+            payload.removal_read = removalRead;
+        }
 
         try {
             const response = await fetch(`/customer/service-connection/${connId}/assign-meter`, {
@@ -860,10 +993,7 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({
-                    meter_id: parseInt(meterId),
-                    install_read: parseFloat(initialReading)
-                })
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();
@@ -871,9 +1001,16 @@
             if (data.success) {
                 closeAssignMeterModal();
                 if (window.showToast) {
-                    const message = currentMeterTabMode === 'new'
-                        ? 'Meter registered and assigned successfully!'
-                        : 'Meter assigned successfully!';
+                    let message;
+                    if (isReplacingMeter) {
+                        message = currentMeterTabMode === 'new'
+                            ? 'Meter registered and replaced successfully!'
+                            : 'Meter replaced successfully!';
+                    } else {
+                        message = currentMeterTabMode === 'new'
+                            ? 'Meter registered and assigned successfully!'
+                            : 'Meter assigned successfully!';
+                    }
                     window.showToast(message, 'success');
                 }
                 location.reload();
@@ -883,9 +1020,18 @@
         } catch (error) {
             alert('Error: ' + error.message);
             btn.disabled = false;
-            const resetText = currentMeterTabMode === 'new' ? 'Register & Assign' : 'Assign Meter';
-            btn.innerHTML = `<i class="fas fa-check mr-2"></i><span id="assignMeterBtnText">${resetText}</span>`;
+            resetMeterButtonState();
         }
+    }
+
+    /**
+     * Reset the meter button to its correct state based on current mode
+     */
+    function resetMeterButtonState() {
+        const btn = document.getElementById('assignMeterSubmitBtn');
+        updateMeterButtonText();
+        const btnText = document.getElementById('assignMeterBtnText').textContent;
+        btn.innerHTML = `<i class="fas fa-check mr-2"></i><span id="assignMeterBtnText">${btnText}</span>`;
     }
     </script>
 </x-app-layout>
