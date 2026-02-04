@@ -36,8 +36,6 @@ class CustomerController extends Controller
 
     /**
      * Get customer statistics for dashboard/list page
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function stats(): JsonResponse
     {
@@ -109,7 +107,6 @@ class CustomerController extends Controller
     /**
      * Search customers by name, phone, or ID
      *
-     * @param  Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function search(Request $request)
@@ -276,8 +273,6 @@ class CustomerController extends Controller
 
     /**
      * Get customer statistics for dashboard cards
-     *
-     * @return JsonResponse
      */
     public function getStats(): JsonResponse
     {
@@ -296,9 +291,6 @@ class CustomerController extends Controller
 
     /**
      * Get customer details for details page
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getDetails(int $id): JsonResponse
     {
@@ -319,9 +311,6 @@ class CustomerController extends Controller
 
     /**
      * Get customer documents from all service connections
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getDocuments(int $id): JsonResponse
     {
@@ -344,7 +333,6 @@ class CustomerController extends Controller
      * Get customer ledger data with filters
      *
      * @param  int  $id  Customer ID
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getLedger(int $id, Request $request): JsonResponse
     {
@@ -373,9 +361,6 @@ class CustomerController extends Controller
 
     /**
      * Get ledger entry details with source document information
-     *
-     * @param  int  $entryId
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getLedgerEntryDetails(int $entryId): JsonResponse
     {
@@ -391,6 +376,78 @@ class CustomerController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 404);
+        }
+    }
+
+    /**
+     * Export customer ledger as PDF (printable statement)
+     *
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function exportLedgerStatement(int $id, Request $request)
+    {
+        try {
+            $data = $this->customerService->getLedgerStatementData($id, $request->all());
+
+            return view('pages.customer.ledger-statement', $data);
+        } catch (\Exception $e) {
+            abort(404, $e->getMessage());
+        }
+    }
+
+    /**
+     * Export customer ledger as CSV
+     *
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function exportLedgerCsv(int $id, Request $request)
+    {
+        try {
+            $data = $this->customerService->getLedgerStatementData($id, $request->all());
+
+            $filename = 'ledger_'.$data['customer']['customer_code'].'_'.now()->format('Y-m-d').'.csv';
+
+            return response()->streamDownload(function () use ($data) {
+                $handle = fopen('php://output', 'w');
+
+                // BOM for Excel UTF-8
+                fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+
+                // Header info
+                fputcsv($handle, ['Account Statement - '.$data['customer']['name']]);
+                fputcsv($handle, ['Customer ID: '.$data['customer']['customer_code']]);
+                fputcsv($handle, ['Generated: '.now()->format('F d, Y h:i A')]);
+                fputcsv($handle, []);
+
+                // Summary
+                fputcsv($handle, ['SUMMARY']);
+                fputcsv($handle, ['Total Charges', number_format($data['summary']['total_debit'], 2)]);
+                fputcsv($handle, ['Total Payments', number_format($data['summary']['total_credit'], 2)]);
+                fputcsv($handle, ['Current Balance', number_format($data['summary']['net_balance'], 2)]);
+                fputcsv($handle, []);
+
+                // Transaction headers
+                fputcsv($handle, ['Date', 'Time', 'Type', 'Description', 'Debit', 'Credit', 'Balance']);
+
+                // Transaction rows
+                foreach ($data['entries'] as $entry) {
+                    fputcsv($handle, [
+                        $entry['txn_date'],
+                        $entry['time'],
+                        $entry['source_type_label'],
+                        $entry['description'],
+                        $entry['debit'] > 0 ? number_format($entry['debit'], 2) : '',
+                        $entry['credit'] > 0 ? number_format($entry['credit'], 2) : '',
+                        number_format($entry['running_balance'], 2),
+                    ]);
+                }
+
+                fclose($handle);
+            }, $filename, [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+            ]);
+        } catch (\Exception $e) {
+            abort(404, $e->getMessage());
         }
     }
 }

@@ -43,6 +43,8 @@ Route::prefix('customers')->group(function () {
 // Customer Ledger API endpoints
 Route::get('/customer/{id}/ledger', [CustomerController::class, 'getLedger'])->where('id', '[0-9]+')->name('api.customer.ledger');
 Route::get('/customer/ledger/{entryId}', [CustomerController::class, 'getLedgerEntryDetails'])->where('entryId', '[0-9]+')->name('api.customer.ledger.entry');
+Route::get('/customer/{id}/ledger/export/pdf', [CustomerController::class, 'exportLedgerStatement'])->where('id', '[0-9]+')->name('api.customer.ledger.export.pdf');
+Route::get('/customer/{id}/ledger/export/csv', [CustomerController::class, 'exportLedgerCsv'])->where('id', '[0-9]+')->name('api.customer.ledger.export.csv');
 
 // Meter Reading Download API endpoints
 Route::prefix('meter-reading')->middleware('auth:sanctum')->group(function () {

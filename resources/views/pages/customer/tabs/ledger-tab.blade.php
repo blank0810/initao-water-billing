@@ -103,11 +103,37 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Net Balance</p>
                 <p class="text-xl font-bold" id="ledger-net-balance">&#8369;0.00</p>
             </div>
-            <div class="text-center">
-                <button onclick="exportLedger()"
-                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-                    <i class="fas fa-download mr-2"></i>Export Ledger
+            <div class="text-center relative">
+                <button id="export-button" onclick="toggleExportDropdown()"
+                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center">
+                    <i class="fas fa-download mr-2"></i>Export
+                    <i class="fas fa-chevron-down ml-2 text-xs"></i>
                 </button>
+                <!-- Export Dropdown Menu -->
+                <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50">
+                    <div class="py-1">
+                        <button onclick="exportLedgerPdf()"
+                            class="w-full flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-file-pdf text-red-600 dark:text-red-400"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-medium">PDF Statement</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Bank-style printable</p>
+                            </div>
+                        </button>
+                        <button onclick="exportLedgerCsv()"
+                            class="w-full flex items-center px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="flex-shrink-0 w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-3">
+                                <i class="fas fa-file-csv text-green-600 dark:text-green-400"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-medium">CSV Spreadsheet</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">For Excel/Sheets</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

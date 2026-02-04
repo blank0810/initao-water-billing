@@ -565,38 +565,73 @@ window.closeLedgerEntryModal = function() {
 };
 
 /**
- * Export ledger data to CSV
+ * Toggle export dropdown menu
  */
-window.exportLedger = function() {
-    if (!ledgerState.data || !ledgerState.data.entries || ledgerState.data.entries.length === 0) {
-        alert('No ledger data to export');
+window.toggleExportDropdown = function() {
+    const dropdown = document.getElementById('export-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+};
+
+/**
+ * Close export dropdown when clicking outside
+ */
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('export-dropdown');
+    const button = document.getElementById('export-button');
+    if (dropdown && button && !button.contains(event.target) && !dropdown.contains(event.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+/**
+ * Export ledger as CSV (server-side generation with full data)
+ */
+window.exportLedgerCsv = function() {
+    if (!ledgerState.customerId) {
+        alert('No customer selected');
         return;
     }
 
-    // Create CSV content
-    const headers = ['Date', 'Type', 'Description', 'Connection', 'Debit', 'Credit', 'Balance'];
-    const rows = ledgerState.data.entries.map(entry => [
-        entry.txn_date_formatted,
-        entry.source_type_label,
-        `"${(entry.description || '').replace(/"/g, '""')}"`,
-        entry.connection ? entry.connection.account_no : '-',
-        entry.debit,
-        entry.credit,
-        entry.running_balance
-    ]);
+    // Build URL with filters
+    const params = new URLSearchParams();
+    if (ledgerState.filters.connection_id) params.append('connection_id', ledgerState.filters.connection_id);
 
-    const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const url = `/api/customer/${ledgerState.customerId}/ledger/export/csv?${params}`;
+    window.location.href = url;
 
-    // Download file
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `customer_ledger_${ledgerState.customerId}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Close dropdown
+    const dropdown = document.getElementById('export-dropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+};
+
+/**
+ * Export ledger as PDF (opens printable statement in new tab)
+ */
+window.exportLedgerPdf = function() {
+    if (!ledgerState.customerId) {
+        alert('No customer selected');
+        return;
+    }
+
+    // Build URL with filters
+    const params = new URLSearchParams();
+    if (ledgerState.filters.connection_id) params.append('connection_id', ledgerState.filters.connection_id);
+
+    const url = `/api/customer/${ledgerState.customerId}/ledger/export/pdf?${params}`;
+    window.open(url, '_blank');
+
+    // Close dropdown
+    const dropdown = document.getElementById('export-dropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+};
+
+/**
+ * Legacy export function (kept for backwards compatibility)
+ */
+window.exportLedger = function() {
+    toggleExportDropdown();
 };
 
 /**
