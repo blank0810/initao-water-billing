@@ -71,23 +71,43 @@
 
         .brand {
             flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        .brand h1 {
+        .brand-logo {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: #fff;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            flex-shrink: 0;
+        }
+
+        .brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .brand-text h1 {
             font-size: 20px;
             font-weight: 700;
             letter-spacing: 0.5px;
             margin-bottom: 4px;
         }
 
-        .brand .tagline {
+        .brand-text .tagline {
             font-size: 10px;
             opacity: 0.8;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        .brand .contact {
+        .brand-text .contact {
             font-size: 9px;
             opacity: 0.7;
             margin-top: 8px;
@@ -605,9 +625,14 @@
         <div class="header">
             <div class="header-content">
                 <div class="brand">
-                    <h1>Initao Water District</h1>
-                    <div class="tagline">Municipal Water Utility Services</div>
-                    <div class="contact">Municipal Hall Compound, Poblacion, Initao, Misamis Oriental 9022</div>
+                    <div class="brand-logo">
+                        <img src="{{ asset('images/logo.png') }}" alt="LGU Initao Logo">
+                    </div>
+                    <div class="brand-text">
+                        <h1>Initao Water District</h1>
+                        <div class="tagline">Municipal Water Utility Services</div>
+                        <div class="contact">Municipal Hall Compound, Poblacion, Initao, Misamis Oriental 9022</div>
+                    </div>
                 </div>
                 <div class="statement-badge">
                     <div class="label">Official Document</div>
