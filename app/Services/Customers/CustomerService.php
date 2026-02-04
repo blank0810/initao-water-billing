@@ -632,7 +632,7 @@ class CustomerService
 
         // Get rate class from account type
         $rateClass = $activeConnection->accountType
-            ? $activeConnection->accountType->at_description
+            ? $activeConnection->accountType->at_desc
             : 'N/A';
 
         // Calculate total unpaid bills
@@ -683,15 +683,36 @@ class CustomerService
                 ? $latestAssignment->meter->mtr_serial
                 : 'Not Assigned';
 
+            // Get date installed from the latest meter assignment
+            $dateInstalled = $latestAssignment?->installed_at
+                ? $latestAssignment->installed_at->format('M d, Y')
+                : 'N/A';
+
+            // Get meter reader from area's active assignment
+            $meterReader = 'N/A';
+            if ($connection->area) {
+                $activeAssignment = $connection->area->activeAreaAssignments()
+                    ->with('user')
+                    ->first();
+                if ($activeAssignment && $activeAssignment->user) {
+                    $meterReader = $activeAssignment->user->name;
+                }
+            }
+
+            $areaName = $connection->area?->a_desc ?? 'N/A';
+
             return [
                 'connection_id' => $connection->connection_id,
                 'account_no' => $connection->account_no,
-                'connection_type' => $connection->accountType?->at_description ?? 'N/A',
+                'account_type' => $connection->accountType?->at_desc ?? 'N/A',
+                'meter_reader' => $meterReader,
+                'area' => $areaName,
+                'meter_reader_area' => $meterReader !== 'N/A' ? "{$meterReader} - {$areaName}" : $areaName,
                 'meter_no' => $meterNo,
+                'date_installed' => $dateInstalled,
                 'status' => $connection->status?->stat_desc ?? 'UNKNOWN',
                 'status_badge' => $this->getStatusBadgeData($connection->status?->stat_desc ?? 'UNKNOWN'),
                 'started_at' => $connection->started_at ? $connection->started_at->format('M d, Y') : 'N/A',
-                'area' => $connection->area?->a_desc ?? 'N/A',
             ];
         })->toArray();
     }
@@ -783,7 +804,7 @@ class CustomerService
                 $documents[] = [
                     'connection_id' => $connection->connection_id,
                     'account_no' => $connection->account_no,
-                    'connection_type' => $connection->accountType?->at_description ?? 'N/A',
+                    'connection_type' => $connection->accountType?->at_desc ?? 'N/A',
                     'connection_status' => $connection->status?->stat_desc ?? 'UNKNOWN',
                     'document_type' => $doc['type'],
                     'document_name' => $doc['name'],
@@ -890,9 +911,9 @@ class CustomerService
             return [
                 'connection_id' => $connection->connection_id,
                 'account_no' => $connection->account_no,
-                'connection_type' => $connection->accountType?->at_description ?? 'N/A',
+                'connection_type' => $connection->accountType?->at_desc ?? 'N/A',
                 'status' => $connection->status?->stat_desc ?? 'UNKNOWN',
-                'display_label' => "{$connection->account_no} ({$connection->accountType?->at_description})",
+                'display_label' => "{$connection->account_no} ({$connection->accountType?->at_desc})",
             ];
         })->toArray();
     }
@@ -1177,7 +1198,7 @@ class CustomerService
                 'customer_name' => $entry->serviceConnection->customer
                     ? trim("{$entry->serviceConnection->customer->cust_first_name} {$entry->serviceConnection->customer->cust_last_name}")
                     : 'N/A',
-                'account_type' => $entry->serviceConnection->accountType?->at_description ?? 'N/A',
+                'account_type' => $entry->serviceConnection->accountType?->at_desc ?? 'N/A',
             ] : null,
             'audit_info' => [
                 'created_by' => $entry->user?->name ?? 'System',

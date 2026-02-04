@@ -138,7 +138,7 @@
             if (tbody) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                             No service connections found
                         </td>
                     </tr>
@@ -149,6 +149,7 @@
 
     /**
      * Populate service connections table
+     * Columns: Account No, Account Type, Meter Reader & Area, Meter No, Date Installed, Status, Actions
      */
     function populateServiceConnections(connections) {
         const tbody = document.getElementById('connections-tbody');
@@ -160,25 +161,43 @@
                     ${escapeHtml(conn.account_no || 'N/A')}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                    ${escapeHtml(conn.connection_type || 'N/A')}
+                    ${escapeHtml(conn.account_type || conn.connection_type || 'N/A')}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                    <div class="flex flex-col">
+                        <span class="font-medium">${escapeHtml(conn.meter_reader || 'N/A')}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">${escapeHtml(conn.area || 'N/A')}</span>
+                    </div>
                 </td>
                 <td class="px-4 py-3 text-sm font-mono text-gray-900 dark:text-white">
                     ${escapeHtml(conn.meter_no || 'Not Assigned')}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                    ${escapeHtml(conn.area || 'N/A')}
+                    ${escapeHtml(conn.date_installed || 'N/A')}
                 </td>
                 <td class="px-4 py-3 text-center">
                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${conn.status_badge?.classes || 'bg-gray-100 text-gray-800'}">
                         ${escapeHtml(conn.status_badge?.text || conn.status || 'Unknown')}
                     </span>
                 </td>
-                <td class="px-4 py-3 text-center text-sm text-gray-900 dark:text-white">
-                    ${escapeHtml(conn.started_at || 'N/A')}
+                <td class="px-4 py-3 text-center">
+                    <button onclick="viewConnectionDetails(${conn.connection_id})"
+                            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </td>
             </tr>
         `).join('');
     }
+
+    /**
+     * View connection details (placeholder for modal)
+     */
+    window.viewConnectionDetails = function(connectionId) {
+        console.log('View connection details:', connectionId);
+        // TODO: Implement connection details modal if needed
+    };
 
     /**
      * Escape HTML to prevent XSS
