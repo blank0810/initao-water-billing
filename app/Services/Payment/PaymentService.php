@@ -223,6 +223,15 @@ class PaymentService
                 throw new \Exception('Bill not found or already paid.');
             }
 
+            // Check if the billing period is closed
+            if ($bill->period && $bill->period->is_closed) {
+                throw new \Exception(
+                    'Cannot process payment: The billing period "'
+                    .($bill->period->per_name ?? 'Unknown')
+                    .'" has been closed.'
+                );
+            }
+
             $totalDue = $bill->water_amount + $bill->adjustment_total;
 
             // Validate payment amount (full payment required)
