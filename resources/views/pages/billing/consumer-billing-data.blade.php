@@ -1,7 +1,7 @@
 {{-- Customer Profile Card --}}
 <x-ui.card id="customerProfileCard" class="mb-6">
     <div class="flex justify-between items-start mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Consumer Profile</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Customer Profile</h3>
         <span id="overdueBadge" class="px-3 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full text-sm font-medium hidden">
             <i class="fas fa-exclamation-triangle mr-1"></i>Overdue by <span id="overdueDays">0</span> day(s)
         </span>
@@ -75,9 +75,12 @@
                 <i class="fas fa-file-invoice-dollar text-2xl"></i>
             </div>
         </div>
-        <button onclick="openProcessPaymentModal()" class="w-full bg-white text-blue-600 border-white hover:bg-blue-50 px-4 py-2 rounded-lg font-medium transition">
+        <button id="processPaymentBtn" onclick="openProcessPaymentModal()" class="w-full bg-white text-blue-600 border-white hover:bg-blue-50 px-4 py-2 rounded-lg font-medium transition">
             <i class="fas fa-credit-card mr-2"></i>Process Payment
         </button>
+        <div id="paidStatusMessage" class="hidden w-full bg-white/20 text-white px-4 py-2 rounded-lg font-medium text-center">
+            <i class="fas fa-check-circle mr-2"></i>Bill Paid
+        </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-3">
@@ -331,6 +334,17 @@ function updateBillOverview(details) {
         (details.billingStatus === 'PAID' ? 'bg-green-200 text-green-800' :
          details.billingStatus === 'OVERDUE' ? 'bg-red-200 text-red-800' :
          'bg-yellow-200 text-yellow-800');
+
+    // Toggle Process Payment button visibility based on bill status
+    const processPaymentBtn = document.getElementById('processPaymentBtn');
+    const paidStatusMessage = document.getElementById('paidStatusMessage');
+    if (details.billingStatus === 'PAID') {
+        processPaymentBtn.classList.add('hidden');
+        paidStatusMessage.classList.remove('hidden');
+    } else {
+        processPaymentBtn.classList.remove('hidden');
+        paidStatusMessage.classList.add('hidden');
+    }
 }
 
 function updateRecentActivities(details) {

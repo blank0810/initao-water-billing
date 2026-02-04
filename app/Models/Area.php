@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Area extends Model
 {
     use HasFactory;
+
     protected $table = 'area';
 
     protected $primaryKey = 'a_id';
@@ -48,14 +49,6 @@ class Area extends Model
             $q->whereNull('effective_to')
                 ->orWhere('effective_to', '>=', now()->format('Y-m-d'));
         });
-    }
-
-    /**
-     * Get the consumers for the area
-     */
-    public function consumers()
-    {
-        return $this->hasMany(Consumer::class, 'a_id', 'a_id');
     }
 
     /**

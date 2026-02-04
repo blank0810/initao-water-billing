@@ -52,27 +52,11 @@ class Period extends Model
     }
 
     /**
-     * Get the water bills for the period
-     */
-    public function waterBills()
-    {
-        return $this->hasMany(WaterBill::class, 'per_id', 'per_id');
-    }
-
-    /**
      * Get the water bill history for the period
      */
     public function waterBillHistory()
     {
         return $this->hasMany(WaterBillHistory::class, 'period_id', 'per_id');
-    }
-
-    /**
-     * Get the misc bills for the period
-     */
-    public function miscBills()
-    {
-        return $this->hasMany(MiscBill::class, 'per_id', 'per_id');
     }
 
     /**

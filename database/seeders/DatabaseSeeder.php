@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
 
         // Seed service-related tables
         $this->call([
+            StatusSeeder::class,          // Statuses (PENDING, ACTIVE, OVERDUE, etc.)
             UserTypeSeeder::class,        // User types (ADMIN, BILLING)
             AccountTypeSeeder::class,     // Account types (Individual, Corporation, etc.)
             WaterRateSeeder::class,       // Water rates (Residential, Commercial, etc.)
@@ -61,6 +62,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- Town: Initao');
         $this->command->info('- Barangays: 16 barangays');
         $this->command->info('- Puroks: 384 puroks (24 per barangay: 1-A to 12-B)');
+        $this->command->info('- Statuses: 13 statuses (PENDING, ACTIVE, OVERDUE, etc.)');
         $this->command->info('- User Types: 2 types');
         $this->command->info('- Account Types: 6 types');
         $this->command->info('- Water Rates: 13 rate tiers');

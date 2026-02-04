@@ -625,7 +625,7 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p>Initao Municipal Water System | Municipal Hall Compound, Poblacion, Initao, Misamis Oriental</p>
+            <p>Initao Municipal Water System | Jampason, Initao, Misamis Oriental</p>
             <div class="doc-id">Contract Ref: {{ $application->application_number }} | Generated: {{ now()->format('M d, Y H:i') }}</div>
         </div>
     </div>

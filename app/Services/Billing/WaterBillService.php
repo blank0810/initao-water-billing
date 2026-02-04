@@ -525,8 +525,8 @@ class WaterBillService
             'meter_serial' => $activeAssignment?->meter?->mtr_serial ?? 'N/A',
             'barangay' => $connection->address?->barangay?->b_desc ?? 'Unknown',
             'status' => $connection->stat_id === $activeStatusId ? 'Active' : 'Inactive',
-            'email' => $customer?->cust_email ?? 'N/A',
-            'phone' => $customer?->cust_phone ?? 'N/A',
+            'email' => 'N/A', // Email column not available in customer table
+            'phone' => $customer?->contact_number ?? 'N/A',
             'overdue_days' => $overdueDays,
             'current_bill' => $currentBill ? [
                 'bill_id' => $currentBill->bill_id,

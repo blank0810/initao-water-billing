@@ -5,6 +5,7 @@ namespace App\Services\Payment;
 use App\Models\Payment;
 use App\Models\ServiceApplication;
 use App\Models\Status;
+use App\Models\WaterBillHistory;
 use Illuminate\Support\Collection;
 
 class PaymentManagementService
@@ -33,14 +34,14 @@ class PaymentManagementService
             $payments = $payments->merge($applicationPayments);
         }
 
-        // Future: Get pending water bills
-        // if (!$type || $type === self::TYPE_WATER_BILL) {
-        //     $billPayments = $this->getPendingWaterBills($search);
-        //     $payments = $payments->merge($billPayments);
-        // }
+        // Get pending water bills (ACTIVE or OVERDUE status)
+        if (! $type || $type === self::TYPE_WATER_BILL) {
+            $billPayments = $this->getPendingWaterBills($search);
+            $payments = $payments->merge($billPayments);
+        }
 
-        // Sort by date (newest first)
-        return $payments->sortByDesc('date')->values();
+        // Sort by date (oldest first)
+        return $payments->sortBy('date')->values();
     }
 
     /**
@@ -97,12 +98,77 @@ class PaymentManagementService
     }
 
     /**
+     * Get pending water bills (ACTIVE or OVERDUE status)
+     */
+    protected function getPendingWaterBills(?string $search = null): Collection
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
+
+        $query = WaterBillHistory::with([
+            'serviceConnection.customer',
+            'serviceConnection.address.purok',
+            'serviceConnection.address.barangay',
+            'period',
+            'status',
+        ])
+            ->whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]));
+
+        // Apply search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('period', function ($pq) use ($search) {
+                    $pq->where('per_name', 'like', "%{$search}%");
+                })
+                    ->orWhereHas('serviceConnection', function ($cq) use ($search) {
+                        $cq->where('account_no', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('serviceConnection.customer', function ($custQ) use ($search) {
+                        $custQ->where('cust_first_name', 'like', "%{$search}%")
+                            ->orWhere('cust_last_name', 'like', "%{$search}%")
+                            ->orWhere('resolution_no', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $overdueId = $overdueStatusId;
+
+        return $query->orderBy('due_date', 'asc')->get()->map(function ($bill) use ($overdueId) {
+            $connection = $bill->serviceConnection;
+            $customer = $connection?->customer;
+            $totalAmount = $bill->water_amount + $bill->adjustment_total;
+            $isOverdue = $bill->stat_id === $overdueId;
+
+            return [
+                'id' => $bill->bill_id,
+                'type' => self::TYPE_WATER_BILL,
+                'type_label' => 'Water Bill',
+                'reference_number' => $bill->period?->per_name ?? 'Unknown Period',
+                'customer_id' => $customer?->cust_id,
+                'customer_name' => $this->formatCustomerName($customer),
+                'customer_code' => $customer?->resolution_no ?? '-',
+                'address' => $this->formatAddress($connection?->address),
+                'amount' => $totalAmount,
+                'amount_formatted' => '₱ '.number_format($totalAmount, 2),
+                'date' => $bill->due_date,
+                'date_formatted' => $bill->due_date?->format('M d, Y'),
+                'status' => $isOverdue ? 'Overdue' : 'Pending Payment',
+                'status_color' => $isOverdue ? 'red' : 'yellow',
+                'action_url' => route('payment.process.bill', $bill->bill_id),
+                'process_url' => route('payment.process.bill', $bill->bill_id),
+                'print_url' => null,
+            ];
+        });
+    }
+
+    /**
      * Get payment queue statistics
      */
     public function getStatistics(): array
     {
         $verifiedStatusId = Status::getIdByDescription(Status::VERIFIED);
-        $paidStatusId = Status::getIdByDescription(Status::PAID);
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
 
         // Pending application fees
         $pendingApplications = ServiceApplication::with('customerCharges')
@@ -110,11 +176,19 @@ class PaymentManagementService
             ->whereNull('payment_id')
             ->get();
 
-        $totalPending = $pendingApplications->sum(function ($app) {
+        $totalPendingApps = $pendingApplications->sum(function ($app) {
             return $app->customerCharges->sum(fn ($c) => $c->total_amount);
         });
+        $pendingAppCount = $pendingApplications->count();
 
-        $pendingCount = $pendingApplications->count();
+        // Pending water bills
+        $pendingBills = WaterBillHistory::whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))->get();
+        $totalPendingBills = $pendingBills->sum(fn ($b) => $b->water_amount + $b->adjustment_total);
+        $pendingBillCount = $pendingBills->count();
+
+        // Combined totals
+        $totalPending = $totalPendingApps + $totalPendingBills;
+        $pendingCount = $pendingAppCount + $pendingBillCount;
 
         // Today's collections
         $todayPayments = Payment::whereDate('payment_date', today())->get();
@@ -147,8 +221,7 @@ class PaymentManagementService
         return [
             ['value' => '', 'label' => 'All Types'],
             ['value' => self::TYPE_APPLICATION_FEE, 'label' => 'Application Fee'],
-            // ['value' => self::TYPE_WATER_BILL, 'label' => 'Water Bill'],
-            // ['value' => self::TYPE_OTHER_CHARGE, 'label' => 'Other Charges'],
+            ['value' => self::TYPE_WATER_BILL, 'label' => 'Water Bill'],
         ];
     }
 
@@ -248,8 +321,14 @@ class PaymentManagementService
             return self::TYPE_APPLICATION_FEE;
         }
 
-        // Future: Check for water bill payments
-        // Future: Check for other charge payments
+        // Check if payment has allocations to water bills
+        $hasBillAllocation = $payment->paymentAllocations()
+            ->where('target_type', 'BILL')
+            ->exists();
+
+        if ($hasBillAllocation) {
+            return self::TYPE_WATER_BILL;
+        }
 
         return self::TYPE_OTHER_CHARGE;
     }

@@ -72,20 +72,20 @@ class AddressService
     {
         return Purok::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
             ->orderBy('p_desc')
-            ->get(['p_id', 'p_desc', 'b_id']);
+            ->get(['p_id', 'p_desc']);
     }
 
     /**
      * Get puroks by barangay
      *
+     * Note: b_id column was removed from purok table. Returns empty collection
+     * to trigger fallback to getAllPuroks() in the controller.
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getPuroksByBarangay(int $barangayId)
+    public function getPuroksByBarangay(int $_barangayId)
     {
-        return Purok::where('b_id', $barangayId)
-            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
-            ->orderBy('p_desc')
-            ->get(['p_id', 'p_desc', 'b_id']);
+        return collect();
     }
 
     /**

@@ -11,18 +11,14 @@ class Status extends Model
 
     protected $primaryKey = 'stat_id';
 
-
     protected $fillable = ['stat_desc'];
-
 
     public $timestamps = false;
 
     // Status constants - Base
     public const PENDING = 'PENDING';
 
-
     public const ACTIVE = 'ACTIVE';
-
 
     public const INACTIVE = 'INACTIVE';
 
@@ -46,6 +42,9 @@ class Status extends Model
 
     // Status constants - Reading Schedule
     public const COMPLETED = 'COMPLETED';
+
+    // Status constants - Billing
+    public const OVERDUE = 'OVERDUE';
 
     /**
      * Get the ID of a status by its description

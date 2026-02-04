@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class PaymentTransaction extends Model
 {
     protected $table = 'payment_transactions';
+
     protected $primaryKey = 'transaction_id';
 
     protected $fillable = [
@@ -39,14 +40,6 @@ class PaymentTransaction extends Model
     }
 
     /**
-     * Get the bill associated with the transaction
-     */
-    public function bill(): BelongsTo
-    {
-        return $this->belongsTo(WaterBill::class, 'bill_id', 'wb_id');
-    }
-
-    /**
      * Get the polymorphic applied_to relation
      */
     public function appliedTo(): MorphTo
@@ -70,4 +63,3 @@ class PaymentTransaction extends Model
         return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
     }
 }
-

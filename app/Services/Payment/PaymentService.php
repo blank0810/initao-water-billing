@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\PaymentAllocation;
 use App\Models\ServiceApplication;
 use App\Models\Status;
+use App\Models\WaterBillHistory;
 use App\Services\Charge\ApplicationChargeService;
 use App\Services\Ledger\LedgerService;
 use Illuminate\Support\Facades\DB;
@@ -163,5 +164,128 @@ class PaymentService
             ->where('payer_id', $customerId)
             ->orderBy('payment_date', 'desc')
             ->get();
+    }
+
+    /**
+     * Get water bill details for payment processing
+     */
+    public function getWaterBillDetails(int $billId): ?WaterBillHistory
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
+
+        return WaterBillHistory::with([
+            'serviceConnection.customer',
+            'serviceConnection.address.purok',
+            'serviceConnection.address.barangay',
+            'serviceConnection.accountType',
+            'period',
+            'previousReading',
+            'currentReading',
+            'status',
+        ])
+            ->where('bill_id', $billId)
+            ->whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))
+            ->first();
+    }
+
+    /**
+     * Process payment for a water bill
+     *
+     * Creates Payment, PaymentAllocation, CustomerLedger entry
+     * Updates WaterBillHistory status to PAID
+     *
+     * @param  int  $billId  The water bill to pay
+     * @param  float  $amountReceived  Amount received from customer
+     * @param  int  $userId  The cashier processing the payment
+     * @return array Contains 'payment', 'allocation', 'change'
+     *
+     * @throws \Exception
+     */
+    public function processWaterBillPayment(int $billId, float $amountReceived, int $userId): array
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
+        $paidStatusId = Status::getIdByDescription(Status::PAID);
+
+        // Wrap everything in a transaction so lockForUpdate() is effective
+        return DB::transaction(function () use (
+            $billId, $amountReceived, $userId, $activeStatusId, $overdueStatusId, $paidStatusId
+        ) {
+            // Find the bill with lock to prevent concurrent payments
+            $bill = WaterBillHistory::with(['serviceConnection.customer', 'period'])
+                ->where('bill_id', $billId)
+                ->whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))
+                ->lockForUpdate()
+                ->first();
+
+            if (! $bill) {
+                throw new \Exception('Bill not found or already paid.');
+            }
+
+            // Check if the billing period is closed
+            if ($bill->period && $bill->period->is_closed) {
+                throw new \Exception(
+                    'Cannot process payment: The billing period "'
+                    .($bill->period->per_name ?? 'Unknown')
+                    .'" has been closed.'
+                );
+            }
+
+            $totalDue = $bill->water_amount + $bill->adjustment_total;
+
+            // Validate payment amount (full payment required)
+            if ($amountReceived < $totalDue) {
+                throw new \Exception(
+                    'Full payment required. Amount due: ₱'.number_format($totalDue, 2).
+                    '. Received: ₱'.number_format($amountReceived, 2)
+                );
+            }
+
+            $change = $amountReceived - $totalDue;
+            $connection = $bill->serviceConnection;
+            $customer = $connection->customer;
+
+            // 1. Create Payment record
+            $payment = Payment::create([
+                'receipt_no' => $this->generateReceiptNumber(),
+                'payer_id' => $customer->cust_id,
+                'payment_date' => now()->toDateString(),
+                'amount_received' => $amountReceived,
+                'user_id' => $userId,
+                'stat_id' => $activeStatusId,
+            ]);
+
+            // 2. Create PaymentAllocation (target_type = 'BILL')
+            $allocation = PaymentAllocation::create([
+                'payment_id' => $payment->payment_id,
+                'target_type' => 'BILL',
+                'target_id' => $bill->bill_id,
+                'amount_applied' => $totalDue,
+                'period_id' => $bill->period_id,
+                'connection_id' => $connection->connection_id,
+            ]);
+
+            // 3. Create CustomerLedger CREDIT entry
+            $this->ledgerService->recordPaymentAllocation(
+                $allocation,
+                $payment,
+                'Payment for Water Bill - '.($bill->period?->per_name ?? 'Unknown'),
+                $userId
+            );
+
+            // 4. Update bill status to PAID
+            $bill->update([
+                'stat_id' => $paidStatusId,
+            ]);
+
+            return [
+                'payment' => $payment->fresh(),
+                'allocation' => $allocation,
+                'total_paid' => $totalDue,
+                'amount_received' => $amountReceived,
+                'change' => $change,
+            ];
+        });
     }
 }
