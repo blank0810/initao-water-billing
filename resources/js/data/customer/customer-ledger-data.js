@@ -103,6 +103,7 @@ function showLedgerError(message) {
 
 /**
  * Populate ledger table with entries
+ * Groups entries by date with visual separators for better UX
  */
 function populateLedgerTable(entries) {
     const tbody = document.getElementById('ledger-tbody');
@@ -119,39 +120,98 @@ function populateLedgerTable(entries) {
         return;
     }
 
-    tbody.innerHTML = entries.map(entry => `
-        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" onclick="showLedgerEntryDetails(${entry.ledger_entry_id})">
-            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                ${entry.txn_date_formatted}
-            </td>
-            <td class="px-4 py-3 whitespace-nowrap">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${entry.source_type_badge.bg} ${entry.source_type_badge.text}">
-                    ${entry.source_type_label}
-                </span>
-            </td>
-            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate" title="${escapeHtml(entry.description)}">
-                ${escapeHtml(entry.description)}
-            </td>
-            <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                ${entry.connection ? entry.connection.account_no : '-'}
-            </td>
-            <td class="px-4 py-3 text-sm text-right font-medium ${entry.debit > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400'} whitespace-nowrap">
-                ${entry.debit_formatted}
-            </td>
-            <td class="px-4 py-3 text-sm text-right font-medium ${entry.credit > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'} whitespace-nowrap">
-                ${entry.credit_formatted}
-            </td>
-            <td class="px-4 py-3 text-sm text-right font-semibold ${entry.balance_class} whitespace-nowrap">
-                ${entry.running_balance_formatted}
-            </td>
-            <td class="px-4 py-3 text-center whitespace-nowrap">
-                <button onclick="event.stopPropagation(); showLedgerEntryDetails(${entry.ledger_entry_id})"
-                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                    <i class="fas fa-eye"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    // Group entries by date for visual separation
+    let currentDate = null;
+    let html = '';
+
+    entries.forEach((entry, index) => {
+        const entryDate = entry.txn_date_formatted;
+        const isNewDateGroup = entryDate !== currentDate;
+        const isFirstEntry = index === 0;
+
+        // Add date separator row when date changes
+        if (isNewDateGroup) {
+            currentDate = entryDate;
+            html += `
+                <tr class="bg-gray-50 dark:bg-gray-700/50 ${!isFirstEntry ? 'border-t-2 border-gray-300 dark:border-gray-600' : ''}">
+                    <td colspan="8" class="px-4 py-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-day text-blue-500 dark:text-blue-400 text-xs"></i>
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">${entryDate}</span>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">(${formatRelativeDate(entry.txn_date)})</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Entry row with improved styling
+        html += `
+            <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-l-4 ${entry.credit > 0 ? 'border-l-green-400' : 'border-l-red-400'}" onclick="showLedgerEntryDetails(${entry.ledger_entry_id})">
+                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    <span class="text-xs">${formatTimeOnly(entry.post_ts)}</span>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${entry.source_type_badge.bg} ${entry.source_type_badge.text}">
+                        ${entry.source_type_label}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate" title="${escapeHtml(entry.description)}">
+                    ${escapeHtml(entry.description)}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                    ${entry.connection ? entry.connection.account_no : '-'}
+                </td>
+                <td class="px-4 py-3 text-sm text-right font-medium ${entry.debit > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400'} whitespace-nowrap">
+                    ${entry.debit > 0 ? entry.debit_formatted : '-'}
+                </td>
+                <td class="px-4 py-3 text-sm text-right font-medium ${entry.credit > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'} whitespace-nowrap">
+                    ${entry.credit > 0 ? entry.credit_formatted : '-'}
+                </td>
+                <td class="px-4 py-3 text-sm text-right font-semibold ${entry.balance_class} whitespace-nowrap">
+                    ${entry.running_balance_formatted}
+                </td>
+                <td class="px-4 py-3 text-center whitespace-nowrap">
+                    <button onclick="event.stopPropagation(); showLedgerEntryDetails(${entry.ledger_entry_id})"
+                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+/**
+ * Format date as relative (Today, Yesterday, or date)
+ */
+function formatRelativeDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+    } else {
+        const diffTime = Math.abs(today - date);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return `${diffDays} days ago`;
+    }
+}
+
+/**
+ * Format timestamp to time only (HH:MM AM/PM)
+ */
+function formatTimeOnly(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
 /**

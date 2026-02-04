@@ -961,15 +961,19 @@ class CustomerService
             $query->where('source_type', $sourceType);
         }
 
-        // Order by date descending for display
+        // Order by date descending for display (newest first)
+        // Include ledger_entry_id DESC to ensure consistent ordering within same timestamp
+        // This makes balance flow naturally when reading top-to-bottom (balance increases going down = going back in time)
         $entries = $query->orderBy('txn_date', 'desc')
             ->orderBy('post_ts', 'desc')
+            ->orderBy('ledger_entry_id', 'desc')
             ->paginate($perPage);
 
         // Calculate running balance (oldest to newest for calculation)
         $allEntries = CustomerLedger::where('customer_id', $customerId)
             ->orderBy('txn_date', 'asc')
             ->orderBy('post_ts', 'asc')
+            ->orderBy('ledger_entry_id', 'asc')
             ->get();
 
         $runningBalances = $this->calculateRunningBalances($allEntries);

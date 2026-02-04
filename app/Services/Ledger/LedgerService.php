@@ -89,6 +89,9 @@ class LedgerService
 
     /**
      * Get ledger entries for a customer
+     *
+     * Ordered newest-first with ledger_entry_id DESC for consistent ordering
+     * within same timestamp, making balance flow naturally when reading top-to-bottom
      */
     public function getCustomerLedgerEntries(int $customerId): Collection
     {
@@ -96,6 +99,7 @@ class LedgerService
             ->where('customer_id', $customerId)
             ->orderBy('txn_date', 'desc')
             ->orderBy('post_ts', 'desc')
+            ->orderBy('ledger_entry_id', 'desc')
             ->get();
     }
 
@@ -121,8 +125,9 @@ class LedgerService
                 $query->where('source_type', 'PAYMENT')
                     ->whereIn('source_id', $paymentIds);
             })
-            ->orderBy('txn_date')
-            ->orderBy('post_ts')
+            ->orderBy('txn_date', 'desc')
+            ->orderBy('post_ts', 'desc')
+            ->orderBy('ledger_entry_id', 'desc')
             ->get();
     }
 }
