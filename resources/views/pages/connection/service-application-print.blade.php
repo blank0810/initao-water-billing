@@ -388,7 +388,7 @@
             </div>
             <h1>Initao Municipal Water System</h1>
             <div class="subtitle">Municipal Government of Initao</div>
-            <div class="address">Municipal Hall Compound, Poblacion, Initao, Misamis Oriental 9022</div>
+            <div class="address">Jampason, Initao, Misamis Oriental</div>
         </div>
 
         <!-- Document Title -->

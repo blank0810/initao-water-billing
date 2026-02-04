@@ -232,7 +232,7 @@
         <div class="header">
             <h1>Initao Water District</h1>
             <h2>Municipality of Initao, Misamis Oriental</h2>
-            <p>Provincial Road, Poblacion, Initao, Misamis Oriental</p>
+            <p>Jampason, Initao, Misamis Oriental</p>
         </div>
 
         <!-- Document Title -->

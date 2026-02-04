@@ -434,7 +434,7 @@
                         </div>
                         <div>
                             <h3 class="font-semibold text-slate-900 mb-1">Office Address</h3>
-                            <p class="text-slate-600">Municipal Hall, Poblacion<br>Initao, Misamis Oriental 9022</p>
+                            <p class="text-slate-600">Jampason, Initao<br>Misamis Oriental</p>
                         </div>
                     </div>
 
