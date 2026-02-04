@@ -698,23 +698,23 @@
     }
 
     /**
+     * Get the correct button text based on current state
+     */
+    function getMeterButtonText() {
+        if (isReplacingMeter) {
+            return currentMeterTabMode === 'existing' ? 'Replace Meter' : 'Register & Replace';
+        } else {
+            return currentMeterTabMode === 'existing' ? 'Assign Meter' : 'Register & Assign';
+        }
+    }
+
+    /**
      * Update the submit button text based on current state
      */
     function updateMeterButtonText() {
         const btnText = document.getElementById('assignMeterBtnText');
-
-        if (isReplacingMeter) {
-            if (currentMeterTabMode === 'existing') {
-                btnText.textContent = 'Replace Meter';
-            } else {
-                btnText.textContent = 'Register & Replace';
-            }
-        } else {
-            if (currentMeterTabMode === 'existing') {
-                btnText.textContent = 'Assign Meter';
-            } else {
-                btnText.textContent = 'Register & Assign';
-            }
+        if (btnText) {
+            btnText.textContent = getMeterButtonText();
         }
     }
 
@@ -1029,8 +1029,7 @@
      */
     function resetMeterButtonState() {
         const btn = document.getElementById('assignMeterSubmitBtn');
-        updateMeterButtonText();
-        const btnText = document.getElementById('assignMeterBtnText').textContent;
+        const btnText = getMeterButtonText();
         btn.innerHTML = `<i class="fas fa-check mr-2"></i><span id="assignMeterBtnText">${btnText}</span>`;
     }
     </script>
