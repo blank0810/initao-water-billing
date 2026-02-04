@@ -103,7 +103,7 @@ class PaymentManagementService
     protected function getPendingWaterBills(?string $search = null): Collection
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
 
         $query = WaterBillHistory::with([
             'serviceConnection.customer',
@@ -168,7 +168,7 @@ class PaymentManagementService
     {
         $verifiedStatusId = Status::getIdByDescription(Status::VERIFIED);
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
 
         // Pending application fees
         $pendingApplications = ServiceApplication::with('customerCharges')
