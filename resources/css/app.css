@@ -312,6 +312,9 @@ html:not(.dark) {
     background: var(--sidebar-bg);
     overflow-x: hidden;
     overflow-y: auto;
+    /* Hide scrollbar but keep scrolling functional */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
 }
 
 /* Remove extra spacing from wrapper divs */
@@ -320,21 +323,9 @@ html:not(.dark) {
     padding: 0;
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera */
 .sidebar-nav-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.sidebar-nav-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.sidebar-nav-content::-webkit-scrollbar-thumb {
-    border-radius: 99px;
-    background-color: var(--sidebar-bg-secondary);
-}
-
-.sidebar-nav-content::-webkit-scrollbar-thumb:hover {
-    background-color: var(--sidebar-text);
+    display: none;
 }
 
 /* ==========================================
@@ -435,7 +426,16 @@ html:not(.dark) {
 }
 
 .nav-btn:hover .nav-btn-icon i {
-    color: var(--sidebar-text-light);
+    color: #eab308;
+    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5), 0 0 16px rgba(234, 179, 8, 0.3);
+    filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4));
+}
+
+/* Keep sky blue in dark mode */
+html.dark .nav-btn:hover .nav-btn-icon i {
+    color: #38bdf8;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.5));
 }
 
 .nav-btn:hover .nav-btn-chevron {
@@ -462,9 +462,9 @@ html:not(.dark) {
 }
 
 .nav-btn.active .nav-btn-icon i {
-    color: #64748b;
-    text-shadow: 0 0 8px rgba(100, 116, 139, 0.5), 0 0 16px rgba(100, 116, 139, 0.3);
-    filter: drop-shadow(0 0 3px rgba(100, 116, 139, 0.4));
+    color: #eab308;
+    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5), 0 0 16px rgba(234, 179, 8, 0.3);
+    filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4));
 }
 
 /* Sky blue glow in dark mode */
@@ -480,9 +480,9 @@ html.dark .nav-btn.active .nav-btn-icon i {
 
 /* Icon Glow for parent items when submenu is open */
 .nav-btn.icon-glow .nav-btn-icon i {
-    color: #64748b;
-    text-shadow: 0 0 8px rgba(100, 116, 139, 0.5), 0 0 16px rgba(100, 116, 139, 0.3);
-    filter: drop-shadow(0 0 3px rgba(100, 116, 139, 0.4));
+    color: #eab308;
+    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5), 0 0 16px rgba(234, 179, 8, 0.3);
+    filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4));
 }
 
 html.dark .nav-btn.icon-glow .nav-btn-icon i {
@@ -522,6 +522,64 @@ html.dark .nav-btn.icon-glow .nav-btn-icon i {
     flex: 1;
     min-width: 0;
     text-align: left;
+}
+
+/* ==========================================
+   SUBMENU PARENT BUTTON STYLES
+   Ensures consistent hover/active behavior
+   for menu items with subpages
+   ========================================== */
+
+/* Base button element styling - making it behave like anchor */
+button.nav-btn {
+    width: calc(100% - 16px);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+/* Ensure hover states work identically for both links and buttons */
+button.nav-btn:hover,
+a.nav-btn:hover {
+    color: var(--sidebar-text-light);
+}
+
+button.nav-btn:hover::before,
+a.nav-btn:hover::before {
+    opacity: 1;
+    box-shadow: var(--sidebar-hover-shadow);
+}
+
+button.nav-btn:hover::after,
+button.nav-btn:hover .nav-btn-notch,
+a.nav-btn:hover::after,
+a.nav-btn:hover .nav-btn-notch {
+    opacity: 1;
+}
+
+button.nav-btn:hover .nav-btn-icon,
+a.nav-btn:hover .nav-btn-icon {
+    background: transparent;
+}
+
+button.nav-btn:hover .nav-btn-icon i,
+a.nav-btn:hover .nav-btn-icon i {
+    color: #eab308;
+    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5), 0 0 16px rgba(234, 179, 8, 0.3);
+    filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4));
+}
+
+/* Keep sky blue in dark mode */
+html.dark button.nav-btn:hover .nav-btn-icon i,
+html.dark a.nav-btn:hover .nav-btn-icon i {
+    color: #38bdf8;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.5));
+}
+
+button.nav-btn:hover .nav-btn-chevron,
+a.nav-btn:hover .nav-btn-chevron {
+    color: var(--sidebar-text-light);
 }
 
 /* Chevron for dropdowns - consistent styling */
@@ -676,11 +734,22 @@ html.dark .nav-submenu-item.active i {
     padding: 0;
     margin: 4px 8px;
     height: 52px;
-    width: auto;
+    width: 52px;
+    flex-shrink: 0;
+}
+
+.sidebar-collapsed button.nav-btn,
+.sidebar-collapsed a.nav-btn {
+    width: 52px;
+    min-width: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .sidebar-collapsed .nav-btn.w-full {
-    width: calc(100% - 16px);
+    width: 52px;
+    min-width: 52px;
     justify-content: center;
 }
 

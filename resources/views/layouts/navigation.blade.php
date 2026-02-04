@@ -27,6 +27,15 @@ $pageTitles = [
     'analytics' => 'Analytics',
     'settings' => 'Settings',
     'report' => 'Report',
+    'reports' => 'Reports',
+    'reports-tables-billing' => 'Monthly Billing Summary',
+    'reports-tables-collection' => 'Monthly Collection Summary',
+    'reports-tables-status' => 'Monthly Status Report',
+    'reports-tables-aging' => 'Aging of Accounts',
+    'reports-tables-masterlist' => 'Consumer Master List',
+    'reports-tables-abstract' => 'Abstract of Collection',
+    'reports-tables-bill-history' => 'Bill History',
+    'reports-tables-statement' => 'Statement of Account',
 ];
 
 // Get current active menu from session or default to dashboard
@@ -48,9 +57,18 @@ $pageTitles = [
         'billing.main' => 'billing-management',
         'billing.management' => 'billing-management',
         'meter.management' => 'meter-management',
-    'rate.management' => 'rate-management',
-    'ledger.management' => 'ledger-management',
-    'analytics' => 'analytics',
+        'rate.management' => 'rate-management',
+        'ledger.management' => 'ledger-management',
+        'analytics' => 'analytics',
+        'reports' => 'reports',
+        'reports.tables.billing' => 'reports-tables-billing',
+        'reports.tables.collection' => 'reports-tables-collection',
+        'reports.tables.status' => 'reports-tables-status',
+        'reports.tables.aging' => 'reports-tables-aging',
+        'reports.tables.masterlist' => 'reports-tables-masterlist',
+        'reports.tables.abstract' => 'reports-tables-abstract',
+        'reports.tables.bill-history' => 'reports-tables-bill-history',
+        'reports.tables.statement' => 'reports-tables-statement',
 ];
 $activeMenu = $routeToMenu[Route::currentRouteName()] ?? session('active_menu', 'dashboard');
 $pageTitle = $pageTitles[$activeMenu] ?? 'Dashboard';
@@ -77,6 +95,15 @@ $breadcrumbs = [
     'analytics' => ['Pages', 'Analytics'],
     'settings' => ['Pages', 'Settings'],
     'report' => ['Pages', 'Report'],
+    'reports' => ['Pages', 'Reports'],
+    'reports-tables-billing' => ['Pages', 'Reports', 'Monthly Billing Summary'],
+    'reports-tables-collection' => ['Pages', 'Reports', 'Monthly Collection Summary'],
+    'reports-tables-status' => ['Pages', 'Reports', 'Monthly Status Report'],
+    'reports-tables-aging' => ['Pages', 'Reports', 'Aging of Accounts'],
+    'reports-tables-masterlist' => ['Pages', 'Reports', 'Consumer Master List'],
+    'reports-tables-abstract' => ['Pages', 'Reports', 'Abstract of Collection'],
+    'reports-tables-bill-history' => ['Pages', 'Reports', 'Bill History'],
+    'reports-tables-statement' => ['Pages', 'Reports', 'Statement of Account'],
 ];
 
 $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Pages', 'Dashboard'];

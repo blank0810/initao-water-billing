@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summary Status Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 10px;
+            line-height: 1.5;
+            color: #111827;
+            background: #f9fafb;
+            padding: 20px;
+        }
+
+        .document {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 24px 24px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header-logo {
+            margin-bottom: 12px;
+        }
+
+        .header-logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .header .subtitle {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .header .address {
+            font-size: 9px;
+            color: #9ca3af;
+        }
+
+        /* Document Title */
+        .doc-title {
+            padding: 12px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+            background: #f9fafb;
+        }
+
+        .doc-title h2 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #111827;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .doc-title .date {
+            font-size: 10px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* Content */
+        .content {
+            padding: 20px 24px;
+        }
+
+        /* Summary Cards */
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        .data-table th {
+            background: #f9fafb;
+            padding: 10px 6px;
+            text-align: center;
+            font-weight: 600;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 8px 6px;
+            border: 1px solid #e5e7eb;
+            font-size: 10px;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .text-right {
+            text-align: right !important;
+            font-family: 'SF Mono', 'Consolas', monospace;
+        }
+
+        .text-center {
+            text-align: center !important;
+        }
+
+        .text-left {
+            text-align: left !important;
+        }
+
+        /* Schedule header row */
+        .schedule-header {
+            background: #f0f9ff;
+        }
+
+        .schedule-header td {
+            padding: 10px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #3D90D7;
+        }
+
+        /* Grand Total Row */
+        .grand-total-row {
+            background: #3D90D7;
+            color: white;
+            font-weight: 700;
+        }
+
+        .grand-total-row td {
+            padding: 12px 8px;
+            font-size: 11px;
+        }
+
+        /* Subtotal Row */
+        .subtotal-row {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+
+        .subtotal-row td {
+            padding: 8px;
+        }
+
+        /* Efficiency Bar */
+        .efficiency-section {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+        }
+
+        .efficiency-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+
+        .efficiency-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .efficiency-bar {
+            flex: 1;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .efficiency-fill {
+            height: 100%;
+            background: #3D90D7;
+            transition: width 0.3s;
+        }
+
+        .efficiency-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3D90D7;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 12px 24px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .footer p {
+            font-size: 9px;
+            color: #9ca3af;
+        }
+
+        /* Print Actions */
+        .print-actions {
+            max-width: 1100px;
+            margin: 20px auto 0;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background: #3D90D7;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #3580c0;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .document {
+                border: none;
+                border-radius: 0;
+                max-width: none;
+                width: 100%;
+            }
+
+            .print-actions,
+            .back-link,
+            .filter-bar {
+                display: none !important;
+            }
+
+        }
+
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+
+        /* Light Theme Filter Bar */
+        .filter-bar {
+            max-width: 1100px;
+            margin: 0 auto 16px;
+            padding: 12px 16px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .filter-bar .filter-label {
+            color: #374151;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .filter-bar .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-bar select {
+            padding: 8px 32px 8px 12px;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            color: #111827;
+            font-size: 13px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%23374151%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E');
+            background-position: right 8px center;
+            background-repeat: no-repeat;
+            background-size: 1.25em 1.25em;
+        }
+
+        .filter-bar select:focus {
+            outline: none;
+            border-color: #3D90D7;
+        }
+
+        .filter-bar .btn-apply {
+            padding: 8px 16px;
+            background: #3D90D7;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .filter-bar .btn-apply:hover {
+            background: #3580c0;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Back Link (Top Left) -->
+    <div class="back-link" style="position: absolute; top: 20px; left: 20px; z-index: 10;">
+        <a href="{{ route('reports') }}" style="text-decoration: none; color: #374151; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-chevron-left"></i> Back to Reports
+        </a>
+    </div>
+
+    <!-- Dark Theme Filter Bar -->
+    <div class="filter-bar" style="margin-top: 60px;">
+        <span class="filter-label"><i class="fas fa-filter" style="margin-right: 8px;"></i>Filter Report</span>
+        <div class="filter-controls">
+            <select id="filterMonth">
+                @for($m = 1; $m <= 12; $m++)
+                    <option value="{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}" {{ (request('month', now()->month) == $m) ? 'selected' : '' }}>
+                        {{ date('F', mktime(0, 0, 0, $m, 1)) }}
+                    </option>
+                @endfor
+            </select>
+            <select id="filterYear">
+                @for($y = now()->year; $y >= now()->year - 5; $y--)
+                    <option value="{{ $y }}" {{ (request('year', now()->year) == $y) ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
+            </select>
+            <button class="btn-apply" onclick="applyFilter()">
+                <i class="fas fa-sync-alt" style="margin-right: 6px;"></i>Apply
+            </button>
+        </div>
+    </div>
+
+    <div class="document">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-logo">
+                <img src="{{ asset('images/logo.png') }}" alt="IMWS Logo">
+            </div>
+            <h1>Initao Municipal Water System</h1>
+            <div class="subtitle">Municipal Government of Initao</div>
+            <div class="address">Municipal Hall Compound, Poblacion, Initao, Misamis Oriental 9022</div>
+        </div>
+
+        <!-- Document Title -->
+        <div class="doc-title">
+            @php
+                $month = request('month', now()->month);
+                $year = request('year', now()->year);
+                $periodDate = \Carbon\Carbon::create($year, $month, 1);
+            @endphp
+            <h2>Summary Status Report</h2>
+            <div class="date">For the Month of {{ $periodDate->format('F Y') }}</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            @php
+                // Get areas with service connections
+                $areas = \App\Models\Area::with(['customers.serviceConnection'])
+                    ->orderBy('a_desc')
+                    ->get();
+                
+                // Group areas by first letter for now
+                $groupedBySchedule = $areas->groupBy(fn($area) => substr($area->a_desc ?? $area->name ?? 'A', 0, 1));
+                
+                // Calculate grand totals
+                $grandConnections = 0;
+                $grandDisconnections = 0;
+                $grandReconnections = 0;
+                $grandConsumers = 0;
+                $grandBilling = 0;
+                $grandCollection = 0;
+                $grandUncollected = 0;
+            @endphp
+
+            <!-- Status Table -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">Schedule</th>
+                        <th style="width: 18%;">Area</th>
+                        <th style="width: 9%;">New Conn.</th>
+                        <th style="width: 9%;">Disconn.</th>
+                        <th style="width: 9%;">Reconn.</th>
+                        <th style="width: 9%;">Consumers</th>
+                        <th style="width: 12%;">Billing</th>
+                        <th style="width: 12%;">Collection</th>
+                        <th style="width: 12%;">Uncollected</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($groupedBySchedule as $scheduleNo => $scheduleAreas)
+                        @php
+                            $scheduleConnections = 0;
+                            $scheduleDisconnections = 0;
+                            $scheduleReconnections = 0;
+                            $scheduleConsumers = 0;
+                            $scheduleBilling = 0;
+                            $scheduleCollection = 0;
+                            $scheduleUncollected = 0;
+                        @endphp
+
+                        <!-- Schedule Header -->
+                        <tr class="schedule-header">
+                            <td colspan="9"><i class="fas fa-folder" style="margin-right: 6px;"></i>Schedule {{ $scheduleNo ?? 'N/A' }}</td>
+                        </tr>
+
+                        @foreach($scheduleAreas as $area)
+                            @php
+                                // Calculate area statistics
+                                $areaCustomers = $area->customers ?? collect();
+                                $activeConnections = $areaCustomers->filter(fn($c) => $c->serviceConnection?->stat_id == 2)->count();
+                                
+                                // Get new connections this month
+                                $newConnections = \App\Models\ServiceConnection::whereHas('customer', fn($q) => $q->where('area_id', $area->id))
+                                    ->whereMonth('created_at', $month)
+                                    ->whereYear('created_at', $year)
+                                    ->count();
+                                
+                                // Disconnections and reconnections (simplified)
+                                $disconnections = 0;
+                                $reconnections = 0;
+                                
+                                // Get billing for the area this month
+                                $areaBilling = \App\Models\WaterBill::whereHas('customer', fn($q) => $q->where('area_id', $area->id))
+                                    ->whereMonth('billing_date', $month)
+                                    ->whereYear('billing_date', $year)
+                                    ->sum('total_amount');
+                                
+                                // Get collection for the area this month
+                                $areaCollection = \App\Models\Payment::whereHas('waterBill.customer', fn($q) => $q->where('area_id', $area->id))
+                                    ->whereMonth('payment_date', $month)
+                                    ->whereYear('payment_date', $year)
+                                    ->sum('amount_received');
+                                
+                                $areaUncollected = $areaBilling - $areaCollection;
+                                
+                                // Add to schedule totals
+                                $scheduleConnections += $newConnections;
+                                $scheduleDisconnections += $disconnections;
+                                $scheduleReconnections += $reconnections;
+                                $scheduleConsumers += $areaCustomers->count();
+                                $scheduleBilling += $areaBilling;
+                                $scheduleCollection += $areaCollection;
+                                $scheduleUncollected += $areaUncollected;
+                            @endphp
+                            <tr>
+                                <td class="text-center">{{ $area->schedule_no ?? '-' }}</td>
+                                <td class="text-left">{{ $area->name ?? $area->a_desc }}</td>
+                                <td class="text-center">{{ $newConnections }}</td>
+                                <td class="text-center">{{ $disconnections }}</td>
+                                <td class="text-center">{{ $reconnections }}</td>
+                                <td class="text-center">{{ $areaCustomers->count() }}</td>
+                                <td class="text-right">₱ {{ number_format($areaBilling, 2) }}</td>
+                                <td class="text-right">₱ {{ number_format($areaCollection, 2) }}</td>
+                                <td class="text-right">₱ {{ number_format($areaUncollected, 2) }}</td>
+                            </tr>
+                        @endforeach
+
+                        <!-- Schedule Subtotal -->
+                        <tr class="subtotal-row">
+                            <td colspan="2" class="text-right">Schedule {{ $scheduleNo ?? 'N/A' }} Total:</td>
+                            <td class="text-center">{{ $scheduleConnections }}</td>
+                            <td class="text-center">{{ $scheduleDisconnections }}</td>
+                            <td class="text-center">{{ $scheduleReconnections }}</td>
+                            <td class="text-center">{{ $scheduleConsumers }}</td>
+                            <td class="text-right">₱ {{ number_format($scheduleBilling, 2) }}</td>
+                            <td class="text-right">₱ {{ number_format($scheduleCollection, 2) }}</td>
+                            <td class="text-right">₱ {{ number_format($scheduleUncollected, 2) }}</td>
+                        </tr>
+
+                        @php
+                            $grandConnections += $scheduleConnections;
+                            $grandDisconnections += $scheduleDisconnections;
+                            $grandReconnections += $scheduleReconnections;
+                            $grandConsumers += $scheduleConsumers;
+                            $grandBilling += $scheduleBilling;
+                            $grandCollection += $scheduleCollection;
+                            $grandUncollected += $scheduleUncollected;
+                        @endphp
+                    @empty
+                        <tr>
+                            <td colspan="9" class="text-center" style="padding: 40px; color: #6b7280;">
+                                No data available.
+                            </td>
+                        </tr>
+                    @endforelse
+
+                    <!-- Grand Total -->
+                    @if($grandConsumers > 0)
+                        <tr class="grand-total-row">
+                            <td colspan="2" class="text-right">GRAND TOTAL:</td>
+                            <td class="text-center">{{ $grandConnections }}</td>
+                            <td class="text-center">{{ $grandDisconnections }}</td>
+                            <td class="text-center">{{ $grandReconnections }}</td>
+                            <td class="text-center">{{ $grandConsumers }}</td>
+                            <td class="text-right">₱ {{ number_format($grandBilling, 2) }}</td>
+                            <td class="text-right">₱ {{ number_format($grandCollection, 2) }}</td>
+                            <td class="text-right">₱ {{ number_format($grandUncollected, 2) }}</td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Generated on {{ now()->format('F d, Y h:i A') }} • Initao Municipal Water System</p>
+        </div>
+    </div>
+
+    <!-- Print Actions (Bottom Right Aligned) -->
+    <div class="print-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+        <a href="{{ route('reports.summary-status') }}?export=pdf&month={{ request('month', now()->month) }}&year={{ request('year', now()->year) }}" class="btn btn-secondary">
+            <i class="fas fa-file-pdf"></i> Export PDF
+        </a>
+        <a href="{{ route('reports.summary-status') }}?export=excel&month={{ request('month', now()->month) }}&year={{ request('year', now()->year) }}" class="btn btn-secondary">
+            <i class="fas fa-file-excel"></i> Export Excel
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Print Document
+        </button>
+    </div>
+
+    <script>
+        function applyFilter() {
+            const month = document.getElementById('filterMonth').value;
+            const year = document.getElementById('filterYear').value;
+            window.location.href = `{{ route('reports.summary-status') }}?month=${month}&year=${year}`;
+        }
+    </script>
+</body>
+</html>
