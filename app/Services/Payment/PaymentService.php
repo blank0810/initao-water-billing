@@ -208,34 +208,35 @@ class PaymentService
         $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
         $paidStatusId = Status::getIdByDescription(Status::PAID);
 
-        // Find the bill and validate it's unpaid
-        $bill = WaterBillHistory::with(['serviceConnection.customer', 'period'])
-            ->where('bill_id', $billId)
-            ->whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))
-            ->lockForUpdate()
-            ->first();
-
-        if (! $bill) {
-            throw new \Exception('Bill not found or already paid.');
-        }
-
-        $totalDue = $bill->water_amount + $bill->adjustment_total;
-
-        // Validate payment amount (full payment required)
-        if ($amountReceived < $totalDue) {
-            throw new \Exception(
-                'Full payment required. Amount due: ₱'.number_format($totalDue, 2).
-                '. Received: ₱'.number_format($amountReceived, 2)
-            );
-        }
-
-        $change = $amountReceived - $totalDue;
-        $connection = $bill->serviceConnection;
-        $customer = $connection->customer;
-
+        // Wrap everything in a transaction so lockForUpdate() is effective
         return DB::transaction(function () use (
-            $bill, $connection, $customer, $amountReceived, $totalDue, $change, $userId, $paidStatusId, $activeStatusId
+            $billId, $amountReceived, $userId, $activeStatusId, $overdueStatusId, $paidStatusId
         ) {
+            // Find the bill with lock to prevent concurrent payments
+            $bill = WaterBillHistory::with(['serviceConnection.customer', 'period'])
+                ->where('bill_id', $billId)
+                ->whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))
+                ->lockForUpdate()
+                ->first();
+
+            if (! $bill) {
+                throw new \Exception('Bill not found or already paid.');
+            }
+
+            $totalDue = $bill->water_amount + $bill->adjustment_total;
+
+            // Validate payment amount (full payment required)
+            if ($amountReceived < $totalDue) {
+                throw new \Exception(
+                    'Full payment required. Amount due: ₱'.number_format($totalDue, 2).
+                    '. Received: ₱'.number_format($amountReceived, 2)
+                );
+            }
+
+            $change = $amountReceived - $totalDue;
+            $connection = $bill->serviceConnection;
+            $customer = $connection->customer;
+
             // 1. Create Payment record
             $payment = Payment::create([
                 'receipt_no' => $this->generateReceiptNumber(),
