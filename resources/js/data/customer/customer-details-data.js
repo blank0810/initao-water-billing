@@ -17,6 +17,9 @@
     // Store customer ID globally for ledger tab and other components
     window.currentCustomerId = customerId;
 
+    // Store service connections data for modal access
+    let serviceConnectionsData = [];
+
     /**
      * Fetch customer details from API
      */
@@ -155,6 +158,9 @@
         const tbody = document.getElementById('connections-tbody');
         if (!tbody) return;
 
+        // Store connections data for modal access
+        serviceConnectionsData = connections;
+
         tbody.innerHTML = connections.map(conn => `
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
@@ -228,9 +234,37 @@
     /**
      * View connection details (placeholder for modal)
      */
+    /**
+     * View connection details in modal
+     * Finds the connection by ID and opens the connection details modal
+     */
     function viewConnectionDetails(connectionId) {
-        console.log('View connection details:', connectionId);
-        // TODO: Implement connection details modal if needed
+        // Find the connection data by ID
+        const connection = serviceConnectionsData.find(
+            conn => conn.connection_id === connectionId
+        );
+
+        if (!connection) {
+            console.error('Connection not found:', connectionId);
+            return;
+        }
+
+        // Check if the modal function exists (from connection-details.blade.php component)
+        if (typeof window.openConnectionDetailsModal === 'function') {
+            // Map our data format to what the modal expects
+            window.openConnectionDetailsModal({
+                connection_id: connection.connection_id,
+                account_no: connection.account_no,
+                customer_type: connection.account_type,
+                connection_status: connection.status,
+                meter_no: connection.meter_no,
+                date_installed: connection.date_installed,
+                meterReader: connection.meter_reader,
+                area: connection.area
+            });
+        } else {
+            console.warn('Connection details modal not available');
+        }
     }
 
     /**
