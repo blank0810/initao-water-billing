@@ -431,7 +431,7 @@
     </div>
 
     <!-- Assign Meter Modal -->
-    <div id="assignMeterModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div id="assignMeterModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4" data-connection-id="{{ $connData?->connection_id }}">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full">
             <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -784,8 +784,9 @@
             return;
         }
 
-        const el = document.querySelector('[x-data]');
-        const connId = el?.__x?.$data?.connection?.id;
+        // Get connection ID from data attribute
+        const modal = document.getElementById('assignMeterModal');
+        const connId = modal?.dataset?.connectionId;
 
         if (!connId) {
             alert('Connection ID not found');
