@@ -172,7 +172,7 @@ class PaymentService
     public function getWaterBillDetails(int $billId): ?WaterBillHistory
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
 
         return WaterBillHistory::with([
             'serviceConnection.customer',
@@ -205,7 +205,7 @@ class PaymentService
     public function processWaterBillPayment(int $billId, float $amountReceived, int $userId): array
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
         $paidStatusId = Status::getIdByDescription(Status::PAID);
 
         // Find the bill and validate it's unpaid
