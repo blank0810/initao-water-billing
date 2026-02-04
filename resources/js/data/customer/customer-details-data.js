@@ -181,23 +181,57 @@
                     </span>
                 </td>
                 <td class="px-4 py-3 text-center">
-                    <button onclick="viewConnectionDetails(${conn.connection_id})"
-                            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    <button data-connection-id="${conn.connection_id}"
+                            class="view-connection-btn text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                             title="View Details">
                         <i class="fas fa-eye"></i>
                     </button>
                 </td>
             </tr>
         `).join('');
+
+        // Attach delegated click listener for connection view buttons
+        attachConnectionViewListeners();
+    }
+
+    /**
+     * Attach delegated event listener for connection view buttons
+     * Uses event delegation on the table body to handle dynamically created buttons
+     */
+    function attachConnectionViewListeners() {
+        const tbody = document.getElementById('connections-tbody');
+        if (!tbody) return;
+
+        // Remove existing listener to prevent duplicates (using a named function)
+        tbody.removeEventListener('click', handleConnectionClick);
+        tbody.addEventListener('click', handleConnectionClick);
+    }
+
+    /**
+     * Handle click events on connection view buttons
+     */
+    function handleConnectionClick(event) {
+        const button = event.target.closest('.view-connection-btn');
+        if (!button) return;
+
+        const connectionId = button.dataset.connectionId;
+
+        // Validate connection ID is a positive integer
+        if (!connectionId || !/^\d+$/.test(connectionId)) {
+            console.error('Invalid connection ID:', connectionId);
+            return;
+        }
+
+        viewConnectionDetails(parseInt(connectionId, 10));
     }
 
     /**
      * View connection details (placeholder for modal)
      */
-    window.viewConnectionDetails = function(connectionId) {
+    function viewConnectionDetails(connectionId) {
         console.log('View connection details:', connectionId);
         // TODO: Implement connection details modal if needed
-    };
+    }
 
     /**
      * Escape HTML to prevent XSS
