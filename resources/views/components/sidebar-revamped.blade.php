@@ -45,9 +45,9 @@ $user = Auth::user() ?? (object) [
         @can('users.view')
         <div>
             <button @click="toggleSubmenu('userManagement')"
-                :class="[activeMenu.startsWith('user-') && 'active', openSubmenus.userManagement && 'icon-glow']"
-                class="nav-btn w-full"
-                :data-tooltip="!sidebarOpen ? 'Users' : null">
+                :class="activeMenu.startsWith('user-') && 'active'"
+                class="nav-btn nav-btn-submenu"
+                :data-tooltip="!sidebarOpen ? 'User Management' : null">
                 <span class="nav-btn-notch"></span>
                 <div class="nav-btn-icon">
                     <i class="fas fa-users"></i>
@@ -81,9 +81,9 @@ $user = Auth::user() ?? (object) [
         @can('customers.manage')
         <div>
             <button @click="toggleSubmenu('connectionManagement')"
-                :class="[activeMenu.startsWith('connection-') && 'active', openSubmenus.connectionManagement && 'icon-glow']"
-                class="nav-btn w-full"
-                :data-tooltip="!sidebarOpen ? 'Connections' : null">
+                :class="activeMenu.startsWith('connection-') && 'active'"
+                class="nav-btn nav-btn-submenu"
+                :data-tooltip="!sidebarOpen ? 'Connection Management' : null">
                 <span class="nav-btn-notch"></span>
                 <div class="nav-btn-icon">
                     <i class="fas fa-plug"></i>
@@ -122,9 +122,9 @@ $user = Auth::user() ?? (object) [
         @can('customers.view')
         <div>
             <button @click="toggleSubmenu('customerManagement')"
-                :class="[activeMenu.startsWith('customer-') && 'active', openSubmenus.customerManagement && 'icon-glow']"
-                class="nav-btn w-full"
-                :data-tooltip="!sidebarOpen ? 'Customers' : null">
+                :class="activeMenu.startsWith('customer-') && 'active'"
+                class="nav-btn nav-btn-submenu"
+                :data-tooltip="!sidebarOpen ? 'Customer Management' : null">
                 <span class="nav-btn-notch"></span>
                 <div class="nav-btn-icon">
                     <i class="fas fa-user-tie"></i>
@@ -224,17 +224,17 @@ $user = Auth::user() ?? (object) [
         </a>
         @endcan
 
-        <!-- Analytics -->
+        <!-- Reports -->
         @can('reports.view')
-        <a href="{{ route('analytics') }}" @click="setActiveMenu('analytics')"
-            :class="activeMenu === 'analytics' && 'active'"
+        <a href="{{ route('reports') }}" @click="setActiveMenu('reports')"
+            :class="activeMenu === 'reports' && 'active'"
             class="nav-btn"
-            :data-tooltip="!sidebarOpen ? 'Analytics' : null">
+            :data-tooltip="!sidebarOpen ? 'Reports' : null">
             <span class="nav-btn-notch"></span>
             <div class="nav-btn-icon">
-                <i class="fas fa-chart-line"></i>
+                <i class="fas fa-file-alt"></i>
             </div>
-            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Analytics</span>
+            <span class="nav-btn-text" x-show="sidebarOpen" x-transition.opacity.duration.200ms>Reports</span>
         </a>
         @endcan
 
@@ -242,9 +242,9 @@ $user = Auth::user() ?? (object) [
         @canany(['config.geographic.manage', 'config.billing.manage', 'config.access.manage'])
         <div>
             <button @click="toggleSubmenu('adminConfig')"
-                :class="[activeMenu.startsWith('config-') && 'active', openSubmenus.adminConfig && 'icon-glow']"
-                class="nav-btn w-full"
-                :data-tooltip="!sidebarOpen ? 'Config' : null">
+                :class="activeMenu.startsWith('config-') && 'active'"
+                class="nav-btn nav-btn-submenu"
+                :data-tooltip="!sidebarOpen ? 'Admin Configuration' : null">
                 <span class="nav-btn-notch"></span>
                 <div class="nav-btn-icon">
                     <i class="fas fa-cogs"></i>
@@ -253,7 +253,7 @@ $user = Auth::user() ?? (object) [
                 <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.adminConfig && 'rotated'" x-show="sidebarOpen" x-transition.opacity></i>
             </button>
 
-            <div x-show="openSubmenus.adminConfig && sidebarOpen" x-collapse class="ml-3 pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-1 mt-1">
+            <div x-show="openSubmenus.adminConfig && sidebarOpen" x-collapse class="nav-submenu">
 
                 <!-- Geographic Submenu -->
                 @can('config.geographic.manage')
@@ -426,7 +426,7 @@ $user = Auth::user() ?? (object) [
                     '/meter/management': 'meter-management',
                     '/rate/management': 'rate-management',
                     '/ledger/management': 'ledger-management',
-                    '/analytics': 'analytics',
+                    '/reports': 'reports',
                     '/config/barangays': 'config-geographic-barangays',
                     '/config/areas': 'config-geographic-areas',
                     '/config/puroks': 'config-geographic-puroks',
