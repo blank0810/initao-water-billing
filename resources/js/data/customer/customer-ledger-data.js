@@ -477,6 +477,7 @@ function populateLedgerEntryModal(data) {
 
 /**
  * Format source document details for display
+ * All values are escaped to prevent XSS attacks
  */
 function formatSourceDetails(source) {
     if (source.type === 'BILL') {
@@ -484,27 +485,27 @@ function formatSourceDetails(source) {
             <div class="grid grid-cols-2 gap-3 text-sm">
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Billing Period</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.period}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.period)}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Due Date</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.due_date}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.due_date)}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Previous Reading</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.prev_reading}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.prev_reading)}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Current Reading</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.curr_reading}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.curr_reading)}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Consumption</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.consumption}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.consumption)}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Total Amount</p>
-                    <p class="font-semibold text-red-600">${source.total_amount}</p>
+                    <p class="font-semibold text-red-600">${escapeHtml(source.total_amount)}</p>
                 </div>
             </div>
         `;
@@ -513,19 +514,19 @@ function formatSourceDetails(source) {
             <div class="grid grid-cols-2 gap-3 text-sm">
                 <div class="col-span-2">
                     <p class="text-xs text-gray-500 dark:text-gray-400">Charge Item</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.charge_item}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.charge_item)}</p>
                 </div>
                 <div class="col-span-2">
                     <p class="text-xs text-gray-500 dark:text-gray-400">Description</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.description || '-'}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.description) || '-'}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Quantity x Unit Price</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.quantity} x ${source.unit_amount}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.quantity)} x ${escapeHtml(source.unit_amount)}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Total Amount</p>
-                    <p class="font-semibold text-red-600">${source.total_amount}</p>
+                    <p class="font-semibold text-red-600">${escapeHtml(source.total_amount)}</p>
                 </div>
             </div>
         `;
@@ -534,19 +535,19 @@ function formatSourceDetails(source) {
             <div class="grid grid-cols-2 gap-3 text-sm">
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Receipt Number</p>
-                    <p class="font-mono font-medium text-gray-900 dark:text-white">${source.receipt_no}</p>
+                    <p class="font-mono font-medium text-gray-900 dark:text-white">${escapeHtml(source.receipt_no)}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Payment Date</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.payment_date}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.payment_date)}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Amount Received</p>
-                    <p class="font-semibold text-green-600">${source.amount_received}</p>
+                    <p class="font-semibold text-green-600">${escapeHtml(source.amount_received)}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Processed By</p>
-                    <p class="font-medium text-gray-900 dark:text-white">${source.processed_by}</p>
+                    <p class="font-medium text-gray-900 dark:text-white">${escapeHtml(source.processed_by)}</p>
                 </div>
             </div>
         `;
