@@ -360,13 +360,13 @@
         <div class="content">
             @php
                 $search = request('search', '');
-                $billsQuery = \App\Models\WaterBill::with(['customer.consumer', 'customer.area'])
-                    ->orderBy('billing_date', 'desc');
+                $billsQuery = \App\Models\WaterBillHistory::with(['serviceConnection.customer', 'serviceConnection.area', 'period', 'status'])
+                    ->orderBy('created_at', 'desc');
                 
                 if ($search) {
-                    $billsQuery->whereHas('customer', function($q) use ($search) {
+                    $billsQuery->whereHas('serviceConnection', function($q) use ($search) {
                         $q->where('account_no', 'like', "%{$search}%")
-                          ->orWhereHas('consumer', function($q2) use ($search) {
+                          ->orWhereHas('customer', function($q2) use ($search) {
                               $q2->whereRaw("CONCAT(cust_first_name, ' ', cust_last_name) LIKE ?", ["%{$search}%"]);
                           });
                     });
@@ -385,7 +385,7 @@
                             <th style="width: 12%;">Bill No.</th>
                             <th style="width: 12%;">Account No.</th>
                             <th style="width: 20%;">Consumer Name</th>
-                            <th style="width: 12%;">Billing Date</th>
+                            <th style="width: 12%;">Billing Period</th>
                             <th style="width: 12%;">Due Date</th>
                             <th style="width: 10%;">Volume (m³)</th>
                             <th style="width: 12%;">Amount</th>
@@ -394,20 +394,24 @@
                     </thead>
                     <tbody>
                         @foreach($bills as $index => $bill)
+                            @php
+                                $customer = $bill->serviceConnection?->customer;
+                                $customerName = $customer ? trim($customer->cust_first_name . ' ' . $customer->cust_last_name) : 'N/A';
+                                $paidStatusId = \App\Models\Status::getIdByDescription('PAID');
+                                $isPaid = $bill->stat_id == $paidStatusId;
+                            @endphp
                             <tr>
                                 <td class="text-center">{{ $index + 1 }}</td>
-                                <td class="text-center">{{ $bill->bill_no ?? 'N/A' }}</td>
-                                <td class="text-center">{{ $bill->customer?->account_no ?? 'N/A' }}</td>
-                                <td class="text-left">{{ $bill->customer?->consumer?->full_name ?? 'N/A' }}</td>
-                                <td class="text-center">{{ $bill->billing_date ? \Carbon\Carbon::parse($bill->billing_date)->format('m/d/Y') : '-' }}</td>
+                                <td class="text-center">{{ str_pad($bill->bill_id, 6, '0', STR_PAD_LEFT) }}</td>
+                                <td class="text-center">{{ $bill->serviceConnection?->account_no ?? 'N/A' }}</td>
+                                <td class="text-left">{{ $customerName }}</td>
+                                <td class="text-center">{{ $bill->period?->per_name ?? '-' }}</td>
                                 <td class="text-center">{{ $bill->due_date ? \Carbon\Carbon::parse($bill->due_date)->format('m/d/Y') : '-' }}</td>
                                 <td class="text-right">{{ number_format($bill->consumption ?? 0, 2) }}</td>
                                 <td class="text-right">₱ {{ number_format($bill->total_amount ?? 0, 2) }}</td>
                                 <td class="text-center">
-                                    @if($bill->payment_status == 'paid')
+                                    @if($isPaid)
                                         <span style="color: #16a34a; font-weight: 600;">Paid</span>
-                                    @elseif($bill->payment_status == 'partial')
-                                        <span style="color: #f59e0b; font-weight: 600;">Partial</span>
                                     @else
                                         <span style="color: #dc2626; font-weight: 600;">Unpaid</span>
                                     @endif

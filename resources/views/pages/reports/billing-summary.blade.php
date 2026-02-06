@@ -391,24 +391,28 @@
         <!-- Content -->
         <div class="content">
             @php
-                $bills = \App\Models\WaterBill::with(['customer.consumer', 'customer.area'])
-                    ->whereMonth('billing_date', $month)
-                    ->whereYear('billing_date', $year)
+                // Get WaterBillHistory for the specified month/year
+                $paidStatusId = \App\Models\Status::getIdByDescription('PAID');
+                $bills = \App\Models\WaterBillHistory::with(['serviceConnection.customer', 'serviceConnection.area', 'period', 'currentReading'])
+                    ->whereHas('period', function($q) use ($month, $year) {
+                        $q->whereMonth('start_date', $month)
+                          ->whereYear('start_date', $year);
+                    })
                     ->get();
                 
                 $groupedByArea = $bills->groupBy(function($bill) {
-                    return $bill->customer?->area?->name ?? 'Unassigned';
+                    return $bill->serviceConnection?->area?->name ?? 'Unassigned';
                 })->sortKeys();
                 
                 $grandTotalVolume = 0;
                 $grandTotalAmount = 0;
-                $paidCount = $bills->where('payment_status', 'paid')->count();
-                $unpaidCount = $bills->where('payment_status', '!=', 'paid')->count();
+                $paidCount = $bills->where('stat_id', $paidStatusId)->count();
+                $unpaidCount = $bills->where('stat_id', '!=', $paidStatusId)->count();
             @endphp
 
             @forelse($groupedByArea as $areaName => $areaBills)
                 @php
-                    $areaSchedule = $areaBills->first()?->customer?->area?->schedule_no ?? '-';
+                    $areaSchedule = '-'; // Could be derived from area if available
                     $areaTotalVolume = 0;
                     $areaTotalAmount = 0;
                 @endphp
@@ -433,12 +437,17 @@
                                 @php
                                     $areaTotalVolume += $bill->consumption ?? 0;
                                     $areaTotalAmount += $bill->total_amount ?? 0;
+                                    $customer = $bill->serviceConnection?->customer;
+                                    $customerName = $customer ? trim($customer->cust_first_name . ' ' . $customer->cust_last_name) : 'N/A';
+                                    $readDate = $bill->currentReading?->reading_date ?? $bill->due_date;
+                                    $readDateFormatted = $readDate ? (is_string($readDate) ? \Carbon\Carbon::parse($readDate)->format('m/d/Y') : $readDate->format('m/d/Y')) : '-';
+                                    $dueDateFormatted = $bill->due_date ? (is_string($bill->due_date) ? \Carbon\Carbon::parse($bill->due_date)->format('m/d/Y') : $bill->due_date->format('m/d/Y')) : '-';
                                 @endphp
                                 <tr>
                                     <td class="text-center">{{ $index + 1 }}</td>
-                                    <td class="text-left">{{ $bill->customer?->consumer?->full_name ?? 'N/A' }}</td>
-                                    <td class="text-center">{{ $bill->billing_date ? \Carbon\Carbon::parse($bill->billing_date)->format('m/d/Y') : '-' }}</td>
-                                    <td class="text-center">{{ $bill->due_date ? \Carbon\Carbon::parse($bill->due_date)->format('m/d/Y') : '-' }}</td>
+                                    <td class="text-left">{{ $customerName }}</td>
+                                    <td class="text-center">{{ $readDateFormatted }}</td>
+                                    <td class="text-center">{{ $dueDateFormatted }}</td>
                                     <td class="text-right">{{ number_format($bill->consumption ?? 0) }} m³</td>
                                     <td class="text-right">₱ {{ number_format($bill->total_amount ?? 0, 2) }}</td>
                                 </tr>
