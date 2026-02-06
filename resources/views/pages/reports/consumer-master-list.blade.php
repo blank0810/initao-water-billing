@@ -358,9 +358,15 @@
         <!-- Content -->
         <div class="content">
             @php
-                $consumers = \App\Models\Consumer::orderBy('c_id')->get();
-                $totalActive = $consumers->filter(fn($c) => $c->stat_id == 2)->count();
-                $totalInactive = $consumers->count() - $totalActive;
+                // Get all service connections with their customers
+                $activeStatusId = \App\Models\Status::getIdByDescription('ACTIVE');
+                $connections = \App\Models\ServiceConnection::with(['customer', 'accountType', 'address.barangay', 'area', 'meterAssignments.meter', 'status'])
+                    ->whereHas('customer')
+                    ->orderBy('account_no')
+                    ->get();
+                
+                $totalActive = $connections->where('stat_id', $activeStatusId)->count();
+                $totalInactive = $connections->count() - $totalActive;
             @endphp
 
             <!-- Consumer Table -->
@@ -379,28 +385,30 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($consumers as $index => $customer)
+                    @forelse($connections as $index => $connection)
                         @php
-                            $connection = $customer->serviceConnection;
-                            $status = $connection?->status;
-                            $statusName = $status?->name ?? ($connection ? 'Active' : 'Inactive');
+                            $customer = $connection->customer;
+                            $status = $connection->status;
+                            $statusName = $status?->stat_desc ?? 'Unknown';
                             $statusClass = 'status-inactive';
-                            if ($connection?->stat_id == 2) {
+                            if ($connection->stat_id == $activeStatusId) {
                                 $statusClass = 'status-active';
                             } elseif (strtolower($statusName) == 'disconnected') {
                                 $statusClass = 'status-disconnected';
                             }
-                            $fullName = trim($customer->cust_last_name . ', ' . $customer->cust_first_name . ' ' . ($customer->cust_middle_name ?? ''));
+                            $fullName = $customer ? trim($customer->cust_last_name . ', ' . $customer->cust_first_name . ' ' . ($customer->cust_middle_name ?? '')) : 'N/A';
+                            $address = $connection->address ? ($connection->address->barangay?->b_desc ?? 'N/A') : 'N/A';
+                            $meterSerial = $connection->meterAssignments->whereNull('removed_at')->first()?->meter?->mtr_serial ?? '-';
                         @endphp
                         <tr>
                             <td class="text-center">{{ $index + 1 }}</td>
-                            <td class="text-center">{{ $customer->account_no ?? str_pad($customer->cust_id, 6, '0', STR_PAD_LEFT) }}</td>
+                            <td class="text-center">{{ $connection->account_no }}</td>
                             <td class="text-left">{{ $fullName }}</td>
-                            <td class="text-left">{{ $customer->consumer?->address ?? 'N/A' }}</td>
-                            <td class="text-center">{{ $customer->accountType?->name ?? 'N/A' }}</td>
-                            <td class="text-center">{{ $customer->consumer?->area?->name ?? 'N/A' }}</td>
-                            <td class="text-center">{{ $connection?->meter?->meter_serial ?? '-' }}</td>
-                            <td class="text-center">{{ $customer->created_at ? \Carbon\Carbon::parse($customer->created_at)->format('m/d/Y') : '-' }}</td>
+                            <td class="text-left">{{ $address }}</td>
+                            <td class="text-center">{{ $connection->accountType?->at_desc ?? 'N/A' }}</td>
+                            <td class="text-center">{{ $connection->area?->name ?? 'N/A' }}</td>
+                            <td class="text-center">{{ $meterSerial }}</td>
+                            <td class="text-center">{{ $connection->started_at ? \Carbon\Carbon::parse($connection->started_at)->format('m/d/Y') : '-' }}</td>
                             <td class="text-center">
                                 <span class="status-badge {{ $statusClass }}">{{ $statusName }}</span>
                             </td>
@@ -418,7 +426,7 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p>Total Records: {{ number_format($consumers->count()) }}</p>
+            <p>Total Records: {{ number_format($connections->count()) }}</p>
             <p>Generated on {{ now()->format('F d, Y h:i A') }} • Initao Municipal Water System</p>
         </div>
     </div>

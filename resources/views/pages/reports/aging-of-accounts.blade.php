@@ -341,14 +341,17 @@
             @php
                 // Calculate aging data
                 $today = now();
-                // Get unpaid bills through ServiceConnection and WaterBill relationships
-                $waterBills = \App\Models\WaterBill::where('payment_status', '!=', 'paid')
-                    ->with(['consumerLedger.consumer.customer'])
+                $paidStatusId = \App\Models\Status::getIdByDescription('PAID');
+                
+                // Get unpaid bills through WaterBillHistory
+                $waterBills = \App\Models\WaterBillHistory::with(['serviceConnection.customer', 'status'])
+                    ->where('stat_id', '!=', $paidStatusId)
+                    ->whereNotNull('due_date')
                     ->get();
                 
                 // Group by customer
                 $customerBills = $waterBills->groupBy(function($bill) {
-                    return $bill->consumerLedger?->consumer?->customer?->cust_id;
+                    return $bill->serviceConnection?->customer?->cust_id;
                 })->filter(fn($bills, $custId) => !is_null($custId));
 
                 $total30 = 0;
@@ -376,7 +379,7 @@
                     @php $rowNum = 0; @endphp
                     @forelse($customerBills as $custId => $bills)
                         @php
-                            $customer = $bills->first()?->consumerLedger?->consumer?->customer;
+                            $customer = $bills->first()?->serviceConnection?->customer;
                             if (!$customer) continue;
                             
                             $rowNum++;
@@ -389,15 +392,15 @@
                             foreach($bills as $bill) {
                                 $dueDate = \Carbon\Carbon::parse($bill->due_date);
                                 $daysOverdue = $today->diffInDays($dueDate, false);
-                                $amount = $bill->total_amount - ($bill->amount_paid ?? 0);
+                                $amount = $bill->total_amount;
 
-                                if ($daysOverdue <= 0) {
+                                if ($daysOverdue >= 0) {
                                     $current += $amount;
-                                } elseif ($daysOverdue <= 30) {
+                                } elseif ($daysOverdue >= -30) {
                                     $within30 += $amount;
-                                } elseif ($daysOverdue <= 60) {
+                                } elseif ($daysOverdue >= -60) {
                                     $days31to60 += $amount;
-                                } elseif ($daysOverdue <= 90) {
+                                } elseif ($daysOverdue >= -90) {
                                     $days61to90 += $amount;
                                 } else {
                                     $over90 += $amount;
@@ -413,7 +416,7 @@
                         <tr>
                             <td class="text-center">{{ $rowNum }}</td>
                             <td class="text-left">{{ trim($customer->cust_last_name . ', ' . $customer->cust_first_name) }}</td>
-                            <td class="text-center">{{ $customer->account_no ?? '-' }}</td>
+                            <td class="text-center">{{ $bills->first()?->serviceConnection?->account_no ?? '-' }}</td>
                             <td class="text-right">{{ $current > 0 ? '₱ ' . number_format($current, 2) : '-' }}</td>
                             <td class="text-right">{{ $within30 > 0 ? '₱ ' . number_format($within30, 2) : '-' }}</td>
                             <td class="text-right">{{ $days31to60 > 0 ? '₱ ' . number_format($days31to60, 2) : '-' }}</td>
