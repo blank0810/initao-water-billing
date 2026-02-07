@@ -393,12 +393,17 @@ class WaterBillService
         if ($connection->change_meter) {
             $meterChangeData = $this->getMeterChangeData($data['connection_id']);
 
-            if ($meterChangeData) {
-                $isMeterChange = true;
-                $oldMeterConsumption = $meterChangeData['old_meter_consumption'];
-                $newMeterConsumption = $consumption; // New meter: curr_reading - prev_reading (install_read)
-                $consumption = $oldMeterConsumption + $newMeterConsumption; // Combined total
+            if (! $meterChangeData) {
+                return [
+                    'success' => false,
+                    'message' => 'Meter change flag is set but no removed meter assignment found. Please verify meter change setup.',
+                ];
             }
+
+            $isMeterChange = true;
+            $oldMeterConsumption = $meterChangeData['old_meter_consumption'];
+            $newMeterConsumption = $consumption; // New meter: curr_reading - prev_reading (install_read)
+            $consumption = $oldMeterConsumption + $newMeterConsumption; // Combined total
         }
         // ============================================
         // NORMAL BILLING (change_meter = false)
@@ -1061,7 +1066,12 @@ class WaterBillService
         $oldMeterConsumption = null;
         $newMeterConsumption = null;
 
-        if ($isMeterChange && $uploadedReading->install_read !== null) {
+        if ($isMeterChange) {
+            // Validate meter change data is complete
+            if ($uploadedReading->install_read === null) {
+                return ['success' => false, 'message' => 'Meter change flag is set but install reading is missing.'];
+            }
+
             // New meter: previous reading is install_read (not previous_reading which is old meter's last billed)
             $prevReading = (float) $uploadedReading->install_read;
 
@@ -1073,12 +1083,17 @@ class WaterBillService
             $newMeterConsumption = $currReading - $prevReading;
             $consumption = $newMeterConsumption;
 
-            // Old meter consumption
+            // Old meter consumption - required for meter change
             $meterChangeData = $this->getMeterChangeData($uploadedReading->connection_id);
-            if ($meterChangeData) {
-                $oldMeterConsumption = $meterChangeData['old_meter_consumption'];
-                $consumption += $oldMeterConsumption; // Combined total
+            if (! $meterChangeData) {
+                return [
+                    'success' => false,
+                    'message' => 'Meter change flag is set but no removed meter assignment found. Please verify meter change setup.',
+                ];
             }
+
+            $oldMeterConsumption = $meterChangeData['old_meter_consumption'];
+            $consumption += $oldMeterConsumption; // Combined total
         } else {
             // ============================================
             // NORMAL BILLING (is_meter_change = false)
