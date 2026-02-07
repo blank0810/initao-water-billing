@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Models\CustomerLedger;
+use App\Models\MeterAssignment;
 use App\Models\Period;
 use App\Models\ReadingSchedule;
 use App\Models\ReadingScheduleEntry;
@@ -83,6 +84,32 @@ class MeterReadingDownloadService
             $activeMeterAssignment = $connection?->meterAssignments->first();
             $meter = $activeMeterAssignment?->meter;
 
+            // ============================================
+            // METER CHANGE DATA (change_meter = true)
+            // ============================================
+            $isMeterChange = $connection?->change_meter ?? false;
+            $removalRead = null;
+            $installRead = null;
+
+            if ($isMeterChange) {
+                // Get the previous (removed) meter assignment
+                $previousAssignment = MeterAssignment::where('connection_id', $connectionId)
+                    ->whereNotNull('removed_at')
+                    ->whereNotNull('removal_read')
+                    ->latest('removed_at')
+                    ->first();
+
+                if ($previousAssignment) {
+                    $removalRead = (float) $previousAssignment->removal_read;
+                }
+
+                // Get install_read from current assignment
+                if ($activeMeterAssignment) {
+                    $installRead = (float) $activeMeterAssignment->install_read;
+                }
+            }
+            // ============================================
+
             // Get previous reading value from the previous period's bill current reading
             // Fall back to install_read from MeterAssignment if no previous reading exists
             $previousReadingValue = null;
@@ -113,6 +140,12 @@ class MeterReadingDownloadService
                 if ($previousReadingValue === null && $activeMeterAssignment) {
                     $previousReadingValue = $activeMeterAssignment->install_read;
                 }
+
+                // For meter change, keep previous_reading as the last billed value
+                // so the mobile app can compute old meter consumption:
+                //   old_meter_consumption = removal_read - previous_reading (last billed)
+                // The install_read is sent separately for new meter consumption:
+                //   new_meter_consumption = current_reading - install_read
             }
 
             // Calculate arrear: sum of unpaid bills from previous periods
@@ -123,14 +156,14 @@ class MeterReadingDownloadService
                 $totalDebits = CustomerLedger::where('connection_id', $connectionId)
                     ->where('period_id', '<', $periodId)
                     ->where('stat_id', '=', 2)
-                    //->where('source_type', 'BILL')
+                    // ->where('source_type', 'BILL')
                     ->sum('debit');
 
                 // Get total credits (payments) from CustomerLedger for previous periods
                 $totalCredits = CustomerLedger::where('connection_id', $connectionId)
                     ->where('period_id', '<', $periodId)
                     ->where('stat_id', '=', 2)
-                    //->where('source_type', 'PAYMENT')
+                    // ->where('source_type', 'PAYMENT')
                     ->sum('credit');
 
                 $arrear = max(0, (float) $totalDebits - (float) $totalCredits);
@@ -190,6 +223,10 @@ class MeterReadingDownloadService
                 'penalty' => $penalty,
                 'sequence_order' => $entry->sequence_order,
                 'entry_status' => $entry->status?->stat_desc,
+                // Meter change fields for mobile app
+                'is_meter_change' => $isMeterChange,
+                'removal_read' => $removalRead,
+                'install_read' => $installRead,
             ];
         });
 

@@ -33,6 +33,9 @@ class UploadedReading extends Model
         'reading_date',
         'site_bill_amount',
         'computed_amount',
+        'is_meter_change',
+        'removal_read',
+        'install_read',
         'is_printed',
         'is_scanned',
         'photo_path',
@@ -50,6 +53,9 @@ class UploadedReading extends Model
         'penalty' => 'decimal:2',
         'site_bill_amount' => 'decimal:2',
         'computed_amount' => 'decimal:2',
+        'is_meter_change' => 'boolean',
+        'removal_read' => 'decimal:3',
+        'install_read' => 'decimal:3',
         'reading_date' => 'date',
         'is_printed' => 'boolean',
         'is_scanned' => 'boolean',
@@ -100,12 +106,32 @@ class UploadedReading extends Model
     }
 
     /**
-     * Calculate consumption (present reading - previous reading).
+     * Calculate consumption accounting for meter change scenarios.
+     *
+     * Normal: present_reading - previous_reading
+     * Meter change: (present_reading - install_read) + (removal_read - previous_reading)
      */
     public function getConsumptionAttribute(): ?float
     {
         if ($this->present_reading === null || $this->previous_reading === null) {
             return null;
+        }
+
+        if ($this->is_meter_change) {
+            $newMeterConsumption = 0;
+            $oldMeterConsumption = 0;
+
+            // New meter: present_reading - install_read
+            if ($this->install_read !== null) {
+                $newMeterConsumption = max(0, (float) $this->present_reading - (float) $this->install_read);
+            }
+
+            // Old meter: removal_read - previous_reading (last billed)
+            if ($this->removal_read !== null) {
+                $oldMeterConsumption = max(0, (float) $this->removal_read - (float) $this->previous_reading);
+            }
+
+            return $newMeterConsumption + $oldMeterConsumption;
         }
 
         return max(0, (float) $this->present_reading - (float) $this->previous_reading);

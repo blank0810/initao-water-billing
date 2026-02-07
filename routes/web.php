@@ -264,6 +264,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/water-bills/consumers', [\App\Http\Controllers\WaterBillController::class, 'getConsumerBillingList'])->name('water-bills.consumers');
         Route::get('/water-bills/billed-consumers', [\App\Http\Controllers\WaterBillController::class, 'getBilledConsumersByPeriod'])->name('water-bills.billed-consumers');
         Route::get('/water-bills/summary', [\App\Http\Controllers\WaterBillController::class, 'getBillingSummary'])->name('water-bills.summary');
+        Route::get('/water-bills/{billId}/print', [\App\Http\Controllers\WaterBillController::class, 'printBill'])->name('water-bills.print');
 
         // Area Management API
         Route::get('/areas/list', [\App\Http\Controllers\AreaController::class, 'index'])->name('areas.list');

@@ -131,6 +131,9 @@
                                 <button @click="viewBill(bill)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                <a :href="'/water-bills/' + bill.bill_id + '/print'" target="_blank" class="text-green-600 hover:text-green-900 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 p-2 rounded inline-block" title="Print Statement">
+                                    <i class="fas fa-print"></i>
+                                </a>
                             </td>
                         </tr>
                     </template>

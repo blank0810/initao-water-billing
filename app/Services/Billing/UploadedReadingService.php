@@ -2,6 +2,8 @@
 
 namespace App\Services\Billing;
 
+use App\Models\MeterAssignment;
+use App\Models\MeterReading;
 use App\Models\ReadingSchedule;
 use App\Models\ReadingScheduleEntry;
 use App\Models\ServiceConnection;
@@ -142,6 +144,9 @@ class UploadedReadingService
                 'reading_date' => $readingData['reading_date'] ?? null,
                 'site_bill_amount' => $readingData['site_bill_amount'] ?? null,
                 'computed_amount' => $computedAmount,
+                'is_meter_change' => $readingData['is_meter_change'] ?? false,
+                'removal_read' => $readingData['removal_read'] ?? null,
+                'install_read' => $readingData['install_read'] ?? null,
                 'is_printed' => $readingData['is_printed'] ?? false,
                 'is_scanned' => $readingData['is_scanned'] ?? false,
                 'photo_path' => $photoPath ?? $existingPhotoPath,
@@ -189,16 +194,51 @@ class UploadedReadingService
      */
     private function calculateBillAmount(array $readingData): ?float
     {
-        $previousReading = $readingData['previous_reading'] ?? 0;
         $presentReading = $readingData['present_reading'] ?? 0;
-        $consumption = max(0, $presentReading - $previousReading);
+
+        // ============================================
+        // METER CHANGE HANDLING (is_meter_change = true)
+        // ============================================
+        $isMeterChange = $readingData['is_meter_change'] ?? false;
+
+        if ($isMeterChange && isset($readingData['install_read'])) {
+            // New meter consumption: current reading - install_read
+            // (previous_reading holds the old meter's last billed value, not install_read)
+            $newMeterPrevReading = (float) $readingData['install_read'];
+            $consumption = max(0, $presentReading - $newMeterPrevReading);
+
+            // Old meter consumption: removal_read - last billed reading
+            if (isset($readingData['removal_read'])) {
+                $connection = ServiceConnection::find($readingData['connection_id']);
+
+                if ($connection) {
+                    $previousAssignment = MeterAssignment::where('connection_id', $readingData['connection_id'])
+                        ->whereNotNull('removed_at')
+                        ->whereNotNull('removal_read')
+                        ->latest('removed_at')
+                        ->first();
+
+                    if ($previousAssignment) {
+                        $oldMeterPrevReading = $this->getLastReadingForOldMeter($previousAssignment);
+                        $oldMeterConsumption = max(0, (float) $readingData['removal_read'] - $oldMeterPrevReading);
+                        $consumption += $oldMeterConsumption; // Add old meter consumption to total
+                    }
+                }
+            }
+        } else {
+            // ============================================
+            // NORMAL BILLING (is_meter_change = false)
+            // ============================================
+            $previousReading = $readingData['previous_reading'] ?? 0;
+            $consumption = max(0, $presentReading - $previousReading);
+        }
 
         if ($consumption <= 0) {
             return null;
         }
 
         // Get account_type_id from ServiceConnection
-        $connection = ServiceConnection::find($readingData['connection_id']);
+        $connection = $connection ?? ServiceConnection::find($readingData['connection_id']);
         $accountTypeId = $connection?->account_type_id;
 
         if (! $accountTypeId) {
@@ -216,6 +256,21 @@ class UploadedReadingService
         );
 
         return $billResult['success'] ? $billResult['amount'] : null;
+    }
+
+    /**
+     * Get the last reading for an old meter assignment.
+     */
+    private function getLastReadingForOldMeter(MeterAssignment $assignment): float
+    {
+        $lastReading = MeterReading::where('assignment_id', $assignment->assignment_id)
+            ->whereNotNull('period_id')
+            ->orderBy('reading_id', 'desc')
+            ->first();
+
+        return $lastReading
+            ? (float) $lastReading->reading_value
+            : (float) $assignment->install_read;
     }
 
     /**

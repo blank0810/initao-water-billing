@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Models\CustomerLedger;
+use App\Models\MeterAssignment;
 use App\Models\MeterReading;
 use App\Models\Period;
 use App\Models\ReadingSchedule;
@@ -69,6 +70,18 @@ class WaterBillService
 
                 $activeAssignment = $connection->meterAssignments->first();
 
+                // Get meter change data if applicable
+                $changeMeter = $connection->change_meter ?? false;
+                $removalRead = null;
+                if ($changeMeter) {
+                    $prevAssignment = MeterAssignment::where('connection_id', $connection->connection_id)
+                        ->whereNotNull('removed_at')
+                        ->whereNotNull('removal_read')
+                        ->latest('removed_at')
+                        ->first();
+                    $removalRead = $prevAssignment ? (float) $prevAssignment->removal_read : null;
+                }
+
                 return [
                     'connection_id' => $connection->connection_id,
                     'account_no' => $connection->account_no,
@@ -80,6 +93,8 @@ class WaterBillService
                     'meter_serial' => $activeAssignment?->meter?->mtr_serial ?? 'N/A',
                     'install_read' => $activeAssignment?->install_read ?? 0,
                     'label' => $connection->account_no.' - '.$customerName,
+                    'change_meter' => $changeMeter,
+                    'removal_read' => $removalRead,
                 ];
             });
     }
@@ -140,22 +155,30 @@ class WaterBillService
             ->orderBy('reading_id', 'desc')
             ->first();
 
-        if ($lastReading) {
-            return [
+        $result = $lastReading
+            ? [
                 'reading_id' => $lastReading->reading_id,
                 'reading_value' => (float) $lastReading->reading_value,
                 'reading_date' => $lastReading->reading_date?->format('Y-m-d'),
                 'period_id' => $lastReading->period_id,
+            ]
+            : [
+                'reading_id' => null,
+                'reading_value' => (float) $assignment->install_read,
+                'reading_date' => $assignment->installed_at?->format('Y-m-d'),
+                'period_id' => null,
             ];
+
+        // Add meter change context
+        $result['change_meter'] = $connection->change_meter ?? false;
+        if ($result['change_meter']) {
+            $meterChangeData = $this->getMeterChangeData($connectionId);
+            $result['old_meter_consumption'] = $meterChangeData['old_meter_consumption'] ?? 0;
+            $result['removal_read'] = $meterChangeData['removal_read'] ?? null;
+            $result['old_meter_previous_reading'] = $meterChangeData['old_meter_previous_reading'] ?? null;
         }
 
-        // Fall back to install reading
-        return [
-            'reading_id' => null,
-            'reading_value' => (float) $assignment->install_read,
-            'reading_date' => $assignment->installed_at?->format('Y-m-d'),
-            'period_id' => null,
-        ];
+        return $result;
     }
 
     /**
@@ -240,6 +263,72 @@ class WaterBillService
     }
 
     /**
+     * Get meter change data for a connection if change_meter flag is set.
+     *
+     * @return array|null Meter change data or null if not a meter change
+     */
+    private function getMeterChangeData(int $connectionId): ?array
+    {
+        $connection = ServiceConnection::find($connectionId);
+
+        // ============================================
+        // NORMAL BILLING (change_meter = false)
+        // ============================================
+        if (! $connection || ! $connection->change_meter) {
+            return null;
+        }
+
+        // ============================================
+        // METER CHANGE BILLING (change_meter = true)
+        // ============================================
+        // Get the previously removed meter assignment
+        $previousAssignment = MeterAssignment::where('connection_id', $connectionId)
+            ->whereNotNull('removed_at')
+            ->whereNotNull('removal_read')
+            ->latest('removed_at')
+            ->first();
+
+        if (! $previousAssignment) {
+            return null;
+        }
+
+        // Get the previous reading for the old meter (last billed or install_read)
+        $previousReading = $this->getLastReadingForAssignment($previousAssignment->assignment_id);
+
+        return [
+            'old_assignment_id' => $previousAssignment->assignment_id,
+            'removal_read' => (float) $previousAssignment->removal_read,
+            'old_meter_previous_reading' => $previousReading,
+            'old_meter_consumption' => max(0, (float) $previousAssignment->removal_read - $previousReading),
+        ];
+    }
+
+    /**
+     * Get the last reading value for a specific assignment.
+     */
+    private function getLastReadingForAssignment(int $assignmentId): float
+    {
+        $assignment = MeterAssignment::find($assignmentId);
+
+        if (! $assignment) {
+            return 0;
+        }
+
+        // Try to get the last billed reading
+        $lastReading = MeterReading::where('assignment_id', $assignmentId)
+            ->whereNotNull('period_id')
+            ->orderBy('reading_id', 'desc')
+            ->first();
+
+        if ($lastReading) {
+            return (float) $lastReading->reading_value;
+        }
+
+        // Fall back to install_read
+        return (float) $assignment->install_read;
+    }
+
+    /**
      * Generate a water bill.
      */
     public function generateBill(array $data): array
@@ -292,6 +381,29 @@ class WaterBillService
 
         $consumption = $currReading - $prevReading;
 
+        // ============================================
+        // METER CHANGE HANDLING (change_meter = true)
+        // ============================================
+        $isMeterChange = false;
+        $meterChangeData = null;
+        $oldMeterConsumption = null;
+        $newMeterConsumption = null;
+
+        if ($connection->change_meter) {
+            $meterChangeData = $this->getMeterChangeData($data['connection_id']);
+
+            if ($meterChangeData) {
+                $isMeterChange = true;
+                $oldMeterConsumption = $meterChangeData['old_meter_consumption'];
+                $newMeterConsumption = $consumption; // New meter: curr_reading - prev_reading (install_read)
+                $consumption = $oldMeterConsumption + $newMeterConsumption; // Combined total
+            }
+        }
+        // ============================================
+        // NORMAL BILLING (change_meter = false)
+        // ============================================
+        // consumption = $currReading - $prevReading (already calculated above)
+
         // Calculate bill amount
         $calculation = $this->calculateBillAmount(
             $consumption,
@@ -338,10 +450,19 @@ class WaterBillService
                 'water_amount' => $calculation['amount'],
                 'due_date' => $data['due_date'] ?? now()->addDays(15)->format('Y-m-d'),
                 'adjustment_total' => 0,
+                'is_meter_change' => $isMeterChange,
+                'old_assignment_id' => $meterChangeData['old_assignment_id'] ?? null,
+                'old_meter_consumption' => $oldMeterConsumption,
+                'new_meter_consumption' => $newMeterConsumption,
                 'stat_id' => $activeStatusId,
             ]);
 
             // Create CustomerLedger debit entry for the bill
+            $description = 'Water Bill - '.$period->per_name.' (Consumption: '.$consumption.' cu.m)';
+            if ($isMeterChange) {
+                $description .= ' [Meter Change: Old='.$oldMeterConsumption.', New='.$newMeterConsumption.']';
+            }
+
             CustomerLedger::create([
                 'customer_id' => $connection->customer_id,
                 'connection_id' => $data['connection_id'],
@@ -351,28 +472,44 @@ class WaterBillService
                 'source_type' => 'BILL',
                 'source_id' => $bill->bill_id,
                 'source_line_no' => 1,
-                'description' => 'Water Bill - '.$period->per_name.' (Consumption: '.$consumption.' cu.m)',
+                'description' => $description,
                 'debit' => $calculation['amount'],
                 'credit' => 0,
                 'user_id' => Auth::id() ?? 1,
                 'stat_id' => $activeStatusId,
             ]);
 
+            // Clear change_meter flag after successful billing
+            if ($isMeterChange) {
+                ServiceConnection::where('connection_id', $data['connection_id'])
+                    ->update(['change_meter' => false]);
+            }
+
             DB::commit();
+
+            $responseData = [
+                'bill_id' => $bill->bill_id,
+                'connection_id' => $connection->connection_id,
+                'account_no' => $connection->account_no,
+                'period' => $period->per_name,
+                'consumption' => $consumption,
+                'amount' => $calculation['amount'],
+                'breakdown' => $calculation['breakdown'],
+                'due_date' => $bill->due_date,
+            ];
+
+            if ($isMeterChange) {
+                $responseData['meter_change'] = [
+                    'is_meter_change' => true,
+                    'old_meter_consumption' => $oldMeterConsumption,
+                    'new_meter_consumption' => $newMeterConsumption,
+                ];
+            }
 
             return [
                 'success' => true,
                 'message' => 'Bill generated successfully.',
-                'data' => [
-                    'bill_id' => $bill->bill_id,
-                    'connection_id' => $connection->connection_id,
-                    'account_no' => $connection->account_no,
-                    'period' => $period->per_name,
-                    'consumption' => $consumption,
-                    'amount' => $calculation['amount'],
-                    'breakdown' => $calculation['breakdown'],
-                    'due_date' => $bill->due_date,
-                ],
+                'data' => $responseData,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -406,12 +543,41 @@ class WaterBillService
 
         $consumption = $currReading - $prevReading;
 
-        // Calculate bill amount
+        // ============================================
+        // METER CHANGE HANDLING (change_meter = true)
+        // ============================================
+        $meterChangeData = null;
+        $oldMeterConsumption = 0;
+        $newMeterConsumption = $consumption;
+
+        if ($connection->change_meter) {
+            $meterChangeData = $this->getMeterChangeData($data['connection_id']);
+
+            if ($meterChangeData) {
+                $oldMeterConsumption = $meterChangeData['old_meter_consumption'];
+                $newMeterConsumption = $consumption; // New meter: curr - prev (which is install_read)
+                $consumption = $oldMeterConsumption + $newMeterConsumption; // Total consumption
+            }
+        }
+        // ============================================
+        // NORMAL BILLING (change_meter = false)
+        // ============================================
+        // consumption = $currReading - $prevReading (already calculated above)
+
+        // Calculate bill amount based on total consumption
         $calculation = $this->calculateBillAmount(
             $consumption,
             $connection->account_type_id,
             $data['period_id'] ?? null
         );
+
+        // Add meter change info to response if applicable
+        if ($meterChangeData) {
+            $calculation['meter_change'] = true;
+            $calculation['old_meter_consumption'] = $oldMeterConsumption;
+            $calculation['new_meter_consumption'] = $newMeterConsumption;
+            $calculation['breakdown']['total_consumption'] = $consumption;
+        }
 
         return $calculation;
     }
@@ -884,14 +1050,39 @@ class WaterBillService
         }
 
         // Validate readings
-        $prevReading = (float) $uploadedReading->previous_reading;
         $currReading = (float) $uploadedReading->present_reading;
+
+        // ============================================
+        // METER CHANGE HANDLING (is_meter_change = true)
+        // ============================================
+        $isMeterChange = (bool) $uploadedReading->is_meter_change;
+        $meterChangeData = null;
+        $oldMeterConsumption = null;
+        $newMeterConsumption = null;
+
+        if ($isMeterChange && $uploadedReading->install_read !== null) {
+            // New meter: previous reading is install_read (not previous_reading which is old meter's last billed)
+            $prevReading = (float) $uploadedReading->install_read;
+            $newMeterConsumption = max(0, $currReading - $prevReading);
+            $consumption = $newMeterConsumption;
+
+            // Old meter consumption
+            $meterChangeData = $this->getMeterChangeData($uploadedReading->connection_id);
+            if ($meterChangeData) {
+                $oldMeterConsumption = $meterChangeData['old_meter_consumption'];
+                $consumption += $oldMeterConsumption; // Combined total
+            }
+        } else {
+            // ============================================
+            // NORMAL BILLING (is_meter_change = false)
+            // ============================================
+            $prevReading = (float) $uploadedReading->previous_reading;
+            $consumption = $currReading - $prevReading;
+        }
 
         if ($currReading < $prevReading) {
             return ['success' => false, 'message' => 'Current reading cannot be less than previous reading.'];
         }
-
-        $consumption = $currReading - $prevReading;
 
         // Calculate bill amount
         $calculation = $this->calculateBillAmount(
@@ -910,7 +1101,7 @@ class WaterBillService
             // Get the meter reader ID from the schedule
             $meterReaderId = $schedule->reader_id ?? 1;
 
-            // Create previous reading record
+            // Create previous reading record (install_read for meter change, previous_reading otherwise)
             $prevReadingRecord = MeterReading::create([
                 'assignment_id' => $assignment->assignment_id,
                 'period_id' => $periodId,
@@ -942,10 +1133,19 @@ class WaterBillService
                 'water_amount' => $calculation['amount'],
                 'due_date' => now()->addDays(15)->format('Y-m-d'),
                 'adjustment_total' => 0,
+                'is_meter_change' => $isMeterChange,
+                'old_assignment_id' => $meterChangeData['old_assignment_id'] ?? null,
+                'old_meter_consumption' => $oldMeterConsumption,
+                'new_meter_consumption' => $newMeterConsumption,
                 'stat_id' => $activeStatusId,
             ]);
 
             // Create CustomerLedger debit entry for the bill
+            $description = 'Water Bill - '.$period->per_name.' (Consumption: '.$consumption.' cu.m)';
+            if ($isMeterChange) {
+                $description .= ' [Meter Change: Old='.$oldMeterConsumption.', New='.$newMeterConsumption.']';
+            }
+
             CustomerLedger::create([
                 'customer_id' => $connection->customer_id,
                 'connection_id' => $uploadedReading->connection_id,
@@ -955,12 +1155,18 @@ class WaterBillService
                 'source_type' => 'BILL',
                 'source_id' => $bill->bill_id,
                 'source_line_no' => 1,
-                'description' => 'Water Bill - '.$period->per_name.' (Consumption: '.$consumption.' cu.m)',
+                'description' => $description,
                 'debit' => $calculation['amount'],
                 'credit' => 0,
                 'user_id' => $userId,
                 'stat_id' => $activeStatusId,
             ]);
+
+            // Clear change_meter flag after successful billing
+            if ($isMeterChange) {
+                ServiceConnection::where('connection_id', $uploadedReading->connection_id)
+                    ->update(['change_meter' => false]);
+            }
 
             // Update the uploaded reading as processed
             $uploadedReading->update([
@@ -982,6 +1188,135 @@ class WaterBillService
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Get all data needed to render a printable billing statement for a specific bill.
+     */
+    public function getBillPrintData(int $billId): ?array
+    {
+        $bill = WaterBillHistory::with([
+            'serviceConnection.customer',
+            'serviceConnection.accountType',
+            'serviceConnection.area',
+            'serviceConnection.address.purok',
+            'serviceConnection.address.barangay',
+            'serviceConnection.meterAssignments' => function ($query) {
+                $query->whereNull('removed_at');
+            },
+            'serviceConnection.meterAssignments.meter',
+            'period',
+            'previousReading',
+            'currentReading',
+            'billAdjustments.billAdjustmentType',
+            'oldMeterAssignment.meter',
+        ])->find($billId);
+
+        if (! $bill) {
+            return null;
+        }
+
+        $connection = $bill->serviceConnection;
+        $customer = $connection?->customer;
+        $activeAssignment = $connection?->meterAssignments->first();
+
+        // Customer name
+        $customerName = $customer
+            ? trim(implode(' ', array_filter([
+                $customer->cust_first_name,
+                $customer->cust_middle_name ? substr($customer->cust_middle_name, 0, 1).'.' : '',
+                $customer->cust_last_name,
+            ])))
+            : 'Unknown';
+
+        // Full address
+        $purokDesc = $connection?->address?->purok?->p_desc ?? '';
+        $barangayDesc = $connection?->address?->barangay?->b_desc ?? '';
+        $fullAddress = trim(implode(', ', array_filter([$purokDesc, $barangayDesc, 'Initao, Misamis Oriental'])));
+
+        // Outstanding balance for this connection (excluding current bill)
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
+
+        $arrears = WaterBillHistory::where('connection_id', $connection->connection_id)
+            ->where('bill_id', '!=', $billId)
+            ->whereIn('stat_id', [$activeStatusId, $overdueStatusId])
+            ->get()
+            ->sum(function ($b) {
+                return (float) $b->water_amount + (float) $b->adjustment_total;
+            });
+
+        // Bill adjustments
+        $adjustments = $bill->billAdjustments->map(function ($adj) {
+            return [
+                'type' => $adj->billAdjustmentType?->name ?? 'Adjustment',
+                'amount' => (float) $adj->amount,
+            ];
+        });
+
+        // Recent consumption history (last 6 billing periods for this connection)
+        $recentBills = WaterBillHistory::with('period')
+            ->where('connection_id', $connection->connection_id)
+            ->orderBy('period_id', 'desc')
+            ->limit(6)
+            ->get()
+            ->reverse()
+            ->values();
+
+        $consumptionHistory = $recentBills->map(function ($b) {
+            return [
+                'period' => $b->period?->per_name ?? '',
+                'consumption' => (float) $b->consumption,
+                'amount' => round((float) $b->water_amount + (float) $b->adjustment_total, 2),
+            ];
+        });
+
+        $totalAmount = (float) $bill->water_amount + (float) $bill->adjustment_total;
+
+        return [
+            'bill' => [
+                'bill_id' => $bill->bill_id,
+                'consumption' => (float) $bill->consumption,
+                'water_amount' => (float) $bill->water_amount,
+                'adjustment_total' => (float) $bill->adjustment_total,
+                'total_amount' => round($totalAmount, 2),
+                'due_date' => $bill->due_date,
+                'created_at' => $bill->created_at,
+                'is_meter_change' => (bool) $bill->is_meter_change,
+                'old_meter_consumption' => $bill->old_meter_consumption ? (float) $bill->old_meter_consumption : null,
+                'new_meter_consumption' => $bill->new_meter_consumption ? (float) $bill->new_meter_consumption : null,
+            ],
+            'readings' => [
+                'previous' => (float) ($bill->previousReading?->reading_value ?? 0),
+                'current' => (float) ($bill->currentReading?->reading_value ?? 0),
+                'reading_date' => $bill->currentReading?->reading_date,
+            ],
+            'connection' => [
+                'account_no' => $connection->account_no,
+                'account_type' => $connection->accountType?->at_desc ?? 'Residential',
+                'area' => $connection->area?->a_desc ?? 'N/A',
+                'meter_serial' => $activeAssignment?->meter?->mtr_serial ?? 'N/A',
+                'started_at' => $connection->started_at,
+            ],
+            'customer' => [
+                'name' => $customerName,
+                'address' => $fullAddress,
+                'contact' => $customer?->contact_number ?? 'N/A',
+            ],
+            'period' => [
+                'name' => $bill->period?->per_name ?? 'N/A',
+                'start_date' => $bill->period?->start_date,
+                'end_date' => $bill->period?->end_date,
+            ],
+            'old_meter' => $bill->is_meter_change ? [
+                'serial' => $bill->oldMeterAssignment?->meter?->mtr_serial ?? 'N/A',
+                'removal_read' => (float) ($bill->oldMeterAssignment?->removal_read ?? 0),
+            ] : null,
+            'arrears' => round($arrears, 2),
+            'adjustments' => $adjustments->toArray(),
+            'consumption_history' => $consumptionHistory->toArray(),
+            'total_amount_due' => round($totalAmount + $arrears, 2),
+        ];
     }
 
     /**

@@ -52,6 +52,11 @@
                             <div class="text-right text-sm">
                                 <p class="text-gray-500 dark:text-gray-400">Meter: <span class="font-mono font-medium text-gray-900 dark:text-white" x-text="selectedConnection.meter_serial || 'N/A'"></span></p>
                                 <p class="text-gray-500 dark:text-gray-400">Install Read: <span class="font-mono font-medium text-gray-900 dark:text-white" x-text="parseFloat(selectedConnection.install_read || 0).toFixed(3)"></span></p>
+                                <template x-if="selectedConnection.change_meter">
+                                    <span class="inline-flex items-center px-2 py-0.5 mt-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-200">
+                                        <i class="fas fa-exchange-alt mr-1"></i>Meter Change
+                                    </span>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -155,29 +160,92 @@
                     <h4 class="font-medium text-gray-900 dark:text-white mb-3">
                         <i class="fas fa-tachometer-alt mr-2 text-green-600"></i>Meter Readings
                     </h4>
+                    <!-- Meter Change Info Banner -->
+                    <template x-if="lastReading && lastReading.change_meter">
+                        <div class="mb-3 p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700 rounded-lg">
+                            <div class="flex items-start gap-2">
+                                <i class="fas fa-exchange-alt text-orange-600 mt-0.5"></i>
+                                <div class="text-sm">
+                                    <p class="font-semibold text-orange-800 dark:text-orange-200">Meter Change Detected</p>
+                                    <p class="text-orange-700 dark:text-orange-300 mt-1">
+                                        Old meter removal read: <span class="font-mono font-bold" x-text="parseFloat(lastReading.removal_read || 0).toFixed(3)"></span> m<sup>3</sup>
+                                        &mdash; Last billed: <span class="font-mono font-bold" x-text="parseFloat(lastReading.old_meter_previous_reading || 0).toFixed(3)"></span> m<sup>3</sup>
+                                    </p>
+                                    <p class="text-orange-700 dark:text-orange-300">
+                                        Old meter consumption: <span class="font-mono font-bold" x-text="parseFloat(lastReading.old_meter_consumption || 0).toFixed(3)"></span> m<sup>3</sup>
+                                    </p>
+                                    <p class="text-orange-600 dark:text-orange-400 text-xs mt-1">Total bill = old meter consumption + new meter consumption (entered below)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Previous Reading (m<sup>3</sup>) *</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <template x-if="lastReading && lastReading.change_meter">
+                                    <span>New Meter Previous Reading (m<sup>3</sup>) *</span>
+                                </template>
+                                <template x-if="!lastReading || !lastReading.change_meter">
+                                    <span>Previous Reading (m<sup>3</sup>) *</span>
+                                </template>
+                            </label>
                             <input type="number" x-model="form.prev_reading" @input="calculateConsumption()" step="0.001" min="0" placeholder="0.000"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono">
                             <template x-if="lastReading">
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                    Last reading: <span class="font-mono" x-text="parseFloat(lastReading.reading_value).toFixed(3)"></span> m<sup>3</sup>
+                                    <span x-show="lastReading.change_meter">Install read: </span>
+                                    <span x-show="!lastReading.change_meter">Last reading: </span>
+                                    <span class="font-mono" x-text="parseFloat(lastReading.reading_value).toFixed(3)"></span> m<sup>3</sup>
                                     <span x-show="lastReading.reading_date">(<span x-text="lastReading.reading_date"></span>)</span>
                                 </p>
                             </template>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Reading (m<sup>3</sup>) *</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <template x-if="lastReading && lastReading.change_meter">
+                                    <span>New Meter Current Reading (m<sup>3</sup>) *</span>
+                                </template>
+                                <template x-if="!lastReading || !lastReading.change_meter">
+                                    <span>Current Reading (m<sup>3</sup>) *</span>
+                                </template>
+                            </label>
                             <input type="number" x-model="form.curr_reading" @input="calculateConsumption()" step="0.001" min="0" placeholder="0.000"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Consumption (m<sup>3</sup>)</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <template x-if="lastReading && lastReading.change_meter">
+                                    <span>New Meter Consumption (m<sup>3</sup>)</span>
+                                </template>
+                                <template x-if="!lastReading || !lastReading.change_meter">
+                                    <span>Consumption (m<sup>3</sup>)</span>
+                                </template>
+                            </label>
                             <input type="text" :value="consumption.toFixed(3)" readonly
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white font-mono font-bold">
                         </div>
                     </div>
+
+                    <!-- Meter Change: Total Consumption Summary -->
+                    <template x-if="lastReading && lastReading.change_meter && consumption > 0">
+                        <div class="mt-3 p-3 bg-orange-100 dark:bg-orange-900/40 rounded-lg border border-orange-300 dark:border-orange-700">
+                            <div class="grid grid-cols-3 gap-3 text-sm text-center">
+                                <div>
+                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase">Old Meter</p>
+                                    <p class="font-mono font-bold text-gray-900 dark:text-white" x-text="parseFloat(lastReading.old_meter_consumption || 0).toFixed(3)"></p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase">New Meter</p>
+                                    <p class="font-mono font-bold text-gray-900 dark:text-white" x-text="consumption.toFixed(3)"></p>
+                                </div>
+                                <div class="bg-orange-200 dark:bg-orange-800 rounded p-1">
+                                    <p class="text-orange-700 dark:text-orange-300 text-xs uppercase font-semibold">Total</p>
+                                    <p class="font-mono font-bold text-orange-800 dark:text-orange-200" x-text="(parseFloat(lastReading.old_meter_consumption || 0) + consumption).toFixed(3)"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </template>
 

@@ -500,9 +500,21 @@
         }
 
         tbody.innerHTML = pageData.map(reading => {
-            const consumption = reading.present_reading && reading.previous_reading
-                ? (parseFloat(reading.present_reading) - parseFloat(reading.previous_reading)).toFixed(3)
-                : '-';
+            let consumption = '-';
+            if (reading.present_reading != null && reading.previous_reading != null) {
+                if (reading.is_meter_change) {
+                    // Meter change: (present - install_read) + (removal_read - previous)
+                    const newMeter = reading.install_read != null
+                        ? Math.max(0, parseFloat(reading.present_reading) - parseFloat(reading.install_read))
+                        : 0;
+                    const oldMeter = reading.removal_read != null
+                        ? Math.max(0, parseFloat(reading.removal_read) - parseFloat(reading.previous_reading))
+                        : 0;
+                    consumption = (newMeter + oldMeter).toFixed(3);
+                } else {
+                    consumption = Math.max(0, parseFloat(reading.present_reading) - parseFloat(reading.previous_reading)).toFixed(3);
+                }
+            }
 
             const statusBadges = [];
             if (reading.is_processed) {
@@ -818,9 +830,21 @@
         document.getElementById('detailPrevReading').textContent = data.previous_reading ?? '-';
         document.getElementById('detailPresentReading').textContent = data.present_reading ?? '-';
 
-        const consumption = data.present_reading !== null && data.previous_reading !== null
-            ? (parseFloat(data.present_reading) - parseFloat(data.previous_reading)).toFixed(3)
-            : '-';
+        let consumption = '-';
+        if (data.present_reading !== null && data.previous_reading !== null) {
+            if (data.is_meter_change) {
+                // Meter change: (present - install_read) + (removal_read - previous)
+                const newMeter = data.install_read != null
+                    ? Math.max(0, parseFloat(data.present_reading) - parseFloat(data.install_read))
+                    : 0;
+                const oldMeter = data.removal_read != null
+                    ? Math.max(0, parseFloat(data.removal_read) - parseFloat(data.previous_reading))
+                    : 0;
+                consumption = (newMeter + oldMeter).toFixed(3);
+            } else {
+                consumption = Math.max(0, parseFloat(data.present_reading) - parseFloat(data.previous_reading)).toFixed(3);
+            }
+        }
         document.getElementById('detailConsumption').textContent = consumption;
         document.getElementById('detailReadingDate').textContent = data.reading_date || '-';
 
