@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Models\CustomerLedger;
+use App\Models\MeterAssignment;
 use App\Models\Period;
 use App\Models\ReadingSchedule;
 use App\Models\ReadingScheduleEntry;
@@ -73,7 +74,32 @@ class MeterReadingDownloadService
             }
         }
 
-        $consumers = $entries->map(function ($entry) use ($previousPeriod, $scheduleAreaMap, $periodId) {
+        // Pre-fetch removed meter assignments for connections with change_meter flag
+        // This avoids N+1 queries inside the map() callback
+        $meterChangeConnectionIds = $entries
+            ->filter(fn ($e) => $e->serviceConnection?->change_meter)
+            ->pluck('serviceConnection.connection_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $removedAssignmentsMap = [];
+        if (! empty($meterChangeConnectionIds)) {
+            $removedAssignments = MeterAssignment::whereIn('connection_id', $meterChangeConnectionIds)
+                ->whereNotNull('removed_at')
+                ->whereNotNull('removal_read')
+                ->orderBy('removed_at', 'desc')
+                ->get()
+                ->groupBy('connection_id');
+
+            // Take only the most recent removed assignment per connection
+            foreach ($removedAssignments as $connId => $assignments) {
+                $removedAssignmentsMap[$connId] = $assignments->first();
+            }
+        }
+
+        $consumers = $entries->map(function ($entry) use ($previousPeriod, $scheduleAreaMap, $periodId, $removedAssignmentsMap) {
             $connection = $entry->serviceConnection;
             $customer = $connection?->customer;
             $address = $connection?->address;
@@ -82,6 +108,28 @@ class MeterReadingDownloadService
             // Get current active meter assignment
             $activeMeterAssignment = $connection?->meterAssignments->first();
             $meter = $activeMeterAssignment?->meter;
+
+            // ============================================
+            // METER CHANGE DATA (change_meter = true)
+            // ============================================
+            $isMeterChange = $connection?->change_meter ?? false;
+            $removalRead = null;
+            $installRead = null;
+
+            if ($isMeterChange && $connectionId) {
+                // Use pre-fetched removed assignment (avoids N+1 query)
+                $previousAssignment = $removedAssignmentsMap[$connectionId] ?? null;
+
+                if ($previousAssignment) {
+                    $removalRead = (float) $previousAssignment->removal_read;
+                }
+
+                // Get install_read from current assignment
+                if ($activeMeterAssignment) {
+                    $installRead = (float) $activeMeterAssignment->install_read;
+                }
+            }
+            // ============================================
 
             // Get previous reading value from the previous period's bill current reading
             // Fall back to install_read from MeterAssignment if no previous reading exists
@@ -104,6 +152,7 @@ class MeterReadingDownloadService
                 if ($previousReadingValue === null && $activeMeterAssignment) {
                     $latestReading = $activeMeterAssignment->meterReadings()
                         ->whereNotNull('period_id')
+                        ->orderBy('reading_date', 'desc')
                         ->orderBy('reading_id', 'desc')
                         ->first();
                     $previousReadingValue = $latestReading?->reading_value;
@@ -113,36 +162,40 @@ class MeterReadingDownloadService
                 if ($previousReadingValue === null && $activeMeterAssignment) {
                     $previousReadingValue = $activeMeterAssignment->install_read;
                 }
+
+                // For meter change, keep previous_reading as the last billed value
+                // so the mobile app can compute old meter consumption:
+                //   old_meter_consumption = removal_read - previous_reading (last billed)
+                // The install_read is sent separately for new meter consumption:
+                //   new_meter_consumption = current_reading - install_read
             }
 
-            // Calculate arrear: sum of unpaid bills from previous periods
-            // Arrear = total bill amount (debit) - total payments (credit) for previous periods
+            // Calculate arrear: unpaid water bills from previous periods (excludes penalties)
+            // Arrear = BILL debits - PAYMENT credits
             $arrear = 0;
-            if ($connectionId && $periodId) {
-                // Get total debits (bills) from CustomerLedger for previous periods
-                $totalDebits = CustomerLedger::where('connection_id', $connectionId)
-                    ->where('period_id', '<', $periodId)
-                    ->where('stat_id', '=', 2)
-                    //->where('source_type', 'BILL')
-                    ->sum('debit');
-
-                // Get total credits (payments) from CustomerLedger for previous periods
-                $totalCredits = CustomerLedger::where('connection_id', $connectionId)
-                    ->where('period_id', '<', $periodId)
-                    ->where('stat_id', '=', 2)
-                    //->where('source_type', 'PAYMENT')
-                    ->sum('credit');
-
-                $arrear = max(0, (float) $totalDebits - (float) $totalCredits);
-            }
-
-            // Calculate penalty: sum of penalties from CustomerLedger for previous periods
             $penalty = 0;
             if ($connectionId && $periodId) {
-                // Penalties are typically charges with description containing 'PENALTY'
-                // or source_type 'CHARGE' with penalty-related descriptions
+                // Get total BILL debits from CustomerLedger for previous periods
+                $totalBillDebits = CustomerLedger::where('connection_id', $connectionId)
+                    ->where('period_id', '<', $periodId)
+                    ->where('stat_id', '=', 2)
+                    ->where('source_type', 'BILL')
+                    ->sum('debit');
+
+                // Get total PAYMENT credits from CustomerLedger for previous periods
+                $totalPaymentCredits = CustomerLedger::where('connection_id', $connectionId)
+                    ->where('period_id', '<', $periodId)
+                    ->where('stat_id', '=', 2)
+                    ->where('source_type', 'PAYMENT')
+                    ->sum('credit');
+
+                $arrear = max(0, (float) $totalBillDebits - (float) $totalPaymentCredits);
+
+                // Calculate penalty separately (CHARGE entries with penalty descriptions)
+                // Penalty is NOT included in arrear - tracked separately
                 $penalty = (float) CustomerLedger::where('connection_id', $connectionId)
                     ->where('period_id', '<', $periodId)
+                    ->where('source_type', 'CHARGE')
                     ->where(function ($query) {
                         $query->where('description', 'LIKE', '%PENALTY%')
                             ->orWhere('description', 'LIKE', '%Penalty%')
@@ -190,6 +243,10 @@ class MeterReadingDownloadService
                 'penalty' => $penalty,
                 'sequence_order' => $entry->sequence_order,
                 'entry_status' => $entry->status?->stat_desc,
+                // Meter change fields for mobile app
+                'is_meter_change' => $isMeterChange,
+                'removal_read' => $removalRead,
+                'install_read' => $installRead,
             ];
         });
 

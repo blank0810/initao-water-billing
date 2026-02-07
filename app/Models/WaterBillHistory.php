@@ -28,6 +28,10 @@ class WaterBillHistory extends Model
         'water_amount',
         'due_date',
         'adjustment_total',
+        'is_meter_change',
+        'old_assignment_id',
+        'old_meter_consumption',
+        'new_meter_consumption',
         'stat_id',
     ];
 
@@ -36,6 +40,9 @@ class WaterBillHistory extends Model
         'water_amount' => 'decimal:2',
         'due_date' => 'date',
         'adjustment_total' => 'decimal:2',
+        'is_meter_change' => 'boolean',
+        'old_meter_consumption' => 'decimal:3',
+        'new_meter_consumption' => 'decimal:3',
     ];
 
     /**
@@ -92,5 +99,13 @@ class WaterBillHistory extends Model
     public function getTotalAmountAttribute()
     {
         return $this->water_amount + $this->adjustment_total;
+    }
+
+    /**
+     * Get the old meter assignment (for meter change bills)
+     */
+    public function oldMeterAssignment()
+    {
+        return $this->belongsTo(MeterAssignment::class, 'old_assignment_id', 'assignment_id');
     }
 }

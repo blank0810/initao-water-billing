@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\Billing\WaterBillService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class WaterBillController extends Controller
 {
@@ -121,7 +122,7 @@ class WaterBillController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading billing details: ' . $e->getMessage(),
+                'message' => 'Error loading billing details: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -141,7 +142,7 @@ class WaterBillController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading consumer list: ' . $e->getMessage(),
+                'message' => 'Error loading consumer list: '.$e->getMessage(),
                 'data' => [],
             ], 500);
         }
@@ -165,11 +166,23 @@ class WaterBillController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading billed consumers: ' . $e->getMessage(),
+                'message' => 'Error loading billed consumers: '.$e->getMessage(),
                 'data' => [],
                 'statistics' => [],
             ], 500);
         }
+    }
+
+    /**
+     * Print a billing statement for a specific bill.
+     */
+    public function printBill(int $billId): View
+    {
+        $data = $this->billService->getBillPrintData($billId);
+
+        abort_if(! $data, 404, 'Bill not found.');
+
+        return view('pages.billing.water-bill-print', compact('data'));
     }
 
     /**
@@ -187,7 +200,7 @@ class WaterBillController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading billing summary: ' . $e->getMessage(),
+                'message' => 'Error loading billing summary: '.$e->getMessage(),
                 'data' => [],
             ], 500);
         }

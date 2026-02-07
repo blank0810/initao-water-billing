@@ -27,12 +27,14 @@ class ServiceConnection extends Model
         'area_id',
         'started_at',
         'ended_at',
+        'change_meter',
         'stat_id',
     ];
 
     protected $casts = [
         'started_at' => 'date',
         'ended_at' => 'date',
+        'change_meter' => 'boolean',
     ];
 
     /**
@@ -131,5 +133,15 @@ class ServiceConnection extends Model
     public function paymentAllocations()
     {
         return $this->hasMany(PaymentAllocation::class, 'connection_id', 'connection_id');
+    }
+
+    /**
+     * Get the previous (removed) meter assignment for meter change scenarios
+     */
+    public function previousMeterAssignment()
+    {
+        return $this->hasOne(MeterAssignment::class, 'connection_id', 'connection_id')
+            ->whereNotNull('removed_at')
+            ->latest('removed_at');
     }
 }

@@ -208,9 +208,14 @@ class MeterAssignmentService
                 now()
             );
 
+            // Set change_meter flag on ServiceConnection for billing to capture
+            ServiceConnection::where('connection_id', $connectionId)
+                ->update(['change_meter' => true]);
+
             return [
                 'removed_assignment' => $removedAssignment,
                 'new_assignment' => $newAssignment,
+                'change_meter_flag_set' => true,
             ];
         });
     }
