@@ -1064,7 +1064,13 @@ class WaterBillService
         if ($isMeterChange && $uploadedReading->install_read !== null) {
             // New meter: previous reading is install_read (not previous_reading which is old meter's last billed)
             $prevReading = (float) $uploadedReading->install_read;
-            $newMeterConsumption = max(0, $currReading - $prevReading);
+
+            // Validate before calculating - current reading must be >= install_read
+            if ($currReading < $prevReading) {
+                return ['success' => false, 'message' => 'Current reading cannot be less than install reading.'];
+            }
+
+            $newMeterConsumption = $currReading - $prevReading;
             $consumption = $newMeterConsumption;
 
             // Old meter consumption
@@ -1078,11 +1084,13 @@ class WaterBillService
             // NORMAL BILLING (is_meter_change = false)
             // ============================================
             $prevReading = (float) $uploadedReading->previous_reading;
-            $consumption = $currReading - $prevReading;
-        }
 
-        if ($currReading < $prevReading) {
-            return ['success' => false, 'message' => 'Current reading cannot be less than previous reading.'];
+            // Validate before calculating
+            if ($currReading < $prevReading) {
+                return ['success' => false, 'message' => 'Current reading cannot be less than previous reading.'];
+            }
+
+            $consumption = $currReading - $prevReading;
         }
 
         // Calculate bill amount
