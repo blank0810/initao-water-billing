@@ -1240,16 +1240,22 @@ class WaterBillService
         $fullAddress = trim(implode(', ', array_filter([$purokDesc, $barangayDesc, 'Initao, Misamis Oriental'])));
 
         // Outstanding balance for this connection (excluding current bill)
+        // Uses CustomerLedger for accuracy with partial payments
+        // Arrears = BILL debits - PAYMENT credits (excludes current bill's ledger entry)
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-        $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
 
-        $arrears = WaterBillHistory::where('connection_id', $connection->connection_id)
-            ->where('bill_id', '!=', $billId)
-            ->whereIn('stat_id', [$activeStatusId, $overdueStatusId])
-            ->get()
-            ->sum(function ($b) {
-                return (float) $b->water_amount + (float) $b->adjustment_total;
-            });
+        $totalBillDebits = CustomerLedger::where('connection_id', $connection->connection_id)
+            ->where('source_type', 'BILL')
+            ->where('source_id', '!=', $billId)
+            ->where('stat_id', $activeStatusId)
+            ->sum('debit');
+
+        $totalPaymentCredits = CustomerLedger::where('connection_id', $connection->connection_id)
+            ->where('source_type', 'PAYMENT')
+            ->where('stat_id', $activeStatusId)
+            ->sum('credit');
+
+        $arrears = max(0, (float) $totalBillDebits - (float) $totalPaymentCredits);
 
         // Bill adjustments
         $adjustments = $bill->billAdjustments->map(function ($adj) {
