@@ -265,6 +265,7 @@ class UploadedReadingService
     {
         $lastReading = MeterReading::where('assignment_id', $assignment->assignment_id)
             ->whereNotNull('period_id')
+            ->orderBy('reading_date', 'desc')
             ->orderBy('reading_id', 'desc')
             ->first();
 

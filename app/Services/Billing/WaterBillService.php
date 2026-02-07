@@ -317,6 +317,7 @@ class WaterBillService
         // Try to get the last billed reading
         $lastReading = MeterReading::where('assignment_id', $assignmentId)
             ->whereNotNull('period_id')
+            ->orderBy('reading_date', 'desc')
             ->orderBy('reading_id', 'desc')
             ->first();
 
@@ -1217,8 +1218,12 @@ class WaterBillService
         }
 
         $connection = $bill->serviceConnection;
-        $customer = $connection?->customer;
-        $activeAssignment = $connection?->meterAssignments->first();
+        if (! $connection) {
+            return null;
+        }
+
+        $customer = $connection->customer;
+        $activeAssignment = $connection->meterAssignments->first();
 
         // Customer name
         $customerName = $customer
