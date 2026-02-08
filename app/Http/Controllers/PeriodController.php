@@ -57,6 +57,7 @@ class PeriodController extends Controller
             'per_code' => 'required|string|max:20',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'grace_period' => 'sometimes|integer|min:0|max:365',
         ]);
 
         $result = $this->periodService->createPeriod($validated);
@@ -83,6 +84,7 @@ class PeriodController extends Controller
             'per_code' => 'sometimes|string|max:20',
             'start_date' => 'sometimes|date',
             'end_date' => 'sometimes|date|after_or_equal:start_date',
+            'grace_period' => 'sometimes|integer|min:0|max:365',
         ]);
 
         $result = $this->periodService->updatePeriod($periodId, $validated);

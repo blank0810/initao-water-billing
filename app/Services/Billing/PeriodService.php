@@ -27,6 +27,7 @@ class PeriodService
                     'start_date' => $period->start_date->format('Y-m-d'),
                     'end_date' => $period->end_date->format('Y-m-d'),
                     'date_range' => $period->start_date->format('M d').' - '.$period->end_date->format('M d, Y'),
+                    'grace_period' => $period->grace_period,
                     'is_closed' => $period->is_closed,
                     'closed_at' => $period->closed_at?->format('Y-m-d H:i:s'),
                     'bills_count' => $period->water_bill_history_count,
@@ -59,6 +60,7 @@ class PeriodService
             'per_code' => $period->per_code,
             'start_date' => $period->start_date->format('Y-m-d'),
             'end_date' => $period->end_date->format('Y-m-d'),
+            'grace_period' => $period->grace_period,
             'is_closed' => $period->is_closed,
             'closed_at' => $period->closed_at?->format('Y-m-d H:i:s'),
             'closed_by_name' => $period->closedByUser?->name,
@@ -108,6 +110,7 @@ class PeriodService
                 'per_code' => $data['per_code'],
                 'start_date' => $data['start_date'],
                 'end_date' => $data['end_date'],
+                'grace_period' => $data['grace_period'] ?? 10,
                 'is_closed' => false,
                 'stat_id' => Status::getIdByDescription(Status::ACTIVE),
             ]);
@@ -262,6 +265,7 @@ class PeriodService
             'per_code' => $data['per_code'] ?? $period->per_code,
             'start_date' => $data['start_date'] ?? $period->start_date,
             'end_date' => $data['end_date'] ?? $period->end_date,
+            'grace_period' => $data['grace_period'] ?? $period->grace_period,
         ]);
 
         return [

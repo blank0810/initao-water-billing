@@ -325,6 +325,7 @@ class MeterReadingDownloadService
                 'per_code' => $currentPeriod->per_code,
                 'start_date' => $currentPeriod->start_date->format('Y-m-d'),
                 'end_date' => $currentPeriod->end_date->format('Y-m-d'),
+                'grace_period' => $currentPeriod->grace_period,
             ],
             'rates' => $ratesData->toArray(),
         ];
@@ -384,6 +385,7 @@ class MeterReadingDownloadService
                 'per_code' => $period->per_code,
                 'start_date' => $period->start_date->format('Y-m-d'),
                 'end_date' => $period->end_date->format('Y-m-d'),
+                'grace_period' => $period->grace_period,
             ],
             'rates' => $ratesData->toArray(),
         ];

@@ -222,6 +222,13 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period Code <span class="text-red-500">*</span></label>
                         <input type="text" x-model="createForm.per_code" required placeholder="e.g., 202601" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
+
+                    <!-- Grace Period -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grace Period (days)</label>
+                        <input type="number" x-model="createForm.grace_period" min="0" max="365" placeholder="10" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Days after end date before penalties apply</p>
+                    </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
                     <button type="button" @click="showCreateModal = false" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Cancel</button>
@@ -273,6 +280,13 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Period Code <span class="text-red-500">*</span></label>
                         <input type="text" x-model="editForm.per_code" required class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
+
+                    <!-- Grace Period -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grace Period (days)</label>
+                        <input type="number" x-model="editForm.grace_period" min="0" max="365" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Days after end date before penalties apply</p>
+                    </div>
                 </div>
                 <div class="flex justify-end gap-3 mt-6">
                     <button type="button" @click="showEditModal = false" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Cancel</button>
@@ -312,6 +326,10 @@
                     <div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">End Date</p>
                         <p class="text-sm font-medium text-gray-900 dark:text-white" x-text="viewPeriodData?.end_date"></p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Grace Period</p>
+                        <p class="text-sm font-medium text-gray-900 dark:text-white"><span x-text="viewPeriodData?.grace_period || 10"></span> days</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Bills</p>
@@ -479,6 +497,7 @@ function periodsData() {
             per_code: '',
             start_date: '',
             end_date: '',
+            grace_period: 10,
             autoGenerate: true
         },
         editForm: {
@@ -486,7 +505,8 @@ function periodsData() {
             per_name: '',
             per_code: '',
             start_date: '',
-            end_date: ''
+            end_date: '',
+            grace_period: 10
         },
         viewPeriodData: null,
         closePeriodData: null,
@@ -538,6 +558,7 @@ function periodsData() {
                 per_code: '',
                 start_date: '',
                 end_date: '',
+                grace_period: 10,
                 autoGenerate: true
             };
             this.showCreateModal = true;
@@ -592,7 +613,8 @@ function periodsData() {
                 per_name: period.per_name,
                 per_code: period.per_code,
                 start_date: period.start_date,
-                end_date: period.end_date
+                end_date: period.end_date,
+                grace_period: period.grace_period || 10
             };
             this.showEditModal = true;
         },
