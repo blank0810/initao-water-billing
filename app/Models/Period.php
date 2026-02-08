@@ -22,6 +22,7 @@ class Period extends Model
         'per_code',
         'start_date',
         'end_date',
+        'grace_period',
         'is_closed',
         'closed_at',
         'closed_by',
@@ -31,6 +32,7 @@ class Period extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'grace_period' => 'integer',
         'is_closed' => 'boolean',
         'closed_at' => 'datetime',
     ];
