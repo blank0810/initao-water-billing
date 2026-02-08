@@ -68,7 +68,7 @@ class UserService
             'username' => $data['username'] ?? $this->generateUsername($data['email']),
             'password' => Hash::make($data['password']),
             'stat_id' => $data['status_id'],
-            'u_type' => $data['u_type'] ?? 1, // Default user type
+            'u_type' => $data['u_type'] ?? 3, // Default user type (3 = ADMIN)
         ]);
 
         // Assign role
