@@ -122,7 +122,7 @@ class MeterAssignmentController extends Controller
             'removal_read' => 'nullable|numeric|min:0',
         ]);
 
-        $result = $this->assignmentService->removeMeter($assignmentId, $validated);
+        $result = $this->assignmentService->removeMeterFromArray($assignmentId, $validated);
 
         return response()->json($result, $result['success'] ? 200 : 422);
     }

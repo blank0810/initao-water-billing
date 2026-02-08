@@ -324,4 +324,153 @@ class MeterAssignmentService
                 ];
             });
     }
+
+    /**
+     * Get all meter assignments (active and removed) formatted for the UI.
+     */
+    public function getAllAssignments(): Collection
+    {
+        return MeterAssignment::with([
+            'meter',
+            'serviceConnection.customer',
+            'serviceConnection.accountType',
+            'serviceConnection.address.barangay',
+        ])
+            ->orderBy('installed_at', 'desc')
+            ->get()
+            ->map(fn ($assignment) => $this->formatAssignmentForUI($assignment));
+    }
+
+    /**
+     * Get only active assignments (removed_at is null) formatted for the UI.
+     */
+    public function getActiveAssignments(): Collection
+    {
+        return MeterAssignment::with([
+            'meter',
+            'serviceConnection.customer',
+            'serviceConnection.accountType',
+            'serviceConnection.address.barangay',
+        ])
+            ->whereNull('removed_at')
+            ->orderBy('installed_at', 'desc')
+            ->get()
+            ->map(fn ($assignment) => $this->formatAssignmentForUI($assignment));
+    }
+
+    /**
+     * Get assignment details by ID.
+     */
+    public function getAssignmentDetails(int $assignmentId): ?array
+    {
+        $assignment = MeterAssignment::with([
+            'meter',
+            'serviceConnection.customer',
+            'serviceConnection.accountType',
+            'serviceConnection.address.barangay',
+        ])->find($assignmentId);
+
+        if (! $assignment) {
+            return null;
+        }
+
+        return $this->formatAssignmentForUI($assignment);
+    }
+
+    /**
+     * Get meter assignment statistics.
+     */
+    public function getStats(): array
+    {
+        $totalMeters = Meter::count();
+
+        $assignedMeterIds = MeterAssignment::whereNull('removed_at')
+            ->pluck('meter_id');
+
+        $activeAssignments = $assignedMeterIds->count();
+
+        $availableMeters = Meter::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->whereNotIn('mtr_id', $assignedMeterIds)
+            ->count();
+
+        $connectionsWithMeters = MeterAssignment::whereNull('removed_at')
+            ->pluck('connection_id');
+
+        $unassignedConnections = ServiceConnection::where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->whereNull('ended_at')
+            ->whereNotIn('connection_id', $connectionsWithMeters)
+            ->count();
+
+        return [
+            'total_meters' => $totalMeters,
+            'available_meters' => $availableMeters,
+            'active_assignments' => $activeAssignments,
+            'unassigned_connections' => $unassignedConnections,
+        ];
+    }
+
+    /**
+     * Format an assignment for the UI.
+     */
+    private function formatAssignmentForUI(MeterAssignment $assignment): array
+    {
+        $connection = $assignment->serviceConnection;
+        $meter = $assignment->meter;
+        $customer = $connection?->customer;
+
+        $customerName = $customer
+            ? trim(implode(' ', array_filter([
+                $customer->cust_first_name,
+                $customer->cust_middle_name ? substr($customer->cust_middle_name, 0, 1).'.' : '',
+                $customer->cust_last_name,
+            ])))
+            : 'Unknown';
+
+        $isActive = $assignment->removed_at === null;
+
+        return [
+            'assignment_id' => $assignment->assignment_id,
+            'meter_id' => $meter?->mtr_id,
+            'meter_serial' => $meter?->mtr_serial ?? 'Unknown',
+            'meter_brand' => $meter?->mtr_brand ?? 'Unknown',
+            'connection_id' => $connection?->connection_id,
+            'account_no' => $connection?->account_no ?? 'Unknown',
+            'customer_name' => $customerName,
+            'account_type' => $connection?->accountType?->at_desc ?? 'Unknown',
+            'barangay' => $connection?->address?->barangay?->b_desc ?? 'Unknown',
+            'installed_at' => $assignment->installed_at?->format('Y-m-d') ?? '-',
+            'install_read' => $assignment->install_read,
+            'removed_at' => $assignment->removed_at?->format('Y-m-d'),
+            'removal_read' => $assignment->removal_read,
+            'is_active' => $isActive,
+            'status' => $isActive ? 'Active' : 'Removed',
+            'status_class' => $isActive
+                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        ];
+    }
+
+    /**
+     * Remove a meter from a connection (array signature for controller).
+     */
+    public function removeMeterFromArray(int $assignmentId, array $data): array
+    {
+        $removedAt = isset($data['removed_at']) ? Carbon::parse($data['removed_at']) : now();
+        $removalRead = (float) ($data['removal_read'] ?? 0);
+
+        try {
+            $assignment = $this->removeMeter($assignmentId, $removalRead, $removedAt, 'User action');
+
+            return [
+                'success' => true,
+                'message' => 'Meter removed successfully.',
+                'data' => $this->formatAssignmentForUI($assignment),
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
 }

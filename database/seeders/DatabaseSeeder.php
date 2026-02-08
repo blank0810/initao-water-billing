@@ -52,6 +52,7 @@ class DatabaseSeeder extends Seeder
             TestUsersSeeder::class,       // Create test users for each role (includes super admin)
             PeriodSeeder::class,          // Billing periods (12 months)
             MiscReferenceSeeder::class,   // Misc references (penalties, discounts, surcharges)
+            MeterSeeder::class,           // Sample meters (25 meters: Neptune, Sensus, Badger, Itron, Master Meter)
             ServiceConnectionSeeder::class, // Sample service connections (Residential & Commercial)
         ]);
 
@@ -70,6 +71,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- Bill Adjustment Types: 5 types');
         $this->command->info('- Periods: 12 billing periods');
         $this->command->info('- Misc References: 3 reference types');
+        $this->command->info('- Meters: 25 meters (5 each of Neptune, Sensus, Badger, Itron, Master Meter)');
         $this->command->info('- Roles: 6 roles (Super Admin, Admin, Billing Officer, Meter Reader, Cashier, Viewer)');
         $this->command->info('- Permissions: 18 permissions across 8 modules');
         $this->command->info('- Test Users: 7 users (1 per role + testuser) - Password: "password"');
