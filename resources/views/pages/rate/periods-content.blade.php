@@ -329,7 +329,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Grace Period</p>
-                        <p class="text-sm font-medium text-gray-900 dark:text-white"><span x-text="viewPeriodData?.grace_period || 10"></span> days</p>
+                        <p class="text-sm font-medium text-gray-900 dark:text-white"><span x-text="viewPeriodData?.grace_period ?? 10"></span> days</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Bills</p>
@@ -614,7 +614,7 @@ function periodsData() {
                 per_code: period.per_code,
                 start_date: period.start_date,
                 end_date: period.end_date,
-                grace_period: period.grace_period || 10
+                grace_period: period.grace_period ?? 10
             };
             this.showEditModal = true;
         },
