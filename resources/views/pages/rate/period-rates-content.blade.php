@@ -783,6 +783,11 @@ function periodRatesData() {
                 return;
             }
 
+            if (this.selectedPeriodId !== 'default' && !this.hasCustomRates) {
+                this.newRate.range_id = 1;
+                return;
+            }
+
             const classRates = this.rates.filter(r => r.class_id == this.newRate.class_id);
             const maxTier = classRates.reduce((max, r) => Math.max(max, parseInt(r.range_id) || 0), 0);
             this.newRate.range_id = maxTier + 1;
