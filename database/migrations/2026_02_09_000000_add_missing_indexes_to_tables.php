@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -12,6 +13,8 @@ return new class extends Migration
      * Foreign key columns already have auto-created indexes from FK constraints.
      * This migration adds composite indexes and indexes on non-FK columns
      * that are frequently used in WHERE, ORDER BY, and JOIN operations.
+     *
+     * Uses addIndexSafely() to handle partial runs gracefully.
      */
     public function up(): void
     {
@@ -20,76 +23,52 @@ return new class extends Migration
         // =====================================================================
 
         // consumer_address: Hierarchical address lookups (e.g. "all addresses in barangay X of town Y")
-        Schema::table('consumer_address', function (Blueprint $table) {
-            $table->index(['prov_id', 't_id', 'b_id', 'p_id'], 'ca_address_hierarchy_index');
-        });
+        $this->addIndexSafely('consumer_address', ['prov_id', 't_id', 'b_id', 'p_id'], 'ca_address_hierarchy_index');
 
         // MeterAssignment: Date-based queries and "find current meter for connection"
-        Schema::table('MeterAssignment', function (Blueprint $table) {
-            $table->index('installed_at', 'meter_assignment_installed_at_index');
-            $table->index('removed_at', 'meter_assignment_removed_at_index');
-            $table->index(['connection_id', 'removed_at'], 'meter_assignment_current_meter_index');
-        });
+        $this->addIndexSafely('MeterAssignment', ['installed_at'], 'meter_assignment_installed_at_index');
+        $this->addIndexSafely('MeterAssignment', ['removed_at'], 'meter_assignment_removed_at_index');
+        $this->addIndexSafely('MeterAssignment', ['connection_id', 'removed_at'], 'meter_assignment_current_meter_index');
 
         // ServiceConnection: "Active connections for a customer"
-        Schema::table('ServiceConnection', function (Blueprint $table) {
-            $table->index(['customer_id', 'stat_id'], 'sc_customer_status_index');
-        });
+        $this->addIndexSafely('ServiceConnection', ['customer_id', 'stat_id'], 'sc_customer_status_index');
 
         // MeterReading: Date-based queries and period reports
-        Schema::table('MeterReading', function (Blueprint $table) {
-            $table->index('reading_date', 'meter_reading_date_index');
-            $table->index(['period_id', 'reading_date'], 'meter_reading_period_date_index');
-        });
+        $this->addIndexSafely('MeterReading', ['reading_date'], 'meter_reading_date_index');
+        $this->addIndexSafely('MeterReading', ['period_id', 'reading_date'], 'meter_reading_period_date_index');
 
         // water_bill_history: Overdue bill lookups
-        Schema::table('water_bill_history', function (Blueprint $table) {
-            $table->index('due_date', 'wbh_due_date_index');
-            $table->index(['stat_id', 'due_date'], 'wbh_status_due_date_index');
-        });
+        $this->addIndexSafely('water_bill_history', ['due_date'], 'wbh_due_date_index');
+        $this->addIndexSafely('water_bill_history', ['stat_id', 'due_date'], 'wbh_status_due_date_index');
 
         // PaymentAllocation: "Payments for connection in period" and reverse polymorphic
-        Schema::table('PaymentAllocation', function (Blueprint $table) {
-            $table->index(['connection_id', 'period_id'], 'pa_connection_period_index');
-            $table->index(['target_type', 'target_id'], 'pa_target_polymorphic_index');
-        });
+        $this->addIndexSafely('PaymentAllocation', ['connection_id', 'period_id'], 'pa_connection_period_index');
+        $this->addIndexSafely('PaymentAllocation', ['target_type', 'target_id'], 'pa_target_polymorphic_index');
 
         // CustomerLedger: Customer statements and posting timestamps
-        Schema::table('CustomerLedger', function (Blueprint $table) {
-            $table->index('post_ts', 'cl_post_ts_index');
-            $table->index(['customer_id', 'txn_date'], 'cl_customer_txn_date_index');
-        });
+        $this->addIndexSafely('CustomerLedger', ['post_ts'], 'cl_post_ts_index');
+        $this->addIndexSafely('CustomerLedger', ['customer_id', 'txn_date'], 'cl_customer_txn_date_index');
 
         // =====================================================================
         // MEDIUM PRIORITY - Reports, batch operations, and schedule management
         // =====================================================================
 
         // AreaAssignment: "Current assignments for this reader"
-        Schema::table('AreaAssignment', function (Blueprint $table) {
-            $table->index(['user_id', 'effective_to'], 'aa_reader_current_index');
-        });
+        $this->addIndexSafely('AreaAssignment', ['user_id', 'effective_to'], 'aa_reader_current_index');
 
         // reading_schedule: End date queries and status+date filtering
-        Schema::table('reading_schedule', function (Blueprint $table) {
-            $table->index('scheduled_end_date', 'rs_end_date_index');
-        });
+        $this->addIndexSafely('reading_schedule', ['scheduled_end_date'], 'rs_end_date_index');
 
         // uploaded_readings: Filter by processing status
-        Schema::table('uploaded_readings', function (Blueprint $table) {
-            $table->index('entry_status', 'ur_entry_status_index');
-            $table->index(['schedule_id', 'entry_status'], 'ur_schedule_status_index');
-        });
+        $this->addIndexSafely('uploaded_readings', ['entry_status'], 'ur_entry_status_index');
+        $this->addIndexSafely('uploaded_readings', ['schedule_id', 'entry_status'], 'ur_schedule_status_index');
 
         // reading_schedule_entries: "Pending entries in this schedule"
-        Schema::table('reading_schedule_entries', function (Blueprint $table) {
-            $table->index('status', 'rse_status_index');
-            $table->index(['schedule_id', 'status'], 'rse_schedule_status_index');
-        });
+        $this->addIndexSafely('reading_schedule_entries', ['status'], 'rse_status_index');
+        $this->addIndexSafely('reading_schedule_entries', ['schedule_id', 'status'], 'rse_schedule_status_index');
 
         // misc_bill: "Unpaid bills for connection due soon"
-        Schema::table('misc_bill', function (Blueprint $table) {
-            $table->index(['connection_id', 'is_paid', 'due_date'], 'mb_connection_paid_due_index');
-        });
+        $this->addIndexSafely('misc_bill', ['connection_id', 'is_paid', 'due_date'], 'mb_connection_paid_due_index');
     }
 
     /**
@@ -97,60 +76,63 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('consumer_address', function (Blueprint $table) {
-            $table->dropIndex('ca_address_hierarchy_index');
-        });
+        $this->dropIndexSafely('consumer_address', 'ca_address_hierarchy_index');
+        $this->dropIndexSafely('MeterAssignment', 'meter_assignment_installed_at_index');
+        $this->dropIndexSafely('MeterAssignment', 'meter_assignment_removed_at_index');
+        $this->dropIndexSafely('MeterAssignment', 'meter_assignment_current_meter_index');
+        $this->dropIndexSafely('ServiceConnection', 'sc_customer_status_index');
+        $this->dropIndexSafely('MeterReading', 'meter_reading_date_index');
+        $this->dropIndexSafely('MeterReading', 'meter_reading_period_date_index');
+        $this->dropIndexSafely('water_bill_history', 'wbh_due_date_index');
+        $this->dropIndexSafely('water_bill_history', 'wbh_status_due_date_index');
+        $this->dropIndexSafely('PaymentAllocation', 'pa_connection_period_index');
+        $this->dropIndexSafely('PaymentAllocation', 'pa_target_polymorphic_index');
+        $this->dropIndexSafely('CustomerLedger', 'cl_post_ts_index');
+        $this->dropIndexSafely('CustomerLedger', 'cl_customer_txn_date_index');
+        $this->dropIndexSafely('AreaAssignment', 'aa_reader_current_index');
+        $this->dropIndexSafely('reading_schedule', 'rs_end_date_index');
+        $this->dropIndexSafely('uploaded_readings', 'ur_entry_status_index');
+        $this->dropIndexSafely('uploaded_readings', 'ur_schedule_status_index');
+        $this->dropIndexSafely('reading_schedule_entries', 'rse_status_index');
+        $this->dropIndexSafely('reading_schedule_entries', 'rse_schedule_status_index');
+        $this->dropIndexSafely('misc_bill', 'mb_connection_paid_due_index');
+    }
 
-        Schema::table('MeterAssignment', function (Blueprint $table) {
-            $table->dropIndex('meter_assignment_installed_at_index');
-            $table->dropIndex('meter_assignment_removed_at_index');
-            $table->dropIndex('meter_assignment_current_meter_index');
-        });
+    /**
+     * Add an index only if it doesn't already exist.
+     */
+    private function addIndexSafely(string $table, array $columns, string $indexName): void
+    {
+        if (! $this->indexExists($table, $indexName)) {
+            Schema::table($table, function (Blueprint $blueprint) use ($columns, $indexName) {
+                $blueprint->index($columns, $indexName);
+            });
+        }
+    }
 
-        Schema::table('ServiceConnection', function (Blueprint $table) {
-            $table->dropIndex('sc_customer_status_index');
-        });
+    /**
+     * Drop an index only if it exists.
+     */
+    private function dropIndexSafely(string $table, string $indexName): void
+    {
+        if ($this->indexExists($table, $indexName)) {
+            Schema::table($table, function (Blueprint $blueprint) use ($indexName) {
+                $blueprint->dropIndex($indexName);
+            });
+        }
+    }
 
-        Schema::table('MeterReading', function (Blueprint $table) {
-            $table->dropIndex('meter_reading_date_index');
-            $table->dropIndex('meter_reading_period_date_index');
-        });
+    /**
+     * Check if an index exists on a table.
+     */
+    private function indexExists(string $table, string $indexName): bool
+    {
+        $database = DB::getDatabaseName();
 
-        Schema::table('water_bill_history', function (Blueprint $table) {
-            $table->dropIndex('wbh_due_date_index');
-            $table->dropIndex('wbh_status_due_date_index');
-        });
-
-        Schema::table('PaymentAllocation', function (Blueprint $table) {
-            $table->dropIndex('pa_connection_period_index');
-            $table->dropIndex('pa_target_polymorphic_index');
-        });
-
-        Schema::table('CustomerLedger', function (Blueprint $table) {
-            $table->dropIndex('cl_post_ts_index');
-            $table->dropIndex('cl_customer_txn_date_index');
-        });
-
-        Schema::table('AreaAssignment', function (Blueprint $table) {
-            $table->dropIndex('aa_reader_current_index');
-        });
-
-        Schema::table('reading_schedule', function (Blueprint $table) {
-            $table->dropIndex('rs_end_date_index');
-        });
-
-        Schema::table('uploaded_readings', function (Blueprint $table) {
-            $table->dropIndex('ur_entry_status_index');
-            $table->dropIndex('ur_schedule_status_index');
-        });
-
-        Schema::table('reading_schedule_entries', function (Blueprint $table) {
-            $table->dropIndex('rse_status_index');
-            $table->dropIndex('rse_schedule_status_index');
-        });
-
-        Schema::table('misc_bill', function (Blueprint $table) {
-            $table->dropIndex('mb_connection_paid_due_index');
-        });
+        return DB::table('information_schema.statistics')
+            ->where('table_schema', $database)
+            ->where('table_name', $table)
+            ->where('index_name', $indexName)
+            ->exists();
     }
 };
