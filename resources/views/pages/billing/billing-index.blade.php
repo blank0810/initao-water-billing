@@ -16,6 +16,9 @@
             <!-- Summary Cards -->
             @include('components.ui.billing.summary-cards')
 
+            <!-- Penalty Action Section -->
+            @include('components.ui.billing.penalty-section')
+
             <!-- Tabs -->
             <div class="mb-6">
                 <div class="border-b border-gray-200 dark:border-gray-700">
