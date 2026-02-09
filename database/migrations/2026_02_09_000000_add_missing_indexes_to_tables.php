@@ -66,7 +66,7 @@ return new class extends Migration
 
         // AreaAssignment: "Current assignments for this reader"
         Schema::table('AreaAssignment', function (Blueprint $table) {
-            $table->index(['meter_reader_id', 'effective_to'], 'aa_reader_current_index');
+            $table->index(['user_id', 'effective_to'], 'aa_reader_current_index');
         });
 
         // reading_schedule: End date queries and status+date filtering
