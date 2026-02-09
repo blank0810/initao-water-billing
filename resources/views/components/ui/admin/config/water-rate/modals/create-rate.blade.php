@@ -81,7 +81,7 @@
                         >
                             <option value="">Default Rate</option>
                             <template x-for="period in periods" :key="period.per_id">
-                                <option :value="period.per_id" x-text="`${period.p_month} ${period.p_year}`"></option>
+                                <option :value="period.per_id" x-text="period.per_name"></option>
                             </template>
                         </select>
                         <p class="mt-1 text-xs text-gray-500">Leave as "Default Rate" for general pricing</p>

@@ -114,24 +114,39 @@ class ServiceConnectionSeeder extends Seeder
         ];
 
         $createdCount = 0;
+        $skippedCount = 0;
 
         foreach ($serviceConnections as $index => $data) {
-            // Create customer
-            $customer = Customer::create([
-                'create_date' => now(),
-                'cust_first_name' => $data['customer']['cust_first_name'],
-                'cust_middle_name' => $data['customer']['cust_middle_name'],
-                'cust_last_name' => $data['customer']['cust_last_name'],
-                'ca_id' => $address->ca_id,
-                'land_mark' => 'Near main road',
-                'stat_id' => $activeStatusId,
-                'c_type' => $data['customer']['c_type'],
-                'resolution_no' => $this->generateResolutionNumber(
-                    $data['customer']['cust_first_name'],
-                    $data['customer']['cust_middle_name'],
-                    $data['customer']['cust_last_name']
-                ),
-            ]);
+            // Find or create customer (skip if already exists)
+            $customer = Customer::where('cust_first_name', $data['customer']['cust_first_name'])
+                ->where('cust_middle_name', $data['customer']['cust_middle_name'])
+                ->where('cust_last_name', $data['customer']['cust_last_name'])
+                ->first();
+
+            if (! $customer) {
+                $customer = Customer::create([
+                    'create_date' => now(),
+                    'cust_first_name' => $data['customer']['cust_first_name'],
+                    'cust_middle_name' => $data['customer']['cust_middle_name'],
+                    'cust_last_name' => $data['customer']['cust_last_name'],
+                    'ca_id' => $address->ca_id,
+                    'land_mark' => 'Near main road',
+                    'stat_id' => $activeStatusId,
+                    'c_type' => $data['customer']['c_type'],
+                    'resolution_no' => $this->generateResolutionNumber(
+                        $data['customer']['cust_first_name'],
+                        $data['customer']['cust_middle_name'],
+                        $data['customer']['cust_last_name']
+                    ),
+                ]);
+            }
+
+            // Skip if service connection already exists for this customer
+            if (ServiceConnection::where('customer_id', $customer->cust_id)->exists()) {
+                $skippedCount++;
+
+                continue;
+            }
 
             // Generate unique account number
             $accountNo = $this->generateAccountNumber($data['account_prefix'], $index + 1);
@@ -150,9 +165,7 @@ class ServiceConnectionSeeder extends Seeder
             $createdCount++;
         }
 
-        $this->command->info("Service Connections seeded: {$createdCount} connections created");
-        $this->command->info('- Residential: 3 connections');
-        $this->command->info('- Commercial: 2 connections');
+        $this->command->info("Service Connections seeded: {$createdCount} created, {$skippedCount} already existed");
     }
 
     /**

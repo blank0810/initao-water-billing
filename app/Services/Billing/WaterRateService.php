@@ -144,30 +144,37 @@ class WaterRateService
     }
 
     /**
-     * Copy default rates to a specific period.
+     * Copy rates to a specific period from a source (default rates or another period).
      *
-     * @param  int  $periodId  Target period ID
+     * @param  int  $targetPeriodId  Target period ID
      * @param  float  $adjustmentPercent  Percentage adjustment (e.g., 5 for 5% increase)
+     * @param  int|null  $sourcePeriodId  Source period ID (null = copy from default rates)
      * @return int Number of rates created
      */
-    public function copyRatesToPeriod(int $periodId, float $adjustmentPercent = 0): int
+    public function copyRatesToPeriod(int $targetPeriodId, float $adjustmentPercent = 0, ?int $sourcePeriodId = null): int
     {
-        $defaultRates = $this->getDefaultRates();
+        $sourceRates = $sourcePeriodId
+            ? $this->getRatesForSourcePeriod($sourcePeriodId)
+            : $this->getDefaultRates();
+
+        if ($sourceRates->isEmpty()) {
+            throw new \DomainException('No rates found in the selected source.');
+        }
+
         $multiplier = 1 + ($adjustmentPercent / 100);
         $count = 0;
 
         DB::beginTransaction();
         try {
-            foreach ($defaultRates as $rate) {
-                // Check if rate already exists for this period
-                $exists = WaterRate::where('period_id', $periodId)
+            foreach ($sourceRates as $rate) {
+                $exists = WaterRate::where('period_id', $targetPeriodId)
                     ->where('class_id', $rate->class_id)
                     ->where('range_id', $rate->range_id)
                     ->exists();
 
                 if (! $exists) {
                     WaterRate::create([
-                        'period_id' => $periodId,
+                        'period_id' => $targetPeriodId,
                         'class_id' => $rate->class_id,
                         'range_id' => $rate->range_id,
                         'range_min' => $rate->range_min,
@@ -187,6 +194,18 @@ class WaterRateService
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Get active rates for a specific period (not falling back to defaults).
+     */
+    private function getRatesForSourcePeriod(int $periodId): Collection
+    {
+        return WaterRate::where('period_id', $periodId)
+            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
+            ->orderBy('class_id')
+            ->orderBy('range_id')
+            ->get();
     }
 
     /**

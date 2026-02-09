@@ -39,12 +39,14 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,      // Permissions (18 permissions across 8 modules)
         ]);
 
-        // Create default test user
-        User::factory()->create([
-            'username' => 'testuser',
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Create default test user (skip if already exists)
+        if (! User::where('email', 'test@example.com')->exists()) {
+            User::factory()->create([
+                'username' => 'testuser',
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+        }
 
         // Seed tables that depend on users (must come after user creation)
         $this->call([

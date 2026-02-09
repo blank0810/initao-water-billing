@@ -20,7 +20,7 @@ class WaterRateController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         if ($request->expectsJson()) {
-            $periodId = $request->query('period_id');
+            $periodId = $request->query('period');
             $rates = $this->waterRateService->getAllRates($periodId);
 
             return response()->json($rates);

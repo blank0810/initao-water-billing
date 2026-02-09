@@ -64,8 +64,8 @@ class UserService
     {
         $user = User::create([
             'name' => $data['name'],
-            'email' => $data['email'],
-            'username' => $data['username'] ?? $this->generateUsername($data['email']),
+            'username' => $data['username'],
+            'email' => $data['email'] ?? null,
             'password' => Hash::make($data['password']),
             'stat_id' => $data['status_id'],
         ]);
@@ -85,12 +85,9 @@ class UserService
     {
         $updateData = [
             'name' => $data['name'],
-            'email' => $data['email'],
+            'username' => $data['username'],
+            'email' => $data['email'] ?? null,
         ];
-
-        if (isset($data['username'])) {
-            $updateData['username'] = $data['username'];
-        }
 
         // Only update password if provided
         if (! empty($data['password'])) {
@@ -167,20 +164,43 @@ class UserService
     }
 
     /**
-     * Generate username from email
+     * Suggest available usernames based on first and last name.
+     *
+     * @return array<string> Available username suggestions
      */
-    private function generateUsername(string $email): string
+    public function suggestUsernames(string $firstName, string $lastName): array
     {
-        $base = explode('@', $email)[0];
-        $username = $base;
-        $counter = 1;
+        $first = strtolower(trim($firstName));
+        $last = strtolower(str_replace(' ', '', trim($lastName)));
+        $firstInitial = mb_substr($first, 0, 1);
 
-        while (User::where('username', $username)->exists()) {
-            $username = $base.$counter;
-            $counter++;
+        $candidates = [
+            $first.'.'.$last,          // juan.delacruz
+            $firstInitial.$last,        // jdelacruz
+            $first.'_'.$last,           // juan_delacruz
+            $last.'.'.$first,           // delacruz.juan
+        ];
+
+        $candidates = array_unique($candidates);
+
+        $available = [];
+        foreach ($candidates as $candidate) {
+            if (! User::where('username', $candidate)->exists()) {
+                $available[] = $candidate;
+            }
         }
 
-        return $username;
+        // If all taken, append numbers to the first format
+        if (empty($available)) {
+            $base = $first.'.'.$last;
+            $counter = 1;
+            while (User::where('username', $base.$counter)->exists()) {
+                $counter++;
+            }
+            $available[] = $base.$counter;
+        }
+
+        return $available;
     }
 
     /**

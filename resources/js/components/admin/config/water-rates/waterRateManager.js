@@ -41,7 +41,7 @@ export default function waterRateManager() {
         // Load available periods for filtering
         async loadPeriods() {
             try {
-                const response = await fetch('/api/periods', {
+                const response = await fetch('/rate/periods', {
                     headers: {
                         'Accept': 'application/json',
                     },
@@ -52,18 +52,7 @@ export default function waterRateManager() {
                 }
 
                 const data = await response.json();
-                this.periods = data.data || [];
-
-                // Populate the period dropdown
-                const periodSelect = document.querySelector('select[x-model="periodFilter"]');
-                if (periodSelect && this.periods.length > 0) {
-                    this.periods.forEach(period => {
-                        const option = document.createElement('option');
-                        option.value = period.p_id;
-                        option.textContent = `${period.p_month} ${period.p_year}`;
-                        periodSelect.appendChild(option);
-                    });
-                }
+                this.periods = data.periods || [];
             } catch (error) {
                 console.error('Error loading periods:', error);
             }

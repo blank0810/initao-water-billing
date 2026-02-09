@@ -21,7 +21,9 @@
                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                     <option value="">Default Rates</option>
-                    <!-- Periods will be loaded dynamically -->
+                    <template x-for="period in periods" :key="period.per_id">
+                        <option :value="period.per_id" x-text="period.per_name"></option>
+                    </template>
                 </select>
             </div>
         </div>

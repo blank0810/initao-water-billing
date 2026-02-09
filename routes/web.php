@@ -342,6 +342,7 @@ Route::middleware('auth')->group(function () {
     // User Management - Manage (users.manage permission)
     Route::middleware(['permission:users.manage'])->group(function () {
         Route::get('/user/add', [UserController::class, 'create'])->name('user.add');
+        Route::get('/user/suggest-username', [UserController::class, 'suggestUsername'])->name('user.suggest-username');
 
         Route::post('/user', [UserController::class, 'store'])->name('user.store');
         Route::put('/user/{id}', [UserController::class, 'update'])->name('user.update');
@@ -426,6 +427,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/rate/account-types', [\App\Http\Controllers\RateController::class, 'getAccountTypes'])->name('rate.account-types');
         Route::get('/rate/periods/{periodId}/rates', [\App\Http\Controllers\RateController::class, 'getRatesForPeriod'])->name('rate.periods.rates');
         Route::post('/rate/periods/{periodId}/rates/copy', [\App\Http\Controllers\RateController::class, 'copyRatesToPeriod'])->name('rate.periods.rates.copy');
+        Route::post('/rate/rates', [\App\Http\Controllers\RateController::class, 'storeRate'])->name('rate.rates.store');
         Route::put('/rate/rates/{rateId}', [\App\Http\Controllers\RateController::class, 'updateRate'])->name('rate.rates.update');
         Route::post('/rate/rates/upload', [\App\Http\Controllers\RateController::class, 'uploadRates'])->name('rate.rates.upload');
         Route::get('/rate/template', [\App\Http\Controllers\RateController::class, 'downloadTemplate'])->name('rate.template');

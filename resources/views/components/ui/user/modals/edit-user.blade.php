@@ -23,8 +23,12 @@
                 <input type="text" id="editUserName" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address *</label>
-                <input type="email" id="editUserEmail" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username *</label>
+                <input type="text" id="editUserUsername" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                <input type="email" id="editUserEmail" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="Optional">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role *</label>
@@ -42,10 +46,6 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password (leave blank to keep current)</label>
                 <input type="password" id="editUserPassword" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="Enter new password">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
-                <input type="password" id="editUserPasswordConfirm" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="Confirm new password">
             </div>
         </form>
 
@@ -101,9 +101,9 @@ function populateEditRoleDropdown(selectedRoleId = null) {
 function showEditUserModal(user) {
     document.getElementById('editUserId').value = user.id;
     document.getElementById('editUserName').value = user.name || user.UserName || '';
+    document.getElementById('editUserUsername').value = user.username || '';
     document.getElementById('editUserEmail').value = user.email || user.Email || '';
     document.getElementById('editUserPassword').value = '';
-    document.getElementById('editUserPasswordConfirm').value = '';
 
     // Set status
     const status = (user.status || user.Status || '').toLowerCase();
@@ -136,19 +136,13 @@ async function saveUser() {
     }
 
     const password = document.getElementById('editUserPassword').value;
-    const passwordConfirm = document.getElementById('editUserPasswordConfirm').value;
-
-    if (password && password !== passwordConfirm) {
-        window.dispatchEvent(new CustomEvent('show-alert', {
-            detail: { type: 'error', message: 'Passwords do not match' }
-        }));
-        return;
-    }
+    const email = document.getElementById('editUserEmail').value;
 
     const userData = {
         id: document.getElementById('editUserId').value,
         name: document.getElementById('editUserName').value,
-        email: document.getElementById('editUserEmail').value,
+        username: document.getElementById('editUserUsername').value,
+        email: email ? email.trim() : null,
         role_id: parseInt(document.getElementById('editUserRole').value),
         status: document.getElementById('editUserStatus').value,
     };
@@ -156,7 +150,6 @@ async function saveUser() {
     // Only include password if it was changed
     if (password) {
         userData.password = password;
-        userData.password_confirmation = passwordConfirm;
     }
 
     // Show loading state
