@@ -103,6 +103,10 @@ return new class extends Migration
      */
     private function addIndexSafely(string $table, array $columns, string $indexName): void
     {
+        if (! Schema::hasTable($table)) {
+            return;
+        }
+
         if (! $this->indexExists($table, $indexName)) {
             Schema::table($table, function (Blueprint $blueprint) use ($columns, $indexName) {
                 $blueprint->index($columns, $indexName);
@@ -115,6 +119,10 @@ return new class extends Migration
      */
     private function dropIndexSafely(string $table, string $indexName): void
     {
+        if (! Schema::hasTable($table)) {
+            return;
+        }
+
         if ($this->indexExists($table, $indexName)) {
             Schema::table($table, function (Blueprint $blueprint) use ($indexName) {
                 $blueprint->dropIndex($indexName);
