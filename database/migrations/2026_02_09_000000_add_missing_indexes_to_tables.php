@@ -64,8 +64,8 @@ return new class extends Migration
         $this->addIndexSafely('uploaded_readings', ['schedule_id', 'entry_status'], 'ur_schedule_status_index');
 
         // reading_schedule_entries: "Pending entries in this schedule"
-        $this->addIndexSafely('reading_schedule_entries', ['status'], 'rse_status_index');
-        $this->addIndexSafely('reading_schedule_entries', ['schedule_id', 'status'], 'rse_schedule_status_index');
+        $this->addIndexSafely('reading_schedule_entries', ['status_id'], 'rse_status_index');
+        $this->addIndexSafely('reading_schedule_entries', ['schedule_id', 'status_id'], 'rse_schedule_status_index');
 
         // misc_bill: "Unpaid bills for connection due soon"
         $this->addIndexSafely('misc_bill', ['connection_id', 'is_paid', 'due_date'], 'mb_connection_paid_due_index');
