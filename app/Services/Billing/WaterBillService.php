@@ -106,7 +106,7 @@ class WaterBillService
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
-        $periods = Period::select('per_id', 'per_name', 'start_date', 'is_closed', 'stat_id')
+        $periods = Period::select('per_id', 'per_name', 'start_date', 'end_date', 'grace_period', 'is_closed', 'stat_id')
             ->where('is_closed', false)
             ->orderBy('start_date', 'desc')
             ->get()
@@ -115,6 +115,8 @@ class WaterBillService
                     'per_id' => $period->per_id,
                     'per_name' => $period->per_name,
                     'start_date' => $period->start_date,
+                    'end_date' => $period->end_date,
+                    'grace_period' => $period->grace_period,
                     'is_active' => $period->stat_id === $activeStatusId,
                 ];
             });
