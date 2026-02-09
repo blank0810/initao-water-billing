@@ -7,6 +7,8 @@ class AddUserManager {
         this.formData = {};
         this.roles = [];
         this.isSubmitting = false;
+        this.usernameManuallyEdited = false;
+        this.suggestionDebounceTimer = null;
     }
 
     // Get CSRF token
@@ -61,9 +63,11 @@ class AddUserManager {
             errors.push('Full name is required');
         }
 
-        if (!formData.email || formData.email.trim() === '') {
-            errors.push('Email is required');
-        } else {
+        if (!formData.username || formData.username.trim() === '') {
+            errors.push('Username is required');
+        }
+
+        if (formData.email && formData.email.trim() !== '') {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(formData.email)) {
                 errors.push('Please enter a valid email address');
@@ -72,10 +76,6 @@ class AddUserManager {
 
         if (!formData.password || formData.password.length < 8) {
             errors.push('Password must be at least 8 characters');
-        }
-
-        if (formData.password !== formData.password_confirmation) {
-            errors.push('Passwords do not match');
         }
 
         if (!formData.role_id) {
@@ -116,9 +116,9 @@ class AddUserManager {
                 },
                 body: JSON.stringify({
                     name: formData.name.trim(),
-                    email: formData.email.trim(),
+                    username: formData.username.trim(),
+                    email: formData.email ? formData.email.trim() : null,
                     password: formData.password,
-                    password_confirmation: formData.password_confirmation,
                     role_id: parseInt(formData.role_id),
                     status_id: parseInt(formData.status_id),
                 }),
@@ -159,9 +159,85 @@ class AddUserManager {
         }
     }
 
+    // Fetch username suggestions from API
+    async fetchUsernameSuggestions(firstName, lastName) {
+        if (!firstName || !lastName) return [];
+
+        try {
+            const params = new URLSearchParams({ first_name: firstName, last_name: lastName });
+            const response = await fetch(`/user/suggest-username?${params}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': this.getCsrfToken(),
+                },
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                return result.data || [];
+            }
+            return [];
+        } catch (error) {
+            console.error('Error fetching username suggestions:', error);
+            return [];
+        }
+    }
+
+    // Display username suggestion chips
+    displaySuggestions(suggestions) {
+        const container = document.getElementById('usernameSuggestions');
+        const chips = document.getElementById('suggestionChips');
+        if (!container || !chips) return;
+
+        chips.innerHTML = '';
+
+        if (suggestions.length === 0) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        suggestions.forEach(username => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.textContent = username;
+            chip.className = 'px-2.5 py-1 text-xs font-medium rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-700 cursor-pointer transition-colors';
+            chip.addEventListener('click', () => {
+                const usernameInput = document.getElementById('usernameInput');
+                if (usernameInput) {
+                    usernameInput.value = username;
+                    this.usernameManuallyEdited = true;
+                }
+                container.classList.add('hidden');
+            });
+            chips.appendChild(chip);
+        });
+
+        container.classList.remove('hidden');
+    }
+
+    // Debounced suggestion fetch triggered by name field changes
+    onNameChanged(firstName, lastName) {
+        clearTimeout(this.suggestionDebounceTimer);
+        this.suggestionDebounceTimer = setTimeout(async () => {
+            if (firstName.trim() && lastName.trim()) {
+                const suggestions = await this.fetchUsernameSuggestions(firstName.trim(), lastName.trim());
+                this.displaySuggestions(suggestions);
+
+                // Auto-fill username with first suggestion if admin hasn't manually edited it
+                if (!this.usernameManuallyEdited && suggestions.length > 0) {
+                    const usernameInput = document.getElementById('usernameInput');
+                    if (usernameInput) {
+                        usernameInput.value = suggestions[0];
+                    }
+                }
+            }
+        }, 400);
+    }
+
     // Reset form
     resetForm() {
         this.formData = {};
+        this.usernameManuallyEdited = false;
     }
 
     // Get role options (for backward compatibility)
@@ -198,6 +274,26 @@ document.addEventListener('DOMContentLoaded', function() {
         manager.populateRoleDropdown(roleSelect);
     }
 
+    // Username suggestion listeners
+    const firstNameInput = document.querySelector('[name="first_name"]');
+    const lastNameInput = document.querySelector('[name="last_name"]');
+    const usernameInput = document.getElementById('usernameInput');
+
+    if (firstNameInput && lastNameInput) {
+        const triggerSuggestion = () => {
+            manager.onNameChanged(firstNameInput.value, lastNameInput.value);
+        };
+        firstNameInput.addEventListener('input', triggerSuggestion);
+        lastNameInput.addEventListener('input', triggerSuggestion);
+    }
+
+    // Track manual username edits
+    if (usernameInput) {
+        usernameInput.addEventListener('input', () => {
+            manager.usernameManuallyEdited = true;
+        });
+    }
+
     // Handle form submission (check multiple possible form IDs)
     const addUserForm = document.getElementById('userRegistrationForm')
         || document.getElementById('addUserForm');
@@ -214,9 +310,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = {
                 name: fullName,
+                username: formData.get('username'),
                 email: formData.get('email'),
                 password: formData.get('password'),
-                password_confirmation: formData.get('password_confirmation'),
                 role_id: formData.get('role_id'),
                 status_id: formData.get('status_id'),
             };
@@ -244,6 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Reset form
                 addUserForm.reset();
+                manager.usernameManuallyEdited = false;
 
                 // Redirect to user list
                 setTimeout(() => {

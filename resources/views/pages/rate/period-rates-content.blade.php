@@ -28,10 +28,17 @@
 
         <div class="flex gap-2">
             <template x-if="selectedPeriodId !== 'default' && !hasCustomRates">
-                <button @click="showCreateModal = true"
+                <button @click="copySource = 'default'; applyIncrease = false; increasePercent = 5; showCreateModal = true"
                     class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 text-sm font-medium">
+                    <i class="fas fa-copy"></i>
+                    <span>Copy Rates from Period</span>
+                </button>
+            </template>
+            <template x-if="!selectedPeriodClosed">
+                <button @click="openAddRateModal()"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 text-sm font-medium">
                     <i class="fas fa-plus"></i>
-                    <span>Create Period Rates</span>
+                    <span>Add Rate Tier</span>
                 </button>
             </template>
             <button @click="showUploadModal = true"
@@ -43,7 +50,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div x-show="selectedPeriodId === 'default' || hasCustomRates" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700">
             <div class="flex items-center justify-between">
                 <div>
@@ -100,8 +107,35 @@
         </div>
     </div>
 
+    <!-- No Rates Informational Card -->
+    <template x-if="selectedPeriodId !== 'default' && !hasCustomRates">
+        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-8 text-center">
+            <div class="flex justify-center mb-4">
+                <div class="w-16 h-16 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-2xl text-amber-500 dark:text-amber-400"></i>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No Rates Available</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                This period has no rate tiers configured yet. You can set up rates by duplicating from an existing period or by adding individual rate tiers.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button @click="copySource = 'default'; applyIncrease = false; increasePercent = 5; showCreateModal = true"
+                    class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 text-sm font-medium">
+                    <i class="fas fa-copy"></i>
+                    <span>Duplicate Rates from Period</span>
+                </button>
+                <button @click="openAddRateModal()"
+                    class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2 text-sm font-medium">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Rate Tier Manually</span>
+                </button>
+            </div>
+        </div>
+    </template>
+
     <!-- Rates Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div x-show="selectedPeriodId === 'default' || hasCustomRates" class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center">
                 <i class="fas fa-money-bill-wave text-green-500 mr-2"></i>
@@ -152,11 +186,16 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-center">
-                                <button @click="editRate(rate)"
-                                    :disabled="selectedPeriodClosed && rate.period_id !== null"
-                                    class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fas fa-edit mr-1"></i>Edit
-                                </button>
+                                <template x-if="selectedPeriodId !== 'default' && !hasCustomRates">
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 italic">Create period rates first</span>
+                                </template>
+                                <template x-if="selectedPeriodId === 'default' || hasCustomRates">
+                                    <button @click="editRate(rate)"
+                                        :disabled="selectedPeriodClosed"
+                                        class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fas fa-edit mr-1"></i>Edit
+                                    </button>
+                                </template>
                             </td>
                         </tr>
                     </template>
@@ -188,25 +227,48 @@
             <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-auto z-10">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Create Period Rates</h3>
-                </div>
-                <div class="px-6 py-4">
-                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        This will copy all default rates to <strong x-text="selectedPeriodName"></strong>, allowing you to customize them independently.
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Copy rates to <strong x-text="selectedPeriodName"></strong>
                     </p>
+                </div>
+                <div class="px-6 py-4 space-y-4">
+                    <!-- Source Selector -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Copy rates from</label>
+                        <select x-model="copySource"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                            <option value="default">Default Rates (Base)</option>
+                            <template x-for="period in periodsWithRates" :key="period.per_id">
+                                <option :value="period.per_id" x-text="period.per_name + ' (' + period.rate_count + ' tiers)'"></option>
+                            </template>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Select the source rates to copy from
+                        </p>
+                    </div>
 
-                    <div class="mb-4">
+                    <!-- Percentage Adjustment -->
+                    <div>
                         <label class="flex items-center">
                             <input type="checkbox" x-model="applyIncrease" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                             <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Apply percentage adjustment</span>
                         </label>
                     </div>
 
-                    <div x-show="applyIncrease" class="mb-4">
+                    <div x-show="applyIncrease" x-transition>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Percentage (%)</label>
                         <input type="number" x-model="increasePercent" step="0.1"
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                             placeholder="e.g., 5 for 5% increase, -3 for 3% decrease">
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use negative values for decrease</p>
+                    </div>
+
+                    <!-- Info Box -->
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                        <p class="text-xs text-blue-700 dark:text-blue-300">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            This will create a full copy of rates for this period, which you can then customize individually.
+                        </p>
                     </div>
                 </div>
                 <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
@@ -365,6 +427,93 @@
             </div>
         </div>
     </div>
+
+    <!-- Add Rate Tier Modal -->
+    <div x-show="showAddRateModal" x-cloak
+        class="fixed inset-0 z-50 overflow-y-auto"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" @click="showAddRateModal = false"></div>
+
+            <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-auto z-10">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add Rate Tier</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Adding to: <strong x-text="selectedPeriodId === 'default' ? 'Default Rates' : selectedPeriodName"></strong>
+                    </p>
+                </div>
+                <div class="px-6 py-4 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Type</label>
+                            <select x-model="newRate.class_id" @change="autoSetTierNumber()"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select Account Type</option>
+                                <template x-for="(name, id) in accountTypes" :key="id">
+                                    <option :value="id" x-text="name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tier Number</label>
+                            <input type="number" x-model="newRate.range_id" min="1" step="1" readonly
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white cursor-not-allowed">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Auto-assigned based on account type</p>
+                        </div>
+                        <div></div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Range Min (cu.m)</label>
+                            <input type="number" x-model="newRate.range_min" min="0"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Range Max (cu.m)</label>
+                            <input type="number" x-model="newRate.range_max" min="0"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="10">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Base Rate (₱)</label>
+                            <input type="number" x-model="newRate.rate_val" step="0.01" min="0"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="150.00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rate per cu.m (₱)</label>
+                            <input type="number" x-model="newRate.rate_inc" step="0.01" min="0"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                placeholder="15.00">
+                        </div>
+                    </div>
+
+                    <template x-if="addRateError">
+                        <div class="p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
+                            <p class="text-xs text-red-700 dark:text-red-300">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                <span x-text="addRateError"></span>
+                            </p>
+                        </div>
+                    </template>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                    <button @click="showAddRateModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+                        Cancel
+                    </button>
+                    <button @click="addRateTier()" :disabled="addingRate"
+                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition disabled:opacity-50">
+                        <span x-show="!addingRate">Add Rate Tier</span>
+                        <span x-show="addingRate"><i class="fas fa-spinner fa-spin mr-1"></i>Adding...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -384,8 +533,10 @@ function periodRatesData() {
         showCreateModal: false,
         showEditModal: false,
         showUploadModal: false,
+        showAddRateModal: false,
 
         // Create modal
+        copySource: 'default',
         applyIncrease: false,
         increasePercent: 5,
         creating: false,
@@ -393,6 +544,11 @@ function periodRatesData() {
         // Edit modal
         editingRate: {},
         saving: false,
+
+        // Add rate modal
+        newRate: {},
+        addingRate: false,
+        addRateError: '',
 
         // Upload modal
         uploadPeriodId: 'default',
@@ -410,6 +566,10 @@ function periodRatesData() {
             if (this.selectedPeriodId === 'default' || this.selectedPeriodId === null) return false;
             const period = this.periods.find(p => p.per_id == this.selectedPeriodId);
             return period ? period.is_closed : false;
+        },
+
+        get periodsWithRates() {
+            return this.periods.filter(p => p.has_custom_rates && p.per_id != this.selectedPeriodId);
         },
 
         get filteredRates() {
@@ -456,10 +616,8 @@ function periodRatesData() {
                 this.accountTypes = data.accountTypes || {};
                 this.defaultAccountTypeId = data.defaultAccountTypeId || null;
 
-                // Set the default selected class to Residential on initial load
-                if (!this.initialized && this.defaultAccountTypeId) {
-                    this.selectedClassId = this.defaultAccountTypeId;
-                } else if (!this.initialized) {
+                // Set the default selected class to All Classes on initial load
+                if (!this.initialized) {
                     this.selectedClassId = 'all';
                 }
             } catch (error) {
@@ -527,16 +685,21 @@ function periodRatesData() {
         async createPeriodRates() {
             this.creating = true;
             try {
+                const payload = {
+                    apply_increase: this.applyIncrease,
+                    increase_percent: this.increasePercent,
+                };
+                if (this.copySource !== 'default') {
+                    payload.source_period_id = this.copySource;
+                }
+
                 const response = await fetch(`/rate/periods/${this.selectedPeriodId}/rates/copy`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({
-                        apply_increase: this.applyIncrease,
-                        increase_percent: this.increasePercent
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
@@ -599,6 +762,72 @@ function periodRatesData() {
                 this.showNotification('Failed to upload rates', 'error');
             }
             this.uploading = false;
+        },
+
+        openAddRateModal() {
+            this.newRate = {
+                class_id: '',
+                range_id: '',
+                range_min: '',
+                range_max: '',
+                rate_val: '',
+                rate_inc: '',
+            };
+            this.addRateError = '';
+            this.showAddRateModal = true;
+        },
+
+        autoSetTierNumber() {
+            if (!this.newRate.class_id) {
+                this.newRate.range_id = '';
+                return;
+            }
+
+            if (this.selectedPeriodId !== 'default' && !this.hasCustomRates) {
+                this.newRate.range_id = 1;
+                return;
+            }
+
+            const classRates = this.rates.filter(r => r.class_id == this.newRate.class_id);
+            const maxTier = classRates.reduce((max, r) => Math.max(max, parseInt(r.range_id) || 0), 0);
+            this.newRate.range_id = maxTier + 1;
+        },
+
+        async addRateTier() {
+            this.addingRate = true;
+            this.addRateError = '';
+
+            try {
+                const periodId = (this.selectedPeriodId === 'default' || this.selectedPeriodId === null)
+                    ? null
+                    : this.selectedPeriodId;
+
+                const response = await fetch('/rate/rates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        ...this.newRate,
+                        period_id: periodId,
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    this.showAddRateModal = false;
+                    await this.loadRates();
+                    this.showNotification('Rate tier added successfully', 'success');
+                } else {
+                    this.addRateError = data.message || 'Failed to add rate tier';
+                }
+            } catch (error) {
+                console.error('Failed to add rate tier:', error);
+                this.addRateError = 'Failed to add rate tier';
+            }
+            this.addingRate = false;
         },
 
         showNotification(message, type = 'info') {

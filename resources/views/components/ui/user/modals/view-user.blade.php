@@ -26,6 +26,10 @@
                 <div id="viewUserName" class="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded"></div>
             </div>
             <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
+                <div id="viewUserUsername" class="text-sm font-mono text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded"></div>
+            </div>
+            <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
                 <div id="viewUserEmail" class="text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded"></div>
             </div>
@@ -55,6 +59,7 @@
 function showViewUserModal(user) {
     document.getElementById('viewUserId').textContent = user.id;
     document.getElementById('viewUserName').textContent = user.name || 'N/A';
+    document.getElementById('viewUserUsername').textContent = user.username || 'N/A';
     document.getElementById('viewUserEmail').textContent = user.email || 'N/A';
     document.getElementById('viewUserRole').textContent = user.role?.display_name || user.role?.role_name || 'No Role';
     document.getElementById('viewUserDate').textContent = user.created_at_formatted || 'N/A';

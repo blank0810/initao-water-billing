@@ -4,7 +4,6 @@ namespace App\Services\Billing;
 
 use App\Models\Period;
 use App\Models\Status;
-use App\Models\WaterRate;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -115,95 +114,12 @@ class PeriodService
                 'stat_id' => Status::getIdByDescription(Status::ACTIVE),
             ]);
 
-            // Copy rates from the most recent previous period
-            $copiedRates = $this->copyRatesFromPreviousPeriod($period);
-
-            $message = 'Period created successfully.';
-            if ($copiedRates > 0) {
-                $message .= " {$copiedRates} rate tiers copied from previous period.";
-            }
-
             return [
                 'success' => true,
-                'message' => $message,
+                'message' => 'Period created successfully. Use "Create Period Rates" to set up rates for this period.',
                 'data' => $this->getPeriodDetails($period->per_id),
             ];
         });
-    }
-
-    /**
-     * Copy rates from the most recent previous period to a new period.
-     */
-    private function copyRatesFromPreviousPeriod(Period $newPeriod): int
-    {
-        // Find the most recent period before this one
-        $previousPeriod = Period::where('start_date', '<', $newPeriod->start_date)
-            ->orderBy('start_date', 'desc')
-            ->first();
-
-        if (! $previousPeriod) {
-            // No previous period, try to copy from default rates (period_id = NULL)
-            return $this->copyDefaultRates($newPeriod);
-        }
-
-        // Get rates from previous period
-        $previousRates = WaterRate::where('period_id', $previousPeriod->per_id)
-            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
-            ->get();
-
-        if ($previousRates->isEmpty()) {
-            // Previous period has no rates, try default rates
-            return $this->copyDefaultRates($newPeriod);
-        }
-
-        // Copy rates to new period
-        $copiedCount = 0;
-        foreach ($previousRates as $rate) {
-            WaterRate::create([
-                'period_id' => $newPeriod->per_id,
-                'class_id' => $rate->class_id,
-                'range_id' => $rate->range_id,
-                'range_min' => $rate->range_min,
-                'range_max' => $rate->range_max,
-                'rate_val' => $rate->rate_val,
-                'rate_inc' => $rate->rate_inc,
-                'stat_id' => $rate->stat_id,
-            ]);
-            $copiedCount++;
-        }
-
-        return $copiedCount;
-    }
-
-    /**
-     * Copy default rates (period_id = NULL) to a period.
-     */
-    private function copyDefaultRates(Period $period): int
-    {
-        $defaultRates = WaterRate::whereNull('period_id')
-            ->where('stat_id', Status::getIdByDescription(Status::ACTIVE))
-            ->get();
-
-        if ($defaultRates->isEmpty()) {
-            return 0;
-        }
-
-        $copiedCount = 0;
-        foreach ($defaultRates as $rate) {
-            WaterRate::create([
-                'period_id' => $period->per_id,
-                'class_id' => $rate->class_id,
-                'range_id' => $rate->range_id,
-                'range_min' => $rate->range_min,
-                'range_max' => $rate->range_max,
-                'rate_val' => $rate->rate_val,
-                'rate_inc' => $rate->rate_inc,
-                'stat_id' => $rate->stat_id,
-            ]);
-            $copiedCount++;
-        }
-
-        return $copiedCount;
     }
 
     /**

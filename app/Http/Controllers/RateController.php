@@ -162,13 +162,14 @@ class RateController extends Controller
     }
 
     /**
-     * Copy default rates to a specific period.
+     * Copy rates to a specific period from a source (defaults or another period).
      */
     public function copyRatesToPeriod(Request $request, int $periodId): JsonResponse
     {
         $request->validate([
             'apply_increase' => 'boolean',
             'increase_percent' => 'numeric|min:-100|max:1000',
+            'source_period_id' => 'nullable|integer|exists:period,per_id',
         ]);
 
         $period = Period::findOrFail($periodId);
@@ -189,19 +190,80 @@ class RateController extends Controller
 
         $applyIncrease = $request->boolean('apply_increase', false);
         $increasePercent = $applyIncrease ? $request->input('increase_percent', 0) : 0;
+        $sourcePeriodId = $request->filled('source_period_id') ? (int) $request->input('source_period_id') : null;
 
         try {
-            $count = $this->rateService->copyRatesToPeriod($periodId, $increasePercent);
+            $count = $this->rateService->copyRatesToPeriod($periodId, $increasePercent, $sourcePeriodId);
 
             return response()->json([
                 'message' => 'Rates copied successfully.',
                 'count' => $count,
             ]);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to copy rates: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Store a new rate tier.
+     */
+    public function storeRate(Request $request): JsonResponse
+    {
+        $request->validate([
+            'class_id' => 'required|integer|exists:account_type,at_id',
+            'range_id' => 'required|integer|min:1',
+            'range_min' => 'required|integer|min:0',
+            'range_max' => 'required|integer|gt:range_min',
+            'rate_val' => 'required|numeric|min:0',
+            'rate_inc' => 'required|numeric|min:0',
+            'period_id' => 'nullable|integer|exists:period,per_id',
+        ]);
+
+        $periodId = $request->filled('period_id') ? (int) $request->input('period_id') : null;
+
+        if ($periodId) {
+            $period = Period::findOrFail($periodId);
+            if ($period->is_closed) {
+                return response()->json([
+                    'message' => 'Cannot add rates to a closed period.',
+                ], 422);
+            }
+        }
+
+        // Check for duplicate tier
+        $exists = WaterRate::where('period_id', $periodId)
+            ->where('class_id', $request->input('class_id'))
+            ->where('range_id', $request->input('range_id'))
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'message' => 'A rate tier with this class and tier number already exists for this period.',
+            ], 422);
+        }
+
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        WaterRate::create([
+            'period_id' => $periodId,
+            'class_id' => $request->input('class_id'),
+            'range_id' => $request->input('range_id'),
+            'range_min' => $request->input('range_min'),
+            'range_max' => $request->input('range_max'),
+            'rate_val' => $request->input('rate_val'),
+            'rate_inc' => $request->input('rate_inc'),
+            'stat_id' => $activeStatusId,
+        ]);
+
+        return response()->json([
+            'message' => 'Rate tier added successfully.',
+        ], 201);
     }
 
     /**
@@ -219,60 +281,29 @@ class RateController extends Controller
 
         $rate = WaterRate::findOrFail($rateId);
 
-        // Check if editing a default rate for a specific period
+        // Prevent editing default rates in a period context — user must create period rates first
         if ($rate->period_id === null && $request->filled('period_id')) {
-            $periodId = $request->input('period_id');
-            $period = Period::findOrFail($periodId);
+            return response()->json([
+                'message' => 'This period has no custom rates yet. Please create period rates first.',
+            ], 422);
+        }
 
-            if ($period->is_closed) {
+        // Check if the rate belongs to a closed period
+        if ($rate->period_id !== null) {
+            $period = Period::find($rate->period_id);
+            if ($period && $period->is_closed) {
                 return response()->json([
                     'message' => 'Cannot modify rates for a closed period.',
                 ], 422);
             }
-
-            // Check if a period-specific rate already exists
-            $existingRate = WaterRate::where('period_id', $periodId)
-                ->where('class_id', $rate->class_id)
-                ->where('range_id', $rate->range_id)
-                ->first();
-
-            if ($existingRate) {
-                $existingRate->update([
-                    'rate_val' => $request->input('rate_val'),
-                    'rate_inc' => $request->input('rate_inc'),
-                    'range_min' => $request->input('range_min'),
-                    'range_max' => $request->input('range_max'),
-                ]);
-            } else {
-                WaterRate::create([
-                    'period_id' => $periodId,
-                    'class_id' => $rate->class_id,
-                    'range_id' => $rate->range_id,
-                    'range_min' => $request->input('range_min'),
-                    'range_max' => $request->input('range_max'),
-                    'rate_val' => $request->input('rate_val'),
-                    'rate_inc' => $request->input('rate_inc'),
-                    'stat_id' => $rate->stat_id,
-                ]);
-            }
-        } else {
-            // Update the existing rate
-            if ($rate->period_id !== null) {
-                $period = Period::find($rate->period_id);
-                if ($period && $period->is_closed) {
-                    return response()->json([
-                        'message' => 'Cannot modify rates for a closed period.',
-                    ], 422);
-                }
-            }
-
-            $rate->update([
-                'rate_val' => $request->input('rate_val'),
-                'rate_inc' => $request->input('rate_inc'),
-                'range_min' => $request->input('range_min'),
-                'range_max' => $request->input('range_max'),
-            ]);
         }
+
+        $rate->update([
+            'rate_val' => $request->input('rate_val'),
+            'rate_inc' => $request->input('rate_inc'),
+            'range_min' => $request->input('range_min'),
+            'range_max' => $request->input('range_max'),
+        ]);
 
         return response()->json([
             'message' => 'Rate updated successfully.',

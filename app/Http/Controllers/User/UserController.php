@@ -10,6 +10,7 @@ use App\Models\Status;
 use App\Services\AreaAssignmentService;
 use App\Services\Users\UserService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
@@ -172,6 +173,27 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'data' => $stats,
+        ]);
+    }
+
+    /**
+     * Suggest available usernames based on name
+     */
+    public function suggestUsername(Request $request): JsonResponse
+    {
+        $request->validate([
+            'first_name' => ['required', 'string'],
+            'last_name' => ['required', 'string'],
+        ]);
+
+        $suggestions = $this->userService->suggestUsernames(
+            $request->input('first_name'),
+            $request->input('last_name')
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $suggestions,
         ]);
     }
 

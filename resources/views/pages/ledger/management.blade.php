@@ -1,158 +1,119 @@
 <x-app-layout>
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-[80vh] bg-gray-50 dark:bg-gray-900">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 
             <!-- Page Header -->
-            <x-ui.page-header 
-                title="Ledger Management" 
+            <x-ui.page-header
+                title="Ledger Management"
                 subtitle="Track financial transactions, payments, and account balances"
-            >
-                <x-slot name="actions">
-                    <x-ui.button variant="outline" href="{{ route('ledger.overall-data') }}" icon="fas fa-chart-bar">
-                        Overall Data
-                    </x-ui.button>
-                </x-slot>
-            </x-ui.page-header>
+            />
 
-            <!-- Tabs -->
-            <div class="mb-6">
-                <div class="border-b border-gray-200 dark:border-gray-700">
-                    <nav class="-mb-px flex space-x-8">
-                        <button onclick="switchLedgerTab('consumers')" id="tabLedgerConsumers" class="ledger-tab-button border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600 dark:text-blue-400">
-                            <i class="fas fa-users mr-2"></i>Consumer Ledgers
-                        </button>
-                        <button onclick="switchLedgerTab('transactions')" id="tabLedgerTransactions" class="ledger-tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-                            <i class="fas fa-exchange-alt mr-2"></i>Transaction Types
-                        </button>
-                    </nav>
+            <!-- Under Development Card -->
+            <div class="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+
+                <!-- Subtle diagonal stripes background -->
+                <div class="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
+                     style="background-image: repeating-linear-gradient(
+                         -45deg,
+                         transparent,
+                         transparent 10px,
+                         currentColor 10px,
+                         currentColor 11px
+                     );">
                 </div>
-            </div>
 
-            <!-- Search and Filters -->
-            <div id="searchFilterSection" class="mb-6">
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <div class="flex-1">
-                        <x-ui.search-bar placeholder="Search by consumer name, ID, meter number..." />
+                <div class="relative flex flex-col items-center justify-center py-20 px-6 text-center"
+                     x-data="{ show: false }"
+                     x-init="setTimeout(() => show = true, 100)">
+
+                    <!-- Animated Icon -->
+                    <div class="mb-8"
+                         x-show="show"
+                         x-transition:enter="transition ease-out duration-500"
+                         x-transition:enter-start="opacity-0 -translate-y-4"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+                        <div class="relative">
+                            <!-- Outer ring pulse -->
+                            <div class="absolute inset-0 w-28 h-28 rounded-full bg-amber-400/10 dark:bg-amber-400/5 animate-ping" style="animation-duration: 3s;"></div>
+                            <!-- Icon container -->
+                            <div class="relative w-28 h-28 rounded-full bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-2 border-amber-200 dark:border-amber-700/50 flex items-center justify-center">
+                                <svg class="w-12 h-12 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.049.58.025 1.193-.14 1.743" />
+                                </svg>
+                            </div>
+                        </div>
                     </div>
-                    <div class="sm:w-64">
-                        <select id="sourceTypeFilterDropdown" onchange="filterBySourceType(this.value)" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="all">All Transaction Types</option>
-                        </select>
+
+                    <!-- Text Content -->
+                    <div x-show="show"
+                         x-transition:enter="transition ease-out duration-500 delay-200"
+                         x-transition:enter-start="opacity-0 translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+
+                        <!-- Status Badge -->
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 mb-5">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            </span>
+                            <span class="text-xs font-semibold tracking-wide uppercase text-amber-700 dark:text-amber-300">In Development</span>
+                        </div>
+
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                            This module is currently being built
+                        </h2>
+                        <p class="text-gray-500 dark:text-gray-400 max-w-md mx-auto leading-relaxed mb-8">
+                            The Ledger Management system is under active development. This will include consumer ledger tracking, transaction history, and account balance management.
+                        </p>
+                    </div>
+
+                    <!-- Feature Preview Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl w-full"
+                         x-show="show"
+                         x-transition:enter="transition ease-out duration-500 delay-[400ms]"
+                         x-transition:enter-start="opacity-0 translate-y-3"
+                         x-transition:enter-end="opacity-100 translate-y-0">
+
+                        <div class="flex flex-col items-center p-5 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-3">
+                                <i class="fas fa-book-open text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Consumer Ledgers</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500 mt-1">Account histories</span>
+                        </div>
+
+                        <div class="flex flex-col items-center p-5 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700">
+                            <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-3">
+                                <i class="fas fa-exchange-alt text-green-600 dark:text-green-400"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Transactions</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500 mt-1">Bills, payments, charges</span>
+                        </div>
+
+                        <div class="flex flex-col items-center p-5 rounded-xl bg-gray-50 dark:bg-gray-700/30 border border-gray-100 dark:border-gray-700">
+                            <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-3">
+                                <i class="fas fa-chart-line text-purple-600 dark:text-purple-400"></i>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">Balance Reports</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500 mt-1">Outstanding balances</span>
+                        </div>
+                    </div>
+
+                    <!-- Back to Dashboard -->
+                    <div class="mt-10"
+                         x-show="show"
+                         x-transition:enter="transition ease-out duration-500 delay-[600ms]"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100">
+                        <a href="{{ route('dashboard') }}"
+                           class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
+                            <i class="fas fa-arrow-left text-xs"></i>
+                            Back to Dashboard
+                        </a>
                     </div>
                 </div>
-            </div>
-
-            <!-- Summary Cards -->
-            <div id="ledgerSummaryWrapper" class="mb-8">
-                @include('components.ui.ledger.info-cards')
-            </div>
-
-            <!-- Main Table Section -->
-            <div id="tableSection" x-data="ledgerManagementData()" x-init="init()">
-                <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full">
-                            <thead>
-                                <tr class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
-                                    <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Consumer Name</th>
-                                    <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Consumer ID</th>
-                                    <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Meter No.</th>
-                                    <th class="px-4 py-3.5 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Total Charges</th>
-                                    <th class="px-4 py-3.5 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Total Payments</th>
-                                    <th class="px-4 py-3.5 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Outstanding Balance</th>
-                                    <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                <template x-for="consumer in paginatedData" :key="consumer.id">
-                                    <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-all duration-150">
-                                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-white" x-text="consumer.name"></td>
-                                        <td class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300" x-text="consumer.id"></td>
-                                        <td class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300" x-text="consumer.meterNo"></td>
-                                        <td class="px-4 py-3 text-sm text-right text-red-600" x-text="'₱ '+consumer.totalCharges.toFixed(2)"></td>
-                                        <td class="px-4 py-3 text-sm text-right text-green-600" x-text="'₱ '+consumer.totalPayments.toFixed(2)"></td>
-                                        <td class="px-4 py-3 text-sm text-right font-semibold" :class="consumer.balance>0?'text-red-600':'text-green-600'" x-text="'₱ '+Math.abs(consumer.balance).toFixed(2)"></td>
-                                        <td class="px-4 py-3 text-center"><button @click="selectConsumer(consumer.id)" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">View Ledger</button></td>
-                                    </tr>
-                                </template>
-                                <template x-if="paginatedData.length===0">
-                                    <tr><td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400"><i class="fas fa-inbox text-3xl mb-2 opacity-50"></i><p>No consumers found</p></td></tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="flex justify-between items-center mt-4 flex-wrap gap-4">
-                    <div class="flex items-center gap-2"><span class="text-sm text-gray-600 dark:text-gray-400">Show</span><select x-model.number="pageSize" @change="currentPage=1" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select><span class="text-sm text-gray-600 dark:text-gray-400">entries</span></div>
-                    <div class="flex items-center gap-2"><button @click="prevPage()" :disabled="currentPage===1" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"><i class="fas fa-chevron-left mr-1"></i>Previous</button><div class="text-sm text-gray-700 dark:text-gray-300 px-3 font-medium">Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span></div><button @click="nextPage()" :disabled="currentPage===totalPages" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed">Next<i class="fas fa-chevron-right ml-1"></i></button></div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Showing <span class="font-semibold text-gray-900 dark:text-white" x-text="startRecord"></span> to <span class="font-semibold text-gray-900 dark:text-white" x-text="endRecord"></span> of <span class="font-semibold text-gray-900 dark:text-white" x-text="totalRecords"></span> results</div>
-                </div>
-            </div>
-<script>
-function ledgerManagementData(){return{searchQuery:'',sourceTypeFilter:'all',pageSize:10,currentPage:1,data:[],init(){this.loadData();this.$watch('searchQuery',()=>this.currentPage=1);this.$watch('sourceTypeFilter',()=>this.currentPage=1);this.$watch('pageSize',()=>this.currentPage=1)},loadData(){if(!window._ledgerModule){setTimeout(()=>this.loadData(),100);return}const{consumers}=window._ledgerModule;this.data=consumers.map(c=>{const totalCharges=c.ledgerHistory.reduce((sum,e)=>sum+e.debit,0);const totalPayments=c.ledgerHistory.reduce((sum,e)=>sum+e.credit,0);const balance=totalCharges-totalPayments;return{...c,totalCharges,totalPayments,balance}})},get filteredData(){let filtered=this.data;if(this.searchQuery){filtered=filtered.filter(c=>c.name.toLowerCase().includes(this.searchQuery.toLowerCase())||c.id.toLowerCase().includes(this.searchQuery.toLowerCase())||c.meterNo.toLowerCase().includes(this.searchQuery.toLowerCase()))}if(this.sourceTypeFilter!=='all'){filtered=filtered.filter(c=>c.ledgerHistory.some(e=>e.sourceType===this.sourceTypeFilter))}return filtered},get totalRecords(){return this.filteredData.length},get totalPages(){return Math.ceil(this.totalRecords/this.pageSize)||1},get startRecord(){return this.totalRecords===0?0:((this.currentPage-1)*this.pageSize)+1},get endRecord(){return Math.min(this.currentPage*this.pageSize,this.totalRecords)},get paginatedData(){const start=(this.currentPage-1)*this.pageSize;return this.filteredData.slice(start,start+this.pageSize)},prevPage(){if(this.currentPage>1)this.currentPage--},nextPage(){if(this.currentPage<this.totalPages)this.currentPage++},selectConsumer(id){if(window.selectConsumer)window.selectConsumer(id)}}}
-</script>
-
-            <!-- Consumer Ledger Details Section -->
-            <div id="ledgerDetailsSection" class="hidden">
-                @include('pages.ledger.ledger-consumer-info')
-            </div>
-
-            <!-- Transaction Types Section -->
-            <div id="ledgerTransactionsSection" class="hidden">
-                @include('components.ui.ledger.transaction-types-content')
             </div>
 
         </div>
     </div>
 </x-app-layout>
-
-@vite(['resources/js/ledger.js'])
-
-<script>
-let currentLedgerTab = 'consumers';
-
-function switchLedgerTab(tab) {
-    currentLedgerTab = tab;
-    
-    document.querySelectorAll('.ledger-tab-button').forEach(btn => {
-        btn.classList.remove('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
-        btn.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-    });
-    
-    if(tab === 'consumers') {
-        document.getElementById('tabLedgerConsumers').classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-        document.getElementById('tabLedgerConsumers').classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
-        
-        document.getElementById('searchFilterSection').classList.remove('hidden');
-        document.getElementById('ledgerSummaryWrapper').classList.remove('hidden');
-        document.getElementById('tableSection').classList.remove('hidden');
-        document.getElementById('ledgerDetailsSection').classList.add('hidden');
-        document.getElementById('ledgerTransactionsSection').classList.add('hidden');
-    } else if(tab === 'transactions') {
-        document.getElementById('tabLedgerTransactions').classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-        document.getElementById('tabLedgerTransactions').classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
-        
-        document.getElementById('searchFilterSection').classList.add('hidden');
-        document.getElementById('ledgerSummaryWrapper').classList.add('hidden');
-        document.getElementById('tableSection').classList.add('hidden');
-        document.getElementById('ledgerDetailsSection').classList.add('hidden');
-        document.getElementById('ledgerTransactionsSection').classList.remove('hidden');
-    }
-}
-
-window.switchLedgerTab = switchLedgerTab;
-
-window.viewOverallLedgerData = function() {
-    switchLedgerTab('consumers');
-    const wrapper = document.getElementById('ledgerSummaryWrapper');
-    wrapper?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
-
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        if (typeof renderConsumerMainTable === 'function') {
-            renderConsumerMainTable();
-        }
-    }, 100);
-});
-</script>

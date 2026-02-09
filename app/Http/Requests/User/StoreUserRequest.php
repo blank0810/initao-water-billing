@@ -21,9 +21,9 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'username' => ['nullable', 'string', 'max:100', 'unique:users,username'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'username' => ['required', 'string', 'max:100', 'unique:users,username'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8'],
             'role_id' => ['required', 'exists:roles,role_id'],
             'status_id' => ['required', 'exists:statuses,stat_id'],
             'meter_reader_areas' => ['nullable', 'array'],
@@ -38,13 +38,12 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name.required' => 'The full name is required.',
-            'email.required' => 'The email address is required.',
+            'username.required' => 'The username is required.',
+            'username.unique' => 'This username is already taken.',
             'email.email' => 'Please enter a valid email address.',
             'email.unique' => 'This email address is already registered.',
-            'username.unique' => 'This username is already taken.',
             'password.required' => 'The password is required.',
             'password.min' => 'The password must be at least 8 characters.',
-            'password.confirmed' => 'The password confirmation does not match.',
             'role_id.required' => 'Please select a role.',
             'role_id.exists' => 'The selected role is invalid.',
             'status_id.required' => 'Please select a status.',
