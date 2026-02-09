@@ -13,8 +13,6 @@ use Illuminate\Support\Facades\Log;
 
 class PenaltyService
 {
-    private const PENALTY_AMOUNT = 10.00;
-
     private const PENALTY_CODE = 'LATE_PENALTY';
 
     public function __construct(
@@ -105,7 +103,7 @@ class PenaltyService
                 'charge_item_id' => $penaltyChargeItem->charge_item_id,
                 'description' => "Late Payment Penalty - {$periodName} (Bill #{$bill->bill_id})",
                 'quantity' => 1,
-                'unit_amount' => self::PENALTY_AMOUNT,
+                'unit_amount' => $penaltyChargeItem->default_amount,
                 'due_date' => now()->addDays(7),
                 'stat_id' => $activeStatusId,
             ]);
@@ -186,6 +184,7 @@ class PenaltyService
     public function getOverdueBillsSummary(): array
     {
         $overdueBills = $this->findOverdueBills();
+        $penaltyChargeItem = ChargeItem::where('code', self::PENALTY_CODE)->first();
 
         $withPenalty = 0;
         $withoutPenalty = 0;
@@ -202,6 +201,7 @@ class PenaltyService
             'total_overdue' => $overdueBills->count(),
             'with_penalty' => $withPenalty,
             'without_penalty' => $withoutPenalty,
+            'penalty_amount' => $penaltyChargeItem?->default_amount ?? 0,
         ];
     }
 }
