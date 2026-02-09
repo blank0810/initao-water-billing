@@ -30,7 +30,14 @@ class PenaltyController extends Controller
      */
     public function process(): JsonResponse
     {
-        $userId = Auth::id() ?? 1;
+        $userId = Auth::id();
+
+        if (! $userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required.',
+            ], 401);
+        }
 
         $result = $this->penaltyService->processAllOverdueBills($userId);
 
