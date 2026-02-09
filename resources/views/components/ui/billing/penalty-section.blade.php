@@ -103,7 +103,8 @@ function penaltyData() {
 
         async fetchStats() {
             try {
-                const response = await fetch('/penalties/summary');
+                const response = await fetch('{{ route("penalties.summary") }}');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 if (data.success) {
                     this.stats = data.data;
@@ -116,7 +117,7 @@ function penaltyData() {
         async processPenalties() {
             this.processing = true;
             try {
-                const response = await fetch('/penalties/process', {
+                const response = await fetch('{{ route("penalties.process") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -125,13 +126,13 @@ function penaltyData() {
                     }
                 });
 
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
 
                 if (data.success) {
                     this.showNotification('success', data.message);
                     this.showModal = false;
                     this.fetchStats();
-                    // Refresh the billing summary cards if available
                     if (window.refreshBillingSummary) {
                         window.refreshBillingSummary();
                     }

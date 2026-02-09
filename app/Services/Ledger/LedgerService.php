@@ -15,15 +15,17 @@ class LedgerService
      * Record a charge as a DEBIT entry in the ledger
      *
      * Called when charges are created (at verification)
+     *
+     * @param  int|null  $periodId  Optional period ID (e.g., for penalties tied to a specific billing period)
      */
-    public function recordCharge(CustomerCharge $charge, int $userId): CustomerLedger
+    public function recordCharge(CustomerCharge $charge, int $userId, ?int $periodId = null): CustomerLedger
     {
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
         return CustomerLedger::create([
             'customer_id' => $charge->customer_id,
             'connection_id' => $charge->connection_id, // May be null for applications
-            'period_id' => null, // No period for one-time charges
+            'period_id' => $periodId, // Null for one-time charges, set for period-specific charges like penalties
             'txn_date' => now()->toDateString(),
             'post_ts' => now(),
             'source_type' => 'CHARGE',

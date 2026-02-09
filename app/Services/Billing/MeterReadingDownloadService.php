@@ -4,6 +4,7 @@ namespace App\Services\Billing;
 
 use App\Models\CustomerLedger;
 use App\Models\MeterAssignment;
+use App\Models\MeterReading;
 use App\Models\Period;
 use App\Models\ReadingSchedule;
 use App\Models\ReadingScheduleEntry;
@@ -148,26 +149,32 @@ class MeterReadingDownloadService
                     }
                 }
 
-                // If no previous bill found, try to get the latest reading from any period
-                if ($previousReadingValue === null && $activeMeterAssignment) {
-                    $latestReading = $activeMeterAssignment->meterReadings()
-                        ->whereNotNull('period_id')
-                        ->orderBy('reading_date', 'desc')
-                        ->orderBy('reading_id', 'desc')
-                        ->first();
-                    $previousReadingValue = $latestReading?->reading_value;
+                // If no previous bill found, try to get the latest reading
+                if ($previousReadingValue === null) {
+                    if ($isMeterChange && isset($removedAssignmentsMap[$connectionId])) {
+                        // For meter change: get last reading from OLD (removed) meter
+                        $oldAssignment = $removedAssignmentsMap[$connectionId];
+                        $latestReading = MeterReading::where('assignment_id', $oldAssignment->assignment_id)
+                            ->whereNotNull('period_id')
+                            ->orderBy('reading_date', 'desc')
+                            ->orderBy('reading_id', 'desc')
+                            ->first();
+                        $previousReadingValue = $latestReading?->reading_value;
+                    } elseif ($activeMeterAssignment) {
+                        // Normal case: get latest reading from current meter
+                        $latestReading = $activeMeterAssignment->meterReadings()
+                            ->whereNotNull('period_id')
+                            ->orderBy('reading_date', 'desc')
+                            ->orderBy('reading_id', 'desc')
+                            ->first();
+                        $previousReadingValue = $latestReading?->reading_value;
+                    }
                 }
 
-                // If still no reading found, use install_read as fallback
-                if ($previousReadingValue === null && $activeMeterAssignment) {
+                // If still no reading found, use install_read as fallback (only for non-meter-change)
+                if ($previousReadingValue === null && $activeMeterAssignment && ! $isMeterChange) {
                     $previousReadingValue = $activeMeterAssignment->install_read;
                 }
-
-                // For meter change, keep previous_reading as the last billed value
-                // so the mobile app can compute old meter consumption:
-                //   old_meter_consumption = removal_read - previous_reading (last billed)
-                // The install_read is sent separately for new meter consumption:
-                //   new_meter_consumption = current_reading - install_read
             }
 
             // Calculate arrear: unpaid water bills from previous periods (excludes penalties)
