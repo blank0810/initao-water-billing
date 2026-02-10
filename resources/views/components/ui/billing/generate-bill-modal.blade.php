@@ -355,11 +355,7 @@ function generateBillModalData() {
             prev_reading: 0,
             curr_reading: 0,
             reading_date: new Date().toISOString().split('T')[0],
-<<<<<<< HEAD
-            due_date: ''
-=======
             due_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
->>>>>>> e6dd06f (fix(billing): calculate due_date from creation date + grace_period)
         },
 
         get canSubmit() {
@@ -584,13 +580,8 @@ function generateBillModalData() {
                 prev_reading: 0,
                 curr_reading: 0,
                 reading_date: new Date().toISOString().split('T')[0],
-<<<<<<< HEAD
-                due_date: ''
-=======
                 due_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
->>>>>>> e6dd06f (fix(billing): calculate due_date from creation date + grace_period)
             };
-            this.updateDueDate();
             this.errorMessage = '';
             this.searchQuery = '';
             this.selectedConnection = null;
