@@ -193,6 +193,80 @@ class PaymentService
     }
 
     /**
+     * Get outstanding items for a single bill + its period-matched charges
+     *
+     * Used by the single-bill payment page when a cashier clicks a specific bill.
+     * Returns only that bill and charges sharing the same period_id.
+     */
+    public function getBillOutstandingItems(int $billId): array
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
+
+        $bill = WaterBillHistory::with(['period', 'status'])
+            ->where('bill_id', $billId)
+            ->whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))
+            ->first();
+
+        if (! $bill) {
+            return [
+                'bills' => collect(),
+                'charges' => collect(),
+                'bills_total' => 0,
+                'charges_total' => 0,
+                'grand_total' => 0,
+            ];
+        }
+
+        $billMapped = collect([[
+            'id' => $bill->bill_id,
+            'type' => 'BILL',
+            'description' => 'Water Bill - '.($bill->period?->per_name ?? 'Unknown Period'),
+            'period_name' => $bill->period?->per_name ?? 'Unknown',
+            'amount' => (float) ($bill->water_amount + $bill->adjustment_total),
+            'due_date' => $bill->due_date?->format('M d, Y'),
+            'is_overdue' => $bill->stat_id === $overdueStatusId,
+            'period_id' => $bill->period_id,
+        ]]);
+
+        // Get charges for the same connection AND same period
+        $charges = CustomerCharge::select('CustomerCharge.*', 'CustomerLedger.period_id as ledger_period_id')
+            ->leftJoin('CustomerLedger', function ($join) {
+                $join->on('CustomerCharge.charge_id', '=', 'CustomerLedger.source_id')
+                    ->where('CustomerLedger.source_type', '=', 'CHARGE');
+            })
+            ->where('CustomerCharge.connection_id', $bill->connection_id)
+            ->whereNull('CustomerCharge.application_id')
+            ->where('CustomerCharge.stat_id', $activeStatusId)
+            ->where('CustomerLedger.period_id', $bill->period_id)
+            ->orderBy('CustomerCharge.due_date', 'asc')
+            ->get()
+            ->unique('charge_id')
+            ->filter(fn ($charge) => $charge->remaining_amount > 0)
+            ->map(function ($charge) {
+                return [
+                    'id' => $charge->charge_id,
+                    'type' => 'CHARGE',
+                    'description' => $charge->description,
+                    'period_name' => null,
+                    'amount' => (float) $charge->remaining_amount,
+                    'due_date' => $charge->due_date?->format('M d, Y'),
+                    'is_overdue' => $charge->due_date?->isPast() ?? false,
+                    'period_id' => $charge->ledger_period_id,
+                ];
+            })
+            ->values();
+
+        return [
+            'bills' => $billMapped,
+            'charges' => $charges,
+            'bills_total' => $billMapped->sum('amount'),
+            'charges_total' => $charges->sum('amount'),
+            'grand_total' => $billMapped->sum('amount') + $charges->sum('amount'),
+        ];
+    }
+
+    /**
      * Get all outstanding items for a connection (unpaid bills + unpaid charges)
      *
      * Used by the bulk payment page to show everything a customer owes.
@@ -260,15 +334,15 @@ class PaymentService
     }
 
     /**
-     * Process payment for a water bill
+     * Process payment for a single water bill + its period-matched charges
      *
-     * Creates Payment, PaymentAllocation, CustomerLedger entry
-     * Updates WaterBillHistory status to PAID
+     * Creates Payment, PaymentAllocations, CustomerLedger entries
+     * Updates WaterBillHistory and charges status to PAID
      *
      * @param  int  $billId  The water bill to pay
      * @param  float  $amountReceived  Amount received from customer
      * @param  int  $userId  The cashier processing the payment
-     * @return array Contains 'payment', 'allocation', 'change'
+     * @return array Contains 'payment', 'allocations', 'total_paid', 'amount_received', 'change'
      *
      * @throws \Exception
      */
@@ -278,10 +352,11 @@ class PaymentService
         $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
         $paidStatusId = Status::getIdByDescription(Status::PAID);
 
-        // Wrap everything in a transaction so lockForUpdate() is effective
         return DB::transaction(function () use (
             $billId, $amountReceived, $userId, $activeStatusId, $overdueStatusId, $paidStatusId
         ) {
+            $allocations = collect();
+
             // Find the bill with lock to prevent concurrent payments
             $bill = WaterBillHistory::with(['serviceConnection.customer', 'period'])
                 ->where('bill_id', $billId)
@@ -293,7 +368,6 @@ class PaymentService
                 throw new \Exception('Bill not found or already paid.');
             }
 
-            // Check if the billing period is closed
             if ($bill->period && $bill->period->is_closed) {
                 throw new \Exception(
                     'Cannot process payment: The billing period "'
@@ -302,21 +376,42 @@ class PaymentService
                 );
             }
 
-            $totalDue = $bill->water_amount + $bill->adjustment_total;
+            $connection = $bill->serviceConnection;
+            $customer = $connection->customer;
 
-            // Validate payment amount (full payment required)
+            if (! $customer) {
+                throw new \Exception('No customer associated with this connection.');
+            }
+
+            // Lock period-matched charges for this bill
+            $charges = CustomerCharge::select('CustomerCharge.*', 'CustomerLedger.period_id as ledger_period_id')
+                ->leftJoin('CustomerLedger', function ($join) {
+                    $join->on('CustomerCharge.charge_id', '=', 'CustomerLedger.source_id')
+                        ->where('CustomerLedger.source_type', '=', 'CHARGE');
+                })
+                ->where('CustomerCharge.connection_id', $connection->connection_id)
+                ->whereNull('CustomerCharge.application_id')
+                ->where('CustomerCharge.stat_id', $activeStatusId)
+                ->where('CustomerLedger.period_id', $bill->period_id)
+                ->lockForUpdate()
+                ->get()
+                ->unique('charge_id')
+                ->filter(fn ($c) => $c->remaining_amount > 0);
+
+            $billAmount = $bill->water_amount + $bill->adjustment_total;
+            $chargesAmount = $charges->sum(fn ($c) => $c->remaining_amount);
+            $totalDue = $billAmount + $chargesAmount;
+
             if ($amountReceived < $totalDue) {
                 throw new \Exception(
-                    'Full payment required. Amount due: ₱'.number_format($totalDue, 2).
-                    '. Received: ₱'.number_format($amountReceived, 2)
+                    'Full payment required. Amount due: ₱'.number_format($totalDue, 2)
+                    .'. Received: ₱'.number_format($amountReceived, 2)
                 );
             }
 
             $change = $amountReceived - $totalDue;
-            $connection = $bill->serviceConnection;
-            $customer = $connection->customer;
 
-            // 1. Create Payment record
+            // Create Payment record
             $payment = Payment::create([
                 'receipt_no' => $this->generateReceiptNumber(),
                 'payer_id' => $customer->cust_id,
@@ -326,32 +421,53 @@ class PaymentService
                 'stat_id' => $activeStatusId,
             ]);
 
-            // 2. Create PaymentAllocation (target_type = 'BILL')
-            $allocation = PaymentAllocation::create([
+            // Allocate to the bill
+            $billAllocation = PaymentAllocation::create([
                 'payment_id' => $payment->payment_id,
                 'target_type' => 'BILL',
                 'target_id' => $bill->bill_id,
-                'amount_applied' => $totalDue,
+                'amount_applied' => $billAmount,
                 'period_id' => $bill->period_id,
                 'connection_id' => $connection->connection_id,
             ]);
+            $allocations->push($billAllocation);
 
-            // 3. Create CustomerLedger CREDIT entry
             $this->ledgerService->recordPaymentAllocation(
-                $allocation,
+                $billAllocation,
                 $payment,
                 'Payment for Water Bill - '.($bill->period?->per_name ?? 'Unknown'),
                 $userId
             );
 
-            // 4. Update bill status to PAID
-            $bill->update([
-                'stat_id' => $paidStatusId,
-            ]);
+            $bill->update(['stat_id' => $paidStatusId]);
+
+            // Allocate to period-matched charges
+            foreach ($charges as $charge) {
+                $chargeAmount = $charge->remaining_amount;
+
+                $chargeAllocation = PaymentAllocation::create([
+                    'payment_id' => $payment->payment_id,
+                    'target_type' => 'CHARGE',
+                    'target_id' => $charge->charge_id,
+                    'amount_applied' => $chargeAmount,
+                    'period_id' => $bill->period_id,
+                    'connection_id' => $connection->connection_id,
+                ]);
+                $allocations->push($chargeAllocation);
+
+                $this->ledgerService->recordPaymentAllocation(
+                    $chargeAllocation,
+                    $payment,
+                    'Payment for: '.$charge->description,
+                    $userId
+                );
+
+                $charge->update(['stat_id' => $paidStatusId]);
+            }
 
             return [
                 'payment' => $payment->fresh(),
-                'allocation' => $allocation,
+                'allocations' => $allocations,
                 'total_paid' => $totalDue,
                 'amount_received' => $amountReceived,
                 'change' => $change,
