@@ -119,6 +119,7 @@ class PaymentController extends Controller
 
     /**
      * Show water bill payment processing form
+     * Now shows ALL outstanding items for the connection (bulk payment)
      */
     public function processWaterBillPayment(int $id)
     {
@@ -128,32 +129,35 @@ class PaymentController extends Controller
             abort(404, 'Bill not found or already paid.');
         }
 
-        $totalAmount = $bill->water_amount + $bill->adjustment_total;
+        $connection = $bill->serviceConnection;
+        $outstandingItems = $this->paymentService->getConnectionOutstandingItems($connection->connection_id);
 
         return view('pages.payment.process-water-bill', [
             'bill' => $bill,
-            'totalAmount' => $totalAmount,
+            'connection' => $connection,
+            'outstandingItems' => $outstandingItems,
+            'selectedBillId' => $bill->bill_id,
         ]);
     }
 
     /**
-     * Process water bill payment
+     * Process bulk water bill + charges payment
      * Supports both AJAX (JSON) and form submission
      */
     public function storeWaterBillPayment(int $id, Request $request)
     {
         $request->validate([
-            'amount_received' => 'required|numeric|min:0',
+            'amount_received' => 'required|numeric|min:0.01',
+            'connection_id' => 'required|integer|exists:ServiceConnection,connection_id',
         ]);
 
         try {
-            $result = $this->paymentService->processWaterBillPayment(
-                $id,
+            $result = $this->paymentService->processConnectionPayment(
+                (int) $request->connection_id,
                 (float) $request->amount_received,
-                auth()->id()
+                auth()->id(),
             );
 
-            // Return JSON for AJAX requests
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,

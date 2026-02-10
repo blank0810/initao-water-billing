@@ -230,10 +230,6 @@ function billingDetailsData() {
                 const result = await response.json();
                 if (result.success) {
                     this.periods = result.data;
-                    // Set active period as default
-                    if (result.activePeriodId) {
-                        this.selectedPeriod = result.activePeriodId;
-                    }
                 }
             } catch (error) {
                 console.error('Error loading periods:', error);

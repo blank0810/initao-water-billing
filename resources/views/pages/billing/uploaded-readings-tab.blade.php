@@ -318,13 +318,13 @@
         try {
             const response = await fetch('/water-bills/billing-periods');
             const result = await response.json();
-            if (result.periods) {
+            if (result.success && result.data) {
                 const select = document.getElementById('uploadedPeriodFilter');
                 if (!select) return;
 
                 // Find current period (first one that is not closed, or the most recent)
                 let currentPeriodId = null;
-                const periods = result.periods;
+                const periods = result.data;
 
                 // Try to find the current active period (not closed)
                 const activePeriod = periods.find(p => !p.is_closed);

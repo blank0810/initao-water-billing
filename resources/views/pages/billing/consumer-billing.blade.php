@@ -253,10 +253,6 @@ function consumerBillingData() {
                 if (result.success) {
                     this.periods = result.data;
                     this.activePeriodId = result.activePeriodId;
-                    // Set default to active period
-                    if (this.activePeriodId) {
-                        this.selectedPeriodId = this.activePeriodId;
-                    }
                 }
             } catch (error) {
                 console.error('Error loading periods:', error);
