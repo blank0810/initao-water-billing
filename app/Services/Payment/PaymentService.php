@@ -445,6 +445,10 @@ class PaymentService
                 ?? ServiceConnection::with('customer')->findOrFail($connectionId);
             $customer = $connection->customer;
 
+            if (! $customer) {
+                throw new \Exception('No customer associated with this connection.');
+            }
+
             // --- Create Payment record ---
             $payment = Payment::create([
                 'receipt_no' => $this->generateReceiptNumber(),
