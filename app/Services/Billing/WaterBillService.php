@@ -796,15 +796,7 @@ class WaterBillService
         $paidStatusId = Status::getIdByDescription(Status::PAID) ?? Status::getIdByDescription('Paid') ?? 2;
         $overdueStatusId = Status::getIdByDescription('OVERDUE') ?? Status::getIdByDescription('Overdue') ?? 4;
 
-        // If no period specified, get the active period
-        if (! $periodId) {
-            $activePeriod = Period::where('stat_id', $activeStatusId)
-                ->where('is_closed', false)
-                ->first();
-            $periodId = $activePeriod?->per_id;
-        }
-
-        // Get all bills for the period
+        // Get all bills (filtered by period if specified, otherwise all)
         $billsQuery = WaterBillHistory::with([
             'serviceConnection.customer',
             'serviceConnection.accountType',

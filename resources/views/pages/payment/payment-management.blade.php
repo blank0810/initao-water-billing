@@ -147,6 +147,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Address</th>
                                     <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Date</th>
                                     <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Amount</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Other Charges</th>
                                     <th class="px-6 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
@@ -173,6 +174,17 @@
                                         </td>
                                         <td class="px-6 py-4 text-right">
                                             <p class="text-sm font-bold text-gray-900 dark:text-white" x-text="payment.amount_formatted"></p>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <template x-if="payment.charges_count > 0">
+                                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                                                    <i class="fas fa-exclamation-circle text-[10px]"></i>
+                                                    <span x-text="payment.charges_total_formatted"></span>
+                                                </span>
+                                            </template>
+                                            <template x-if="!payment.charges_count || payment.charges_count === 0">
+                                                <span class="text-xs text-gray-400">-</span>
+                                            </template>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex items-center justify-center gap-2">

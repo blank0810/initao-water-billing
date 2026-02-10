@@ -178,8 +178,8 @@ function adjustmentsData() {
             try {
                 const response = await fetch('/water-bills/billing-periods');
                 const result = await response.json();
-                if (result.periods) {
-                    this.periods = result.periods;
+                if (result.success) {
+                    this.periods = result.data;
                 }
             } catch (error) {
                 console.error('Failed to load periods:', error);

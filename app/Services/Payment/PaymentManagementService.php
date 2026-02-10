@@ -2,6 +2,8 @@
 
 namespace App\Services\Payment;
 
+use App\Models\CustomerCharge;
+use App\Models\CustomerLedger;
 use App\Models\Payment;
 use App\Models\ServiceApplication;
 use App\Models\Status;
@@ -99,6 +101,7 @@ class PaymentManagementService
 
     /**
      * Get pending water bills (ACTIVE or OVERDUE status)
+     * Includes unpaid charges count/total per connection for queue display
      */
     protected function getPendingWaterBills(?string $search = null): Collection
     {
@@ -133,11 +136,59 @@ class PaymentManagementService
 
         $overdueId = $overdueStatusId;
 
-        return $query->orderBy('due_date', 'asc')->get()->map(function ($bill) use ($overdueId) {
+        // Pre-fetch unpaid charges grouped by (connection_id, period_id) to avoid N+1
+        // JOIN CustomerLedger to get period_id for each charge — associates charges with specific bills
+        $bills = $query->orderBy('due_date', 'asc')->get();
+        $connectionIds = $bills->pluck('connection_id')->unique()->values();
+
+        $chargesByBill = CustomerCharge::select('CustomerCharge.*', 'CustomerLedger.period_id as ledger_period_id')
+            ->leftJoin('CustomerLedger', function ($join) {
+                $join->on('CustomerCharge.charge_id', '=', 'CustomerLedger.source_id')
+                    ->where('CustomerLedger.source_type', '=', 'CHARGE');
+            })
+            ->where('CustomerCharge.stat_id', $activeStatusId)
+            ->whereNull('CustomerCharge.application_id')
+            ->whereIn('CustomerCharge.connection_id', $connectionIds)
+            ->get()
+            ->unique('charge_id')
+            ->groupBy(function ($charge) {
+                $periodKey = $charge->ledger_period_id ?? 'null';
+
+                return "{$charge->connection_id}-{$periodKey}";
+            })
+            ->map(function ($charges) {
+                $unpaid = $charges->filter(fn ($c) => $c->remaining_amount > 0);
+
+                return [
+                    'count' => $unpaid->count(),
+                    'total' => $unpaid->sum(fn ($c) => $c->remaining_amount),
+                ];
+            });
+
+        // Find the oldest bill per connection to attach null-period charges
+        $oldestBillPerConnection = $bills->groupBy('connection_id')
+            ->map(fn ($connBills) => $connBills->sortBy('due_date')->first());
+
+        return $bills->map(function ($bill) use ($overdueId, $chargesByBill, $oldestBillPerConnection) {
             $connection = $bill->serviceConnection;
             $customer = $connection?->customer;
             $totalAmount = $bill->water_amount + $bill->adjustment_total;
             $isOverdue = $bill->stat_id === $overdueId;
+
+            // Get charges for this specific bill (by connection_id + period_id)
+            $billKey = "{$bill->connection_id}-{$bill->period_id}";
+            $connCharges = $chargesByBill->get($billKey, ['count' => 0, 'total' => 0]);
+
+            // Attach null-period charges to the oldest bill for this connection
+            $oldestBill = $oldestBillPerConnection->get($bill->connection_id);
+            if ($oldestBill && $oldestBill->bill_id === $bill->bill_id) {
+                $nullKey = "{$bill->connection_id}-null";
+                $nullCharges = $chargesByBill->get($nullKey, ['count' => 0, 'total' => 0]);
+                $connCharges = [
+                    'count' => $connCharges['count'] + $nullCharges['count'],
+                    'total' => $connCharges['total'] + $nullCharges['total'],
+                ];
+            }
 
             return [
                 'id' => $bill->bill_id,
@@ -150,6 +201,9 @@ class PaymentManagementService
                 'address' => $this->formatAddress($connection?->address),
                 'amount' => $totalAmount,
                 'amount_formatted' => '₱ '.number_format($totalAmount, 2),
+                'charges_count' => $connCharges['count'],
+                'charges_total' => $connCharges['total'],
+                'charges_total_formatted' => $connCharges['total'] > 0 ? '₱ '.number_format($connCharges['total'], 2) : null,
                 'date' => $bill->due_date,
                 'date_formatted' => $bill->due_date?->format('M d, Y'),
                 'status' => $isOverdue ? 'Overdue' : 'Pending Payment',

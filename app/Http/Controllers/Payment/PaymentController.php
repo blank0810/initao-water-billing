@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Payment;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\WaterBillHistory;
 use App\Services\Payment\PaymentManagementService;
 use App\Services\Payment\PaymentService;
 use App\Services\ServiceApplication\ServiceApplicationService;
@@ -119,6 +120,7 @@ class PaymentController extends Controller
 
     /**
      * Show water bill payment processing form
+     * Now shows ALL outstanding items for the connection (bulk payment)
      */
     public function processWaterBillPayment(int $id)
     {
@@ -128,32 +130,49 @@ class PaymentController extends Controller
             abort(404, 'Bill not found or already paid.');
         }
 
-        $totalAmount = $bill->water_amount + $bill->adjustment_total;
+        $connection = $bill->serviceConnection;
+
+        if (! $connection) {
+            abort(404, 'Service connection not found for this bill.');
+        }
+
+        $outstandingItems = $this->paymentService->getConnectionOutstandingItems($connection->connection_id);
 
         return view('pages.payment.process-water-bill', [
             'bill' => $bill,
-            'totalAmount' => $totalAmount,
+            'connection' => $connection,
+            'outstandingItems' => $outstandingItems,
+            'selectedBillId' => $bill->bill_id,
         ]);
     }
 
     /**
-     * Process water bill payment
+     * Process bulk water bill + charges payment
      * Supports both AJAX (JSON) and form submission
      */
     public function storeWaterBillPayment(int $id, Request $request)
     {
         $request->validate([
-            'amount_received' => 'required|numeric|min:0',
+            'amount_received' => 'required|numeric|min:0.01',
+            'connection_id' => 'required|integer|exists:ServiceConnection,connection_id',
         ]);
 
+        // Validate that the route bill belongs to the provided connection
+        $bill = WaterBillHistory::where('bill_id', $id)
+            ->where('connection_id', $request->connection_id)
+            ->first();
+
+        if (! $bill) {
+            abort(403, 'Bill does not belong to this connection.');
+        }
+
         try {
-            $result = $this->paymentService->processWaterBillPayment(
-                $id,
+            $result = $this->paymentService->processConnectionPayment(
+                (int) $request->connection_id,
                 (float) $request->amount_received,
-                auth()->id()
+                auth()->id(),
             );
 
-            // Return JSON for AJAX requests
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
