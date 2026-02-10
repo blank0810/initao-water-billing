@@ -131,6 +131,11 @@ class PaymentController extends Controller
         }
 
         $connection = $bill->serviceConnection;
+
+        if (! $connection) {
+            abort(404, 'Service connection not found for this bill.');
+        }
+
         $outstandingItems = $this->paymentService->getConnectionOutstandingItems($connection->connection_id);
 
         return view('pages.payment.process-water-bill', [
