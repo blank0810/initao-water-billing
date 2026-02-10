@@ -256,34 +256,60 @@ test('getCustomerList includes meter_no from active service connection', functio
 });
 
 test('getCustomerList includes current_bill with unpaid balance', function () {
-    // Create a customer
-    $customer = Customer::factory()->create([
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
-    ]);
-
+    $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
     $paidStatusId = Status::getIdByDescription(Status::PAID);
 
-    // Create bills in CustomerLedger - one paid, one unpaid
+    // Create a customer
+    $customer = Customer::factory()->create([
+        'stat_id' => $activeStatusId,
+    ]);
+
+    // Create WaterBillHistory records (source of truth for paid/unpaid)
+    $paidBillId = \DB::table('water_bill_history')->insertGetId([
+        'connection_id' => 1,
+        'period_id' => 1,
+        'consumption' => 10,
+        'water_amount' => 1500.50,
+        'due_date' => now(),
+        'adjustment_total' => 0,
+        'stat_id' => $paidStatusId, // Paid bill
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $unpaidBillId = \DB::table('water_bill_history')->insertGetId([
+        'connection_id' => 1,
+        'period_id' => 2,
+        'consumption' => 5,
+        'water_amount' => 800.25,
+        'due_date' => now(),
+        'adjustment_total' => 0,
+        'stat_id' => $activeStatusId, // Unpaid bill
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    // Create ledger entries pointing to the bills via source_id
     \DB::table('CustomerLedger')->insert([
         [
             'customer_id' => $customer->cust_id,
             'source_type' => 'BILL',
-            'source_id' => 1,
+            'source_id' => $paidBillId,
             'txn_date' => now(),
             'debit' => 1500.50,
             'credit' => 0,
-            'stat_id' => $paidStatusId, // Already paid
+            'stat_id' => $paidStatusId,
             'created_at' => now(),
             'updated_at' => now(),
         ],
         [
             'customer_id' => $customer->cust_id,
             'source_type' => 'BILL',
-            'source_id' => 2,
+            'source_id' => $unpaidBillId,
             'txn_date' => now(),
             'debit' => 800.25,
             'credit' => 0,
-            'stat_id' => Status::getIdByDescription(Status::ACTIVE), // Unpaid
+            'stat_id' => $activeStatusId,
             'created_at' => now(),
             'updated_at' => now(),
         ],
@@ -294,25 +320,40 @@ test('getCustomerList includes current_bill with unpaid balance', function () {
 
     $customerData = $result['data']->firstWhere('cust_id', $customer->cust_id);
 
-    // Only unpaid (ACTIVE) BILL debits are counted: 800.25
+    // Only bills with ACTIVE status in WaterBillHistory are counted: 800.25
     expect($customerData['current_bill'])->toBe(800.25);
 });
 
 test('getCustomerList shows zero balance when fully paid', function () {
+    $paidStatusId = Status::getIdByDescription(Status::PAID);
+
     // Create a customer
     $customer = Customer::factory()->create([
         'stat_id' => Status::getIdByDescription(Status::ACTIVE),
     ]);
 
-    // Create bill with PAID status (ledger entry marked PAID after payment)
+    // Create paid bill in WaterBillHistory (source of truth)
+    $billId = \DB::table('water_bill_history')->insertGetId([
+        'connection_id' => 1,
+        'period_id' => 1,
+        'consumption' => 10,
+        'water_amount' => 500.00,
+        'due_date' => now(),
+        'adjustment_total' => 0,
+        'stat_id' => $paidStatusId,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    // Create ledger entry pointing to the paid bill
     \DB::table('CustomerLedger')->insert([
         'customer_id' => $customer->cust_id,
         'source_type' => 'BILL',
-        'source_id' => 1,
+        'source_id' => $billId,
         'txn_date' => now(),
         'debit' => 500.00,
         'credit' => 0,
-        'stat_id' => Status::getIdByDescription(Status::PAID),
+        'stat_id' => $paidStatusId,
         'created_at' => now(),
         'updated_at' => now(),
     ]);
