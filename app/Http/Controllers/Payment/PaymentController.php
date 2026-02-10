@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Payment;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\WaterBillHistory;
 use App\Services\Payment\PaymentManagementService;
 use App\Services\Payment\PaymentService;
 use App\Services\ServiceApplication\ServiceApplicationService;
@@ -150,6 +151,15 @@ class PaymentController extends Controller
             'amount_received' => 'required|numeric|min:0.01',
             'connection_id' => 'required|integer|exists:ServiceConnection,connection_id',
         ]);
+
+        // Validate that the route bill belongs to the provided connection
+        $bill = WaterBillHistory::where('bill_id', $id)
+            ->where('connection_id', $request->connection_id)
+            ->first();
+
+        if (! $bill) {
+            abort(403, 'Bill does not belong to this connection.');
+        }
 
         try {
             $result = $this->paymentService->processConnectionPayment(

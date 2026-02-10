@@ -142,7 +142,7 @@ class PaymentManagementService
         $connectionIds = $bills->pluck('connection_id')->unique()->values();
 
         $chargesByBill = CustomerCharge::select('CustomerCharge.*', 'CustomerLedger.period_id as ledger_period_id')
-            ->join('CustomerLedger', function ($join) {
+            ->leftJoin('CustomerLedger', function ($join) {
                 $join->on('CustomerCharge.charge_id', '=', 'CustomerLedger.source_id')
                     ->where('CustomerLedger.source_type', '=', 'CHARGE');
             })
@@ -150,6 +150,7 @@ class PaymentManagementService
             ->whereNull('CustomerCharge.application_id')
             ->whereIn('CustomerCharge.connection_id', $connectionIds)
             ->get()
+            ->unique('charge_id')
             ->groupBy(function ($charge) {
                 $periodKey = $charge->ledger_period_id ?? 'null';
 
