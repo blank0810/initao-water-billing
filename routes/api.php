@@ -18,6 +18,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Health check endpoint for mobile app connectivity
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now()->toISOString(),
+    ]);
+});
+
 // Address API endpoints for cascading dropdowns
 Route::prefix('address')->group(function () {
     Route::get('/provinces', [AddressController::class, 'getProvinces']);
