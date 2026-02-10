@@ -4,7 +4,6 @@ use App\Models\Customer;
 use App\Models\Status;
 use App\Services\Customers\CustomerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -66,7 +65,7 @@ test('getCustomerStats formats total_current_bill correctly', function () {
         ->toMatch('/^\d+\.\d{2}$/');
 });
 
-test('getCustomerStats calculates bill amounts with ledger debits and credits', function () {
+test('getCustomerStats calculates bill amounts from unpaid ledger entries', function () {
     // Create customers
     $customer1 = Customer::factory()->create([
         'c_type' => 'RESIDENTIAL',
@@ -77,7 +76,7 @@ test('getCustomerStats calculates bill amounts with ledger debits and credits', 
         'stat_id' => Status::getIdByDescription(Status::ACTIVE),
     ]);
 
-    // Create bills in CustomerLedger with debits
+    // Create bills in CustomerLedger - one paid, two unpaid
     \DB::table('CustomerLedger')->insert([
         [
             'customer_id' => $customer1->cust_id,
@@ -86,7 +85,18 @@ test('getCustomerStats calculates bill amounts with ledger debits and credits', 
             'txn_date' => now(),
             'debit' => 500.00,
             'credit' => 0,
-            'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+            'stat_id' => Status::getIdByDescription(Status::PAID), // Paid
+            'created_at' => now(),
+            'updated_at' => now(),
+        ],
+        [
+            'customer_id' => $customer1->cust_id,
+            'source_type' => 'BILL',
+            'source_id' => 3,
+            'txn_date' => now(),
+            'debit' => 300.00,
+            'credit' => 0,
+            'stat_id' => Status::getIdByDescription(Status::ACTIVE), // Unpaid
             'created_at' => now(),
             'updated_at' => now(),
         ],
@@ -97,31 +107,16 @@ test('getCustomerStats calculates bill amounts with ledger debits and credits', 
             'txn_date' => now(),
             'debit' => 750.00,
             'credit' => 0,
-            'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+            'stat_id' => Status::getIdByDescription(Status::ACTIVE), // Unpaid
             'created_at' => now(),
             'updated_at' => now(),
         ],
     ]);
 
-    // Create partial payment for customer1
-    \DB::table('CustomerLedger')->insert([
-        'customer_id' => $customer1->cust_id,
-        'source_type' => 'PAYMENT',
-        'source_id' => 1,
-        'txn_date' => now(),
-        'debit' => 0,
-        'credit' => 200.00,
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-
     $stats = $this->customerService->getCustomerStats();
 
-    // Total debits: 500 + 750 = 1250
-    // Total credits: 200
-    // Total current bill: 1250 - 200 = 1050.00
-    expect($stats['total_current_bill'])->toBe('1050.00');
+    // Only ACTIVE (unpaid) BILL debits are counted: 300 + 750 = 1050.00
+    expect((float) $stats['total_current_bill'])->toBe(1050.00);
 });
 
 test('getCustomerStats with different residential vs commercial customers', function () {

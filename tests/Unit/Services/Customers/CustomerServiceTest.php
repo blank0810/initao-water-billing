@@ -261,7 +261,9 @@ test('getCustomerList includes current_bill with unpaid balance', function () {
         'stat_id' => Status::getIdByDescription(Status::ACTIVE),
     ]);
 
-    // Create bills in CustomerLedger
+    $paidStatusId = Status::getIdByDescription(Status::PAID);
+
+    // Create bills in CustomerLedger - one paid, one unpaid
     \DB::table('CustomerLedger')->insert([
         [
             'customer_id' => $customer->cust_id,
@@ -270,7 +272,7 @@ test('getCustomerList includes current_bill with unpaid balance', function () {
             'txn_date' => now(),
             'debit' => 1500.50,
             'credit' => 0,
-            'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+            'stat_id' => $paidStatusId, // Already paid
             'created_at' => now(),
             'updated_at' => now(),
         ],
@@ -281,23 +283,10 @@ test('getCustomerList includes current_bill with unpaid balance', function () {
             'txn_date' => now(),
             'debit' => 800.25,
             'credit' => 0,
-            'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+            'stat_id' => Status::getIdByDescription(Status::ACTIVE), // Unpaid
             'created_at' => now(),
             'updated_at' => now(),
         ],
-    ]);
-
-    // Create partial payment
-    \DB::table('CustomerLedger')->insert([
-        'customer_id' => $customer->cust_id,
-        'source_type' => 'PAYMENT',
-        'source_id' => 1,
-        'txn_date' => now(),
-        'debit' => 0,
-        'credit' => 1000.00,
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
-        'created_at' => now(),
-        'updated_at' => now(),
     ]);
 
     $request = new Request;
@@ -305,10 +294,8 @@ test('getCustomerList includes current_bill with unpaid balance', function () {
 
     $customerData = $result['data']->firstWhere('cust_id', $customer->cust_id);
 
-    // Total debits: 1500.50 + 800.25 = 2300.75
-    // Total credits: 1000.00
-    // Unpaid: 2300.75 - 1000.00 = 1300.75
-    expect($customerData['current_bill'])->toBe('₱1,300.75');
+    // Only unpaid (ACTIVE) BILL debits are counted: 800.25
+    expect($customerData['current_bill'])->toBe(800.25);
 });
 
 test('getCustomerList shows zero balance when fully paid', function () {
@@ -317,7 +304,7 @@ test('getCustomerList shows zero balance when fully paid', function () {
         'stat_id' => Status::getIdByDescription(Status::ACTIVE),
     ]);
 
-    // Create bill
+    // Create bill with PAID status (ledger entry marked PAID after payment)
     \DB::table('CustomerLedger')->insert([
         'customer_id' => $customer->cust_id,
         'source_type' => 'BILL',
@@ -325,20 +312,7 @@ test('getCustomerList shows zero balance when fully paid', function () {
         'txn_date' => now(),
         'debit' => 500.00,
         'credit' => 0,
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-
-    // Create full payment
-    \DB::table('CustomerLedger')->insert([
-        'customer_id' => $customer->cust_id,
-        'source_type' => 'PAYMENT',
-        'source_id' => 1,
-        'txn_date' => now(),
-        'debit' => 0,
-        'credit' => 500.00,
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'stat_id' => Status::getIdByDescription(Status::PAID),
         'created_at' => now(),
         'updated_at' => now(),
     ]);
@@ -348,7 +322,7 @@ test('getCustomerList shows zero balance when fully paid', function () {
 
     $customerData = $result['data']->firstWhere('cust_id', $customer->cust_id);
 
-    expect($customerData['current_bill'])->toBe('₱0.00');
+    expect($customerData['current_bill'])->toBe(0.0);
 });
 
 test('getCustomerList handles customers with no service connection', function () {
