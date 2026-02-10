@@ -269,6 +269,35 @@ test('it creates reversal debit entries in customer ledger', function () {
     expect($reversalEntry->description)->toContain('Reason: Incorrect amount');
 });
 
+test('it reverts BILL ledger entry stat_id back to ACTIVE on cancellation', function () {
+    ['bill' => $bill, 'payment' => $payment] = createPaymentWithBillAllocation();
+
+    // Create the BILL ledger entry marked as PAID (as payment processing would do)
+    $billLedger = CustomerLedger::create([
+        'customer_id' => $this->customer->cust_id,
+        'connection_id' => $this->connection->connection_id,
+        'period_id' => $this->period->per_id,
+        'txn_date' => now()->toDateString(),
+        'post_ts' => now(),
+        'source_type' => 'BILL',
+        'source_id' => $bill->bill_id,
+        'description' => 'Water Bill - January 2026',
+        'debit' => $bill->water_amount,
+        'credit' => 0,
+        'user_id' => $this->user->id,
+        'stat_id' => $this->paidStatusId,
+    ]);
+
+    $this->paymentService->cancelPayment(
+        $payment->payment_id,
+        'Reverting bill ledger test',
+        $this->user->id
+    );
+
+    $billLedger->refresh();
+    expect($billLedger->stat_id)->toBe($this->activeStatusId);
+});
+
 test('it reverts bill status from PAID back to ACTIVE when due date is in future', function () {
     ['bill' => $bill, 'payment' => $payment] = createPaymentWithBillAllocation([
         'due_date' => now()->addDays(30),
@@ -405,6 +434,19 @@ test('it marks all allocations as cancelled', function () {
     $allocation->refresh();
     expect($allocation->stat_id)->toBe($this->cancelledStatusId);
 });
+
+test('it throws exception when allocation belongs to a closed period', function () {
+    ['payment' => $payment] = createPaymentWithBillAllocation();
+
+    // Close the period
+    $this->period->update(['is_closed' => true, 'closed_at' => now()]);
+
+    $this->paymentService->cancelPayment(
+        $payment->payment_id,
+        'Should not be allowed',
+        $this->user->id
+    );
+})->throws(\Exception::class, 'Cannot cancel payment: The billing period "January 2026" has been closed.');
 
 test('it throws exception for non-existent payment', function () {
     $this->paymentService->cancelPayment(

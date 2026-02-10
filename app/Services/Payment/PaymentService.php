@@ -688,7 +688,7 @@ class PaymentService
             $activeStatusId, $cancelledStatusId, $overdueStatusId
         ) {
             // Lock the payment to prevent concurrent operations
-            $payment = Payment::with('paymentAllocations')
+            $payment = Payment::with('paymentAllocations.period')
                 ->where('payment_id', $paymentId)
                 ->lockForUpdate()
                 ->first();
@@ -703,6 +703,17 @@ class PaymentService
 
             if ($payment->stat_id !== $activeStatusId) {
                 throw new \Exception('Only active payments can be cancelled.');
+            }
+
+            // Guard: reject cancellation if any allocation belongs to a closed period
+            foreach ($payment->paymentAllocations as $allocation) {
+                if ($allocation->period && $allocation->period->is_closed) {
+                    throw new \Exception(
+                        'Cannot cancel payment: The billing period "'
+                        .($allocation->period->per_name ?? 'Unknown')
+                        .'" has been closed.'
+                    );
+                }
             }
 
             // 1. Mark Payment as CANCELLED
@@ -739,10 +750,15 @@ class PaymentService
 
                 // Revert target bill/charge status
                 $this->revertTargetStatus($allocation, $activeStatusId, $overdueStatusId);
+
+                // Revert the original BILL/CHARGE ledger entry back to ACTIVE
+                CustomerLedger::where('source_type', $allocation->target_type)
+                    ->where('source_id', $allocation->target_id)
+                    ->update(['stat_id' => $activeStatusId]);
             }
 
             // 3. Handle application payment link (if this was an application payment)
-            $this->revertApplicationPayment($payment, $cancelledStatusId, $activeStatusId);
+            $this->revertApplicationPayment($payment, $activeStatusId);
 
             return [
                 'success' => true,
@@ -807,7 +823,6 @@ class PaymentService
      */
     protected function revertApplicationPayment(
         Payment $payment,
-        int $cancelledStatusId,
         int $activeStatusId
     ): void {
         $application = ServiceApplication::where('payment_id', $payment->payment_id)->first();
@@ -822,8 +837,16 @@ class PaymentService
             ]);
 
             // Revert charges back to ACTIVE
-            CustomerCharge::where('application_id', $application->application_id)
+            $chargeIds = CustomerCharge::where('application_id', $application->application_id)
                 ->where('stat_id', Status::getIdByDescription(Status::PAID))
+                ->pluck('charge_id');
+
+            CustomerCharge::whereIn('charge_id', $chargeIds)
+                ->update(['stat_id' => $activeStatusId]);
+
+            // Revert corresponding CHARGE ledger entries back to ACTIVE
+            CustomerLedger::where('source_type', 'CHARGE')
+                ->whereIn('source_id', $chargeIds)
                 ->update(['stat_id' => $activeStatusId]);
         }
     }

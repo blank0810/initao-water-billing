@@ -235,6 +235,24 @@
             letter-spacing: 2px;
         }
 
+        /* Cancelled Badge */
+        .cancelled-badge {
+            text-align: center;
+            margin-top: 10px;
+            padding: 6px;
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            border-radius: 4px;
+        }
+
+        .cancelled-badge span {
+            font-size: 10px;
+            font-weight: 700;
+            color: #dc2626;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
         /* Footer */
         .footer {
             margin-top: 10px;
@@ -333,7 +351,7 @@
                 display: none !important;
             }
 
-            .header, .receipt-title, .paid-badge, .footer {
+            .header, .receipt-title, .paid-badge, .cancelled-badge, .footer {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -441,10 +459,16 @@
                 </div>
             </div>
 
-            <!-- Paid Badge -->
-            <div class="paid-badge">
+            <!-- Status Badge -->
+            @if ($payment->status?->stat_desc === 'CANCELLED')
+            <div class="cancelled-badge" role="status" aria-label="Payment Cancelled">
+                <span>&#10007; Payment Cancelled</span>
+            </div>
+            @else
+            <div class="paid-badge" role="status" aria-label="Payment Confirmed">
                 <span>&#10003; Payment Confirmed</span>
             </div>
+            @endif
 
             <!-- Signature -->
             <div class="signature">

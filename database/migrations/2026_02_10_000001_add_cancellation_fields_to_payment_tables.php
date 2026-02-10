@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -18,12 +19,16 @@ return new class extends Migration
         });
 
         Schema::table('PaymentAllocation', function (Blueprint $table) {
-            $activeStatusId = \App\Models\Status::getIdByDescription(\App\Models\Status::ACTIVE);
-
-            $table->unsignedBigInteger('stat_id')->default($activeStatusId)->after('connection_id');
-
+            $table->unsignedBigInteger('stat_id')->nullable()->after('connection_id');
             $table->foreign('stat_id')->references('stat_id')->on('statuses');
         });
+
+        // Backfill existing rows using a DB-level subquery (no model dependency)
+        DB::statement("
+            UPDATE PaymentAllocation
+            SET stat_id = (SELECT stat_id FROM statuses WHERE stat_desc = 'ACTIVE' LIMIT 1)
+            WHERE stat_id IS NULL
+        ");
     }
 
     public function down(): void
