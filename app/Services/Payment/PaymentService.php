@@ -128,6 +128,12 @@ class PaymentService
             // Mark charges as PAID
             $this->chargeService->markChargesAsPaid($application->application_id);
 
+            // Mark CHARGE ledger entries as PAID
+            $chargeIds = $chargesData['charges']->pluck('charge_id');
+            CustomerLedger::where('source_type', 'CHARGE')
+                ->whereIn('source_id', $chargeIds)
+                ->update(['stat_id' => $paidStatusId]);
+
             // Update application status to PAID
             $application->update([
                 'stat_id' => $paidStatusId,
@@ -468,6 +474,11 @@ class PaymentService
                 );
 
                 $charge->update(['stat_id' => $paidStatusId]);
+
+                // Mark CHARGE ledger entry as PAID
+                CustomerLedger::where('source_type', 'CHARGE')
+                    ->where('source_id', $charge->charge_id)
+                    ->update(['stat_id' => $paidStatusId]);
             }
 
             return [
@@ -633,6 +644,11 @@ class PaymentService
                 );
 
                 $charge->update(['stat_id' => $paidStatusId]);
+
+                // Mark CHARGE ledger entry as PAID
+                CustomerLedger::where('source_type', 'CHARGE')
+                    ->where('source_id', $charge->charge_id)
+                    ->update(['stat_id' => $paidStatusId]);
             }
 
             return [
