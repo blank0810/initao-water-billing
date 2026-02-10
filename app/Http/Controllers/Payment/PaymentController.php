@@ -211,12 +211,38 @@ class PaymentController extends Controller
      */
     public function showReceipt(int $paymentId): View
     {
-        $payment = Payment::with(['user', 'payer', 'status'])->findOrFail($paymentId);
+        $payment = Payment::with(['user', 'payer.address.purok', 'payer.address.barangay', 'status', 'paymentAllocations'])->findOrFail($paymentId);
 
-        // Get the associated application from payment
-        $application = $this->applicationService->getApplicationById($payment->payer?->serviceApplications?->first()?->application_id);
+        // Determine payment type from allocations
+        $hasBillAllocation = $payment->paymentAllocations->contains('target_type', 'BILL');
+        $hasChargeAllocation = $payment->paymentAllocations->contains('target_type', 'CHARGE');
 
-        // If application not found via customer, try to find via payment_id on ServiceApplication
+        // Check if this is an application payment (charges linked to an application)
+        $isApplicationPayment = false;
+        if ($hasChargeAllocation && ! $hasBillAllocation) {
+            $chargeIds = $payment->paymentAllocations->where('target_type', 'CHARGE')->pluck('target_id');
+            $isApplicationPayment = \App\Models\CustomerCharge::whereIn('charge_id', $chargeIds)
+                ->whereNotNull('application_id')
+                ->exists();
+        }
+
+        if ($isApplicationPayment) {
+            return $this->showApplicationReceipt($payment, $paymentId);
+        }
+
+        return $this->showWaterBillReceipt($payment);
+    }
+
+    /**
+     * Render receipt for application payments
+     */
+    private function showApplicationReceipt(Payment $payment, int $paymentId): View
+    {
+        $applicationId = $payment->payer?->serviceApplications?->first()?->application_id;
+        $application = $applicationId
+            ? $this->applicationService->getApplicationById($applicationId)
+            : null;
+
         if (! $application) {
             $application = \App\Models\ServiceApplication::with([
                 'customer',
@@ -232,6 +258,37 @@ class PaymentController extends Controller
         $chargesData = $this->applicationService->getApplicationCharges($application->application_id);
 
         return view('pages.payment.payment-receipt', compact('payment', 'application', 'chargesData'));
+    }
+
+    /**
+     * Render receipt for water bill payments
+     */
+    private function showWaterBillReceipt(Payment $payment): View
+    {
+        $allocations = $payment->paymentAllocations;
+
+        // Build line items from allocations
+        $lineItems = collect();
+        $totalDue = 0;
+
+        foreach ($allocations as $allocation) {
+            if ($allocation->target_type === 'BILL') {
+                $bill = WaterBillHistory::with('period')->find($allocation->target_id);
+                $lineItems->push([
+                    'description' => 'Water Bill - '.($bill?->period?->per_name ?? 'Unknown'),
+                    'amount' => (float) $allocation->amount_applied,
+                ]);
+            } elseif ($allocation->target_type === 'CHARGE') {
+                $charge = \App\Models\CustomerCharge::find($allocation->target_id);
+                $lineItems->push([
+                    'description' => $charge?->description ?? 'Charge',
+                    'amount' => (float) $allocation->amount_applied,
+                ]);
+            }
+            $totalDue += (float) $allocation->amount_applied;
+        }
+
+        return view('pages.payment.water-bill-receipt', compact('payment', 'lineItems', 'totalDue'));
     }
 
     /**
@@ -257,6 +314,7 @@ class PaymentController extends Controller
                 'Customer Code',
                 'Payment Type',
                 'Amount',
+                'Status',
                 'Time',
             ]);
 
@@ -268,6 +326,7 @@ class PaymentController extends Controller
                     $tx['customer_code'],
                     $tx['payment_type_label'],
                     $tx['amount'],
+                    $tx['is_cancelled'] ? 'CANCELLED' : 'ACTIVE',
                     $tx['time'],
                 ]);
             }
@@ -275,8 +334,12 @@ class PaymentController extends Controller
             // Summary footer
             fputcsv($handle, []);
             fputcsv($handle, ['Summary']);
-            fputcsv($handle, ['Total Collected', $data['summary']['total_collected']]);
+            fputcsv($handle, ['Net Collected', $data['summary']['total_collected']]);
             fputcsv($handle, ['Transaction Count', $data['summary']['transaction_count']]);
+            if ($data['summary']['cancelled_count'] > 0) {
+                fputcsv($handle, ['Cancelled Amount', $data['summary']['cancelled_amount']]);
+                fputcsv($handle, ['Cancelled Count', $data['summary']['cancelled_count']]);
+            }
 
             foreach ($data['summary']['by_type'] as $type) {
                 fputcsv($handle, [$type['type'], $type['amount']]);
@@ -302,5 +365,30 @@ class PaymentController extends Controller
         $cashierName = auth()->user()->name;
 
         return view('pages.payment.my-transactions-report', compact('data', 'cashierName'));
+    }
+
+    /**
+     * Cancel a payment (ADMIN/SUPER_ADMIN only)
+     */
+    public function cancelPayment(int $paymentId, Request $request): JsonResponse
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        try {
+            $result = $this->paymentService->cancelPayment(
+                $paymentId,
+                $request->input('reason'),
+                auth()->id()
+            );
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 }

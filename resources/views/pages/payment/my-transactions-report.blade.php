@@ -260,6 +260,25 @@
             color: #7c3aed;
         }
 
+        .transactions-table .type-badge.cancelled {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .transactions-table tr.cancelled {
+            background: #fef2f2;
+            opacity: 0.7;
+        }
+
+        .transactions-table tr.cancelled td {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .transactions-table tr.cancelled td .type-badge {
+            text-decoration: none;
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -440,13 +459,20 @@
             <!-- Summary Cards -->
             <div class="summary">
                 <div class="summary-card primary">
-                    <div class="label">Total Collected</div>
+                    <div class="label">Net Collected</div>
                     <div class="value">{{ $data['summary']['total_collected_formatted'] }}</div>
                 </div>
                 <div class="summary-card">
                     <div class="label">Transactions</div>
                     <div class="value">{{ $data['summary']['transaction_count'] }}</div>
                 </div>
+                @if(($data['summary']['cancelled_count'] ?? 0) > 0)
+                <div class="summary-card" style="border-color: #dc2626;">
+                    <div class="label" style="color: #dc2626;">Cancelled</div>
+                    <div class="value" style="color: #dc2626;">{{ $data['summary']['cancelled_amount_formatted'] }}</div>
+                    <div class="label">{{ $data['summary']['cancelled_count'] }} item(s)</div>
+                </div>
+                @endif
             </div>
 
             <!-- Type Breakdown -->
@@ -472,20 +498,22 @@
                         <th>Receipt #</th>
                         <th>Customer</th>
                         <th>Type</th>
+                        <th>Status</th>
                         <th>Time</th>
                         <th>Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($data['transactions'] as $tx)
-                    <tr>
+                    <tr class="{{ ($tx['is_cancelled'] ?? false) ? 'cancelled' : '' }}">
                         <td class="receipt-no">{{ $tx['receipt_no'] }}</td>
                         <td>{{ $tx['customer_name'] }}</td>
                         <td>
-                            <span class="type-badge {{ $tx['payment_type'] === 'APPLICATION_FEE' ? 'application' : 'other' }}">
-                                {{ $tx['payment_type_label'] }}
+                            <span class="type-badge {{ ($tx['is_cancelled'] ?? false) ? 'cancelled' : ($tx['payment_type'] === 'APPLICATION_FEE' ? 'application' : 'other') }}">
+                                {{ ($tx['is_cancelled'] ?? false) ? 'CANCELLED' : $tx['payment_type_label'] }}
                             </span>
                         </td>
+                        <td style="text-decoration: none;">{{ ($tx['is_cancelled'] ?? false) ? 'CANCELLED' : 'ACTIVE' }}</td>
                         <td>{{ $tx['time'] }}</td>
                         <td>{{ $tx['amount_formatted'] }}</td>
                     </tr>

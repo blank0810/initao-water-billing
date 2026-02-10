@@ -61,6 +61,13 @@
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Collected</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white" x-text="myTransactions.summary?.total_collected_formatted || '₱ 0.00'"></p>
+                        <template x-if="myTransactions.summary?.cancelled_count > 0">
+                            <p class="text-xs text-red-500 mt-1">
+                                <i class="fas fa-ban mr-1"></i>
+                                <span x-text="myTransactions.summary?.cancelled_count"></span> cancelled
+                                (<span x-text="myTransactions.summary?.cancelled_amount_formatted"></span>)
+                            </p>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -147,38 +154,68 @@
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     <template x-for="tx in filteredMyTransactions" :key="tx.payment_id">
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                        <tr class="transition-colors"
+                            :class="tx.is_cancelled ? 'bg-red-50/50 dark:bg-red-900/10 opacity-75' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'">
                             <td class="px-6 py-4">
-                                <span class="text-sm font-mono font-medium text-gray-900 dark:text-white" x-text="tx.receipt_no"></span>
+                                <span class="text-sm font-mono font-medium"
+                                      :class="tx.is_cancelled ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-900 dark:text-white'"
+                                      x-text="tx.receipt_no"></span>
                             </td>
                             <td class="px-6 py-4">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white" x-text="tx.customer_name"></p>
+                                <p class="text-sm font-medium"
+                                   :class="tx.is_cancelled ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-900 dark:text-white'"
+                                   x-text="tx.customer_name"></p>
                             </td>
                             <td class="px-6 py-4">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                      :class="tx.payment_type === 'APPLICATION_FEE' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'"
-                                      x-text="tx.payment_type_label">
-                                </span>
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                          :class="tx.is_cancelled
+                                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                              : (tx.payment_type === 'APPLICATION_FEE'
+                                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                                  : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400')"
+                                          x-text="tx.is_cancelled ? 'CANCELLED' : tx.payment_type_label">
+                                    </span>
+                                </div>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <span class="text-sm font-bold text-gray-900 dark:text-white" x-text="tx.amount_formatted"></span>
+                                <span class="text-sm font-bold"
+                                      :class="tx.is_cancelled ? 'text-red-400 dark:text-red-500 line-through' : 'text-gray-900 dark:text-white'"
+                                      x-text="tx.amount_formatted"></span>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="text-sm text-gray-700 dark:text-gray-300" x-text="tx.time"></span>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-center gap-2">
-                                    <button @click="viewTransaction(tx)"
-                                            class="p-2 text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
-                                            title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <a :href="tx.receipt_url"
-                                       target="_blank"
-                                       class="p-2 text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition-colors"
-                                       title="Print Receipt">
-                                        <i class="fas fa-print"></i>
-                                    </a>
+                                    <template x-if="!tx.is_cancelled">
+                                        <div class="flex items-center gap-2">
+                                            <button @click="viewTransaction(tx)"
+                                                    class="p-2 text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                                                    title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a :href="tx.receipt_url"
+                                               target="_blank"
+                                               class="p-2 text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition-colors"
+                                               title="Print Receipt">
+                                                <i class="fas fa-print"></i>
+                                            </a>
+                                            @can('payments.void')
+                                            <button @click="openCancelPaymentModal(tx)"
+                                                    class="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+                                                    title="Cancel Payment">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                            @endcan
+                                        </div>
+                                    </template>
+                                    <template x-if="tx.is_cancelled">
+                                        <div class="text-xs text-red-500 dark:text-red-400 text-center">
+                                            <p x-text="'By: ' + tx.cancelled_by_name"></p>
+                                            <p x-text="tx.cancelled_at" class="text-gray-400"></p>
+                                        </div>
+                                    </template>
                                 </div>
                             </td>
                         </tr>

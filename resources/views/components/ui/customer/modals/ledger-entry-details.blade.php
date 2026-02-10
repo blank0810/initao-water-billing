@@ -104,10 +104,10 @@
                     class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors">
                     Close
                 </button>
-                <button id="modal-print-btn" onclick="printLedgerEntry()"
-                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors hidden">
-                    <i class="fas fa-print mr-2"></i>Print
-                </button>
+                <a id="modal-receipt-btn" href="#" target="_blank"
+                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors hidden inline-flex items-center">
+                    <i class="fas fa-receipt mr-2"></i>View Receipt
+                </a>
             </div>
         </div>
     </div>

@@ -219,6 +219,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/payment/bill/{id}/process', [PaymentController::class, 'storeWaterBillPayment'])->name('payment.bill.store');
     });
 
+    // Payment Cancellation - Void (payments.void permission)
+    Route::middleware(['permission:payments.void'])->group(function () {
+        Route::post('/payment/{id}/cancel', [PaymentController::class, 'cancelPayment'])->name('payment.cancel');
+    });
+
     // -------------------------------------------------------------------------
     // Billing Management - View (billing.view permission)
     // -------------------------------------------------------------------------

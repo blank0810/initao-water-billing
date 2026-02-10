@@ -365,13 +365,14 @@
 </head>
 <body>
     @php
-        $customerName = $application->customer
-            ? trim(($application->customer->cust_first_name ?? '') . ' ' . ($application->customer->cust_middle_name ? $application->customer->cust_middle_name[0] . '. ' : '') . ($application->customer->cust_last_name ?? ''))
+        $customer = $payment->payer;
+        $customerName = $customer
+            ? trim(($customer->cust_first_name ?? '') . ' ' . ($customer->cust_middle_name ? $customer->cust_middle_name[0] . '. ' : '') . ($customer->cust_last_name ?? ''))
             : '-';
-        $fullAddress = $application->address
-            ? trim(($application->address->purok?->p_desc ?? '') . ', ' . ($application->address->barangay?->b_desc ?? '') . ', Initao, Misamis Oriental')
+        $fullAddress = $customer?->address
+            ? trim(($customer->address->purok?->p_desc ?? '') . ', ' . ($customer->address->barangay?->b_desc ?? '') . ', Initao, Misamis Oriental')
             : '-';
-        $change = $payment->amount_received - $chargesData['total_amount'];
+        $change = $payment->amount_received - $totalDue;
     @endphp
 
     <div class="receipt">
@@ -403,16 +404,12 @@
                 <span class="label">Cashier:</span>
                 <span class="value">{{ $payment->user?->name ?? 'System' }}</span>
             </div>
-            <div class="meta-row">
-                <span class="label">Application No.:</span>
-                <span class="value">{{ $application->application_number }}</span>
-            </div>
 
             <!-- Customer Section -->
             <div class="section">
                 <div class="section-title">Received From</div>
                 <div class="customer-name">{{ $customerName }}</div>
-                <div class="customer-details">{{ $application->customer?->resolution_no ?? '-' }}</div>
+                <div class="customer-details">{{ $customer?->resolution_no ?? '-' }}</div>
                 <div class="customer-details">{{ $fullAddress }}</div>
             </div>
 
@@ -427,10 +424,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($chargesData['charges'] as $charge)
+                        @foreach($lineItems as $item)
                         <tr>
-                            <td>{{ $charge->description }}</td>
-                            <td>{{ number_format($charge->total_amount, 2) }}</td>
+                            <td>{{ $item['description'] }}</td>
+                            <td>{{ number_format($item['amount'], 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -441,7 +438,7 @@
             <div class="totals">
                 <div class="total-row">
                     <span class="label">Subtotal:</span>
-                    <span class="value">PHP {{ number_format($chargesData['total_amount'], 2) }}</span>
+                    <span class="value">PHP {{ number_format($totalDue, 2) }}</span>
                 </div>
                 <div class="total-row">
                     <span class="label">Amount Tendered:</span>
@@ -455,7 +452,7 @@
                 @endif
                 <div class="total-row grand">
                     <span class="label">TOTAL PAID:</span>
-                    <span class="value">PHP {{ number_format($chargesData['total_amount'], 2) }}</span>
+                    <span class="value">PHP {{ number_format($totalDue, 2) }}</span>
                 </div>
             </div>
 

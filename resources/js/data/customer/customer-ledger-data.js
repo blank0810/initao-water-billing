@@ -146,8 +146,15 @@ function populateLedgerTable(entries) {
         }
 
         // Entry row with improved styling
+        const isCancelledEntry = entry.status?.stat_desc === 'CANCELLED';
+        const isReversalEntry = entry.source_type === 'REVERSAL';
+        const rowClasses = isCancelledEntry
+            ? 'bg-red-50/50 dark:bg-red-900/10 opacity-60 border-l-4 border-l-gray-300'
+            : isReversalEntry
+                ? 'bg-amber-50/50 dark:bg-amber-900/10 border-l-4 border-l-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                : `hover:bg-blue-50 dark:hover:bg-gray-700 border-l-4 ${entry.credit > 0 ? 'border-l-green-400' : 'border-l-red-400'}`;
         html += `
-            <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-l-4 ${entry.credit > 0 ? 'border-l-green-400' : 'border-l-red-400'}" onclick="showLedgerEntryDetails(${entry.ledger_entry_id})">
+            <tr class="${rowClasses} transition-colors cursor-pointer" onclick="showLedgerEntryDetails(${entry.ledger_entry_id})">
                 <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     <span class="text-xs">${formatTimeOnly(entry.post_ts)}</span>
                 </td>
@@ -172,10 +179,20 @@ function populateLedgerTable(entries) {
                     ${entry.running_balance_formatted}
                 </td>
                 <td class="px-4 py-3 text-center whitespace-nowrap">
-                    <button onclick="event.stopPropagation(); showLedgerEntryDetails(${entry.ledger_entry_id})"
-                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                    <div class="flex items-center justify-center gap-1">
+                        <button onclick="event.stopPropagation(); showLedgerEntryDetails(${entry.ledger_entry_id})"
+                            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${entry.source_type === 'PAYMENT' && entry.status?.stat_desc !== 'CANCELLED' && window.canVoidPayments ? `
+                        <button onclick="event.stopPropagation(); cancelPaymentFromLedger(${entry.source_id})"
+                            class="text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400 ml-1"
+                            title="Cancel Payment">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                        ` : ''}
+                    </div>
                 </td>
             </tr>
         `;
@@ -443,15 +460,23 @@ function populateLedgerEntryModal(data) {
     // Source document section
     const sourceSection = document.getElementById('modal-source-section');
     const sourceContent = document.getElementById('modal-source-content');
-    const printBtn = document.getElementById('modal-print-btn');
+    const receiptBtn = document.getElementById('modal-receipt-btn');
 
     if (data.source_details && sourceSection && sourceContent) {
         sourceSection.classList.remove('hidden');
         sourceContent.innerHTML = formatSourceDetails(data.source_details);
-        if (printBtn) printBtn.classList.remove('hidden');
     } else {
         if (sourceSection) sourceSection.classList.add('hidden');
-        if (printBtn) printBtn.classList.add('hidden');
+    }
+
+    // Show View Receipt button only for PAYMENT entries
+    if (receiptBtn) {
+        if (data.source_details && data.source_details.payment_id) {
+            receiptBtn.href = `/payment/receipt/${data.source_details.payment_id}`;
+            receiptBtn.classList.remove('hidden');
+        } else {
+            receiptBtn.classList.add('hidden');
+        }
     }
 
     // Connection section
@@ -566,6 +591,43 @@ window.closeLedgerEntryModal = function() {
 };
 
 /**
+ * Cancel a payment from the ledger view
+ * Prompts for reason and calls the cancel API endpoint
+ */
+window.cancelPaymentFromLedger = async function(paymentId) {
+    const reason = prompt('Please provide a reason for cancelling this payment:');
+    if (!reason || !reason.trim()) return;
+
+    if (!confirm('Are you sure you want to cancel this payment? This will reverse all ledger entries and make bills/charges available for payment again.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/payment/${paymentId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ reason: reason.trim() }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Payment cancelled successfully.');
+            loadLedgerData(); // Reload to show updated entries
+        } else {
+            alert(result.message || 'Failed to cancel payment.');
+        }
+    } catch (error) {
+        console.error('Error cancelling payment:', error);
+        alert('Network error. Please try again.');
+    }
+};
+
+/**
  * Toggle export dropdown menu
  */
 window.toggleExportDropdown = function() {
@@ -635,9 +697,4 @@ window.exportLedger = function() {
     toggleExportDropdown();
 };
 
-/**
- * Print ledger entry (opens print dialog)
- */
-window.printLedgerEntry = function() {
-    window.print();
-};
+

@@ -66,48 +66,68 @@ test('getCustomerStats formats total_current_bill correctly', function () {
 });
 
 test('getCustomerStats calculates bill amounts from unpaid ledger entries', function () {
+    $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+    $paidStatusId = Status::getIdByDescription(Status::PAID);
+
     // Create customers
     $customer1 = Customer::factory()->create([
         'c_type' => 'RESIDENTIAL',
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'stat_id' => $activeStatusId,
     ]);
     $customer2 = Customer::factory()->create([
         'c_type' => 'COMMERCIAL',
-        'stat_id' => Status::getIdByDescription(Status::ACTIVE),
+        'stat_id' => $activeStatusId,
     ]);
 
-    // Create bills in CustomerLedger - one paid, two unpaid
+    // Create WaterBillHistory records (source of truth for paid/unpaid)
+    $paidBillId = \DB::table('water_bill_history')->insertGetId([
+        'connection_id' => 1, 'period_id' => 1, 'consumption' => 10,
+        'water_amount' => 500.00, 'due_date' => now(), 'adjustment_total' => 0,
+        'stat_id' => $paidStatusId, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $unpaidBillId1 = \DB::table('water_bill_history')->insertGetId([
+        'connection_id' => 1, 'period_id' => 2, 'consumption' => 5,
+        'water_amount' => 300.00, 'due_date' => now(), 'adjustment_total' => 0,
+        'stat_id' => $activeStatusId, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $unpaidBillId2 = \DB::table('water_bill_history')->insertGetId([
+        'connection_id' => 2, 'period_id' => 1, 'consumption' => 15,
+        'water_amount' => 750.00, 'due_date' => now(), 'adjustment_total' => 0,
+        'stat_id' => $activeStatusId, 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    // Create ledger entries pointing to the bills via source_id
     \DB::table('CustomerLedger')->insert([
         [
             'customer_id' => $customer1->cust_id,
             'source_type' => 'BILL',
-            'source_id' => 1,
+            'source_id' => $paidBillId,
             'txn_date' => now(),
             'debit' => 500.00,
             'credit' => 0,
-            'stat_id' => Status::getIdByDescription(Status::PAID), // Paid
+            'stat_id' => $paidStatusId,
             'created_at' => now(),
             'updated_at' => now(),
         ],
         [
             'customer_id' => $customer1->cust_id,
             'source_type' => 'BILL',
-            'source_id' => 3,
+            'source_id' => $unpaidBillId1,
             'txn_date' => now(),
             'debit' => 300.00,
             'credit' => 0,
-            'stat_id' => Status::getIdByDescription(Status::ACTIVE), // Unpaid
+            'stat_id' => $activeStatusId,
             'created_at' => now(),
             'updated_at' => now(),
         ],
         [
             'customer_id' => $customer2->cust_id,
             'source_type' => 'BILL',
-            'source_id' => 2,
+            'source_id' => $unpaidBillId2,
             'txn_date' => now(),
             'debit' => 750.00,
             'credit' => 0,
-            'stat_id' => Status::getIdByDescription(Status::ACTIVE), // Unpaid
+            'stat_id' => $activeStatusId,
             'created_at' => now(),
             'updated_at' => now(),
         ],
@@ -115,7 +135,7 @@ test('getCustomerStats calculates bill amounts from unpaid ledger entries', func
 
     $stats = $this->customerService->getCustomerStats();
 
-    // Only ACTIVE (unpaid) BILL debits are counted: 300 + 750 = 1050.00
+    // Only bills with ACTIVE status in WaterBillHistory: 300 + 750 = 1050.00
     expect((float) $stats['total_current_bill'])->toBe(1050.00);
 });
 

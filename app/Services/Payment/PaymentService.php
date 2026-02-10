@@ -128,6 +128,12 @@ class PaymentService
             // Mark charges as PAID
             $this->chargeService->markChargesAsPaid($application->application_id);
 
+            // Mark CHARGE ledger entries as PAID
+            $chargeIds = $chargesData['charges']->pluck('charge_id');
+            CustomerLedger::where('source_type', 'CHARGE')
+                ->whereIn('source_id', $chargeIds)
+                ->update(['stat_id' => $paidStatusId]);
+
             // Update application status to PAID
             $application->update([
                 'stat_id' => $paidStatusId,
@@ -468,6 +474,11 @@ class PaymentService
                 );
 
                 $charge->update(['stat_id' => $paidStatusId]);
+
+                // Mark CHARGE ledger entry as PAID
+                CustomerLedger::where('source_type', 'CHARGE')
+                    ->where('source_id', $charge->charge_id)
+                    ->update(['stat_id' => $paidStatusId]);
             }
 
             return [
@@ -633,6 +644,11 @@ class PaymentService
                 );
 
                 $charge->update(['stat_id' => $paidStatusId]);
+
+                // Mark CHARGE ledger entry as PAID
+                CustomerLedger::where('source_type', 'CHARGE')
+                    ->where('source_id', $charge->charge_id)
+                    ->update(['stat_id' => $paidStatusId]);
             }
 
             return [
@@ -643,5 +659,195 @@ class PaymentService
                 'change' => $change,
             ];
         });
+    }
+
+    /**
+     * Cancel a payment and reverse all ledger entries
+     *
+     * - Marks Payment as CANCELLED with metadata
+     * - Marks all PaymentAllocations as CANCELLED
+     * - Marks original PAYMENT ledger entries as CANCELLED
+     * - Creates REVERSAL DEBIT entries in CustomerLedger
+     * - Reverts bill/charge statuses to ACTIVE or OVERDUE
+     *
+     * @param  int  $paymentId  The payment to cancel
+     * @param  string  $reason  Required cancellation reason
+     * @param  int  $userId  The admin/staff performing the cancellation
+     * @return array Contains 'success', 'message', 'data'
+     *
+     * @throws \Exception
+     */
+    public function cancelPayment(int $paymentId, string $reason, int $userId): array
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $cancelledStatusId = Status::getIdByDescription(Status::CANCELLED);
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
+
+        return DB::transaction(function () use (
+            $paymentId, $reason, $userId,
+            $activeStatusId, $cancelledStatusId, $overdueStatusId
+        ) {
+            // Lock the payment to prevent concurrent operations
+            $payment = Payment::with('paymentAllocations.period')
+                ->where('payment_id', $paymentId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $payment) {
+                throw new \Exception('Payment not found.');
+            }
+
+            if ($payment->stat_id === $cancelledStatusId) {
+                throw new \Exception('Payment is already cancelled.');
+            }
+
+            if ($payment->stat_id !== $activeStatusId) {
+                throw new \Exception('Only active payments can be cancelled.');
+            }
+
+            // Guard: reject cancellation if any allocation belongs to a closed period
+            foreach ($payment->paymentAllocations as $allocation) {
+                if ($allocation->period && $allocation->period->is_closed) {
+                    throw new \Exception(
+                        'Cannot cancel payment: The billing period "'
+                        .($allocation->period->per_name ?? 'Unknown')
+                        .'" has been closed.'
+                    );
+                }
+            }
+
+            // 1. Mark Payment as CANCELLED
+            $payment->update([
+                'stat_id' => $cancelledStatusId,
+                'cancelled_at' => now(),
+                'cancelled_by' => $userId,
+                'cancellation_reason' => $reason,
+            ]);
+
+            // 2. Process each allocation
+            foreach ($payment->paymentAllocations as $allocation) {
+                // Mark allocation as CANCELLED
+                $allocation->update(['stat_id' => $cancelledStatusId]);
+
+                // Find and mark original PAYMENT ledger entry as CANCELLED
+                CustomerLedger::where('source_type', 'PAYMENT')
+                    ->where('source_id', $payment->payment_id)
+                    ->where('source_line_no', $allocation->payment_allocation_id)
+                    ->update(['stat_id' => $cancelledStatusId]);
+
+                // Create REVERSAL DEBIT entry
+                $description = 'CANCELLED: '.$this->getReversalDescription($allocation);
+                if ($reason) {
+                    $description .= ' (Reason: '.$reason.')';
+                }
+
+                $this->ledgerService->recordPaymentReversal(
+                    $allocation,
+                    $payment,
+                    $description,
+                    $userId
+                );
+
+                // Revert target bill/charge status
+                $this->revertTargetStatus($allocation, $activeStatusId, $overdueStatusId);
+
+                // Revert the original BILL/CHARGE ledger entry back to ACTIVE
+                CustomerLedger::where('source_type', $allocation->target_type)
+                    ->where('source_id', $allocation->target_id)
+                    ->update(['stat_id' => $activeStatusId]);
+            }
+
+            // 3. Handle application payment link (if this was an application payment)
+            $this->revertApplicationPayment($payment, $activeStatusId);
+
+            return [
+                'success' => true,
+                'message' => 'Payment cancelled successfully.',
+                'data' => [
+                    'payment_id' => $paymentId,
+                    'receipt_no' => $payment->receipt_no,
+                    'amount' => $payment->amount_received,
+                    'allocations_reversed' => $payment->paymentAllocations->count(),
+                    'cancelled_by' => $userId,
+                    'cancelled_at' => $payment->cancelled_at,
+                ],
+            ];
+        });
+    }
+
+    /**
+     * Build reversal description from allocation target
+     */
+    protected function getReversalDescription(PaymentAllocation $allocation): string
+    {
+        if ($allocation->target_type === 'BILL') {
+            $bill = WaterBillHistory::with('period')->find($allocation->target_id);
+
+            return 'Water Bill - '.($bill?->period?->per_name ?? 'Unknown Period');
+        }
+
+        if ($allocation->target_type === 'CHARGE') {
+            $charge = CustomerCharge::find($allocation->target_id);
+
+            return $charge?->description ?? 'Charge';
+        }
+
+        return 'Payment';
+    }
+
+    /**
+     * Revert bill or charge status after cancellation
+     */
+    protected function revertTargetStatus(
+        PaymentAllocation $allocation,
+        int $activeStatusId,
+        int $overdueStatusId
+    ): void {
+        if ($allocation->target_type === 'BILL') {
+            $bill = WaterBillHistory::find($allocation->target_id);
+            if ($bill) {
+                // Determine if bill should be OVERDUE based on due_date
+                $newStatusId = ($bill->due_date && $bill->due_date->isPast())
+                    ? $overdueStatusId
+                    : $activeStatusId;
+                $bill->update(['stat_id' => $newStatusId]);
+            }
+        } elseif ($allocation->target_type === 'CHARGE') {
+            CustomerCharge::where('charge_id', $allocation->target_id)
+                ->update(['stat_id' => $activeStatusId]);
+        }
+    }
+
+    /**
+     * If this payment was linked to a ServiceApplication, revert the application status
+     */
+    protected function revertApplicationPayment(
+        Payment $payment,
+        int $activeStatusId
+    ): void {
+        $application = ServiceApplication::where('payment_id', $payment->payment_id)->first();
+
+        if ($application) {
+            // Revert application from PAID back to VERIFIED
+            $verifiedStatusId = Status::getIdByDescription(Status::VERIFIED);
+            $application->update([
+                'stat_id' => $verifiedStatusId,
+                'paid_at' => null,
+                'payment_id' => null,
+            ]);
+
+            // Revert charges back to ACTIVE
+            $chargeIds = CustomerCharge::where('application_id', $application->application_id)
+                ->where('stat_id', Status::getIdByDescription(Status::PAID))
+                ->pluck('charge_id');
+
+            CustomerCharge::whereIn('charge_id', $chargeIds)
+                ->update(['stat_id' => $activeStatusId]);
+
+            // Revert corresponding CHARGE ledger entries back to ACTIVE
+            CustomerLedger::where('source_type', 'CHARGE')
+                ->whereIn('source_id', $chargeIds)
+                ->update(['stat_id' => $activeStatusId]);
+        }
     }
 }

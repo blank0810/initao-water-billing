@@ -23,6 +23,7 @@ class PaymentAllocation extends Model
         'amount_applied',
         'period_id',
         'connection_id',
+        'stat_id',
     ];
 
     protected $casts = [
@@ -51,6 +52,14 @@ class PaymentAllocation extends Model
     public function serviceConnection()
     {
         return $this->belongsTo(ServiceConnection::class, 'connection_id', 'connection_id');
+    }
+
+    /**
+     * Get the status of the allocation
+     */
+    public function status()
+    {
+        return $this->belongsTo(Status::class, 'stat_id', 'stat_id');
     }
 
     /**
