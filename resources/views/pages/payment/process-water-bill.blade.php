@@ -416,7 +416,8 @@
             },
 
             get canProcess() {
-                return this.totalItems > 0
+                return this.data.selected_bill_id
+                    && this.totalItems > 0
                     && this.amountReceived
                     && this.amountReceived >= this.totalDue;
             },
