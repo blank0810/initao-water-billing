@@ -234,6 +234,7 @@ class PaymentService
             ->where('CustomerCharge.stat_id', $activeStatusId)
             ->orderBy('CustomerCharge.due_date', 'asc')
             ->get()
+            ->unique('charge_id')
             ->filter(fn ($charge) => $charge->remaining_amount > 0)
             ->map(function ($charge) {
                 return [
