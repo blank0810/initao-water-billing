@@ -470,10 +470,11 @@ function generateBillModalData() {
                 return;
             }
             const period = this.periods.find(p => p.per_id == this.form.period_id);
-            if (period && period.end_date && period.grace_period !== undefined) {
-                const endDate = new Date(period.end_date);
-                endDate.setDate(endDate.getDate() + parseInt(period.grace_period));
-                this.form.due_date = endDate.toISOString().split('T')[0];
+            if (period && period.grace_period !== undefined) {
+                // Due date = today + grace_period (not period end_date)
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + parseInt(period.grace_period));
+                this.form.due_date = dueDate.toISOString().split('T')[0];
             }
         },
 
