@@ -147,7 +147,7 @@
                         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="">Select period...</option>
                         <template x-for="period in periods" :key="period.per_id">
-                            <option :value="period.per_id" :selected="period.per_id == activePeriodId"
+                            <option :value="String(period.per_id)"
                                 x-text="period.per_name + (period.is_active ? ' (Current)' : '')"></option>
                         </template>
                     </select>
@@ -385,9 +385,10 @@ function generateBillModalData() {
                 if (periodsData.success) {
                     this.periods = periodsData.data;
                     this.activePeriodId = periodsData.activePeriodId;
+                    // Set default period to active period
                     if (this.activePeriodId) {
-                        this.form.period_id = this.activePeriodId;
-                        this.updateDueDate();
+                        this.form.period_id = String(this.activePeriodId);
+                        this.$nextTick(() => this.updateDueDate());
                     }
                 }
             } catch (error) {
@@ -577,12 +578,13 @@ function generateBillModalData() {
         resetForm() {
             this.form = {
                 connection_id: '',
-                period_id: this.activePeriodId || '',
+                period_id: this.activePeriodId ? String(this.activePeriodId) : '',
                 prev_reading: 0,
                 curr_reading: 0,
                 reading_date: new Date().toISOString().split('T')[0],
                 due_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
             };
+            this.updateDueDate();
             this.errorMessage = '';
             this.searchQuery = '';
             this.selectedConnection = null;
