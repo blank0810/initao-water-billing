@@ -41,25 +41,6 @@
                 </div>
             </div>
 
-            <!-- Customer Information -->
-            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-                <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Customer Information</h4>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <span class="text-gray-600 dark:text-gray-400">Name:</span>
-                        <span class="ml-2 font-medium text-gray-900 dark:text-white" id="detailCustomerName">-</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600 dark:text-gray-400">Customer Code:</span>
-                        <span class="ml-2 font-medium text-gray-900 dark:text-white" id="detailCustomerCode">-</span>
-                    </div>
-                    <div class="col-span-2">
-                        <span class="text-gray-600 dark:text-gray-400">Address:</span>
-                        <span class="ml-2 font-medium text-gray-900 dark:text-white" id="detailAddress">-</span>
-                    </div>
-                </div>
-            </div>
-
             <!-- Meter Information -->
             <div class="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-4">
                 <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Meter Information</h4>
@@ -83,22 +64,6 @@
                 </div>
             </div>
 
-            <!-- Water Meter Image -->
-            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
-                <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Water Meter Photo</h4>
-                <div class="flex justify-center">
-                    <div class="relative w-full max-w-md">
-                        <img id="detailMeterImage" 
-                             src="https://via.placeholder.com/400x300/3b82f6/ffffff?text=Water+Meter" 
-                             alt="Water Meter" 
-                             class="w-full h-64 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700">
-                        <div class="absolute top-2 right-2 bg-white dark:bg-gray-800 rounded-lg px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 shadow">
-                            <i class="fas fa-camera mr-1"></i>Meter Photo
-                        </div>
-                    </div>
-                </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">Photo taken during installation</p>
-            </div>
         </div>
 
         <!-- Footer -->
@@ -124,19 +89,10 @@ function openConnectionDetailsModal(connection) {
     statusEl.textContent = connection.connection_status || 'N/A';
     statusEl.className = 'ml-2 font-medium inline-flex px-2 py-1 text-xs rounded-full ' + getStatusColorClass(connection.connection_status);
     
-    document.getElementById('detailCustomerName').textContent = connection.customer_name || 'N/A';
-    document.getElementById('detailCustomerCode').textContent = connection.customer_code || 'N/A';
-    document.getElementById('detailAddress').textContent = connection.address || 'N/A';
-    
     document.getElementById('detailMeterNo').textContent = connection.meter_no || 'N/A';
     document.getElementById('detailDateInstalled').textContent = connection.date_installed ? new Date(connection.date_installed).toLocaleDateString() : 'N/A';
     document.getElementById('detailMeterReader').textContent = connection.meterReader || 'N/A';
     document.getElementById('detailArea').textContent = connection.area || 'N/A';
-    
-    // Set meter image if available
-    if (connection.meter_image) {
-        document.getElementById('detailMeterImage').src = connection.meter_image;
-    }
     
     document.getElementById('connectionDetailsModal').classList.remove('hidden');
 }
