@@ -195,7 +195,7 @@ class CustomerService
     /**
      * Get customer's current unpaid bill amount
      */
-    private function getCustomerCurrentBill(Customer $customer): string
+    private function getCustomerCurrentBill(Customer $customer): float
     {
         // Calculate total unpaid amount from CustomerLedger
         // Debit/Credit accounting: unpaid balance = sum(debits) - sum(credits)
@@ -209,10 +209,7 @@ class CustomerService
             ->where('source_type', 'PAYMENT')
             ->sum('credit');
 
-        $unpaidBalance = max(0, $totalDebits - $totalCredits);
-
-        // Format as Philippine Peso
-        return '₱'.number_format($unpaidBalance, 2, '.', ',');
+        return (float) max(0, $totalDebits - $totalCredits);
     }
 
     /**
