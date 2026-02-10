@@ -1,5 +1,5 @@
 <!-- Bill Generation Tab Content -->
-<div>
+<div x-data="billGenerationTab()" x-init="init()">
     <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 mb-6">
         <div class="flex">
             <i class="fas fa-info-circle text-green-600 mt-0.5 mr-2"></i>
@@ -14,13 +14,15 @@
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             <i class="fas fa-cogs mr-2"></i>Generate Bills
         </h3>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Billing Period</label>
-                <select id="generation-period" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
-                    <option value="BP-2024-02">February 2024 (Open)</option>
-                    <option value="BP-2024-01">January 2024 (Closed)</option>
+                <select id="generation-period" x-model="selectedPeriodId" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500">
+                    <option value="">Select Period</option>
+                    <template x-for="period in periods" :key="period.per_id">
+                        <option :value="String(period.per_id)" x-text="period.per_name + (period.is_closed ? ' (Closed)' : ' (Open)')"></option>
+                    </template>
                 </select>
             </div>
             <div>
@@ -52,13 +54,13 @@
                 <i class="fas fa-calculator mr-2"></i>Recompute Bills
             </button>
             <span class="text-sm text-gray-500 dark:text-gray-400 ml-auto">
-                <i class="fas fa-clock mr-1"></i>Last generated: Jan 29, 2024
+                <i class="fas fa-clock mr-1"></i>Last generated: <span x-text="lastGenerated">-</span>
             </span>
         </div>
     </div>
 
     <!-- Generated Bills Table -->
-    <x-ui.action-functions 
+    <x-ui.action-functions
         searchPlaceholder="Search by bill no, customer..."
         filterLabel="All Status"
         :filterOptions="[
@@ -93,3 +95,40 @@
         :actions="false"
     />
 </div>
+
+<script>
+function billGenerationTab() {
+    return {
+        periods: [],
+        selectedPeriodId: '',
+        lastGenerated: '-',
+
+        async init() {
+            await this.loadPeriods();
+        },
+
+        async loadPeriods() {
+            try {
+                const response = await fetch('/water-bills/billing-periods');
+                const result = await response.json();
+                if (result.success) {
+                    this.periods = result.data;
+
+                    // Set default period to active period
+                    if (result.activePeriodId) {
+                        this.selectedPeriodId = String(result.activePeriodId);
+                    } else {
+                        // Fallback: find first non-closed period
+                        const activePeriod = this.periods.find(p => !p.is_closed);
+                        if (activePeriod) {
+                            this.selectedPeriodId = String(activePeriod.per_id);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading periods:', error);
+            }
+        }
+    }
+}
+</script>

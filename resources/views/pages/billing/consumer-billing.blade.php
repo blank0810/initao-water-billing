@@ -73,7 +73,7 @@
                     class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">All Periods</option>
                     <template x-for="period in periods" :key="period.per_id">
-                        <option :value="period.per_id" x-text="period.per_name" :selected="period.per_id == selectedPeriodId"></option>
+                        <option :value="String(period.per_id)" x-text="period.per_name"></option>
                     </template>
                 </select>
             </div>
@@ -253,6 +253,17 @@ function consumerBillingData() {
                 if (result.success) {
                     this.periods = result.data;
                     this.activePeriodId = result.activePeriodId;
+
+                    // Set default period to active period
+                    if (this.activePeriodId) {
+                        this.selectedPeriodId = String(this.activePeriodId);
+                    } else {
+                        // Fallback: find first non-closed period
+                        const activePeriod = this.periods.find(p => !p.is_closed);
+                        if (activePeriod) {
+                            this.selectedPeriodId = String(activePeriod.per_id);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error loading periods:', error);
