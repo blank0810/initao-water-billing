@@ -154,7 +154,7 @@ function populateLedgerTable(entries) {
                 ? 'bg-amber-50/50 dark:bg-amber-900/10 border-l-4 border-l-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'
                 : `hover:bg-blue-50 dark:hover:bg-gray-700 border-l-4 ${entry.credit > 0 ? 'border-l-green-400' : 'border-l-red-400'}`;
         html += `
-            <tr class="${rowClasses} transition-colors cursor-pointer" onclick="showLedgerEntryDetails(${entry.ledger_entry_id})">`;
+            <tr class="${rowClasses} transition-colors cursor-pointer" onclick="showLedgerEntryDetails(${entry.ledger_entry_id})">
                 <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     <span class="text-xs">${formatTimeOnly(entry.post_ts)}</span>
                 </td>
@@ -460,15 +460,23 @@ function populateLedgerEntryModal(data) {
     // Source document section
     const sourceSection = document.getElementById('modal-source-section');
     const sourceContent = document.getElementById('modal-source-content');
-    const printBtn = document.getElementById('modal-print-btn');
+    const receiptBtn = document.getElementById('modal-receipt-btn');
 
     if (data.source_details && sourceSection && sourceContent) {
         sourceSection.classList.remove('hidden');
         sourceContent.innerHTML = formatSourceDetails(data.source_details);
-        if (printBtn) printBtn.classList.remove('hidden');
     } else {
         if (sourceSection) sourceSection.classList.add('hidden');
-        if (printBtn) printBtn.classList.add('hidden');
+    }
+
+    // Show View Receipt button only for PAYMENT entries
+    if (receiptBtn) {
+        if (data.source_details && data.source_details.payment_id) {
+            receiptBtn.href = `/payment/receipt/${data.source_details.payment_id}`;
+            receiptBtn.classList.remove('hidden');
+        } else {
+            receiptBtn.classList.add('hidden');
+        }
     }
 
     // Connection section
@@ -689,9 +697,4 @@ window.exportLedger = function() {
     toggleExportDropdown();
 };
 
-/**
- * Print ledger entry (opens print dialog)
- */
-window.printLedgerEntry = function() {
-    window.print();
-};
+
