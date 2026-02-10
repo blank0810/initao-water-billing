@@ -303,4 +303,29 @@ class PaymentController extends Controller
 
         return view('pages.payment.my-transactions-report', compact('data', 'cashierName'));
     }
+
+    /**
+     * Cancel a payment (ADMIN/SUPER_ADMIN only)
+     */
+    public function cancelPayment(int $paymentId, Request $request): JsonResponse
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        try {
+            $result = $this->paymentService->cancelPayment(
+                $paymentId,
+                $request->input('reason'),
+                auth()->id()
+            );
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
 }
