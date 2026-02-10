@@ -120,7 +120,7 @@ class PaymentController extends Controller
 
     /**
      * Show water bill payment processing form
-     * Now shows ALL outstanding items for the connection (bulk payment)
+     * Shows only the clicked bill and its period-matched charges
      */
     public function processWaterBillPayment(int $id)
     {
@@ -136,7 +136,7 @@ class PaymentController extends Controller
             abort(404, 'Service connection not found for this bill.');
         }
 
-        $outstandingItems = $this->paymentService->getConnectionOutstandingItems($connection->connection_id);
+        $outstandingItems = $this->paymentService->getBillOutstandingItems($id);
 
         return view('pages.payment.process-water-bill', [
             'bill' => $bill,
@@ -147,7 +147,7 @@ class PaymentController extends Controller
     }
 
     /**
-     * Process bulk water bill + charges payment
+     * Process single water bill + period-matched charges payment
      * Supports both AJAX (JSON) and form submission
      */
     public function storeWaterBillPayment(int $id, Request $request)
@@ -167,8 +167,8 @@ class PaymentController extends Controller
         }
 
         try {
-            $result = $this->paymentService->processConnectionPayment(
-                (int) $request->connection_id,
+            $result = $this->paymentService->processWaterBillPayment(
+                $id,
                 (float) $request->amount_received,
                 auth()->id(),
             );
