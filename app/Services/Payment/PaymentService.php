@@ -441,6 +441,11 @@ class PaymentService
 
             $bill->update(['stat_id' => $paidStatusId]);
 
+            // Mark BILL ledger entry as PAID
+            CustomerLedger::where('source_type', 'BILL')
+                ->where('source_id', $bill->bill_id)
+                ->update(['stat_id' => $paidStatusId]);
+
             // Allocate to period-matched charges
             foreach ($charges as $charge) {
                 $chargeAmount = $charge->remaining_amount;
@@ -598,6 +603,11 @@ class PaymentService
                 );
 
                 $bill->update(['stat_id' => $paidStatusId]);
+
+                // Mark BILL ledger entry as PAID
+                CustomerLedger::where('source_type', 'BILL')
+                    ->where('source_id', $bill->bill_id)
+                    ->update(['stat_id' => $paidStatusId]);
             }
 
             // --- Create allocations for charges ---

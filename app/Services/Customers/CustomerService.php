@@ -7,6 +7,7 @@ use App\Models\ConsumerAddress;
 use App\Models\Customer;
 use App\Models\CustomerCharge;
 use App\Models\CustomerLedger;
+use App\Models\PaymentAllocation;
 use App\Models\ServiceApplication;
 use App\Models\Status;
 use Illuminate\Database\Eloquent\Builder;
@@ -197,17 +198,31 @@ class CustomerService
      */
     private function getCustomerCurrentBill(Customer $customer): float
     {
-        // Calculate total unpaid amount from CustomerLedger
-        // Debit/Credit accounting: unpaid balance = sum(debits) - sum(credits)
-        // where debits are from BILL entries and credits are from PAYMENT entries
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
 
+        // Sum unpaid BILL debits (ACTIVE = not yet paid)
         $totalDebits = $customer->customerLedgerEntries
             ->where('source_type', 'BILL')
+            ->where('stat_id', $activeStatusId)
             ->sum('debit');
 
-        $totalCredits = $customer->customerLedgerEntries
-            ->where('source_type', 'PAYMENT')
-            ->sum('credit');
+        // Sum only PAYMENT credits that are allocated to bills via PaymentAllocation
+        // source_line_no on PAYMENT ledger entries stores the payment_allocation_id
+        $paymentEntries = $customer->customerLedgerEntries
+            ->where('source_type', 'PAYMENT');
+
+        $allocationIds = $paymentEntries->pluck('source_line_no')->filter()->values();
+
+        $totalCredits = 0;
+        if ($allocationIds->isNotEmpty()) {
+            $billAllocationIds = PaymentAllocation::whereIn('payment_allocation_id', $allocationIds)
+                ->where('target_type', 'BILL')
+                ->pluck('payment_allocation_id');
+
+            $totalCredits = $paymentEntries
+                ->whereIn('source_line_no', $billAllocationIds->toArray())
+                ->sum('credit');
+        }
 
         return (float) max(0, $totalDebits - $totalCredits);
     }
@@ -496,16 +511,23 @@ class CustomerService
         // 2. Residential Count
         $residentialCount = Customer::where('c_type', 'RESIDENTIAL')->count();
 
-        // 3. Total Current Bill - Sum of unpaid bills from CustomerLedger
-        // In CustomerLedger, bills are recorded as debits (source_type = 'BILL')
-        // To find unpaid bills, we need to check if the bill amount has been credited (paid)
-        // We'll sum all bill debits and subtract all payment credits for bills
+        // 3. Total Current Bill - Sum of unpaid BILL debits minus bill-related payments
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
         $totalBillDebits = DB::table('CustomerLedger')
             ->where('source_type', 'BILL')
+            ->where('stat_id', $activeStatusId)
             ->sum('debit');
 
+        // Only subtract PAYMENT credits allocated to bills (via PaymentAllocation)
         $totalBillCredits = DB::table('CustomerLedger')
             ->where('source_type', 'PAYMENT')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('PaymentAllocation')
+                    ->whereColumn('PaymentAllocation.payment_allocation_id', 'CustomerLedger.source_line_no')
+                    ->where('PaymentAllocation.target_type', 'BILL');
+            })
             ->sum('credit');
 
         $totalCurrentBill = max(0, $totalBillDebits - $totalBillCredits);
