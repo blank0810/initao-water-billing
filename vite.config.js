@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/js/data/customer/customer-list-simple.js',
                 'resources/js/data/customer/customer-details-data.js',
                 'resources/js/data/consumer/consumer-list.js',
+                'resources/js/data/billing/billing.js',
                 'resources/js/utils/action-functions.js',
             ],
             refresh: true,
