@@ -655,6 +655,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log');
     });
 
+    // -------------------------------------------------------------------------
+    // User Manual / Documentation
+    // -------------------------------------------------------------------------
+    Route::get('/user-manual', function () {
+        session(['active_menu' => 'user-manual']);
+
+        return view('pages.user-manual.documentation');
+    })->name('user-manual');
+
 });
 
 // Auth routes (login, register, password reset, etc.)
