@@ -330,6 +330,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/bill-adjustments/{adjustmentId}/void', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'void'])->name('bill-adjustments.void');
         Route::post('/bill-adjustments/recompute', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'recomputeBill'])->name('bill-adjustments.recompute');
         Route::post('/bill-adjustments/recompute-period', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'recomputePeriod'])->name('bill-adjustments.recompute-period');
+
+        // Penalty Management API
+        Route::get('/penalties/summary', [\App\Http\Controllers\PenaltyController::class, 'summary'])->name('penalties.summary');
+        Route::post('/penalties/process', [\App\Http\Controllers\PenaltyController::class, 'process'])->name('penalties.process');
     });
 
     // -------------------------------------------------------------------------
@@ -441,10 +445,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/periods/{periodId}/close', [\App\Http\Controllers\PeriodController::class, 'closePeriod'])->name('periods.close');
         Route::post('/periods/{periodId}/open', [\App\Http\Controllers\PeriodController::class, 'openPeriod'])->name('periods.open');
         Route::post('/periods/generate-from-date', [\App\Http\Controllers\PeriodController::class, 'generateFromDate'])->name('periods.generate-from-date');
-
-        // Penalty Management API
-        Route::get('/penalties/summary', [\App\Http\Controllers\PenaltyController::class, 'summary'])->name('penalties.summary');
-        Route::post('/penalties/process', [\App\Http\Controllers\PenaltyController::class, 'process'])->name('penalties.process');
 
         Route::get('/settings', function () {
             session(['active_menu' => 'settings']);

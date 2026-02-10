@@ -46,7 +46,7 @@
                 </div>
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Apply Late Payment Penalties?</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    This will create a <span class="font-bold text-red-600">&#8369;10.00 penalty</span> charge for each overdue bill.
+                    This will create a <span class="font-bold text-red-600">&#8369;<span x-text="parseFloat(stats.penalty_amount).toFixed(2)">0.00</span> penalty</span> charge for each overdue bill.
                     <br><br>
                     <span class="font-medium text-gray-900 dark:text-white" x-text="stats.without_penalty"></span> bill(s) will be penalized.
                 </p>
@@ -92,7 +92,7 @@
 <script>
 function penaltyData() {
     return {
-        stats: { total_overdue: 0, with_penalty: 0, without_penalty: 0 },
+        stats: { total_overdue: 0, with_penalty: 0, without_penalty: 0, penalty_amount: 0 },
         showModal: false,
         processing: false,
         notification: { show: false, type: 'success', message: '' },
@@ -103,7 +103,8 @@ function penaltyData() {
 
         async fetchStats() {
             try {
-                const response = await fetch('/penalties/summary');
+                const response = await fetch('{{ route("penalties.summary") }}');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 if (data.success) {
                     this.stats = data.data;
@@ -116,7 +117,7 @@ function penaltyData() {
         async processPenalties() {
             this.processing = true;
             try {
-                const response = await fetch('/penalties/process', {
+                const response = await fetch('{{ route("penalties.process") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -125,13 +126,13 @@ function penaltyData() {
                     }
                 });
 
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
 
                 if (data.success) {
                     this.showNotification('success', data.message);
                     this.showModal = false;
                     this.fetchStats();
-                    // Refresh the billing summary cards if available
                     if (window.refreshBillingSummary) {
                         window.refreshBillingSummary();
                     }

@@ -9,11 +9,10 @@ use App\Models\WaterBillHistory;
 use App\Services\Ledger\LedgerService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PenaltyService
 {
-    private const PENALTY_AMOUNT = 10.00;
-
     private const PENALTY_CODE = 'LATE_PENALTY';
 
     public function __construct(
@@ -50,7 +49,7 @@ class PenaltyService
 
         return CustomerCharge::where('connection_id', $bill->connection_id)
             ->where('charge_item_id', $penaltyChargeItem->charge_item_id)
-            ->where('description', 'like', '%Bill #'.$bill->bill_id.'%')
+            ->where('description', 'like', '%(Bill #'.$bill->bill_id.')')
             ->exists();
     }
 
@@ -65,6 +64,7 @@ class PenaltyService
         if (! $penaltyChargeItem) {
             return [
                 'success' => false,
+                'status' => 'error',
                 'message' => 'Penalty charge item (LATE_PENALTY) not found. Please seed charge items.',
             ];
         }
@@ -73,6 +73,7 @@ class PenaltyService
         if ($this->hasExistingPenalty($bill)) {
             return [
                 'success' => false,
+                'status' => 'already_exists',
                 'message' => 'Penalty already exists for this bill.',
             ];
         }
@@ -82,6 +83,7 @@ class PenaltyService
         if (! $connection || ! $connection->customer_id) {
             return [
                 'success' => false,
+                'status' => 'error',
                 'message' => 'Service connection or customer not found.',
             ];
         }
@@ -101,13 +103,13 @@ class PenaltyService
                 'charge_item_id' => $penaltyChargeItem->charge_item_id,
                 'description' => "Late Payment Penalty - {$periodName} (Bill #{$bill->bill_id})",
                 'quantity' => 1,
-                'unit_amount' => self::PENALTY_AMOUNT,
+                'unit_amount' => $penaltyChargeItem->default_amount,
                 'due_date' => now()->addDays(7),
                 'stat_id' => $activeStatusId,
             ]);
 
-            // Create ledger entry via LedgerService
-            $this->ledgerService->recordCharge($charge, $userId);
+            // Create ledger entry via LedgerService (with period_id for proper tracking)
+            $this->ledgerService->recordCharge($charge, $userId, $bill->period_id);
 
             // Update bill status to OVERDUE
             $bill->update(['stat_id' => $overdueStatusId]);
@@ -116,15 +118,24 @@ class PenaltyService
 
             return [
                 'success' => true,
+                'status' => 'created',
                 'message' => 'Penalty created successfully.',
                 'charge' => $charge,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
 
+            Log::error('Failed to create penalty', [
+                'bill_id' => $bill->bill_id,
+                'connection_id' => $bill->connection_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return [
                 'success' => false,
-                'message' => 'Failed to create penalty: '.$e->getMessage(),
+                'status' => 'error',
+                'message' => 'Failed to create penalty. Please try again or contact support.',
             ];
         }
     }
@@ -145,7 +156,7 @@ class PenaltyService
 
             if ($result['success']) {
                 $processed++;
-            } elseif (str_contains($result['message'], 'already exists')) {
+            } elseif (($result['status'] ?? '') === 'already_exists') {
                 $skipped++;
             } else {
                 $errors[] = [
@@ -173,6 +184,7 @@ class PenaltyService
     public function getOverdueBillsSummary(): array
     {
         $overdueBills = $this->findOverdueBills();
+        $penaltyChargeItem = ChargeItem::where('code', self::PENALTY_CODE)->first();
 
         $withPenalty = 0;
         $withoutPenalty = 0;
@@ -189,6 +201,7 @@ class PenaltyService
             'total_overdue' => $overdueBills->count(),
             'with_penalty' => $withPenalty,
             'without_penalty' => $withoutPenalty,
+            'penalty_amount' => $penaltyChargeItem?->default_amount ?? 0,
         ];
     }
 }

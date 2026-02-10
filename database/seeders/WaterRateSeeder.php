@@ -12,7 +12,7 @@ class WaterRateSeeder extends Seeder
      * Run the database seeds.
      *
      * Seeds tiered water rates with the structure:
-     * - period_id: NULL for default rates
+     * - period_id: NULL for default rates, or specific period ID
      * - class_id: Links to account_type (1=Individual, 2=Corporation, etc.)
      * - range_id: Tier level (1, 2, 3, 4)
      * - range_min/max: Consumption range in cu.m
@@ -25,6 +25,13 @@ class WaterRateSeeder extends Seeder
 
         // Get account type IDs
         $accountTypes = DB::table('account_type')->pluck('at_id', 'at_desc');
+
+        // Get the current period (created by PeriodSeeder)
+        $currentPeriod = DB::table('period')
+            ->where('is_closed', false)
+            ->where('stat_id', $activeStatusId)
+            ->orderBy('start_date', 'desc')
+            ->first();
 
         // Define rate tiers for each class (using class_id from account_type)
         // Format: [class_id => [[range_id, range_min, range_max, rate_val, rate_inc], ...]]
@@ -47,30 +54,38 @@ class WaterRateSeeder extends Seeder
 
         $count = 0;
 
-        foreach ($rateTiers as $classId => $tiers) {
-            foreach ($tiers as $tier) {
-                [$rangeId, $rangeMin, $rangeMax, $rateVal, $rateInc] = $tier;
+        // Seed rates for both NULL (default) and the current period
+        $periodIds = [null];
+        if ($currentPeriod) {
+            $periodIds[] = $currentPeriod->per_id;
+        }
 
-                DB::table('water_rates')->updateOrInsert(
-                    [
-                        'period_id' => null,
-                        'class_id' => $classId,
-                        'range_id' => $rangeId,
-                    ],
-                    [
-                        'period_id' => null,
-                        'class_id' => $classId,
-                        'range_id' => $rangeId,
-                        'range_min' => $rangeMin,
-                        'range_max' => $rangeMax,
-                        'rate_val' => $rateVal,
-                        'rate_inc' => $rateInc,
-                        'stat_id' => $activeStatusId,
-                        'updated_at' => now(),
-                    ]
-                );
+        foreach ($periodIds as $periodId) {
+            foreach ($rateTiers as $classId => $tiers) {
+                foreach ($tiers as $tier) {
+                    [$rangeId, $rangeMin, $rangeMax, $rateVal, $rateInc] = $tier;
 
-                $count++;
+                    DB::table('water_rates')->updateOrInsert(
+                        [
+                            'period_id' => $periodId,
+                            'class_id' => $classId,
+                            'range_id' => $rangeId,
+                        ],
+                        [
+                            'period_id' => $periodId,
+                            'class_id' => $classId,
+                            'range_id' => $rangeId,
+                            'range_min' => $rangeMin,
+                            'range_max' => $rangeMax,
+                            'rate_val' => $rateVal,
+                            'rate_inc' => $rateInc,
+                            'stat_id' => $activeStatusId,
+                            'updated_at' => now(),
+                        ]
+                    );
+
+                    $count++;
+                }
             }
         }
 
@@ -79,6 +94,7 @@ class WaterRateSeeder extends Seeder
             ->whereNull('created_at')
             ->update(['created_at' => now()]);
 
-        $this->command->info("Water Rate Tiers seeded: {$count} rate tiers across " . count($rateTiers) . ' classes');
+        $periodInfo = $currentPeriod ? " (including period: {$currentPeriod->per_name})" : ' (default rates only)';
+        $this->command->info("Water Rate Tiers seeded: {$count} rate tiers across ".count($rateTiers)." classes{$periodInfo}");
     }
 }
