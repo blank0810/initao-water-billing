@@ -113,6 +113,10 @@ Route::middleware('auth')->group(function () {
         })->name('customer.details');
         Route::get('/api/customer/{id}/details', [CustomerController::class, 'getDetails'])->name('customer.details.api');
         Route::get('/api/customer/{id}/documents', [CustomerController::class, 'getDocuments'])->name('customer.documents.api');
+        Route::get('/api/customer/{id}/ledger', [CustomerController::class, 'getLedger'])->name('customer.ledger.api');
+        Route::get('/api/customer/ledger/{entryId}', [CustomerController::class, 'getLedgerEntryDetails'])->name('customer.ledger.entry.api');
+        Route::get('/api/customer/{id}/ledger/export/csv', [CustomerController::class, 'exportLedgerCsv'])->name('customer.ledger.export.csv');
+        Route::get('/api/customer/{id}/ledger/export/pdf', [CustomerController::class, 'exportLedgerStatement'])->name('customer.ledger.export.pdf');
         Route::get('/customer/{id}/print-count', [CustomerController::class, 'printCount'])->name('customer.print-count');
         Route::get('/customer/invoice-list', function () {
             session(['active_menu' => 'invoice-list']);
