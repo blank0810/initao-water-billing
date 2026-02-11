@@ -45,6 +45,14 @@
             "npm install",
             "npm run build"
         ],
+        "setup:fresh": [
+            "composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate --force",
+            "npm install",
+            "@php artisan migrate:fresh --seed --force",
+            "npm run build"
+        ],
         "deploy": [
             "@php artisan down",
             "composer install --no-dev --optimize-autoloader",
