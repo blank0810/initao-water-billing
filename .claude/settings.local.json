@@ -46,7 +46,13 @@
       "Bash(cat:*)",
       "Bash(ls:*)",
       "Bash(git log:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run sync:*)",
+      "Bash(composer dev)",
+      "Bash(npm run setup:*)",
+      "Bash(npm run dev:*)",
+      "Bash(ipconfig:*)",
+      "Bash(findstr:*)"
     ]
   },
   "enabledMcpjsonServers": [
