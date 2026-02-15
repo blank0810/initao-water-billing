@@ -39,7 +39,8 @@ class UpdateUserRequest extends FormRequest
             'password' => ['nullable', 'string', 'min:8'],
             'role_id' => ['required', 'exists:roles,role_id'],
             'status_id' => ['required', 'exists:statuses,stat_id'],
-            'avatar' => ['nullable', 'string'],
+            'avatar' => ['nullable', 'string', 'max:14000000'],
+            'remove_avatar' => ['nullable', 'boolean'],
         ];
     }
 

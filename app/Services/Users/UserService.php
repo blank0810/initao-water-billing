@@ -114,8 +114,15 @@ class UserService
             $updateData['stat_id'] = $data['status_id'];
         }
 
+        // Handle avatar removal
+        if (! empty($data['remove_avatar'])) {
+            if ($user->photo_path) {
+                $this->fileUploadService->deleteFile($user->photo_path);
+            }
+            $updateData['photo_path'] = null;
+        }
         // Handle avatar upload
-        if (! empty($data['avatar'])) {
+        elseif (! empty($data['avatar'])) {
             $result = $this->fileUploadService->storeBase64Image($data['avatar'], 'avatars');
             if ($result['success']) {
                 // Delete old photo if exists
@@ -155,6 +162,11 @@ class UserService
                 'success' => false,
                 'message' => 'Cannot delete super admin user',
             ];
+        }
+
+        // Clean up uploaded photo
+        if ($user->photo_path) {
+            $this->fileUploadService->deleteFile($user->photo_path);
         }
 
         $user->roles()->detach();

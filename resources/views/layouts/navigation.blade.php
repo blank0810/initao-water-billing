@@ -2,6 +2,7 @@
 $user = Auth::user() ?? (object) [
     'name' => 'Demo User',
     'email' => 'demo@example.com',
+    'photo_url' => asset('images/logo.png'),
 ];
 
 // Define page titles mapping

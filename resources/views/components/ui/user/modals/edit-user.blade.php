@@ -200,6 +200,8 @@ async function saveUser() {
     // Include avatar if changed
     if (editAvatarBase64 && editAvatarBase64 !== 'remove') {
         userData.avatar = editAvatarBase64;
+    } else if (editAvatarBase64 === 'remove') {
+        userData.remove_avatar = true;
     }
 
     // Show loading state

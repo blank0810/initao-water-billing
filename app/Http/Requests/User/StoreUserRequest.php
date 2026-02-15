@@ -26,7 +26,7 @@ class StoreUserRequest extends FormRequest
             'password' => ['required', 'string', 'min:8'],
             'role_id' => ['required', 'exists:roles,role_id'],
             'status_id' => ['required', 'exists:statuses,stat_id'],
-            'avatar' => ['nullable', 'string'],
+            'avatar' => ['nullable', 'string', 'max:14000000'],
             'meter_reader_areas' => ['nullable', 'array'],
             'meter_reader_areas.*' => ['exists:area,a_id'],
         ];
