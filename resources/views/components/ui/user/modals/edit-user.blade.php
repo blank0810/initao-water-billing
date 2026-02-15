@@ -57,8 +57,8 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status *</label>
                 <select id="editUserStatus" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="{{ \App\Models\Status::getIdByDescription(\App\Models\Status::ACTIVE) }}">Active</option>
+                    <option value="{{ \App\Models\Status::getIdByDescription(\App\Models\Status::INACTIVE) }}">Inactive</option>
                 </select>
             </div>
             <div>
@@ -150,9 +150,10 @@ function showEditUserModal(user) {
     document.getElementById('editAvatar').value = '';
     document.getElementById('editRemoveAvatarBtn').classList.add('hidden');
 
-    // Set status
-    const status = (user.status || user.Status || '').toLowerCase();
-    document.getElementById('editUserStatus').value = status === 'active' ? 'active' : 'inactive';
+    // Set status by ID
+    if (user.status_id) {
+        document.getElementById('editUserStatus').value = user.status_id;
+    }
 
     // Populate roles and select current role
     if (editUserRoles.length > 0) {
@@ -189,7 +190,7 @@ async function saveUser() {
         username: document.getElementById('editUserUsername').value,
         email: email ? email.trim() : null,
         role_id: parseInt(document.getElementById('editUserRole').value),
-        status: document.getElementById('editUserStatus').value,
+        status_id: parseInt(document.getElementById('editUserStatus').value),
     };
 
     // Only include password if it was changed
