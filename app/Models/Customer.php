@@ -39,6 +39,14 @@ class Customer extends Model
     ];
 
     /**
+     * Get the customer's full name
+     */
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->cust_first_name} {$this->cust_middle_name} {$this->cust_last_name}");
+    }
+
+    /**
      * Get the status associated with the customer
      */
     public function status()
