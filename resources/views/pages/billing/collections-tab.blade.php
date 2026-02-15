@@ -1,80 +1,4 @@
-@push('styles')
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.tailwindcss.min.css" />
-<style>
-    /* DataTables dark mode overrides */
-    .dark .dataTables_wrapper .dataTables_length select,
-    .dark .dataTables_wrapper .dataTables_filter input {
-        background-color: rgb(55 65 81);
-        border-color: rgb(75 85 99);
-        color: rgb(229 231 235);
-    }
-    .dark table.dataTable tbody tr {
-        background-color: rgb(31 41 55);
-        color: rgb(229 231 235);
-    }
-    .dark table.dataTable tbody tr:hover {
-        background-color: rgb(55 65 81) !important;
-    }
-    .dark table.dataTable thead th {
-        background-color: rgb(31 41 55);
-        color: rgb(229 231 235);
-        border-bottom-color: rgb(75 85 99);
-    }
-    .dark .dataTables_wrapper .dataTables_info,
-    .dark .dataTables_wrapper .dataTables_length label,
-    .dark .dataTables_wrapper .dataTables_filter label {
-        color: rgb(156 163 175);
-    }
-    .dark .dataTables_wrapper .dataTables_paginate .paginate_button {
-        color: rgb(156 163 175) !important;
-    }
-    .dark .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-        background: rgb(37 99 235) !important;
-        color: white !important;
-        border-color: rgb(37 99 235) !important;
-    }
-    /* Hide default DataTables search — we use custom filters */
-    .dataTables_filter {
-        display: none !important;
-    }
-</style>
-@endpush
-
-<div x-data="collectionsTab()" x-init="init()">
-    <!-- Custom Filters -->
-    <div class="mb-6">
-        <div class="flex flex-col sm:flex-row gap-3">
-            <div class="flex-1">
-                <div class="relative">
-                    <input type="text" x-model="searchQuery" @input.debounce.400ms="applyFilters()"
-                        placeholder="Search by receipt, consumer, or amount..."
-                        class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" />
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="sm:w-48">
-                <select x-model="statusFilter" @change="applyFilters()"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
-                    <option value="all">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-            </div>
-            <div class="sm:w-44">
-                <input type="date" x-model="dateFrom" @change="applyFilters()"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    title="Date from" />
-            </div>
-            <div class="sm:w-44">
-                <input type="date" x-model="dateTo" @change="applyFilters()"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    title="Date to" />
-            </div>
-        </div>
-    </div>
-
+<div x-data="collectionsData()" x-init="init()">
     <!-- Collection Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
@@ -123,10 +47,33 @@
         </div>
     </div>
 
-    <!-- DataTable -->
+    <!-- Search and Filters -->
+    <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+        <x-ui.search-bar placeholder="Search by receipt, consumer, or amount..." x-model="searchQuery" />
+        <div class="flex items-center gap-3">
+            <select x-model="statusFilter" @change="currentPage = 1; loadData()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+            <input type="date" x-model="dateFrom" @change="currentPage = 1; loadData()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                title="Date from" />
+            <input type="date" x-model="dateTo" @change="currentPage = 1; loadData()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                title="Date to" />
+            <button @click="loadData()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition flex items-center gap-2" :disabled="loading">
+                <i class="fas fa-sync-alt" :class="loading ? 'animate-spin' : ''"></i>
+                <span>Reload</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Table -->
     <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800">
-        <div class="overflow-x-auto p-4">
-            <table id="collectionsTable" class="min-w-full stripe hover" style="width:100%">
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
                 <thead>
                     <tr class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
                         <th class="px-4 py-3.5 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Receipt No.</th>
@@ -138,8 +85,112 @@
                         <th class="px-4 py-3.5 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700"></tbody>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <!-- Loading State -->
+                    <template x-if="loading">
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Loading collections...
+                            </td>
+                        </tr>
+                    </template>
+                    <!-- Empty State -->
+                    <template x-if="!loading && data.length === 0">
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-inbox text-3xl mb-2 opacity-50"></i>
+                                <p class="font-medium">No Collections Found</p>
+                                <p class="text-sm">No payment records match your filters.</p>
+                            </td>
+                        </tr>
+                    </template>
+                    <!-- Data Rows -->
+                    <template x-if="!loading && data.length > 0">
+                        <template x-for="payment in paginatedData" :key="payment.payment_id">
+                            <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-all duration-150"
+                                :class="payment.is_cancelled ? 'bg-red-50/30 dark:bg-red-900/10' : ''">
+                                <td class="px-4 py-3 text-sm font-mono text-gray-900 dark:text-gray-100" x-text="payment.receipt_no"></td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="payment.payment_date || '-'"></td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="payment.consumer_name"></td>
+                                <td class="px-4 py-3 text-sm text-right font-bold text-green-600 dark:text-green-400" x-text="payment.amount_formatted"></td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100" x-text="payment.cashier"></td>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full"
+                                        :class="payment.is_cancelled
+                                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'">
+                                        <i class="fas mr-1" :class="payment.is_cancelled ? 'fa-ban' : 'fa-check-circle'"></i>
+                                        <span x-text="payment.status"></span>
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <a :href="payment.receipt_url" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded" title="View Receipt">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <template x-if="!payment.is_cancelled">
+                                            <a :href="payment.receipt_url" target="_blank" class="text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 p-2 rounded" title="Print Receipt">
+                                                <i class="fas fa-print"></i>
+                                            </a>
+                                        </template>
+                                        @can('payments.void')
+                                        <template x-if="!payment.is_cancelled">
+                                            <button @click="openCancelModal(payment)" class="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 p-2 rounded" title="Cancel Payment">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                        </template>
+                                        @endcan
+                                        <template x-if="payment.is_cancelled">
+                                            <span class="text-xs text-red-400 dark:text-red-500 p-2" :title="payment.cancellation_reason || 'No reason'">
+                                                <i class="fas fa-info-circle"></i>
+                                            </span>
+                                        </template>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </template>
+                    <!-- No Match State -->
+                    <template x-if="!loading && data.length > 0 && paginatedData.length === 0">
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-search text-3xl mb-2 opacity-50"></i>
+                                <p>No matching records found</p>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div x-show="!loading && data.length > 0" x-cloak class="flex justify-between items-center mt-4 flex-wrap gap-4">
+        <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Show</span>
+            <select x-model.number="pageSize" @change="currentPage = 1" class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+            <span class="text-sm text-gray-600 dark:text-gray-400">entries</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button @click="prevPage()" :disabled="currentPage === 1" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                <i class="fas fa-chevron-left mr-1"></i>Previous
+            </button>
+            <div class="text-sm text-gray-700 dark:text-gray-300 px-3 font-medium">
+                Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
+            </div>
+            <button @click="nextPage()" :disabled="currentPage === totalPages" class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                Next<i class="fas fa-chevron-right ml-1"></i>
+            </button>
+        </div>
+
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+            Showing <span class="font-semibold text-gray-900 dark:text-white" x-text="startRecord"></span> to <span class="font-semibold text-gray-900 dark:text-white" x-text="endRecord"></span> of <span class="font-semibold text-gray-900 dark:text-white" x-text="totalRecords"></span> results
         </div>
     </div>
 
@@ -226,21 +277,18 @@
     </div>
 </div>
 
-@push('scripts')
-<!-- jQuery (required by DataTables) -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<!-- DataTables core -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-
 <script>
-function collectionsTab() {
+function collectionsData() {
     return {
         searchQuery: '',
         statusFilter: 'all',
         dateFrom: '',
         dateTo: '',
+        pageSize: 10,
+        currentPage: 1,
+        data: [],
         stats: {},
-        dataTable: null,
+        loading: false,
         initialized: false,
 
         // Cancel modal state
@@ -251,151 +299,42 @@ function collectionsTab() {
         cancelLoading: false,
 
         init() {
-            // DataTable will be initialized when the tab is shown
+            this.$watch('searchQuery', () => this.currentPage = 1);
+            this.$watch('pageSize', () => this.currentPage = 1);
+
             window.renderCollections = () => {
                 if (!this.initialized) {
-                    this.initDataTable();
+                    this.loadData();
+                    this.loadStats();
                     this.initialized = true;
-                } else if (this.dataTable) {
-                    this.dataTable.ajax.reload(null, false);
-                }
-                this.loadStats();
-            };
-        },
-
-        initDataTable() {
-            const self = this;
-
-            this.dataTable = $('#collectionsTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: '{{ route("api.billing.collections") }}',
-                    type: 'GET',
-                    data: function(d) {
-                        d.status = self.statusFilter;
-                        d.date_from = self.dateFrom;
-                        d.date_to = self.dateTo;
-                    },
-                    error: function(xhr) {
-                        console.error('Collections DataTable error:', xhr);
-                        if (window.showToast) {
-                            showToast('Error', 'Failed to load collections data.', 'error');
-                        }
-                    }
-                },
-                columns: [
-                    {
-                        data: 'receipt_no',
-                        render: function(data) {
-                            return '<span class="font-mono text-sm text-gray-900 dark:text-gray-100">' + data + '</span>';
-                        }
-                    },
-                    {
-                        data: 'payment_date',
-                        render: function(data) {
-                            return '<span class="text-sm text-gray-900 dark:text-gray-100">' + (data || '-') + '</span>';
-                        }
-                    },
-                    {
-                        data: 'consumer_name',
-                        render: function(data) {
-                            return '<span class="text-sm text-gray-900 dark:text-gray-100">' + data + '</span>';
-                        }
-                    },
-                    {
-                        data: 'amount_formatted',
-                        className: 'text-right',
-                        render: function(data) {
-                            return '<span class="text-sm font-bold text-green-600 dark:text-green-400">' + data + '</span>';
-                        }
-                    },
-                    {
-                        data: 'cashier',
-                        render: function(data) {
-                            return '<span class="text-sm text-gray-900 dark:text-gray-100">' + data + '</span>';
-                        }
-                    },
-                    {
-                        data: 'status',
-                        className: 'text-center',
-                        render: function(data, type, row) {
-                            if (row.is_cancelled) {
-                                return '<span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200">' +
-                                    '<i class="fas fa-ban mr-1"></i>Cancelled</span>';
-                            }
-                            return '<span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200">' +
-                                '<i class="fas fa-check-circle mr-1"></i>Active</span>';
-                        }
-                    },
-                    {
-                        data: null,
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center',
-                        render: function(data, type, row) {
-                            let actions = '<div class="flex items-center justify-center gap-1">';
-
-                            // View button
-                            actions += '<a href="' + row.receipt_url + '" class="p-2 text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors" title="View Receipt">' +
-                                '<i class="fas fa-eye"></i></a>';
-
-                            if (!row.is_cancelled) {
-                                // Print button
-                                actions += '<a href="' + row.receipt_url + '" target="_blank" class="p-2 text-gray-600 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 transition-colors" title="Print Receipt">' +
-                                    '<i class="fas fa-print"></i></a>';
-
-                                // Cancel button (permission checked server-side via Blade)
-                                @can('payments.void')
-                                actions += '<button onclick="window.collectionsOpenCancel(' + row.payment_id + ')" class="p-2 text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors" title="Cancel Payment">' +
-                                    '<i class="fas fa-ban"></i></button>';
-                                @endcan
-                            } else {
-                                // Show cancellation info on hover
-                                actions += '<span class="text-xs text-red-400 dark:text-red-500" title="' +
-                                    (row.cancellation_reason || 'No reason') + '">' +
-                                    '<i class="fas fa-info-circle"></i></span>';
-                            }
-
-                            actions += '</div>';
-                            return actions;
-                        }
-                    }
-                ],
-                order: [[1, 'desc']],
-                pageLength: 10,
-                lengthMenu: [5, 10, 25, 50],
-                language: {
-                    emptyTable: '<div class="py-4 text-center text-gray-500 dark:text-gray-400"><i class="fas fa-inbox text-3xl mb-2 opacity-50"></i><p>No collections found</p></div>',
-                    processing: '<div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"><i class="fas fa-spinner fa-spin"></i> Loading...</div>',
-                    info: 'Showing _START_ to _END_ of _TOTAL_ entries',
-                    lengthMenu: 'Show _MENU_ entries',
-                },
-                dom: '<"flex justify-between items-center mb-4"lf>rt<"flex justify-between items-center mt-4"ip>',
-                drawCallback: function() {
-                    // Re-apply dark mode classes after each draw
-                    if (document.documentElement.classList.contains('dark')) {
-                        $('#collectionsTable tbody tr').addClass('dark-row');
-                    }
-                }
-            });
-
-            // Expose cancel function globally for DataTables render callback
-            window.collectionsOpenCancel = (paymentId) => {
-                const tableData = this.dataTable.rows().data().toArray();
-                const row = tableData.find(r => r.payment_id === paymentId);
-                if (row) {
-                    this.cancelData = row;
-                    this.cancelReason = '';
-                    this.cancelError = '';
-                    this.showCancelModal = true;
                 }
             };
         },
 
-        applyFilters() {
-            if (this.dataTable) {
-                this.dataTable.search(this.searchQuery).draw();
+        async loadData() {
+            this.loading = true;
+            try {
+                const params = new URLSearchParams({
+                    draw: '1',
+                    start: '0',
+                    length: '9999',
+                    'search[value]': '',
+                    'order[0][column]': '1',
+                    'order[0][dir]': 'desc',
+                    status: this.statusFilter,
+                });
+                if (this.dateFrom) params.set('date_from', this.dateFrom);
+                if (this.dateTo) params.set('date_to', this.dateTo);
+
+                const response = await fetch(`{{ route('api.billing.collections') }}?${params.toString()}`);
+                const result = await response.json();
+                this.data = result.data || [];
+            } catch (error) {
+                console.error('Error loading collections:', error);
+                this.data = [];
+                if (window.showToast) showToast('Error', 'Failed to load collections data.', 'error');
+            } finally {
+                this.loading = false;
             }
         },
 
@@ -411,6 +350,39 @@ function collectionsTab() {
             } catch (error) {
                 console.error('Failed to load stats:', error);
             }
+        },
+
+        get filteredData() {
+            let filtered = this.data;
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(p =>
+                    (p.receipt_no?.toLowerCase() || '').includes(query) ||
+                    (p.consumer_name?.toLowerCase() || '').includes(query) ||
+                    (p.amount_formatted?.toLowerCase() || '').includes(query) ||
+                    (p.cashier?.toLowerCase() || '').includes(query)
+                );
+            }
+            return filtered;
+        },
+
+        get totalRecords() { return this.filteredData.length; },
+        get totalPages() { return Math.ceil(this.totalRecords / this.pageSize) || 1; },
+        get startRecord() { return this.totalRecords === 0 ? 0 : ((this.currentPage - 1) * this.pageSize) + 1; },
+        get endRecord() { return Math.min(this.currentPage * this.pageSize, this.totalRecords); },
+        get paginatedData() {
+            const start = (this.currentPage - 1) * this.pageSize;
+            return this.filteredData.slice(start, start + this.pageSize);
+        },
+
+        prevPage() { if (this.currentPage > 1) this.currentPage--; },
+        nextPage() { if (this.currentPage < this.totalPages) this.currentPage++; },
+
+        openCancelModal(payment) {
+            this.cancelData = payment;
+            this.cancelReason = '';
+            this.cancelError = '';
+            this.showCancelModal = true;
         },
 
         async confirmCancel() {
@@ -437,7 +409,7 @@ function collectionsTab() {
                 if (result.success) {
                     this.showCancelModal = false;
                     this.cancelReason = '';
-                    this.dataTable.ajax.reload(null, false);
+                    this.loadData();
                     this.loadStats();
                     if (window.showToast) showToast('Success', 'Payment cancelled successfully.', 'success');
                 } else {
@@ -449,7 +421,6 @@ function collectionsTab() {
                 this.cancelLoading = false;
             }
         }
-    };
+    }
 }
 </script>
-@endpush
