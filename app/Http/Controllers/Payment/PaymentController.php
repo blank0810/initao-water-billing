@@ -65,6 +65,16 @@ class PaymentController extends Controller
     }
 
     /**
+     * Get collections for server-side DataTables (Billing Management tab)
+     */
+    public function getCollections(Request $request): JsonResponse
+    {
+        $data = $this->paymentManagementService->getCollections($request->all());
+
+        return response()->json($data);
+    }
+
+    /**
      * Get current cashier's transactions for a specific date
      */
     public function getMyTransactions(Request $request): JsonResponse
