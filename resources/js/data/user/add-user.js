@@ -317,6 +317,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 status_id: formData.get('status_id'),
             };
 
+            // Include avatar if preview exists (base64 from FileReader)
+            const xDataEl = addUserForm.closest('[x-data]') || addUserForm.querySelector('[x-data]') || addUserForm;
+            const avatarPreview = Alpine.$data(xDataEl)?.avatarPreview;
+            if (avatarPreview) {
+                data.avatar = avatarPreview;
+            }
+
             // Show loading state
             const submitBtn = addUserForm.querySelector('[type="submit"]');
             const originalText = submitBtn?.innerHTML;

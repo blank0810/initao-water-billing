@@ -244,8 +244,8 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open; $event.stopPropagation()"
                             class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
-                        <div class="h-8 w-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                        <div class="h-8 w-8 rounded-full overflow-hidden">
+                            <img src="{{ $user->photo_url }}" class="w-full h-full object-cover" alt="{{ $user->name }}">
                         </div>
                         <div class="hidden md:block text-left">
                             <div class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $user->name }}</div>

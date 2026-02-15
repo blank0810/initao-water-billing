@@ -18,6 +18,24 @@
 
         <form id="editUserForm" class="p-6 space-y-4">
             <input type="hidden" id="editUserId">
+            <!-- Avatar Upload -->
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center">
+                        <img id="editAvatarImg" src="{{ asset('images/logo.png') }}" class="w-full h-full object-cover" alt="Avatar">
+                    </div>
+                </div>
+                <div>
+                    <input type="file" id="editAvatar" accept="image/*" class="hidden"
+                        onchange="handleEditAvatarChange(this)">
+                    <label for="editAvatar" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg cursor-pointer transition-colors">
+                        <i class="fas fa-upload mr-1.5"></i>Change Photo
+                    </label>
+                    <button type="button" id="editRemoveAvatarBtn" onclick="removeEditAvatar()" class="hidden ml-2 inline-flex items-center px-3 py-1.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm rounded-lg transition-colors">
+                        <i class="fas fa-times mr-1.5"></i>Remove
+                    </button>
+                </div>
+            </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name *</label>
                 <input type="text" id="editUserName" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
@@ -62,6 +80,27 @@
 
 <script>
 let editUserRoles = [];
+let editAvatarBase64 = null;
+
+function handleEditAvatarChange(input) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            editAvatarBase64 = e.target.result;
+            document.getElementById('editAvatarImg').src = editAvatarBase64;
+            document.getElementById('editRemoveAvatarBtn').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeEditAvatar() {
+    editAvatarBase64 = 'remove';
+    document.getElementById('editAvatarImg').src = '{{ asset("images/logo.png") }}';
+    document.getElementById('editAvatar').value = '';
+    document.getElementById('editRemoveAvatarBtn').classList.add('hidden');
+}
 
 // Fetch roles for the dropdown
 async function fetchEditUserRoles() {
@@ -104,6 +143,12 @@ function showEditUserModal(user) {
     document.getElementById('editUserUsername').value = user.username || '';
     document.getElementById('editUserEmail').value = user.email || user.Email || '';
     document.getElementById('editUserPassword').value = '';
+
+    // Set avatar
+    editAvatarBase64 = null;
+    document.getElementById('editAvatarImg').src = user.photo_url || '{{ asset("images/logo.png") }}';
+    document.getElementById('editAvatar').value = '';
+    document.getElementById('editRemoveAvatarBtn').classList.add('hidden');
 
     // Set status
     const status = (user.status || user.Status || '').toLowerCase();
@@ -150,6 +195,11 @@ async function saveUser() {
     // Only include password if it was changed
     if (password) {
         userData.password = password;
+    }
+
+    // Include avatar if changed
+    if (editAvatarBase64 && editAvatarBase64 !== 'remove') {
+        userData.avatar = editAvatarBase64;
     }
 
     // Show loading state

@@ -29,7 +29,7 @@
                             <div class="relative">
                                 <div class="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border-4 border-gray-200 dark:border-gray-600 flex items-center justify-center">
                                     <template x-if="!avatarPreview">
-                                        <i class="fas fa-user text-5xl text-gray-400"></i>
+                                        <img src="{{ asset('images/logo.png') }}" class="w-full h-full object-cover" alt="Default avatar">
                                     </template>
                                     <template x-if="avatarPreview">
                                         <img :src="avatarPreview" class="w-full h-full object-cover" alt="Avatar preview">
