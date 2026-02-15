@@ -1425,6 +1425,8 @@ Replace lines 194-242 in `navigation.blade.php` with:
 
 Create `resources/js/data/notifications/notification-dropdown.js`:
 
+**UX behavior:** Opening the dropdown automatically marks all notifications as read and clears the badge. This prevents the count from being persistently annoying — once the user has "seen" their notifications by opening the dropdown, the badge clears. New notifications arriving later will show the badge again.
+
 ```javascript
 function notificationDropdown() {
     return {
@@ -1453,6 +1455,10 @@ function notificationDropdown() {
             this.open = !this.open;
             if (this.open) {
                 await this.fetchRecent();
+                // Auto-mark all as read when dropdown is opened (clear badge)
+                if (this.unreadCount > 0) {
+                    this.markAllRead();
+                }
             }
         },
 

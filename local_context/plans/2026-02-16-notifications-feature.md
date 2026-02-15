@@ -32,15 +32,15 @@ The existing bell icon in `navigation.blade.php` gets wired to real data.
 
 **Dropdown (on click):**
 - Shows the 5 most recent notifications (fetched via API on click)
+- **Opening the dropdown automatically marks all as read and clears the badge** — once the user has "seen" their notifications, the count resets. New notifications arriving later will show the badge again.
 - Each item:
   - Colored dot on left edge (category color)
   - Title in semibold
   - Brief message in `text-sm` gray
   - Relative timestamp in `text-xs`
-  - Unread items have subtle `bg-blue-50 dark:bg-blue-900/10` background
-- "Mark all as read" text link in header
+- "Mark all as read" text link in header (kept as manual fallback)
 - "View all notifications" footer link routes to `/notifications`
-- Clicking a notification marks it as read and navigates to its linked page
+- Clicking a notification navigates to its linked page
 
 **Alpine.js component:** `notificationDropdown()` — manages badge count, fetches recent notifications, handles mark-read actions.
 
