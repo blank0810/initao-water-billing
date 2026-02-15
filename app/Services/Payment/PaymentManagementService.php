@@ -259,6 +259,14 @@ class PaymentManagementService
             ->get();
         $monthCollection = $monthPayments->sum('amount_received');
 
+        // Total transactions (all time, exclude cancelled)
+        $totalTransactions = Payment::where('stat_id', '!=', $cancelledStatusId)->count();
+
+        // Average payment (all time, exclude cancelled)
+        $averagePayment = $totalTransactions > 0
+            ? Payment::where('stat_id', '!=', $cancelledStatusId)->avg('amount_received')
+            : 0;
+
         return [
             'pending_amount' => $totalPending,
             'pending_amount_formatted' => '₱ '.number_format($totalPending, 2),
@@ -268,6 +276,9 @@ class PaymentManagementService
             'today_count' => $todayCount,
             'month_collection' => $monthCollection,
             'month_collection_formatted' => '₱ '.number_format($monthCollection, 2),
+            'total_transactions' => $totalTransactions,
+            'average_payment' => round($averagePayment, 2),
+            'average_payment_formatted' => '₱ '.number_format($averagePayment, 2),
         ];
     }
 
