@@ -238,6 +238,8 @@ Route::middleware('auth')->group(function () {
             return view('pages.billing.billing-index');
         })->name('billing.management');
 
+        Route::get('/api/billing/collections', [PaymentController::class, 'getCollections'])->name('api.billing.collections');
+
         Route::get('/billing/consumer/{id}', function ($id) {
             session(['active_menu' => 'billing-management']);
 
