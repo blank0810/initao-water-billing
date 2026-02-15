@@ -5,12 +5,17 @@ namespace App\Services\Users;
 use App\Models\Role;
 use App\Models\Status;
 use App\Models\User;
+use App\Services\FileUploadService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
+    public function __construct(
+        protected FileUploadService $fileUploadService
+    ) {}
+
     /**
      * Get all users with their roles (paginated)
      */
@@ -62,13 +67,23 @@ class UserService
      */
     public function createUser(array $data): User
     {
-        $user = User::create([
+        $userData = [
             'name' => $data['name'],
             'username' => $data['username'],
             'email' => $data['email'] ?? null,
             'password' => Hash::make($data['password']),
             'stat_id' => $data['status_id'],
-        ]);
+        ];
+
+        // Handle avatar upload
+        if (! empty($data['avatar'])) {
+            $result = $this->fileUploadService->storeBase64Image($data['avatar'], 'avatars');
+            if ($result['success']) {
+                $userData['photo_path'] = $result['path'];
+            }
+        }
+
+        $user = User::create($userData);
 
         // Assign role
         if (isset($data['role_id'])) {
@@ -97,6 +112,18 @@ class UserService
         // Update status
         if (isset($data['status_id'])) {
             $updateData['stat_id'] = $data['status_id'];
+        }
+
+        // Handle avatar upload
+        if (! empty($data['avatar'])) {
+            $result = $this->fileUploadService->storeBase64Image($data['avatar'], 'avatars');
+            if ($result['success']) {
+                // Delete old photo if exists
+                if ($user->photo_path) {
+                    $this->fileUploadService->deleteFile($user->photo_path);
+                }
+                $updateData['photo_path'] = $result['path'];
+            }
         }
 
         $user->update($updateData);
@@ -151,6 +178,7 @@ class UserService
             'name' => $user->name,
             'email' => $user->email,
             'username' => $user->username,
+            'photo_url' => $user->photo_url,
             'role' => $role ? [
                 'role_id' => $role->role_id,
                 'role_name' => $role->role_name,
