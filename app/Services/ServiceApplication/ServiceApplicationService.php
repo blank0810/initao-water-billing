@@ -10,6 +10,7 @@ use App\Models\Status;
 use App\Models\WaterRate;
 use App\Services\Charge\ApplicationChargeService;
 use App\Services\Ledger\LedgerService;
+use App\Services\Notification\NotificationService;
 use App\Services\Payment\PaymentService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -20,7 +21,8 @@ class ServiceApplicationService
     public function __construct(
         protected ApplicationChargeService $chargeService,
         protected LedgerService $ledgerService,
-        protected PaymentService $paymentService
+        protected PaymentService $paymentService,
+        protected NotificationService $notificationService
     ) {}
 
     /**
@@ -36,7 +38,7 @@ class ServiceApplicationService
      */
     public function createApplication(string $customerType, array $customerData, array $applicationData, ?int $userId = null): array
     {
-        return DB::transaction(function () use ($customerType, $customerData, $applicationData, $userId) {
+        $result = DB::transaction(function () use ($customerType, $customerData, $applicationData, $userId) {
             // Transform customer data from camelCase to snake_case
             $transformedCustomer = $this->transformCustomerData($customerData);
 
@@ -144,6 +146,10 @@ class ServiceApplicationService
                 'total_amount' => $charges->sum(fn ($c) => $c->total_amount),
             ];
         });
+
+        $this->notificationService->notifyApplicationSubmitted($result['application'], $userId);
+
+        return $result;
     }
 
     /**
@@ -187,7 +193,7 @@ class ServiceApplicationService
             throw new \Exception('Only PENDING applications can be verified');
         }
 
-        return DB::transaction(function () use ($application, $verifiedBy) {
+        $result = DB::transaction(function () use ($application, $verifiedBy) {
             // Update application status to VERIFIED
             $application->update([
                 'stat_id' => Status::getIdByDescription(Status::VERIFIED),
@@ -207,6 +213,10 @@ class ServiceApplicationService
                 'ledger_entries' => $ledgerEntries,
             ];
         });
+
+        $this->notificationService->notifyApplicationVerified($result['application'], $verifiedBy);
+
+        return $result;
     }
 
     /**
@@ -245,7 +255,11 @@ class ServiceApplicationService
             'scheduled_by' => $scheduledBy,
         ]);
 
-        return $application->fresh();
+        $application = $application->fresh('customer');
+
+        $this->notificationService->notifyApplicationScheduled($application, $scheduledBy);
+
+        return $application;
     }
 
     /**
@@ -291,7 +305,11 @@ class ServiceApplicationService
             'rejection_reason' => $reason,
         ]);
 
-        return $application->fresh();
+        $application = $application->fresh('customer');
+
+        $this->notificationService->notifyApplicationRejected($application, $reason, $rejectedBy);
+
+        return $application;
     }
 
     /**
@@ -313,7 +331,11 @@ class ServiceApplicationService
             'cancellation_reason' => $reason,
         ]);
 
-        return $application->fresh();
+        $application = $application->fresh('customer');
+
+        $this->notificationService->notifyApplicationCancelled($application);
+
+        return $application;
     }
 
     /**

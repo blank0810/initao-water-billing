@@ -93,9 +93,13 @@ Route::middleware('auth')->group(function () {
     // -------------------------------------------------------------------------
     // Notifications - All authenticated users
     // -------------------------------------------------------------------------
+    Route::get('/notifications', [NotificationController::class, 'page'])->name('notifications.index');
+
     Route::prefix('api/notifications')->name('api.notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/recent', [NotificationController::class, 'recent'])->name('recent');
         Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::get('/category-counts', [NotificationController::class, 'categoryCounts'])->name('category-counts');
         Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
         Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
     });

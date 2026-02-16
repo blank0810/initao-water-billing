@@ -10,15 +10,18 @@ use App\Models\ServiceApplication;
 use App\Models\ServiceConnection;
 use App\Models\Status;
 use App\Models\WaterBillHistory;
+use App\Models\User;
 use App\Services\Charge\ApplicationChargeService;
 use App\Services\Ledger\LedgerService;
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\DB;
 
 class PaymentService
 {
     public function __construct(
         protected ApplicationChargeService $chargeService,
-        protected LedgerService $ledgerService
+        protected LedgerService $ledgerService,
+        protected NotificationService $notificationService
     ) {}
 
     /**
@@ -80,7 +83,7 @@ class PaymentService
 
         $change = $amountReceived - $totalDue;
 
-        return DB::transaction(function () use ($application, $chargesData, $amountReceived, $totalDue, $change, $userId) {
+        $result = DB::transaction(function () use ($application, $chargesData, $amountReceived, $totalDue, $change, $userId) {
             $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
             $paidStatusId = Status::getIdByDescription(Status::PAID);
 
@@ -149,6 +152,12 @@ class PaymentService
                 'change' => $change,
             ];
         });
+
+        $application->load('customer');
+        $totalPaidFormatted = '₱'.number_format($result['total_paid'], 2);
+        $this->notificationService->notifyApplicationPaid($application, $totalPaidFormatted, $userId);
+
+        return $result;
     }
 
     /**
@@ -358,8 +367,10 @@ class PaymentService
         $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
         $paidStatusId = Status::getIdByDescription(Status::PAID);
 
-        return DB::transaction(function () use (
-            $billId, $amountReceived, $userId, $activeStatusId, $overdueStatusId, $paidStatusId
+        $customerForNotification = null;
+
+        $result = DB::transaction(function () use (
+            $billId, $amountReceived, $userId, $activeStatusId, $overdueStatusId, $paidStatusId, &$customerForNotification
         ) {
             $allocations = collect();
 
@@ -384,6 +395,7 @@ class PaymentService
 
             $connection = $bill->serviceConnection;
             $customer = $connection->customer;
+            $customerForNotification = $customer;
 
             if (! $customer) {
                 throw new \Exception('No customer associated with this connection.');
@@ -489,6 +501,12 @@ class PaymentService
                 'change' => $change,
             ];
         });
+
+        $customerName = $customerForNotification?->fullName ?? 'Unknown Customer';
+        $amountFormatted = '₱'.number_format($result['total_paid'], 2);
+        $this->notificationService->notifyPaymentProcessed($customerName, $amountFormatted, $result['payment']->receipt_no, $userId);
+
+        return $result;
     }
 
     /**
@@ -516,9 +534,11 @@ class PaymentService
         $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
         $paidStatusId = Status::getIdByDescription(Status::PAID);
 
-        return DB::transaction(function () use (
+        $customerForNotification = null;
+
+        $result = DB::transaction(function () use (
             $connectionId, $amountReceived, $userId,
-            $activeStatusId, $overdueStatusId, $paidStatusId
+            $activeStatusId, $overdueStatusId, $paidStatusId, &$customerForNotification
         ) {
             $totalDue = 0;
             $allocations = collect();
@@ -576,6 +596,7 @@ class PaymentService
             $connection = $bills->first()?->serviceConnection
                 ?? ServiceConnection::with('customer')->findOrFail($connectionId);
             $customer = $connection->customer;
+            $customerForNotification = $customer;
 
             if (! $customer) {
                 throw new \Exception('No customer associated with this connection.');
@@ -659,6 +680,12 @@ class PaymentService
                 'change' => $change,
             ];
         });
+
+        $customerName = $customerForNotification?->fullName ?? 'Unknown Customer';
+        $amountFormatted = '₱'.number_format($result['total_paid'], 2);
+        $this->notificationService->notifyPaymentProcessed($customerName, $amountFormatted, $result['payment']->receipt_no, $userId);
+
+        return $result;
     }
 
     /**
@@ -683,7 +710,7 @@ class PaymentService
         $cancelledStatusId = Status::getIdByDescription(Status::CANCELLED);
         $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
 
-        return DB::transaction(function () use (
+        $result = DB::transaction(function () use (
             $paymentId, $reason, $userId,
             $activeStatusId, $cancelledStatusId, $overdueStatusId
         ) {
@@ -773,6 +800,12 @@ class PaymentService
                 ],
             ];
         });
+
+        $cancelledByName = User::find($userId)?->name ?? 'Unknown';
+        $amountFormatted = '₱'.number_format($result['data']['amount'], 2);
+        $this->notificationService->notifyPaymentCancelled($result['data']['receipt_no'], $amountFormatted, $cancelledByName, $userId);
+
+        return $result;
     }
 
     /**

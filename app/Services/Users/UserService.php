@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\Status;
 use App\Models\User;
 use App\Services\FileUploadService;
+use App\Services\Notification\NotificationService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
@@ -13,7 +14,8 @@ use Illuminate\Support\Facades\Hash;
 class UserService
 {
     public function __construct(
-        protected FileUploadService $fileUploadService
+        protected FileUploadService $fileUploadService,
+        protected NotificationService $notificationService
     ) {}
 
     /**
@@ -90,7 +92,12 @@ class UserService
             $user->roles()->attach($data['role_id']);
         }
 
-        return $user->load('roles', 'status');
+        $user = $user->load('roles', 'status');
+        $roleName = $user->roles->first()?->role_name ?? 'unknown';
+
+        $this->notificationService->notifyUserCreated($user->username, $roleName, auth()->id());
+
+        return $user;
     }
 
     /**

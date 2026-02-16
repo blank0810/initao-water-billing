@@ -13,12 +13,17 @@ use App\Models\UploadedReading;
 use App\Models\WaterBillHistory;
 use App\Models\WaterRate;
 use Illuminate\Support\Collection;
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class WaterBillService
 {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {}
+
     /**
      * Get connections with active meter assignments for bill generation.
      */
@@ -494,6 +499,8 @@ class WaterBillService
             }
 
             DB::commit();
+
+            $this->notificationService->notifyBillsGenerated(1, $period->per_name ?? 'Unknown Period', Auth::id());
 
             $responseData = [
                 'bill_id' => $bill->bill_id,
