@@ -201,6 +201,22 @@ class NotificationService
     }
 
     /**
+     * Notify about application cancellation
+     */
+    public function notifyApplicationCancelled(ServiceApplication $application, ?int $actingUserId = null): void
+    {
+        $this->notifyByRole(
+            Notification::TYPE_APPLICATION_CANCELLED,
+            'Application Cancelled',
+            "Application #{$application->application_number} was cancelled",
+            route('service.application.show', $application->application_id),
+            'ServiceApplication',
+            $application->application_id,
+            $actingUserId
+        );
+    }
+
+    /**
      * Notify about connection suspension
      */
     public function notifyConnectionSuspended(ServiceConnection $connection, ?int $actingUserId = null): void
