@@ -111,7 +111,7 @@ $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Pages', 'Dashboard'];
 $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
 @endphp
 
-<nav x-data="{ notifOpen: false, userOpen: false }" class="bg-[#e7e7e7] dark:bg-[#0d131c] z-30 relative sticky top-0">
+<nav class="bg-[#e7e7e7] dark:bg-[#0d131c] z-30 relative sticky top-0">
     <div class="max-w-full mx-auto px-6 sm:px-8 lg:px-10">
         <div class="flex justify-between h-24 items-center">
 
@@ -192,18 +192,17 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                 </button>
 
                 <!-- Notifications -->
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open; $event.stopPropagation()"
-                            class="relative p-2.5 rounded-lg bg-gray-100 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300">
-                        <!-- Bell Icon -->
+                <div class="relative" x-data="notificationDropdown()" x-init="init()">
+                    <button @click="toggleDropdown()" class="relative p-2.5 rounded-lg bg-gray-100 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
-                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-white dark:border-gray-800 font-medium">3</span>
+                        <span x-show="unreadCount > 0" x-text="unreadCount > 99 ? '99+' : unreadCount" x-cloak
+                              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-white dark:border-gray-800 font-medium"></span>
                     </button>
 
-                    <!-- Notification Dropdown -->
-                    <div x-show="open"
+                    <!-- Dropdown -->
+                    <div x-show="open" x-cloak
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
@@ -214,29 +213,56 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                          class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
 
                         <!-- Header -->
-                        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Notifications</h3>
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Notifications</h3>
+                            <button x-show="unreadCount > 0" @click.stop="markAllRead()" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                                Mark all as read
+                            </button>
                         </div>
 
-                        <!-- Notifications List -->
-                        <div class="max-h-96 overflow-y-auto">
-                            <div class="p-4 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition duration-150">
-                                <p class="text-sm text-gray-800 dark:text-gray-200">New customer application pending approval</p>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">2 minutes ago</span>
-                            </div>
-                            <div class="p-4 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition duration-150">
-                                <p class="text-sm text-gray-800 dark:text-gray-200">Payment received from John Doe</p>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">1 hour ago</span>
-                            </div>
-                            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition duration-150">
-                                <p class="text-sm text-gray-800 dark:text-gray-200">System maintenance scheduled</p>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">Yesterday</span>
-                            </div>
+                        <!-- List -->
+                        <div class="max-h-80 overflow-y-auto">
+                            <template x-if="loading">
+                                <div class="p-6 text-center">
+                                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                                </div>
+                            </template>
+
+                            <template x-if="!loading && notifications.length === 0">
+                                <div class="p-6 text-center">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">No notifications yet</p>
+                                </div>
+                            </template>
+
+                            <template x-for="notification in notifications" :key="notification.id">
+                                <a :href="notification.link || '#'" @click="markRead(notification)"
+                                   class="block p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition duration-150"
+                                   :class="{ 'bg-blue-50/50 dark:bg-blue-900/10': !notification.read_at }">
+                                    <div class="flex items-start gap-3">
+                                        <span class="mt-1.5 h-2.5 w-2.5 rounded-full flex-shrink-0"
+                                              :class="{
+                                                  'bg-blue-500': notification.category_color === 'blue',
+                                                  'bg-green-500': notification.category_color === 'green',
+                                                  'bg-red-500': notification.category_color === 'red',
+                                                  'bg-amber-500': notification.category_color === 'amber',
+                                                  'bg-indigo-500': notification.category_color === 'indigo',
+                                                  'bg-gray-400': notification.category_color === 'gray'
+                                              }"></span>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200" x-text="notification.title"></p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2" x-text="notification.message"></p>
+                                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1" x-text="notification.time_ago"></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </template>
                         </div>
 
                         <!-- Footer -->
-                        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-                            <a href="#" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">View all notifications</a>
+                        <div class="p-3 border-t border-gray-200 dark:border-gray-700 text-center">
+                            <a href="{{ route('notifications.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                                View all notifications
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -322,3 +348,83 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
         </div>
     </div>
 </nav>
+
+<script>
+    function notificationDropdown() {
+        return {
+            open: false,
+            loading: false,
+            notifications: [],
+            unreadCount: 0,
+
+            init() {
+                this.fetchUnreadCount();
+            },
+
+            async fetchUnreadCount() {
+                try {
+                    const res = await fetch('/api/notifications/unread-count');
+                    const data = await res.json();
+                    if (data.success) {
+                        this.unreadCount = data.count;
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch unread count:', e);
+                }
+            },
+
+            async toggleDropdown() {
+                this.open = !this.open;
+                if (this.open) {
+                    await this.fetchRecent();
+                    if (this.unreadCount > 0) {
+                        this.markAllRead();
+                    }
+                }
+            },
+
+            async fetchRecent() {
+                this.loading = true;
+                try {
+                    const res = await fetch('/api/notifications/recent');
+                    const data = await res.json();
+                    if (data.success) {
+                        this.notifications = data.data;
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch notifications:', e);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            async markRead(notification) {
+                if (!notification.read_at) {
+                    try {
+                        await fetch(`/api/notifications/${notification.id}/read`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                        });
+                        notification.read_at = new Date().toISOString();
+                        this.unreadCount = Math.max(0, this.unreadCount - 1);
+                    } catch (e) {
+                        console.error('Failed to mark as read:', e);
+                    }
+                }
+            },
+
+            async markAllRead() {
+                try {
+                    await fetch('/api/notifications/read-all', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                    });
+                    this.notifications.forEach(n => n.read_at = new Date().toISOString());
+                    this.unreadCount = 0;
+                } catch (e) {
+                    console.error('Failed to mark all as read:', e);
+                }
+            }
+        };
+    }
+</script>
