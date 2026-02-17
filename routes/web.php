@@ -105,6 +105,11 @@ Route::middleware('auth')->group(function () {
     });
 
     // -------------------------------------------------------------------------
+    // Global Search - All authenticated users
+    // -------------------------------------------------------------------------
+    Route::get('/api/search/customers', \App\Http\Controllers\Search\CustomerSearchController::class)->name('api.search.customers');
+
+    // -------------------------------------------------------------------------
     // Customer Management - View (customers.view permission)
     // -------------------------------------------------------------------------
     Route::middleware(['permission:customers.view'])->group(function () {
