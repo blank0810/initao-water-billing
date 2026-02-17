@@ -475,12 +475,10 @@
         <button onclick="window.print()" class="btn btn-primary">
             <i class="fas fa-print"></i> Print Document
         </button>
-        <a href="{{ route('reports.abstract-collection') }}?export=pdf&date_from={{ request('date_from', now()->startOfMonth()->format('Y-m-d')) }}&date_to={{ request('date_to', now()->format('Y-m-d')) }}" class="btn btn-secondary">
-            <i class="fas fa-file-pdf"></i> Export PDF
-        </a>
-        <a href="{{ route('reports.abstract-collection') }}?export=excel&date_from={{ request('date_from', now()->startOfMonth()->format('Y-m-d')) }}&date_to={{ request('date_to', now()->format('Y-m-d')) }}" class="btn btn-secondary">
-            <i class="fas fa-file-excel"></i> Export Excel
-        </a>
+        @include('components.export-dropdown-print', [
+            'exportFilename' => 'abstract-of-collection',
+            'exportSelector' => '.document'
+        ])
     </div>
 
     <script>

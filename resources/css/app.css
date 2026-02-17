@@ -426,9 +426,9 @@ html:not(.dark) {
 }
 
 .nav-btn:hover .nav-btn-icon i {
-    color: #eab308;
-    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5), 0 0 16px rgba(234, 179, 8, 0.3);
-    filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4));
+    color: #22c55e;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.5), 0 0 16px rgba(34, 197, 94, 0.3);
+    filter: drop-shadow(0 0 3px rgba(34, 197, 94, 0.4));
 }
 
 /* Keep sky blue in dark mode */
@@ -462,9 +462,9 @@ html.dark .nav-btn:hover .nav-btn-icon i {
 }
 
 .nav-btn.active .nav-btn-icon i {
-    color: #eab308;
-    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5), 0 0 16px rgba(234, 179, 8, 0.3);
-    filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4));
+    color: #22c55e;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.5), 0 0 16px rgba(34, 197, 94, 0.3);
+    filter: drop-shadow(0 0 3px rgba(34, 197, 94, 0.4));
 }
 
 /* Sky blue glow in dark mode */
@@ -480,9 +480,9 @@ html.dark .nav-btn.active .nav-btn-icon i {
 
 /* Icon Glow for parent items when submenu is open */
 .nav-btn.icon-glow .nav-btn-icon i {
-    color: #eab308;
-    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5), 0 0 16px rgba(234, 179, 8, 0.3);
-    filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4));
+    color: #22c55e;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.5), 0 0 16px rgba(34, 197, 94, 0.3);
+    filter: drop-shadow(0 0 3px rgba(34, 197, 94, 0.4));
 }
 
 html.dark .nav-btn.icon-glow .nav-btn-icon i {
@@ -564,9 +564,9 @@ a.nav-btn:hover .nav-btn-icon {
 
 button.nav-btn:hover .nav-btn-icon i,
 a.nav-btn:hover .nav-btn-icon i {
-    color: #eab308;
-    text-shadow: 0 0 8px rgba(234, 179, 8, 0.5), 0 0 16px rgba(234, 179, 8, 0.3);
-    filter: drop-shadow(0 0 3px rgba(234, 179, 8, 0.4));
+    color: #22c55e;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.5), 0 0 16px rgba(34, 197, 94, 0.3);
+    filter: drop-shadow(0 0 3px rgba(34, 197, 94, 0.4));
 }
 
 /* Keep sky blue in dark mode */
@@ -677,10 +677,24 @@ a.nav-btn:hover .nav-btn-chevron {
     color: var(--sidebar-text-light);
 }
 
+/* Hover state for submenu items */
+.nav-submenu-item:hover i {
+    color: #22c55e;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.5), 0 0 16px rgba(34, 197, 94, 0.3);
+    filter: drop-shadow(0 0 3px rgba(34, 197, 94, 0.4));
+}
+
+html.dark .nav-submenu-item:hover i {
+    color: #38bdf8;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.6), 0 0 20px rgba(56, 189, 248, 0.4);
+    filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.5));
+}
+
+/* Active state for submenu items */
 .nav-submenu-item.active i {
-    color: #64748b;
-    text-shadow: 0 0 8px rgba(100, 116, 139, 0.5), 0 0 16px rgba(100, 116, 139, 0.3);
-    filter: drop-shadow(0 0 3px rgba(100, 116, 139, 0.4));
+    color: #22c55e;
+    text-shadow: 0 0 8px rgba(34, 197, 94, 0.5), 0 0 16px rgba(34, 197, 94, 0.3);
+    filter: drop-shadow(0 0 3px rgba(34, 197, 94, 0.4));
 }
 
 html.dark .nav-submenu-item.active i {
@@ -715,6 +729,23 @@ html.dark .nav-submenu-item.active i {
     margin-right: 10px;
     flex-shrink: 0;
     transition: color 0.2s ease;
+}
+
+/* Override icon styles for chevron arrows inside submenu items */
+.nav-submenu-item i.nav-btn-chevron,
+.nav-submenu-item .nav-btn-chevron {
+    width: auto;
+    font-size: 0.6rem;
+    margin-right: 4px;
+    margin-left: auto;
+}
+
+/* Button reset for submenu toggle buttons */
+button.nav-submenu-item {
+    width: 100%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
 }
 
 /* ==========================================
