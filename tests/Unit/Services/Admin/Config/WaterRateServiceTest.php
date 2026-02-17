@@ -13,7 +13,7 @@ beforeEach(function () {
     Status::create(['stat_id' => 2, 'stat_desc' => 'ACTIVE']);
     Status::create(['stat_id' => 3, 'stat_desc' => 'INACTIVE']);
 
-    $this->service = new WaterRateService();
+    $this->service = new WaterRateService;
     $this->accountType = AccountType::factory()->create(['at_desc' => 'Residential']);
 });
 
@@ -93,7 +93,7 @@ test('validateNoRangeOverlap throws exception for overlapping ranges', function 
         'range_max' => 15,
     ];
 
-    expect(fn() => $this->service->validateNoRangeOverlap(
+    expect(fn () => $this->service->validateNoRangeOverlap(
         $this->accountType->at_id,
         null,
         $newTier

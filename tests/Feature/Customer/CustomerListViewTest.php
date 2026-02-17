@@ -7,7 +7,6 @@
  * and that required elements are present. They do NOT require database
  * or actual browser testing.
  */
-
 test('customer list new view exists and can be compiled', function () {
     $viewPath = resource_path('views/pages/customer/customer-list.blade.php');
 

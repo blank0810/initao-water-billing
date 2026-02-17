@@ -18,9 +18,9 @@ return new class extends Migration
             $table->decimal('new_meter_consumption', 12, 3)->nullable()->after('old_meter_consumption');
 
             $table->foreign('old_assignment_id')
-                  ->references('assignment_id')
-                  ->on('MeterAssignment')
-                  ->onDelete('set null');
+                ->references('assignment_id')
+                ->on('MeterAssignment')
+                ->onDelete('set null');
         });
     }
 

@@ -279,7 +279,7 @@ class NotificationService
             Notification::TYPE_PAYMENT_PROCESSED,
             'Payment Processed',
             "Payment of {$amount} received from {$customerName} — Receipt #{$receiptNo}",
-            route('customer.payment-management'),
+            route('payment.management'),
             null,
             null,
             $actingUserId
@@ -295,7 +295,7 @@ class NotificationService
             Notification::TYPE_PAYMENT_CANCELLED,
             'Payment Cancelled',
             "Payment #{$receiptNo} of {$amount} has been cancelled by {$cancelledByName}",
-            route('customer.payment-management'),
+            route('payment.management'),
             null,
             null,
             $actingUserId

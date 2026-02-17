@@ -137,7 +137,7 @@ class ReadingScheduleController extends Controller
     {
         $areaId = $request->input('area_id');
         $periodId = $request->input('period_id');
-        
+
         $data = [];
 
         if ($areaId) {

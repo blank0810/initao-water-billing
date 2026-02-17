@@ -4,7 +4,6 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Area;
 use App\Models\AreaAssignment;
-use App\Models\Role;
 use App\Models\Status;
 use App\Models\User;
 
