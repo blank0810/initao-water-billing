@@ -444,12 +444,10 @@
         <button onclick="window.print()" class="btn btn-primary">
             <i class="fas fa-print"></i> Print Document
         </button>
-        <a href="{{ route('reports.water-bill-history') }}?export=pdf&search={{ request('search', '') }}" class="btn btn-secondary">
-            <i class="fas fa-file-pdf"></i> Export PDF
-        </a>
-        <a href="{{ route('reports.water-bill-history') }}?export=excel&search={{ request('search', '') }}" class="btn btn-secondary">
-            <i class="fas fa-file-excel"></i> Export Excel
-        </a>
+        @include('components.export-dropdown-print', [
+            'exportFilename' => 'water-bill-history',
+            'exportSelector' => '.document'
+        ])
     </div>
 
     <script>

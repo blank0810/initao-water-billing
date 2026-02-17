@@ -489,12 +489,10 @@
         <button onclick="window.print()" class="btn btn-primary">
             <i class="fas fa-print"></i> Print Document
         </button>
-        <a href="{{ route('reports.monthly-collection') }}?export=pdf&month={{ request('month', now()->month) }}&year={{ request('year', now()->year) }}" class="btn btn-secondary">
-            <i class="fas fa-file-pdf"></i> Export PDF
-        </a>
-        <a href="{{ route('reports.monthly-collection') }}?export=excel&month={{ request('month', now()->month) }}&year={{ request('year', now()->year) }}" class="btn btn-secondary">
-            <i class="fas fa-file-excel"></i> Export Excel
-        </a>
+        @include('components.export-dropdown-print', [
+            'exportFilename' => 'monthly-collection',
+            'exportSelector' => '.document'
+        ])
     </div>
 
     <script>

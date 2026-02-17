@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div class="min-h-screen bg-gray-50 dark:bg-gray-900" x-data="agingTable()" x-init="init()">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             
             <!-- Back Link -->
@@ -21,6 +21,7 @@
                         <p class="text-sm text-gray-500 dark:text-gray-400">Accounts receivable aging analysis</p>
                     </div>
                 </div>
+                <x-export-dropdown />
             </div>
 
             <!-- Summary Cards -->
@@ -48,23 +49,21 @@
             </div>
 
             <!-- Table Card -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden" x-data="agingTable()" x-init="init()">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 
-                <!-- Filter Bar - Dark Mode -->
-                <div class="p-4 border-b border-gray-200 dark:border-gray-700" style="background-color: #1f2937; border-bottom: 1px solid #374151;">
+                <!-- Filter Bar -->
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                     <div class="flex flex-wrap items-center justify-between gap-4">
                         <!-- Search & Filters -->
                         <div class="flex items-center gap-3">
                             <div class="relative">
                                 <input type="text" x-model="searchQuery" @input="filterData()"
                                     placeholder="Search accounts..."
-                                    class="pl-10 pr-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-[#3D90D7] focus:border-transparent"
-                                    style="background-color: #374151; border-color: #4b5563; color: #ffffff;">
+                                    class="pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3D90D7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                             </div>
                             <select x-model="filterAge" @change="filterData()"
-                                class="px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-[#3D90D7]"
-                                style="background-color: #374151; border-color: #4b5563; color: #ffffff;">
+                                class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3D90D7] bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                                 <option value="">All Ages</option>
                                 <option value="current">Current</option>
                                 <option value="30">1-30 Days</option>
@@ -74,10 +73,9 @@
                             </select>
                             <!-- Sorting Controls (moved from bottom) -->
                             <div class="flex items-center gap-2">
-                                <label class="text-sm font-medium" style="color: #ffffff;">Sort by:</label>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</label>
                                 <select x-model="sortField" @change="sortData()"
-                                    class="px-3 py-2 text-sm border rounded-lg"
-                                    style="background-color: #374151; border-color: #4b5563; color: #ffffff;">
+                                    class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                                     <option value="consumer_name">Consumer Name</option>
                                     <option value="account_no">Account No.</option>
                                     <option value="current">Current</option>
@@ -88,10 +86,7 @@
                                     <option value="total">Total</option>
                                 </select>
                                 <button @click="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; sortData()"
-                                    class="px-2 py-2 text-sm border rounded-lg transition-colors"
-                                    style="background-color: #374151; border-color: #4b5563; color: #ffffff;"
-                                    onmouseover="this.style.backgroundColor='#4b5563'"
-                                    onmouseout="this.style.backgroundColor='#374151'">
+                                    class="px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
                                     <i :class="sortDirection === 'asc' ? 'fas fa-sort-amount-up' : 'fas fa-sort-amount-down'" class="text-gray-400"></i>
                                 </button>
                             </div>
@@ -160,8 +155,7 @@
                         <div class="flex items-center gap-2">
                             <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Show</label>
                             <select x-model.number="pageSize" @change="currentPage = 1"
-                                class="px-3 py-1.5 text-sm border rounded-lg"
-                                style="background-color: #ffffff; border-color: #d1d5db; color: #111827;">
+                                class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                                 <option value="10">10</option>
                                 <option value="25">25</option>
                                 <option value="50">50</option>
@@ -205,6 +199,17 @@
                 sortDirection: 'asc',
                 currentPage: 1,
                 pageSize: 10,
+                exportFilename: 'aging-of-accounts',
+                exportColumns: [
+                    { key: 'consumer_name', label: 'Consumer Name' },
+                    { key: 'account_no', label: 'Account No.' },
+                    { key: 'current', label: 'Current', format: 'currency' },
+                    { key: 'days_30', label: '1-30 Days', format: 'currency' },
+                    { key: 'days_60', label: '31-60 Days', format: 'currency' },
+                    { key: 'days_90', label: '61-90 Days', format: 'currency' },
+                    { key: 'over_90', label: 'Over 90 Days', format: 'currency' },
+                    { key: 'total', label: 'Total', format: 'currency' },
+                ],
                 data: [],
                 filteredData: [],
                 totals: { current: 0, days_30: 0, days_60: 0, days_90: 0, over_90: 0, total: 0 },

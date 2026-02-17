@@ -509,15 +509,10 @@
         <button onclick="window.print()" class="btn btn-primary">
             <i class="fas fa-print"></i> Print Document
         </button>
-        <a href="{{ route('reports.billing-statement') }}?export=pdf" class="btn btn-secondary">
-            <i class="fas fa-file-pdf"></i> PDF
-        </a>
-        <a href="{{ route('reports.billing-statement') }}?export=doc" class="btn btn-secondary">
-            <i class="fas fa-file-word"></i> DOC
-        </a>
-        <a href="{{ route('reports.billing-statement') }}?download=true" class="btn btn-secondary">
-            <i class="fas fa-download"></i> Download
-        </a>
+        @include('components.export-dropdown-print', [
+            'exportFilename' => 'billing-statement',
+            'exportSelector' => '.document'
+        ])
     </div>
 
     <script>
