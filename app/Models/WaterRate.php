@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class WaterRate extends Model
 {
     use HasFactory;
+
     protected $table = 'water_rates';
 
     protected $primaryKey = 'wr_id';

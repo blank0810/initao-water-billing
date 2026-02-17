@@ -7,7 +7,7 @@ use App\Models\Status;
 use App\Services\Admin\Config\BarangayService;
 
 beforeEach(function () {
-    $this->service = new BarangayService();
+    $this->service = new BarangayService;
 });
 
 test('getAllBarangays returns paginated results', function () {
@@ -59,7 +59,7 @@ test('deleteBarangay throws exception when puroks exist', function () {
         'stat_id' => Status::getIdByDescription(Status::ACTIVE),
     ]);
 
-    expect(fn() => $this->service->deleteBarangay($barangay->b_id))
+    expect(fn () => $this->service->deleteBarangay($barangay->b_id))
         ->toThrow(\DomainException::class, 'Cannot delete barangay');
 });
 
@@ -92,7 +92,7 @@ test('deleteBarangay throws exception when consumer addresses exist', function (
         'stat_id' => Status::getIdByDescription(Status::ACTIVE),
     ]);
 
-    expect(fn() => $this->service->deleteBarangay($barangay->b_id))
+    expect(fn () => $this->service->deleteBarangay($barangay->b_id))
         ->toThrow(\DomainException::class, 'Cannot delete barangay');
 });
 

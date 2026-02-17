@@ -12,7 +12,7 @@ class AreaFactory extends Factory
     public function definition(): array
     {
         return [
-            'a_desc' => fake()->unique()->city() . ' Area',
+            'a_desc' => fake()->unique()->city().' Area',
             'stat_id' => 1, // Default to ACTIVE status
         ];
     }

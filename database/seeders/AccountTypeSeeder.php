@@ -37,6 +37,6 @@ class AccountTypeSeeder extends Seeder
             ->whereNull('created_at')
             ->update(['created_at' => now()]);
 
-        $this->command->info('Account Types seeded: ' . count($accountTypes) . ' types');
+        $this->command->info('Account Types seeded: '.count($accountTypes).' types');
     }
 }

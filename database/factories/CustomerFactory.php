@@ -24,7 +24,7 @@ class CustomerFactory extends Factory
             'ca_id' => ConsumerAddress::factory(),
             'land_mark' => strtoupper(fake()->streetName()),
             'c_type' => fake()->randomElement(['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL']),
-            'resolution_no' => 'INITAO-' . strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 2)) . '-' . fake()->numerify('##########'),
+            'resolution_no' => 'INITAO-'.strtoupper(substr($firstName, 0, 1).substr($lastName, 0, 2)).'-'.fake()->numerify('##########'),
             'create_date' => fake()->dateTimeBetween('-2 years', 'now'),
             'stat_id' => 1, // Default to ACTIVE status
         ];
@@ -59,7 +59,7 @@ class CustomerFactory extends Factory
             'cust_first_name' => strtoupper($firstName),
             'cust_middle_name' => $middleName ? strtoupper($middleName) : null,
             'cust_last_name' => strtoupper($lastName),
-            'resolution_no' => 'INITAO-' . strtoupper(substr($firstName, 0, 1) . substr($lastName, 0, 2)) . '-' . fake()->numerify('##########'),
+            'resolution_no' => 'INITAO-'.strtoupper(substr($firstName, 0, 1).substr($lastName, 0, 2)).'-'.fake()->numerify('##########'),
         ]);
     }
 }

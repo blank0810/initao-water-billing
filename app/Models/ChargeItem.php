@@ -11,13 +11,11 @@ class ChargeItem extends Model
 {
     protected $table = 'ChargeItem';
 
-
     protected $primaryKey = 'charge_item_id';
 
     public $timestamps = true;
 
     public $incrementing = true;
-
 
     protected $keyType = 'int';
 

@@ -150,18 +150,79 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
             <!-- Right: Controls -->
             <div class="flex items-center space-x-4">
 
-                <!-- Search Bar -->
-                <div class="relative hidden lg:block">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 dark:text-gray-500">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                <!-- Global Customer Search -->
+                <div x-data="globalSearch()" x-on:click.outside="close()" x-on:keydown.escape.window="close()" class="relative hidden lg:block">
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 dark:text-gray-500">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input
+                            x-ref="searchInput"
+                            x-model="query"
+                            x-on:input.debounce.300ms="search()"
+                            x-on:focus="if (results.length) open = true"
+                            x-on:keydown.arrow-down.prevent="moveDown()"
+                            x-on:keydown.arrow-up.prevent="moveUp()"
+                            x-on:keydown.enter.prevent="selectCurrent()"
+                            type="text"
+                            placeholder="Search customers..."
+                            class="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 w-72 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        >
+                        <!-- Loading Spinner -->
+                        <div x-show="loading" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <svg class="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                        </div>
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        class="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 w-64 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                    >
+
+                    <!-- Results Dropdown -->
+                    <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute top-full left-0 mt-1 w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+
+                        <!-- No Results -->
+                        <template x-if="!loading && results.length === 0 && query.length >= 2 && searched">
+                            <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                                <svg class="mx-auto h-8 w-8 text-gray-300 dark:text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                No customers found for "<span x-text="query" class="font-medium"></span>"
+                            </div>
+                        </template>
+
+                        <!-- Results List -->
+                        <template x-for="(result, index) in results" :key="result.customer_id">
+                            <a :href="'/customer/details/' + result.customer_id"
+                               :class="{ 'bg-blue-50 dark:bg-blue-900/30': selectedIndex === index }"
+                               class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
+                               x-on:mouseenter="selectedIndex = index">
+                                <div class="flex items-center justify-between">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate" x-text="result.name"></p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                                            <span x-show="result.account_no" x-text="result.account_no"></span>
+                                            <span x-show="result.account_no && result.meter_serial"> &middot; </span>
+                                            <span x-show="result.meter_serial" x-text="result.meter_serial"></span>
+                                            <span x-show="(result.account_no || result.meter_serial) && result.barangay"> &middot; </span>
+                                            <span x-show="result.barangay" x-text="result.barangay"></span>
+                                        </p>
+                                    </div>
+                                    <span x-show="result.status"
+                                          :class="{
+                                              'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': result.status === 'ACTIVE',
+                                              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': result.status !== 'ACTIVE'
+                                          }"
+                                          class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0"
+                                          x-text="result.status">
+                                    </span>
+                                </div>
+                            </a>
+                        </template>
+                    </div>
                 </div>
 
                 <!-- Theme Toggle -->
@@ -427,4 +488,72 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
             }
         };
     }
+</script>
+
+<script>
+function globalSearch() {
+    return {
+        query: '',
+        results: [],
+        open: false,
+        loading: false,
+        searched: false,
+        selectedIndex: -1,
+
+        init() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                    e.preventDefault();
+                    this.$refs.searchInput.focus();
+                }
+            });
+        },
+
+        async search() {
+            if (this.query.length < 2) {
+                this.results = [];
+                this.open = false;
+                this.searched = false;
+                return;
+            }
+
+            this.loading = true;
+            try {
+                const response = await fetch(`/api/search/customers?q=${encodeURIComponent(this.query)}`);
+                this.results = await response.json();
+                this.open = true;
+                this.searched = true;
+                this.selectedIndex = -1;
+            } catch (error) {
+                console.error('Search failed:', error);
+                this.results = [];
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        close() {
+            this.open = false;
+            this.selectedIndex = -1;
+        },
+
+        moveDown() {
+            if (this.selectedIndex < this.results.length - 1) {
+                this.selectedIndex++;
+            }
+        },
+
+        moveUp() {
+            if (this.selectedIndex > 0) {
+                this.selectedIndex--;
+            }
+        },
+
+        selectCurrent() {
+            if (this.selectedIndex >= 0 && this.results[this.selectedIndex]) {
+                window.location.href = '/customer/details/' + this.results[this.selectedIndex].customer_id;
+            }
+        },
+    };
+}
 </script>

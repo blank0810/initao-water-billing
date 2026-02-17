@@ -23,7 +23,7 @@ beforeEach(function () {
         'updated_at' => now(),
     ]);
 
-    $this->service = new AreaService();
+    $this->service = new AreaService;
 });
 
 test('getAllAreas returns paginated results', function () {
@@ -55,7 +55,7 @@ test('deleteArea throws exception when active assignments exist', function () {
         'effective_to' => null, // Active
     ]);
 
-    expect(fn() => $this->service->deleteArea($area->a_id))
+    expect(fn () => $this->service->deleteArea($area->a_id))
         ->toThrow(\DomainException::class, 'Cannot delete area');
 });
 

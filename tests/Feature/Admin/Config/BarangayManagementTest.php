@@ -3,10 +3,7 @@
 namespace Tests\Feature\Admin\Config;
 
 use App\Models\Barangay;
-use App\Models\ConsumerAddress;
 use App\Models\Permission;
-use App\Models\Purok;
-use App\Models\Role;
 use App\Models\Status;
 use App\Models\User;
 
@@ -117,7 +114,7 @@ test('admin can view barangay details', function () {
             'b_code',
             'puroks_count',
             'addresses_count',
-        ]
+        ],
     ]);
 });
 

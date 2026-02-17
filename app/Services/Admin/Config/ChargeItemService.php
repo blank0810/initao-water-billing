@@ -12,22 +12,22 @@ class ChargeItemService
         $query = ChargeItem::query()->with('status');
 
         // Search filter
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
         // Charge type filter
-        if (!empty($filters['charge_type'])) {
+        if (! empty($filters['charge_type'])) {
             $query->where('charge_type', $filters['charge_type']);
         }
 
         // Status filter
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('stat_id', $filters['status']);
         }
 

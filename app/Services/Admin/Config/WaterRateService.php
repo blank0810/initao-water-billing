@@ -108,7 +108,7 @@ class WaterRateService
             // Overlap occurs if: (start1 <= end2) AND (start2 <= end1)
             if ($rangeMin <= $tier->range_max && $tier->range_min <= $rangeMax) {
                 throw new \DomainException(
-                    "Range {$rangeMin}-{$rangeMax} overlaps with existing tier " .
+                    "Range {$rangeMin}-{$rangeMax} overlaps with existing tier ".
                     "({$tier->range_min}-{$tier->range_max})"
                 );
             }
