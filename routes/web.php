@@ -643,8 +643,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/puroks/{id}', [PurokController::class, 'update'])->name('config.puroks.update');
         Route::delete('/puroks/{id}', [PurokController::class, 'destroy'])->name('config.puroks.destroy');
 
-        // Reading Schedules
-        Route::get('/reading-schedules', [\App\Http\Controllers\ReadingScheduleController::class, 'configIndex'])->name('config.reading-schedules.index');
+        // Reading Schedules (also requires billing.view for AJAX endpoints)
+        Route::get('/reading-schedules', [\App\Http\Controllers\ReadingScheduleController::class, 'configIndex'])->middleware('permission:billing.view')->name('config.reading-schedules.index');
     });
 
     // -------------------------------------------------------------------------
