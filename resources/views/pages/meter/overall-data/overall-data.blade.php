@@ -113,7 +113,6 @@
     </div>
 </x-app-layout>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 @vite(['resources/js/export-print.js'])
 
 <script>

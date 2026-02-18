@@ -7,11 +7,6 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
-
         <!-- Theme initialization - MUST run before vite scripts -->
         <script>
             (function() {
@@ -34,18 +29,10 @@
             })();
         </script>
 
-        <!-- Export Libraries -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-        <!-- Font Awesome -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-
         @stack('styles')
 
         <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/network-detector.js', 'resources/js/utils/report-export.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/utils/report-export.js'])
 
         <style>
             [x-cloak] {
@@ -235,24 +222,12 @@
 
         <!-- Global Error Handling -->
         <script>
-            // Handle offline/online events
-            window.addEventListener('offline', function() {
-                if (!window.location.pathname.includes('/no-internet-found')) {
-                    window.location.href = '/no-internet-found';
-                }
-            });
-
             // Handle 404 errors from fetch/axios
             window.addEventListener('unhandledrejection', function(event) {
                 if (event.reason && event.reason.response && event.reason.response.status === 404) {
                     console.warn('404 error detected:', event.reason);
                 }
             });
-
-            // Check connection status on load
-            if (!navigator.onLine && !window.location.pathname.includes('/no-internet-found')) {
-                window.location.href = '/no-internet-found';
-            }
         </script>
     </body>
 </html>
