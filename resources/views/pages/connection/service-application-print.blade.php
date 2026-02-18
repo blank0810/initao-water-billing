@@ -539,21 +539,9 @@
 
             <!-- Signatures -->
             <div class="signatures">
-                <div class="signature-box">
-                    <div class="line"></div>
-                    <div class="label">Applicant's Signature</div>
-                </div>
-                <div class="signature-box">
-                    <div class="line"></div>
-                    @if($application->processedBy)
-                    <div class="name" style="font-weight: 500; margin-bottom: 4px;">{{ $application->processedBy->name }}</div>
-                    @endif
-                    <div class="label">Receiving Officer</div>
-                </div>
-                <div class="signature-box">
-                    <div class="line"></div>
-                    <div class="label">Approving Authority</div>
-                </div>
+                <x-document-signature position-key="CUSTOMER" :name="$customerName" label="Applicant's Signature" :show-image="false" style="application" />
+                <x-document-signature position-key="RECEIVING_OFFICER" :name="$application->processedBy?->name" :signature-url="$application->processedBy?->signature_url" label="Receiving Officer" style="application" />
+                <x-document-signature position-key="APPROVING_AUTHORITY" label="Approving Authority" style="application" />
             </div>
         </div>
 

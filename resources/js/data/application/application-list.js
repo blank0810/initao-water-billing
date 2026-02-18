@@ -178,7 +178,7 @@ window.enhancedCustomerData = enhancedCustomerData;
         window.dispatchEvent(new CustomEvent('delete-customer', { detail: customerCode }));
     };
 
-    window.printBothForms = function(customerCode) {
+    window.printBothForms = async function(customerCode) {
         const customer = enhancedCustomerData.find(c => c.customer_code === customerCode);
         if (customer) {
             const customerData = {
@@ -191,14 +191,33 @@ window.enhancedCustomerData = enhancedCustomerData;
             };
 
             if (window.UnifiedPrintSystem && window.MEEDOContractPrint) {
+                // Fetch signatory data for MEEDO contract
+                let signatories = {};
+                try {
+                    const params = new URLSearchParams();
+                    params.append('keys[]', 'MEEDO_OFFICER');
+                    const res = await fetch(`/config/document-signatories/js-data?${params}`);
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json.data) {
+                            // Map uppercase keys to lowercase for JS usage
+                            Object.keys(json.data).forEach(key => {
+                                signatories[key.toLowerCase()] = json.data[key];
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Could not load signatory data:', e);
+                }
+
                 // Print Application Form first
                 window.UnifiedPrintSystem.printServiceApplicationForm(customerData);
-                
+
                 // Print MEEDO Contract after a short delay
                 setTimeout(() => {
-                    window.MEEDOContractPrint.printWaterServiceContract(customerData);
+                    window.MEEDOContractPrint.printWaterServiceContract(customerData, signatories);
                 }, 2000);
-                
+
                 incrementPrintCount(customerCode);
                 showAlert('Application Form & MEEDO Contract printed successfully!', 'success');
             } else {

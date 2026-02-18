@@ -330,7 +330,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @vite(['resources/css/app.css'])
 </head>
 <body>
     <!-- Back Link (Top Left) -->
@@ -443,24 +443,7 @@
 
             <!-- Signatures -->
             <div class="signatures">
-                <div class="signature-block">
-                    <div class="signature-line">
-                        <div class="signature-name">_________________________</div>
-                        <div class="signature-title">Prepared by: Cashier</div>
-                    </div>
-                </div>
-                <div class="signature-block">
-                    <div class="signature-line">
-                        <div class="signature-name">_________________________</div>
-                        <div class="signature-title">Verified by: Accountant</div>
-                    </div>
-                </div>
-                <div class="signature-block">
-                    <div class="signature-line">
-                        <div class="signature-name">_________________________</div>
-                        <div class="signature-title">Noted by: Municipal Treasurer</div>
-                    </div>
-                </div>
+                <x-document-signature position-key="CURRENT_USER" :name="auth()->user()?->name" :signature-url="auth()->user()?->signature_url" label="Prepared by: Cashier" style="report" />
             </div>
         </div>
 

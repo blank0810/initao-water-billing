@@ -28,6 +28,7 @@ class User extends Authenticatable
         'stat_id',
         'u_type',
         'photo_path',
+        'signature_path',
     ];
 
     /**
@@ -63,6 +64,18 @@ class User extends Authenticatable
         }
 
         return asset('images/logo.png');
+    }
+
+    /**
+     * Get the full URL for the user's signature, or null if none.
+     */
+    public function getSignatureUrlAttribute(): ?string
+    {
+        if ($this->signature_path) {
+            return asset($this->signature_path);
+        }
+
+        return null;
     }
 
     /**
