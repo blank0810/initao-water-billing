@@ -98,6 +98,8 @@ export default function readingScheduleManager() {
             const area = this.areas.find(a => a.id == this.form.area_id);
             if (area && area.assigned_reader_id) {
                 this.form.reader_id = area.assigned_reader_id;
+            } else {
+                this.form.reader_id = '';
             }
         },
 
