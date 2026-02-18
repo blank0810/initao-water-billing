@@ -1,5 +1,5 @@
 // Meedo Water Service Contract Print Utility - Standalone Function
-function printWaterServiceContract(customer) {
+function printWaterServiceContract(customer, signatories = {}) {
     const w = window.open('', '_blank', 'width=842,height=1191');
     if (!w) {
         alert('Pop-up blocked. Please allow pop-ups for this site.');
@@ -203,21 +203,17 @@ function printWaterServiceContract(customer) {
                 
                 <div class="signature-section">
                     <div class="signature-block">
-                        <div class="signature-line">Customer's Signature</div>
+                        <div style="margin-top: 30px; text-align: center; font-weight: bold;">${customer.CustomerName || '_________________________'}</div>
+                        <div class="signature-line">Customer's Printed Name</div>
                         <div style="margin-top: 4px;">_________________________</div>
                         <div style="font-size: 8px;">Address</div>
                     </div>
                     <div class="signature-block">
-                        <div style="margin-top: 30px; text-align: center;">_________________________</div>
-                        <div style="font-size: 8px; text-align: center;">Recommending Approval</div>
-                        <div style="font-size: 8px; text-align: center;"><strong>MEEDO</strong> Representative</div>
+                        <div><strong>INITAO MUNICIPAL WATERWORKS SYSTEM</strong></div>
+                        ${signatories.meedo_officer?.signature_base64 ? `<div style="margin-top: 4px;"><img src="${signatories.meedo_officer.signature_base64}" style="max-height: 40px; max-width: 150px;" /></div>` : '<div style="margin-top: 30px;"></div>'}
+                        <div style="text-align: center; font-weight: bold;">${signatories.meedo_officer?.name || '___________________________'}</div>
+                        <div style="border-top: 1px solid #000; margin-top: 2px; padding-top: 2px; font-size: 8px; text-align: center;"><strong>${signatories.meedo_officer?.title || 'MEEDO Officer'}</strong></div>
                     </div>
-                </div>
-                
-                <div style="margin-top: 12px; font-size: 9px; font-weight: bold;">
-                    <div><strong>INITAO MUNICIPAL WATERWORKS SYSTEM</strong></div>
-                    <div style="margin-top: 8px;">ENGR. HERMAN L. BALABAT</div>
-                    <div><strong>MEEDO</strong></div>
                 </div>
                 
                 <div class="addendum">
@@ -250,5 +246,6 @@ function printWaterServiceContract(customer) {
 
 // Export to global scope
 window.printWaterServiceContract = printWaterServiceContract;
+window.MEEDOContractPrint = { printWaterServiceContract };
 
 export { printWaterServiceContract };

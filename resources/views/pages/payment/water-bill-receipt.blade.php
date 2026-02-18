@@ -470,14 +470,8 @@
             <!-- Signature -->
             <div class="signature">
                 <div class="signature-line">
-                    <div class="signature-box">
-                        <div class="line"></div>
-                        <div class="label">Customer Signature</div>
-                    </div>
-                    <div class="signature-box">
-                        <div class="line"></div>
-                        <div class="label">Cashier Signature</div>
-                    </div>
+                    <x-document-signature position-key="CUSTOMER" :name="$customerName" label="Customer Signature" :show-image="false" style="receipt" />
+                    <x-document-signature position-key="CASHIER" :name="$payment->user?->name" :signature-url="$payment->user?->signature_url" label="Cashier" style="receipt" />
                 </div>
             </div>
         </div>

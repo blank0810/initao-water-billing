@@ -65,6 +65,10 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password (leave blank to keep current)</label>
                 <input type="password" id="editUserPassword" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500" placeholder="Enter new password">
             </div>
+            <!-- Digital Signature -->
+            <div id="editSignatureSection">
+                <x-ui.signature-pad name="edit_signature" remove-name="edit_remove_signature" label="Digital Signature" />
+            </div>
         </form>
 
         <div class="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
@@ -166,6 +170,25 @@ function showEditUserModal(user) {
         });
     }
 
+    // Update signature pad with existing signature
+    const sigSection = document.getElementById('editSignatureSection');
+    if (sigSection) {
+        const sigComponent = sigSection.querySelector('[x-data]');
+        if (sigComponent && sigComponent.__x) {
+            const sigData = Alpine.$data(sigComponent);
+            if (sigData) {
+                sigData.signatureData = '';
+                sigData.removeSignature = false;
+                sigData.hasExisting = !!user.signature_url;
+                sigData.existingUrl = user.signature_url || null;
+                if (sigData.pad) {
+                    sigData.pad.clear();
+                    sigData.isEmpty = true;
+                }
+            }
+        }
+    }
+
     document.getElementById('editUserModal').classList.remove('hidden');
 }
 
@@ -203,6 +226,15 @@ async function saveUser() {
         userData.avatar = editAvatarBase64;
     } else if (editAvatarBase64 === 'remove') {
         userData.remove_avatar = true;
+    }
+
+    // Include signature if changed
+    const editSigInput = document.querySelector('#editSignatureSection input[name="edit_signature"]');
+    const editSigRemoveInput = document.querySelector('#editSignatureSection input[name="edit_remove_signature"]');
+    if (editSigInput && editSigInput.value) {
+        userData.signature = editSigInput.value;
+    } else if (editSigRemoveInput && editSigRemoveInput.value === '1') {
+        userData.remove_signature = true;
     }
 
     // Show loading state

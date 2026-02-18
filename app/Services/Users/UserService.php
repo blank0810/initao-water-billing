@@ -85,6 +85,14 @@ class UserService
             }
         }
 
+        // Handle signature upload
+        if (! empty($data['signature'])) {
+            $result = $this->fileUploadService->storeBase64Image($data['signature'], 'signatures');
+            if ($result['success']) {
+                $userData['signature_path'] = $result['path'];
+            }
+        }
+
         $user = User::create($userData);
 
         // Assign role
@@ -140,6 +148,24 @@ class UserService
             }
         }
 
+        // Handle signature removal
+        if (! empty($data['remove_signature'])) {
+            if ($user->signature_path) {
+                $this->fileUploadService->deleteFile($user->signature_path);
+            }
+            $updateData['signature_path'] = null;
+        }
+        // Handle signature upload
+        elseif (! empty($data['signature'])) {
+            $result = $this->fileUploadService->storeBase64Image($data['signature'], 'signatures');
+            if ($result['success']) {
+                if ($user->signature_path) {
+                    $this->fileUploadService->deleteFile($user->signature_path);
+                }
+                $updateData['signature_path'] = $result['path'];
+            }
+        }
+
         $user->update($updateData);
 
         // Sync role
@@ -176,6 +202,11 @@ class UserService
             $this->fileUploadService->deleteFile($user->photo_path);
         }
 
+        // Clean up uploaded signature
+        if ($user->signature_path) {
+            $this->fileUploadService->deleteFile($user->signature_path);
+        }
+
         $user->roles()->detach();
         $user->delete();
 
@@ -198,6 +229,7 @@ class UserService
             'email' => $user->email,
             'username' => $user->username,
             'photo_url' => $user->photo_url,
+            'signature_url' => $user->signature_url,
             'role' => $role ? [
                 'role_id' => $role->role_id,
                 'role_name' => $role->role_name,

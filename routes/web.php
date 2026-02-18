@@ -56,10 +56,6 @@ Route::get('/404', function () {
     return view('pages.info-pages.page-not-found');
 })->name('404');
 
-Route::get('/no-internet-found', function () {
-    return view('pages.info-pages.no-internet-found');
-})->name('no-internet');
-
 // Coming Soon page (for features under development)
 Route::get('/coming-soon', function () {
     return view('pages.coming-soon');
@@ -670,7 +666,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/charge-items/{id}', [ChargeItemController::class, 'show'])->name('config.charge-items.show');
         Route::put('/charge-items/{id}', [ChargeItemController::class, 'update'])->name('config.charge-items.update');
         Route::delete('/charge-items/{id}', [ChargeItemController::class, 'destroy'])->name('config.charge-items.destroy');
+
+        // Document Signatories
+        Route::get('/document-signatories', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'index'])->name('config.document-signatories.index');
+        Route::get('/document-signatories/active-users', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'getActiveUsers'])->name('config.document-signatories.active-users');
+        Route::put('/document-signatories/{positionKey}', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'update'])->name('config.document-signatories.update');
     });
+
+    // Document Signatory JS Data (accessible to any authenticated user for printing)
+    Route::get('/config/document-signatories/js-data', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'getSignatoryDataForJs'])->name('config.document-signatories.js-data');
 
     // -------------------------------------------------------------------------
     // Activity Log - Super Admin Only

@@ -132,7 +132,6 @@
     </div>
 </x-app-layout>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ asset('js/customer-data.js') }}"></script>
 <script src="{{ asset('js/data/consumer/consumer.js') }}"></script>
 <script src="{{ asset('js/data/user/user.js') }}"></script>

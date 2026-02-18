@@ -324,6 +324,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.avatar = avatarPreview;
             }
 
+            // Include signature if drawn/uploaded (from signature pad hidden input)
+            const signatureInput = addUserForm.querySelector('input[name="signature"]');
+            if (signatureInput && signatureInput.value) {
+                data.signature = signatureInput.value;
+            }
+
             // Show loading state
             const submitBtn = addUserForm.querySelector('[type="submit"]');
             const originalText = submitBtn?.innerHTML;

@@ -13,13 +13,6 @@
     $dropdownId = 'exportDropdown_' . uniqid();
 @endphp
 
-{{-- CDN Libraries (loaded once per page) --}}
-@once
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-@endonce
-
 <div style="position: relative; display: inline-block;">
     <button onclick="document.getElementById('{{ $dropdownId }}').classList.toggle('export-dropdown-hidden')" class="btn btn-secondary" type="button" style="display: inline-flex; align-items: center; gap: 8px; position: relative;">
         <i class="fas fa-download"></i> Export

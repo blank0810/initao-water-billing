@@ -10,7 +10,6 @@ export default defineConfig({
                 'resources/js/chart-dash.js',
                 'resources/js/utils/print-form.js',
                 'resources/js/payment.js',
-                'resources/js/network-detector.js',
                 'resources/js/data/customer/customer-list-simple.js',
                 'resources/js/data/customer/customer-details-data.js',
                 'resources/js/data/consumer/consumer-list.js',

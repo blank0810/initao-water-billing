@@ -333,6 +333,13 @@ $user = Auth::user() ?? (object) [
                         <i class="fas fa-file-invoice-dollar"></i>
                         <span>Application Fee Templates</span>
                     </a>
+                    <a href="{{ route('config.document-signatories.index') }}" @click="setActiveMenu('config-billing-signatories')"
+                        :class="activeMenu === 'config-billing-signatories' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>Document Signatories</span>
+                    </a>
                 </div>
                 @endcan
 
@@ -441,6 +448,7 @@ $user = Auth::user() ?? (object) [
                     '/config/water-rates': 'config-water-rates',
                     '/config/account-types': 'config-billing-account-types',
                     '/config/charge-items': 'config-billing-charge-items',
+                    '/config/document-signatories': 'config-billing-signatories',
                     '/admin/roles': 'config-access-roles',
                     '/admin/permissions': 'config-access-permissions',
                     '/admin/role-permissions': 'config-access-matrix',
