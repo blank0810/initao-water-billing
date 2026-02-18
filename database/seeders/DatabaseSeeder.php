@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             WaterRateSeeder::class,       // Water rates (Residential, Commercial, etc.)
             ChargeItemSeeder::class,      // Charge items (Connection Fee, Deposits, etc.)
             BillAdjustmentTypeSeeder::class, // Bill adjustment types (Meter Error, Penalty Waiver, etc.)
+            AreaSeeder::class,            // Areas: 16 areas (one per barangay)
 
             // RBAC seeders
             RoleSeeder::class,            // Roles (Super Admin, Admin, Billing Officer, etc.)
@@ -56,6 +57,7 @@ class DatabaseSeeder extends Seeder
             MiscReferenceSeeder::class,   // Misc references (penalties, discounts, surcharges)
             MeterSeeder::class,           // Sample meters (25 meters: Neptune, Sensus, Badger, Itron, Master Meter)
             ServiceConnectionSeeder::class, // Sample service connections (Residential & Commercial)
+            ReadingScheduleSeeder::class, // Default reading schedules for areas with connections
         ]);
 
         $this->command->info('✅ All seeders completed successfully!');
@@ -77,6 +79,8 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- Roles: 6 roles (Super Admin, Admin, Billing Officer, Meter Reader, Cashier, Viewer)');
         $this->command->info('- Permissions: 18 permissions across 8 modules');
         $this->command->info('- Test Users: 7 users (1 per role + testuser) - Password: "password"');
+        $this->command->info('- Areas: 16 areas (one per barangay)');
         $this->command->info('- Service Connections: 5 connections (3 Residential, 2 Commercial)');
+        $this->command->info('- Reading Schedules: 1 per area with connections (pending status)');
     }
 }

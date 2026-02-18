@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Models\Area;
+use App\Models\Barangay;
 use App\Models\ServiceConnection;
 use App\Models\Status;
 use Illuminate\Support\Collection;
@@ -434,6 +435,76 @@ class AreaService
             'connections_with_area' => $withArea,
             'connections_without_area' => $withoutArea,
             'per_area' => $perArea,
+        ];
+    }
+
+    /**
+     * Auto-assign unassigned connections to areas based on barangay name matching.
+     */
+    public function autoAssignByBarangay(): array
+    {
+        if (! $this->hasAreaIdColumn()) {
+            return [
+                'success' => false,
+                'message' => 'Area assignment feature is not available. Please run database migrations.',
+            ];
+        }
+
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        // Build lookup: barangay name → area_id
+        $areaLookup = Area::where('stat_id', $activeStatusId)
+            ->pluck('a_id', 'a_desc');
+
+        if ($areaLookup->isEmpty()) {
+            return [
+                'success' => false,
+                'message' => 'No active areas found. Please create areas first.',
+            ];
+        }
+
+        // Get all unassigned active connections with their address/barangay
+        $connections = ServiceConnection::with('address.barangay')
+            ->where('stat_id', $activeStatusId)
+            ->whereNull('ended_at')
+            ->whereNull('area_id')
+            ->get();
+
+        if ($connections->isEmpty()) {
+            return [
+                'success' => true,
+                'message' => 'No unassigned connections found. All connections already have an area.',
+                'assigned_count' => 0,
+                'unmatched_count' => 0,
+            ];
+        }
+
+        $assignedCount = 0;
+        $unmatchedCount = 0;
+
+        foreach ($connections as $connection) {
+            $barangayName = $connection->address?->barangay?->b_desc;
+
+            if (! $barangayName || ! $areaLookup->has($barangayName)) {
+                $unmatchedCount++;
+
+                continue;
+            }
+
+            $connection->update(['area_id' => $areaLookup[$barangayName]]);
+            $assignedCount++;
+        }
+
+        $message = "Auto-assigned {$assignedCount} connection(s).";
+        if ($unmatchedCount > 0) {
+            $message .= " {$unmatchedCount} could not be matched (no address or unknown barangay).";
+        }
+
+        return [
+            'success' => true,
+            'message' => $message,
+            'assigned_count' => $assignedCount,
+            'unmatched_count' => $unmatchedCount,
         ];
     }
 

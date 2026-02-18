@@ -288,6 +288,13 @@ $user = Auth::user() ?? (object) [
                         <i class="fas fa-house-user"></i>
                         <span>Puroks</span>
                     </a>
+                    <a href="{{ route('config.reading-schedules.index') }}" @click="setActiveMenu('config-geographic-reading-schedules')"
+                        :class="activeMenu === 'config-geographic-reading-schedules' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Reading Schedules</span>
+                    </a>
                 </div>
                 @endcan
 
@@ -430,6 +437,7 @@ $user = Auth::user() ?? (object) [
                     '/config/barangays': 'config-geographic-barangays',
                     '/config/areas': 'config-geographic-areas',
                     '/config/puroks': 'config-geographic-puroks',
+                    '/config/reading-schedules': 'config-geographic-reading-schedules',
                     '/config/water-rates': 'config-water-rates',
                     '/config/account-types': 'config-billing-account-types',
                     '/config/charge-items': 'config-billing-charge-items',

@@ -294,6 +294,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/areas/connection-area-stats', [\App\Http\Controllers\AreaController::class, 'connectionAreaStats'])->name('areas.connection-area-stats');
         Route::post('/areas/assign-connections', [\App\Http\Controllers\AreaController::class, 'assignAreaToConnections'])->name('areas.assign-connections');
         Route::post('/areas/remove-connections', [\App\Http\Controllers\AreaController::class, 'removeAreaFromConnections'])->name('areas.remove-connections');
+        Route::post('/areas/auto-assign', [\App\Http\Controllers\AreaController::class, 'autoAssignConnections'])->name('areas.auto-assign');
         Route::get('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'show'])->name('areas.show');
         Route::post('/areas', [\App\Http\Controllers\AreaController::class, 'store'])->name('areas.store');
         Route::put('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'update'])->name('areas.update');
@@ -641,6 +642,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/puroks/{id}', [PurokController::class, 'show'])->name('config.puroks.show');
         Route::put('/puroks/{id}', [PurokController::class, 'update'])->name('config.puroks.update');
         Route::delete('/puroks/{id}', [PurokController::class, 'destroy'])->name('config.puroks.destroy');
+
+        // Reading Schedules
+        Route::get('/reading-schedules', [\App\Http\Controllers\ReadingScheduleController::class, 'configIndex'])->name('config.reading-schedules.index');
     });
 
     // -------------------------------------------------------------------------

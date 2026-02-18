@@ -22,7 +22,7 @@ class AreaService
         }
 
         $perPage = $filters['per_page'] ?? 15;
-        $paginated = $query->withCount(['activeAreaAssignments', 'serviceConnections', 'consumers'])
+        $paginated = $query->withCount(['activeAreaAssignments', 'serviceConnections'])
             ->orderBy('a_desc')
             ->paginate($perPage);
 
@@ -94,7 +94,7 @@ class AreaService
                 })->with('user:id,name,email');
             },
         ])
-            ->withCount(['serviceConnections', 'consumers'])
+            ->withCount(['serviceConnections'])
             ->findOrFail($id);
 
         // Format active assignments

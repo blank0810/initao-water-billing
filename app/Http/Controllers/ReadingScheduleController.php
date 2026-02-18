@@ -5,12 +5,21 @@ namespace App\Http\Controllers;
 use App\Services\Billing\ReadingScheduleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ReadingScheduleController extends Controller
 {
     public function __construct(
         private ReadingScheduleService $scheduleService
     ) {}
+
+    /**
+     * Admin config page for reading schedules.
+     */
+    public function configIndex(): View
+    {
+        return view('pages.admin.config.reading-schedules.index');
+    }
 
     /**
      * Get all reading schedules.

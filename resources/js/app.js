@@ -10,6 +10,7 @@ import './components/admin/config/water-rates/waterRateManager.js';
 import './components/admin/config/puroks/purokManager.js';
 import './components/admin/config/account-types/accountTypeManager.js';
 import './components/admin/config/charge-items/chargeItemManager.js';
+import './components/admin/config/reading-schedules/readingScheduleManager.js';
 
 Alpine.plugin(collapse);
 
