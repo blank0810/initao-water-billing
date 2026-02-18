@@ -57,6 +57,9 @@ class ServiceConnectionSeeder extends Seeder
             ]);
         }
 
+        // Build area lookup (area name => a_id) for assigning connections to areas
+        $areaLookup = DB::table('area')->pluck('a_id', 'a_desc');
+
         // Sample data for service connections
         $serviceConnections = [
             // Residential connections
@@ -69,6 +72,7 @@ class ServiceConnectionSeeder extends Seeder
                 ],
                 'account_type' => $residentialType->at_id,
                 'account_prefix' => 'RES',
+                'area_name' => 'Poblacion',
             ],
             [
                 'customer' => [
@@ -79,6 +83,7 @@ class ServiceConnectionSeeder extends Seeder
                 ],
                 'account_type' => $residentialType->at_id,
                 'account_prefix' => 'RES',
+                'area_name' => 'Poblacion',
             ],
             [
                 'customer' => [
@@ -89,6 +94,7 @@ class ServiceConnectionSeeder extends Seeder
                 ],
                 'account_type' => $residentialType->at_id,
                 'account_prefix' => 'RES',
+                'area_name' => 'Sinalac',
             ],
             // Commercial connections
             [
@@ -100,6 +106,7 @@ class ServiceConnectionSeeder extends Seeder
                 ],
                 'account_type' => $commercialType->at_id,
                 'account_prefix' => 'COM',
+                'area_name' => 'Sinalac',
             ],
             [
                 'customer' => [
@@ -110,6 +117,7 @@ class ServiceConnectionSeeder extends Seeder
                 ],
                 'account_type' => $commercialType->at_id,
                 'account_prefix' => 'COM',
+                'area_name' => 'Aluna',
             ],
         ];
 
@@ -157,6 +165,7 @@ class ServiceConnectionSeeder extends Seeder
                 'customer_id' => $customer->cust_id,
                 'address_id' => $address->ca_id,
                 'account_type_id' => $data['account_type'],
+                'area_id' => $areaLookup[$data['area_name']] ?? null,
                 'started_at' => now()->subMonths(rand(1, 12)),
                 'ended_at' => null,
                 'stat_id' => $activeStatusId,

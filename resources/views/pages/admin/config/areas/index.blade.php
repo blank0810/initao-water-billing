@@ -12,8 +12,8 @@
         <x-ui.admin.config.shared.search-filter
             :statuses="[
                 ['value' => '', 'label' => 'All Statuses'],
-                ['value' => '1', 'label' => 'Active'],
-                ['value' => '2', 'label' => 'Inactive']
+                ['value' => '2', 'label' => 'Active'],
+                ['value' => '3', 'label' => 'Inactive']
             ]"
             placeholder="Search by area name..."
         />
@@ -30,28 +30,28 @@
         </div>
 
         <!-- Pagination -->
-        <div x-show="!loading && totalPages > 1" class="mt-4 flex justify-center">
+        <div x-show="!loading && pagination.lastPage > 1" class="mt-4 flex justify-center">
             <nav class="flex items-center gap-2">
                 <button
-                    @click="goToPage(currentPage - 1)"
-                    :disabled="currentPage === 1"
+                    @click="goToPage(pagination.currentPage - 1)"
+                    :disabled="pagination.currentPage === 1"
                     class="px-3 py-2 rounded-lg border disabled:opacity-50"
                 >
                     Previous
                 </button>
 
-                <template x-for="page in Array.from({length: totalPages}, (_, i) => i + 1)" :key="page">
+                <template x-for="page in Array.from({length: pagination.lastPage}, (_, i) => i + 1)" :key="page">
                     <button
                         @click="goToPage(page)"
-                        :class="page === currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'"
+                        :class="page === pagination.currentPage ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'"
                         class="px-3 py-2 rounded-lg border"
                         x-text="page"
                     ></button>
                 </template>
 
                 <button
-                    @click="goToPage(currentPage + 1)"
-                    :disabled="currentPage === totalPages"
+                    @click="goToPage(pagination.currentPage + 1)"
+                    :disabled="pagination.currentPage === pagination.lastPage"
                     class="px-3 py-2 rounded-lg border disabled:opacity-50"
                 >
                     Next
