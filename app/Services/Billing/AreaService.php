@@ -7,6 +7,7 @@ use App\Models\Barangay;
 use App\Models\ServiceConnection;
 use App\Models\Status;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class AreaService
@@ -479,7 +480,8 @@ class AreaService
             ];
         }
 
-        $assignedCount = 0;
+        // Group connection IDs by target area_id
+        $groupedByArea = [];
         $unmatchedCount = 0;
 
         foreach ($connections as $connection) {
@@ -491,9 +493,19 @@ class AreaService
                 continue;
             }
 
-            $connection->update(['area_id' => $areaLookup[$barangayName]]);
-            $assignedCount++;
+            $areaId = $areaLookup[$barangayName];
+            $groupedByArea[$areaId][] = $connection->connection_id;
         }
+
+        // Bulk update per area group inside a transaction
+        $assignedCount = 0;
+
+        DB::transaction(function () use ($groupedByArea, &$assignedCount) {
+            foreach ($groupedByArea as $areaId => $connectionIds) {
+                $assignedCount += ServiceConnection::whereIn('connection_id', $connectionIds)
+                    ->update(['area_id' => $areaId]);
+            }
+        });
 
         $message = "Auto-assigned {$assignedCount} connection(s).";
         if ($unmatchedCount > 0) {
