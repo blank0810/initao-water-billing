@@ -24,7 +24,7 @@ class DocumentSignatoryController extends Controller
             return response()->json(['success' => true, 'data' => $signatories]);
         }
 
-        session(['active_menu' => 'config-billing-signatories']);
+        session(['active_menu' => 'config-system-signatories']);
 
         return view('pages.admin.config.document-signatories.index');
     }

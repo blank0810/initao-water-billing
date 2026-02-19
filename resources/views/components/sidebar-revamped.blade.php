@@ -333,20 +333,6 @@ $user = Auth::user() ?? (object) [
                         <i class="fas fa-file-invoice-dollar"></i>
                         <span>Application Fee Templates</span>
                     </a>
-                    <a href="{{ route('config.document-signatories.index') }}" @click="setActiveMenu('config-billing-signatories')"
-                        :class="activeMenu === 'config-billing-signatories' && 'active'"
-                        class="nav-submenu-item">
-                        <span class="nav-submenu-notch"></span>
-                        <i class="fas fa-pen-fancy"></i>
-                        <span>Document Signatories</span>
-                    </a>
-                    <a href="{{ route('config.automation-settings.index') }}" @click="setActiveMenu('config-billing-automation')"
-                        :class="activeMenu === 'config-billing-automation' && 'active'"
-                        class="nav-submenu-item">
-                        <span class="nav-submenu-notch"></span>
-                        <i class="fas fa-robot"></i>
-                        <span>Automation</span>
-                    </a>
                 </div>
                 @endcan
 
@@ -386,6 +372,35 @@ $user = Auth::user() ?? (object) [
                 </div>
                 @endcan
 
+                <!-- System Submenu -->
+                @can('config.billing.manage')
+                <button @click="toggleSubmenu('systemConfig')"
+                    :class="[activeMenu.startsWith('config-system-') && 'active', openSubmenus.systemConfig && 'icon-glow']"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-sliders-h"></i>
+                    <span style="flex:1; text-align:left;">System</span>
+                    <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.systemConfig && 'rotated'"></i>
+                </button>
+
+                <div x-show="openSubmenus.systemConfig" x-collapse class="nav-submenu" style="padding-left: 12px;">
+                    <a href="{{ route('config.document-signatories.index') }}" @click="setActiveMenu('config-system-signatories')"
+                        :class="activeMenu === 'config-system-signatories' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>Document Signatories</span>
+                    </a>
+                    <a href="{{ route('config.automation-settings.index') }}" @click="setActiveMenu('config-system-automation')"
+                        :class="activeMenu === 'config-system-automation' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-robot"></i>
+                        <span>Automation</span>
+                    </a>
+                </div>
+                @endcan
+
             </div>
         </div>
         @endcanany
@@ -420,7 +435,8 @@ $user = Auth::user() ?? (object) [
                 adminConfig: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-') ? 'true' : 'false' }},
                 geographic: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-geographic-') ? 'true' : 'false' }},
                 billingConfig: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-billing-') ? 'true' : 'false' }},
-                accessControl: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-access-') ? 'true' : 'false' }}
+                accessControl: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-access-') ? 'true' : 'false' }},
+                systemConfig: {{ session('active_menu') && str_starts_with(session('active_menu'), 'config-system-') ? 'true' : 'false' }}
             },
 
             init() {
@@ -455,8 +471,8 @@ $user = Auth::user() ?? (object) [
                     '/config/water-rates': 'config-water-rates',
                     '/config/account-types': 'config-billing-account-types',
                     '/config/charge-items': 'config-billing-charge-items',
-                    '/config/document-signatories': 'config-billing-signatories',
-                    '/config/automation-settings': 'config-billing-automation',
+                    '/config/document-signatories': 'config-system-signatories',
+                    '/config/automation-settings': 'config-system-automation',
                     '/admin/roles': 'config-access-roles',
                     '/admin/permissions': 'config-access-permissions',
                     '/admin/role-permissions': 'config-access-matrix',
@@ -513,7 +529,7 @@ $user = Auth::user() ?? (object) [
 
                 // Define parent-child relationships
                 const childSubmenus = {
-                    'adminConfig': ['geographic', 'billingConfig', 'accessControl']
+                    'adminConfig': ['geographic', 'billingConfig', 'accessControl', 'systemConfig']
                 };
 
                 // Check if this is a child submenu

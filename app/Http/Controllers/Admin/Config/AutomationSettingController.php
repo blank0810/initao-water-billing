@@ -14,6 +14,7 @@ class AutomationSettingController extends Controller
 
     public function index()
     {
+        session(['active_menu' => 'config-system-automation']);
         $settings = $this->service->getAutomationSettings();
 
         return view('pages.admin.config.automation-settings.index', compact('settings'));
