@@ -51,6 +51,16 @@
             <div id="adjustmentError" class="hidden p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
             </div>
 
+            <!-- Period Requirement Note -->
+            <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                <div class="flex items-start gap-2">
+                    <i class="fas fa-exclamation-triangle text-amber-600 dark:text-amber-400 mt-0.5"></i>
+                    <div class="text-sm text-amber-700 dark:text-amber-300">
+                        <strong>Note:</strong> Adjustments can only be applied to bills in closed periods. For open period corrections, use <strong>Recompute Bill</strong>.
+                    </div>
+                </div>
+            </div>
+
             <!-- Adjustment Type Tabs -->
             <div id="adjustmentTabs" class="hidden">
                 <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4">

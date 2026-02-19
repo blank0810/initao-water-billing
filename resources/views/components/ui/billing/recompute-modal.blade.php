@@ -16,6 +16,7 @@
                 <div class="text-sm text-orange-700 dark:text-orange-300">
                     <strong>Recompute</strong> updates meter readings and recalculates bill amounts.
                     This modifies the actual bill record and is only available for <strong>open periods</strong>.
+                    For corrections after a period is closed, use <strong>Bill Adjustment</strong>.
                 </div>
             </div>
         </div>
