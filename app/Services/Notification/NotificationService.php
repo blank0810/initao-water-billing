@@ -355,12 +355,17 @@ class NotificationService
     /**
      * Notify about auto-created period
      */
-    public function notifyPeriodAutoCreated(string $periodName): void
+    public function notifyPeriodAutoCreated(string $periodName, ?string $closedPeriodName = null): void
     {
+        $message = "Period {$periodName} was automatically created with rates copied from the previous period.";
+        if ($closedPeriodName) {
+            $message .= " Previous period ({$closedPeriodName}) was auto-closed.";
+        }
+
         $this->notifyByRole(
             Notification::TYPE_PERIOD_AUTO_CREATED,
             'Period Auto-Created',
-            "Period {$periodName} was automatically created with rates copied from the previous period.",
+            $message,
             null, null, null, null
         );
     }

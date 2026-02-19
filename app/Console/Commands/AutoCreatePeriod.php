@@ -71,8 +71,20 @@ class AutoCreatePeriod extends Command
             $ratesCopied = 0;
         }
 
+        // Auto-close the previous period
+        $closedPeriodName = null;
+        if ($currentPeriod) {
+            $closeResult = $periodService->closePeriod($currentPeriod->per_id, null);
+            if ($closeResult['success']) {
+                $closedPeriodName = $currentPeriod->per_name;
+                $this->info("Previous period {$currentPeriod->per_name} auto-closed.");
+            } else {
+                $this->warn("Could not close previous period: {$closeResult['message']}");
+            }
+        }
+
         // Notify admins
-        $notificationService->notifyPeriodAutoCreated($nextMonth->format('F Y'));
+        $notificationService->notifyPeriodAutoCreated($nextMonth->format('F Y'), $closedPeriodName);
 
         $this->info("Period {$nextMonth->format('F Y')} created with {$ratesCopied} rates copied.");
 
