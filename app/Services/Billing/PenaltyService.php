@@ -19,6 +19,12 @@ class PenaltyService
 
     private ?ChargeItem $penaltyChargeItem = null;
 
+    private ?float $penaltyRate = null;
+
+    private ?int $activeStatusId = null;
+
+    private ?int $overdueStatusId = null;
+
     public function __construct(
         private LedgerService $ledgerService,
         private NotificationService $notificationService
@@ -37,14 +43,48 @@ class PenaltyService
     }
 
     /**
+     * Get the active penalty rate as a decimal (cached per request).
+     */
+    private function getPenaltyRate(): float
+    {
+        if ($this->penaltyRate === null) {
+            $this->penaltyRate = PenaltyConfiguration::getActiveRate();
+        }
+
+        return $this->penaltyRate;
+    }
+
+    /**
+     * Get the ACTIVE status ID (cached per request).
+     */
+    private function getActiveStatusId(): int
+    {
+        if ($this->activeStatusId === null) {
+            $this->activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        }
+
+        return $this->activeStatusId;
+    }
+
+    /**
+     * Get the OVERDUE status ID (cached per request).
+     */
+    private function getOverdueStatusId(): int
+    {
+        if ($this->overdueStatusId === null) {
+            $this->overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
+        }
+
+        return $this->overdueStatusId;
+    }
+
+    /**
      * Find all overdue bills that are past due_date and still ACTIVE
      */
     public function findOverdueBills(): Collection
     {
-        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-
         return WaterBillHistory::with(['serviceConnection.customer', 'period'])
-            ->where('stat_id', $activeStatusId)
+            ->where('stat_id', $this->getActiveStatusId())
             ->whereNotNull('due_date')
             ->whereDate('due_date', '<', now()->toDateString())
             ->whereHas('period', function ($query) {
@@ -109,8 +149,8 @@ class PenaltyService
      */
     public function createPenalty(WaterBillHistory $bill, int $userId): array
     {
-        // Get the penalty charge item
-        $penaltyChargeItem = ChargeItem::where('code', self::PENALTY_CODE)->first();
+        // Get the penalty charge item (cached)
+        $penaltyChargeItem = $this->getPenaltyChargeItem();
 
         if (! $penaltyChargeItem) {
             return [
@@ -139,14 +179,11 @@ class PenaltyService
             ];
         }
 
-        // Calculate penalty as percentage of total bill amount
-        $rate = PenaltyConfiguration::getActiveRate();
-        $ratePercent = PenaltyConfiguration::getActiveRatePercentage();
+        // Calculate penalty as percentage of total bill amount (rate cached per request)
+        $rate = $this->getPenaltyRate();
+        $ratePercent = $rate * 100;
         $billTotal = $bill->water_amount + $bill->adjustment_total;
         $penaltyAmount = round($billTotal * $rate, 2);
-
-        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
 
         try {
             DB::beginTransaction();
@@ -162,14 +199,14 @@ class PenaltyService
                 'quantity' => 1,
                 'unit_amount' => $penaltyAmount,
                 'due_date' => now()->addDays(7),
-                'stat_id' => $activeStatusId,
+                'stat_id' => $this->getActiveStatusId(),
             ]);
 
             // Create ledger entry via LedgerService (with period_id for proper tracking)
             $this->ledgerService->recordCharge($charge, $userId, $bill->period_id);
 
             // Update bill status to OVERDUE
-            $bill->update(['stat_id' => $overdueStatusId]);
+            $bill->update(['stat_id' => $this->getOverdueStatusId()]);
 
             DB::commit();
 
@@ -247,7 +284,7 @@ class PenaltyService
     /**
      * Process a batch of overdue bills (for progress tracking).
      */
-    public function processBatch(int $userId, int $limit = 50, int $offset = 0): array
+    public function processBatch(int $userId, int $limit = 50): array
     {
         $allOverdueBills = $this->findOverdueBills();
         $totalOverdue = $allOverdueBills->count();
@@ -259,8 +296,9 @@ class PenaltyService
         $pendingBills = $allOverdueBills->filter(fn ($bill) => ! in_array($bill->bill_id, $billIdsWithPenalties))->values();
         $totalPending = $pendingBills->count();
 
-        // Get the batch slice
-        $batch = $pendingBills->slice($offset, $limit);
+        // Processed bills are marked OVERDUE and removed from findOverdueBills(),
+        // so each call must start from position 0 of the current pending list.
+        $batch = $pendingBills->slice(0, $limit);
 
         $processed = 0;
         $skipped = 0;
@@ -281,8 +319,7 @@ class PenaltyService
             }
         }
 
-        $newOffset = $offset + $limit;
-        $hasMore = $newOffset < $totalPending;
+        $hasMore = $totalPending > $limit;
 
         return [
             'success' => true,
@@ -291,7 +328,6 @@ class PenaltyService
             'batch_processed' => $processed,
             'batch_skipped' => $skipped,
             'batch_errors' => $errors,
-            'offset' => $newOffset,
             'has_more' => $hasMore,
         ];
     }
@@ -302,7 +338,7 @@ class PenaltyService
     public function getOverdueBillsSummary(): array
     {
         $overdueBills = $this->findOverdueBills();
-        $rate = PenaltyConfiguration::getActiveRate();
+        $rate = $this->getPenaltyRate();
 
         // Bulk check for existing penalties (single query)
         $billIdsWithPenalties = $this->getBillIdsWithPenalties($overdueBills);
@@ -324,7 +360,7 @@ class PenaltyService
             'total_overdue' => $overdueBills->count(),
             'with_penalty' => $withPenalty,
             'without_penalty' => $withoutPenalty,
-            'penalty_rate' => PenaltyConfiguration::getActiveRatePercentage(),
+            'penalty_rate' => $rate * 100,
             'estimated_total' => $estimatedTotal,
         ];
     }

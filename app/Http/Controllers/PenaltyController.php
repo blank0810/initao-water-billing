@@ -96,9 +96,8 @@ class PenaltyController extends Controller
         }
 
         $limit = (int) $request->input('limit', 50);
-        $offset = (int) $request->input('offset', 0);
 
-        $result = $this->penaltyService->processBatch($userId, $limit, $offset);
+        $result = $this->penaltyService->processBatch($userId, $limit);
 
         return response()->json($result);
     }

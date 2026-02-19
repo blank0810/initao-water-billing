@@ -451,14 +451,33 @@ function updateBillingHistoryFromApi(billingHistory) {
         return isNaN(n) ? (dec === 3 ? '0.000' : '0.00') : n.toFixed(dec);
     };
 
-    list.innerHTML = billingHistory.map(bill => `
+    // Helper to escape HTML entities
+    const esc = (text) => {
+        const div = document.createElement('div');
+        div.textContent = text ?? '';
+        return div.innerHTML;
+    };
+
+    list.innerHTML = billingHistory.map(bill => {
+        const period = esc(bill.period);
+        const dueDate = esc(bill.due_date || 'N/A');
+        const status = esc(bill.status);
+        const photoUrl = esc(bill.photo_url || '');
+        const statusIcon = status === 'PAID' ? 'check' : status === 'OVERDUE' ? 'exclamation-circle' : 'clock';
+        const statusClass = status === 'PAID' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+            status === 'OVERDUE' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        const photoClass = bill.has_photo ? 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20' : 'text-gray-300 hover:bg-gray-50 dark:text-gray-600 dark:hover:bg-gray-800';
+        const photoTitle = bill.has_photo ? 'View meter reading photo' : 'No photo available';
+
+        return `
         <div class="flex justify-between items-center py-4">
             <div class="flex items-center">
                 <i class="fas fa-calendar-alt text-gray-400 mr-3"></i>
                 <div>
-                    <div class="text-gray-900 dark:text-white font-medium">${bill.period}</div>
+                    <div class="text-gray-900 dark:text-white font-medium">${period}</div>
                     <div class="text-sm text-gray-500 dark:text-gray-400">
-                        <i class="fas fa-clock mr-1"></i>Due: ${bill.due_date || 'N/A'}
+                        <i class="fas fa-clock mr-1"></i>Due: ${dueDate}
                     </div>
                     <div class="text-xs text-gray-400">
                         Consumption: ${formatNum(bill.consumption, 3)} m³
@@ -466,22 +485,18 @@ function updateBillingHistoryFromApi(billingHistory) {
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <button data-photo-url="${bill.photo_url ? bill.photo_url.replace(/"/g, '&quot;') : ''}" data-has-photo="${bill.has_photo ? 'true' : 'false'}" data-period="${(bill.period || '').replace(/"/g, '&quot;')}" onclick="openBillPhoto(this.dataset.photoUrl, this.dataset.hasPhoto === 'true', this.dataset.period)" class="p-2 rounded-lg transition-colors ${bill.has_photo ? 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20' : 'text-gray-300 hover:bg-gray-50 dark:text-gray-600 dark:hover:bg-gray-800'}" title="${bill.has_photo ? 'View meter reading photo' : 'No photo available'}">
+                <button data-photo-url="${photoUrl}" data-has-photo="${bill.has_photo ? 'true' : 'false'}" data-period="${period}" onclick="openBillPhoto(this.dataset.photoUrl, this.dataset.hasPhoto === 'true', this.dataset.period)" class="p-2 rounded-lg transition-colors ${photoClass}" title="${photoTitle}">
                     <i class="fas fa-camera"></i>
                 </button>
                 <div class="text-right space-y-2">
                     <div class="font-semibold text-gray-900 dark:text-white">₱${formatNum(bill.total_amount, 2)}</div>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        bill.status === 'PAID' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                        bill.status === 'OVERDUE' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                    }">
-                        <i class="fas fa-${bill.status === 'PAID' ? 'check' : bill.status === 'OVERDUE' ? 'exclamation-circle' : 'clock'} mr-1"></i>${bill.status}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass}">
+                        <i class="fas fa-${statusIcon} mr-1"></i>${status}
                     </span>
                 </div>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 async function updateBillTrendGraph(details) {

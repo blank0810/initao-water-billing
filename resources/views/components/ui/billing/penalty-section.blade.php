@@ -376,7 +376,6 @@ function penaltyData() {
             this.liveBatch = 0;
 
             const batchSize = 50;
-            let offset = 0;
             let totalProcessed = 0;
             let totalSkipped = 0;
             let allErrors = [];
@@ -395,7 +394,7 @@ function penaltyData() {
                             'X-CSRF-TOKEN': csrfToken,
                             'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ limit: batchSize, offset })
+                        body: JSON.stringify({ limit: batchSize })
                     });
 
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -412,7 +411,6 @@ function penaltyData() {
                     this.liveTotal = data.total_pending || this.liveTotal;
 
                     this.liveProcessed = totalProcessed + totalSkipped;
-                    offset = data.offset;
                     hasMore = data.has_more;
                 }
 

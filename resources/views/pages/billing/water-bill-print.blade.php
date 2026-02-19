@@ -578,7 +578,7 @@
                     <td>Total Consumption</td>
                     <td><strong>{{ number_format($bill['consumption'], 3) }} cu.m.</strong></td>
                 </tr>
-                @if($bill['rate_per_cum'])
+                @if(!is_null($bill['rate_per_cum']))
                     <tr class="sub-item">
                         <td>Rate per cu.m. ({{ $bill['rate_tier_range'] }} cu.m. tier)</td>
                         <td>&#8369; {{ number_format($bill['rate_per_cum'], 2) }}</td>

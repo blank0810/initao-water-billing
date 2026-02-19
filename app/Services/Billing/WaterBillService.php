@@ -1328,16 +1328,20 @@ class WaterBillService
         $accountTypeId = $connection->account_type_id;
         $periodId = $bill->period_id;
         if ($accountTypeId) {
-            $applicableRate = WaterRate::where('stat_id', $activeStatusId)
+            $allRates = WaterRate::where('stat_id', $activeStatusId)
                 ->where('class_id', $accountTypeId)
                 ->where(function ($q) use ($periodId) {
                     $q->where('period_id', $periodId)
                         ->orWhereNull('period_id');
                 })
                 ->orderByDesc('period_id')
-                ->where('range_min', '<=', $bill->consumption)
-                ->where('range_max', '>=', $bill->consumption)
-                ->first();
+                ->orderBy('range_id')
+                ->get();
+
+            // Mirror calculateBillAmount(): exact range match, else fall back to highest tier
+            $applicableRate = $allRates->first(
+                fn ($r) => $bill->consumption >= $r->range_min && $bill->consumption <= $r->range_max
+            ) ?? $allRates->last();
 
             if ($applicableRate) {
                 $ratePerCum = (float) $applicableRate->rate_val;
