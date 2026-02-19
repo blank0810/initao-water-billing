@@ -50,7 +50,7 @@ class MeterReadingDownloadController extends Controller
      * Get water rates for the current active period.
      *
      * Returns water rate tiers including class_id, range_min, range_max,
-     * rate_val, and rate_increment for the current billing period.
+     * and rate_val (rate per cu.m.) for the current billing period.
      */
     public function getCurrentPeriodRates(): JsonResponse
     {

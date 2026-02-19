@@ -325,6 +325,12 @@ $user = Auth::user() ?? (object) [
                             <i class="fas fa-file-invoice-dollar w-4 text-xs mr-2.5"></i>
                             <span>Application Fee Templates</span>
                         </a>
+                        <a href="{{ route('config.penalty.index') }}" @click="setActiveMenu('config-billing-penalty')"
+                            :class="activeMenu === 'config-billing-penalty' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                            <i class="fas fa-gavel w-4 text-xs mr-2.5"></i>
+                            <span>Penalty Configuration</span>
+                        </a>
                     </div>
                 </div>
                 @endcan
@@ -433,6 +439,7 @@ $user = Auth::user() ?? (object) [
                     '/config/water-rates': 'config-water-rates',
                     '/config/account-types': 'config-billing-account-types',
                     '/config/charge-items': 'config-billing-charge-items',
+                    '/config/penalty': 'config-billing-penalty',
                     '/admin/roles': 'config-access-roles',
                     '/admin/permissions': 'config-access-permissions',
                     '/admin/role-permissions': 'config-access-matrix',

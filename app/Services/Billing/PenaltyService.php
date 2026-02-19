@@ -4,6 +4,7 @@ namespace App\Services\Billing;
 
 use App\Models\ChargeItem;
 use App\Models\CustomerCharge;
+use App\Models\PenaltyConfiguration;
 use App\Models\Status;
 use App\Models\WaterBillHistory;
 use App\Services\Ledger\LedgerService;
@@ -88,6 +89,12 @@ class PenaltyService
             ];
         }
 
+        // Calculate penalty as percentage of total bill amount
+        $rate = PenaltyConfiguration::getActiveRate();
+        $ratePercent = PenaltyConfiguration::getActiveRatePercentage();
+        $billTotal = $bill->water_amount + $bill->adjustment_total;
+        $penaltyAmount = round($billTotal * $rate, 2);
+
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
         $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
 
@@ -101,9 +108,9 @@ class PenaltyService
                 'application_id' => null,
                 'connection_id' => $bill->connection_id,
                 'charge_item_id' => $penaltyChargeItem->charge_item_id,
-                'description' => "Late Payment Penalty - {$periodName} (Bill #{$bill->bill_id})",
+                'description' => "Late Payment Penalty ({$ratePercent}%) - {$periodName} (Bill #{$bill->bill_id})",
                 'quantity' => 1,
-                'unit_amount' => $penaltyChargeItem->default_amount,
+                'unit_amount' => $penaltyAmount,
                 'due_date' => now()->addDays(7),
                 'stat_id' => $activeStatusId,
             ]);
@@ -179,12 +186,61 @@ class PenaltyService
     }
 
     /**
+     * Process a batch of overdue bills (for progress tracking).
+     */
+    public function processBatch(int $userId, int $limit = 50, int $offset = 0): array
+    {
+        $allOverdueBills = $this->findOverdueBills();
+        $totalOverdue = $allOverdueBills->count();
+
+        // Filter to only bills without existing penalty
+        $pendingBills = $allOverdueBills->filter(fn ($bill) => ! $this->hasExistingPenalty($bill))->values();
+        $totalPending = $pendingBills->count();
+
+        // Get the batch slice
+        $batch = $pendingBills->slice($offset, $limit);
+
+        $processed = 0;
+        $skipped = 0;
+        $errors = [];
+
+        foreach ($batch as $bill) {
+            $result = $this->createPenalty($bill, $userId);
+
+            if ($result['success']) {
+                $processed++;
+            } elseif (($result['status'] ?? '') === 'already_exists') {
+                $skipped++;
+            } else {
+                $errors[] = [
+                    'bill_id' => $bill->bill_id,
+                    'message' => $result['message'],
+                ];
+            }
+        }
+
+        $newOffset = $offset + $limit;
+        $hasMore = $newOffset < $totalPending;
+
+        return [
+            'success' => true,
+            'total_pending' => $totalPending,
+            'total_overdue' => $totalOverdue,
+            'batch_processed' => $processed,
+            'batch_skipped' => $skipped,
+            'batch_errors' => $errors,
+            'offset' => $newOffset,
+            'has_more' => $hasMore,
+        ];
+    }
+
+    /**
      * Get overdue bills summary for display
      */
     public function getOverdueBillsSummary(): array
     {
         $overdueBills = $this->findOverdueBills();
-        $penaltyChargeItem = ChargeItem::where('code', self::PENALTY_CODE)->first();
+        $rate = PenaltyConfiguration::getActiveRate();
 
         $withPenalty = 0;
         $withoutPenalty = 0;
@@ -197,11 +253,17 @@ class PenaltyService
             }
         }
 
+        // Estimate total penalty for unpaid overdue bills
+        $estimatedTotal = $overdueBills
+            ->filter(fn ($bill) => ! $this->hasExistingPenalty($bill))
+            ->sum(fn ($bill) => round(($bill->water_amount + $bill->adjustment_total) * $rate, 2));
+
         return [
             'total_overdue' => $overdueBills->count(),
             'with_penalty' => $withPenalty,
             'without_penalty' => $withoutPenalty,
-            'penalty_amount' => $penaltyChargeItem?->default_amount ?? 0,
+            'penalty_rate' => PenaltyConfiguration::getActiveRatePercentage(),
+            'estimated_total' => $estimatedTotal,
         ];
     }
 }

@@ -20,7 +20,6 @@ class UpdateWaterRateRequest extends FormRequest
             'range_min' => 'required|numeric|min:0',
             'range_max' => 'required|numeric|gt:range_min',
             'rate_val' => 'required|numeric|min:0',
-            'rate_inc' => 'required|numeric|min:0',
         ];
     }
 
@@ -33,8 +32,7 @@ class UpdateWaterRateRequest extends FormRequest
             'range_min.required' => 'Minimum range is required',
             'range_max.required' => 'Maximum range is required',
             'range_max.gt' => 'Maximum range must be greater than minimum range',
-            'rate_val.required' => 'Base rate is required',
-            'rate_inc.required' => 'Rate increment is required',
+            'rate_val.required' => 'Rate per cu.m. is required',
         ];
     }
 }

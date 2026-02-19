@@ -66,20 +66,12 @@
                         <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="(selectedItem?.range_min || 0) + ' - ' + (selectedItem?.range_max || 0) + ' m³'"></p>
                     </div>
 
-                    <!-- Base Rate -->
-                    <div>
+                    <!-- Rate per cu.m. -->
+                    <div class="col-span-2">
                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Base Rate
+                            Rate per cu.m.
                         </label>
                         <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="'₱' + parseFloat(selectedItem?.rate_val || 0).toFixed(2)"></p>
-                    </div>
-
-                    <!-- Increment Rate -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">
-                            Increment Rate
-                        </label>
-                        <p class="mt-1 text-base text-gray-900 dark:text-white" x-text="'₱' + parseFloat(selectedItem?.rate_inc || 0).toFixed(2)"></p>
                     </div>
 
                     <!-- Period -->
@@ -100,9 +92,7 @@
                         For consumption within <span x-text="selectedItem?.range_min || 0"></span>-<span x-text="selectedItem?.range_max || 0"></span> m³:
                     </p>
                     <p class="text-sm text-blue-800 dark:text-blue-400 mt-1">
-                        Bill = ₱<span x-text="parseFloat(selectedItem?.rate_val || 0).toFixed(2)"></span> (base) +
-                        (consumption - <span x-text="selectedItem?.range_min || 0"></span>) ×
-                        ₱<span x-text="parseFloat(selectedItem?.rate_inc || 0).toFixed(2)"></span>
+                        Bill = Consumption × ₱<span x-text="parseFloat(selectedItem?.rate_val || 0).toFixed(2)"></span> per cu.m.
                     </p>
                 </div>
             </div>

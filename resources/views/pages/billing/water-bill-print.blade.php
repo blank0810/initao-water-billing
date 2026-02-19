@@ -578,23 +578,23 @@
                     <td>Total Consumption</td>
                     <td><strong>{{ number_format($bill['consumption'], 3) }} cu.m.</strong></td>
                 </tr>
+                @if($bill['rate_per_cum'])
+                    <tr class="sub-item">
+                        <td>Rate per cu.m. ({{ $bill['rate_tier_range'] }} cu.m. tier)</td>
+                        <td>&#8369; {{ number_format($bill['rate_per_cum'], 2) }}</td>
+                    </tr>
+                @endif
                 <tr>
                     <td>Water Bill This Month</td>
                     <td>&#8369; {{ number_format($bill['water_amount'], 2) }}</td>
                 </tr>
                 @if(count($adjustments) > 0)
                     @foreach($adjustments as $adj)
-                        <tr class="sub-item">
-                            <td>{{ $adj['type'] }}</td>
+                        <tr>
+                            <td>Adjustments: {{ $adj['type'] }}</td>
                             <td>{{ $adj['amount'] >= 0 ? '' : '(' }}&#8369; {{ number_format(abs($adj['amount']), 2) }}{{ $adj['amount'] >= 0 ? '' : ')' }}</td>
                         </tr>
                     @endforeach
-                @endif
-                @if($bill['adjustment_total'] != 0)
-                    <tr>
-                        <td>Adjustments</td>
-                        <td>{{ $bill['adjustment_total'] >= 0 ? '' : '(' }}&#8369; {{ number_format(abs($bill['adjustment_total']), 2) }}{{ $bill['adjustment_total'] >= 0 ? '' : ')' }}</td>
-                    </tr>
                 @endif
                 <tr class="subtotal">
                     <td>Current Bill Amount</td>

@@ -321,6 +321,7 @@ Route::middleware('auth')->group(function () {
 
         // Bill Adjustment API
         Route::get('/bill-adjustments', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'index'])->name('bill-adjustments.index');
+        Route::get('/bill-adjustments/periods', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'periods'])->name('bill-adjustments.periods');
         Route::get('/bill-adjustments/types', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'types'])->name('bill-adjustments.types');
         Route::get('/bill-adjustments/lookup/{billId}', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'lookupBill'])->name('bill-adjustments.lookup');
         Route::get('/bill-adjustments/bill/{billId}', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'forBill'])->name('bill-adjustments.for-bill');
@@ -334,6 +335,9 @@ Route::middleware('auth')->group(function () {
         // Penalty Management API
         Route::get('/penalties/summary', [\App\Http\Controllers\PenaltyController::class, 'summary'])->name('penalties.summary');
         Route::post('/penalties/process', [\App\Http\Controllers\PenaltyController::class, 'process'])->name('penalties.process');
+        Route::post('/penalties/process-batch', [\App\Http\Controllers\PenaltyController::class, 'processBatch'])->name('penalties.process-batch');
+        Route::get('/penalties/config', [\App\Http\Controllers\PenaltyController::class, 'getConfig'])->name('penalties.config');
+        Route::put('/penalties/config', [\App\Http\Controllers\PenaltyController::class, 'updateRate'])->name('penalties.config.update');
     });
 
     // -------------------------------------------------------------------------
@@ -646,6 +650,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/charge-items/{id}', [ChargeItemController::class, 'show'])->name('config.charge-items.show');
         Route::put('/charge-items/{id}', [ChargeItemController::class, 'update'])->name('config.charge-items.update');
         Route::delete('/charge-items/{id}', [ChargeItemController::class, 'destroy'])->name('config.charge-items.destroy');
+
+        // Penalty Configuration
+        Route::get('/penalty', [\App\Http\Controllers\PenaltyController::class, 'index'])->name('config.penalty.index');
+        Route::get('/penalty/history', [\App\Http\Controllers\PenaltyController::class, 'getHistory'])->name('penalties.config.history');
     });
 
     // -------------------------------------------------------------------------

@@ -300,6 +300,26 @@
     </div>
 </div>
 
+{{-- Bill Photo Lightbox Modal --}}
+<div id="billPhotoModal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center" onclick="closeBillPhotoModal(event)">
+    <div class="relative max-w-2xl w-full mx-4" onclick="event.stopPropagation()">
+        <div class="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                    <i class="fas fa-camera mr-2 text-gray-400"></i>
+                    <span id="billPhotoTitle">Meter Reading Photo</span>
+                </h3>
+                <button onclick="closeBillPhotoModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <img id="billPhotoImage" src="" alt="Meter Reading" class="w-full h-auto max-h-[60vh] object-contain rounded-lg">
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function updateCustomerProfile(details) {
     if (!details) return;
@@ -445,15 +465,20 @@ function updateBillingHistoryFromApi(billingHistory) {
                     </div>
                 </div>
             </div>
-            <div class="text-right space-y-2">
-                <div class="font-semibold text-gray-900 dark:text-white">₱${formatNum(bill.total_amount, 2)}</div>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    bill.status === 'PAID' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                    bill.status === 'OVERDUE' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                }">
-                    <i class="fas fa-${bill.status === 'PAID' ? 'check' : bill.status === 'OVERDUE' ? 'exclamation-circle' : 'clock'} mr-1"></i>${bill.status}
-                </span>
+            <div class="flex items-center gap-3">
+                <button onclick="openBillPhoto('${bill.photo_url}', ${bill.has_photo ? 'true' : 'false'}, '${bill.period}')" class="p-2 rounded-lg transition-colors ${bill.has_photo ? 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20' : 'text-gray-300 hover:bg-gray-50 dark:text-gray-600 dark:hover:bg-gray-800'}" title="${bill.has_photo ? 'View meter reading photo' : 'No photo available'}">
+                    <i class="fas fa-camera"></i>
+                </button>
+                <div class="text-right space-y-2">
+                    <div class="font-semibold text-gray-900 dark:text-white">₱${formatNum(bill.total_amount, 2)}</div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        bill.status === 'PAID' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                        bill.status === 'OVERDUE' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                    }">
+                        <i class="fas fa-${bill.status === 'PAID' ? 'check' : bill.status === 'OVERDUE' ? 'exclamation-circle' : 'clock'} mr-1"></i>${bill.status}
+                    </span>
+                </div>
             </div>
         </div>
     `).join('');
@@ -737,6 +762,21 @@ function submitProcessPayment() {
     }, 500);
 }
 
+function openBillPhoto(photoUrl, hasPhoto, period) {
+    const modal = document.getElementById('billPhotoModal');
+    const image = document.getElementById('billPhotoImage');
+    const title = document.getElementById('billPhotoTitle');
+    image.src = photoUrl;
+    title.textContent = hasPhoto ? `Meter Reading Photo - ${period}` : `No Photo - ${period}`;
+    modal.classList.remove('hidden');
+}
+
+function closeBillPhotoModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    document.getElementById('billPhotoModal').classList.add('hidden');
+    document.getElementById('billPhotoImage').src = '';
+}
+
 window.updateCustomerProfile = updateCustomerProfile;
 window.updateBillOverview = updateBillOverview;
 window.updateRecentActivities = updateRecentActivities;
@@ -749,4 +789,6 @@ window.updateBillTrendGraphFromApi = updateBillTrendGraphFromApi;
 window.openProcessPaymentModal = openProcessPaymentModal;
 window.closeProcessPaymentModal = closeProcessPaymentModal;
 window.submitProcessPayment = submitProcessPayment;
+window.openBillPhoto = openBillPhoto;
+window.closeBillPhotoModal = closeBillPhotoModal;
 </script>

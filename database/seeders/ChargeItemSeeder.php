@@ -80,8 +80,8 @@ class ChargeItemSeeder extends Seeder
             [
                 'name' => 'Late Payment Penalty',
                 'code' => 'LATE_PENALTY',
-                'description' => 'Penalty for late payment',
-                'default_amount' => 50.00,
+                'description' => 'Penalty for late payment (rate configured in PenaltyConfiguration table)',
+                'default_amount' => 0.00,
                 'charge_type' => 'one_time',
                 'is_taxable' => false,
             ],

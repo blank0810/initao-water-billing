@@ -66,7 +66,6 @@ class SetupPeriodRates extends Command
                         'range_min' => $rate->range_min,
                         'range_max' => $rate->range_max,
                         'rate_val' => $rate->rate_val,
-                        'rate_inc' => $rate->rate_inc,
                         'stat_id' => $rate->stat_id,
                     ]);
                     $copiedCount++;

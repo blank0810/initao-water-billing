@@ -49,47 +49,42 @@ class WaterRateService
     public function calculateCharge(int $consumption, int $classId, ?int $periodId = null): array
     {
         $tiers = $this->getRateTiersForClass($classId, $periodId);
-        $total = 0;
-        $breakdown = [];
 
+        // Find the applicable rate tier for this consumption
+        $applicableTier = null;
         foreach ($tiers as $tier) {
-            if ($consumption < $tier->range_min) {
-                continue;
+            if ($consumption >= $tier->range_min && $consumption <= $tier->range_max) {
+                $applicableTier = $tier;
+                break;
             }
-
-            // Calculate consumption in this tier
-            $tierMin = $tier->range_min;
-            $tierMax = min($consumption, $tier->range_max);
-            $tierConsumption = $tierMax - $tierMin + 1;
-
-            if ($tierConsumption <= 0) {
-                continue;
-            }
-
-            // For minimum charge tier (rate_inc = 0), just use the flat rate
-            if ($tier->rate_inc == 0) {
-                $tierCharge = (float) $tier->rate_val;
-            } else {
-                // Base rate + (excess consumption * rate increment)
-                $excessConsumption = max(0, $tierConsumption - 1);
-                $tierCharge = (float) $tier->rate_val + ($excessConsumption * (float) $tier->rate_inc);
-            }
-
-            $breakdown[] = [
-                'tier' => $tier->range_id,
-                'range' => "{$tier->range_min}-{$tier->range_max}",
-                'consumption' => $tierConsumption,
-                'rate_val' => $tier->rate_val,
-                'rate_inc' => $tier->rate_inc,
-                'charge' => $tierCharge,
-            ];
-
-            $total += $tierCharge;
         }
+
+        // If consumption exceeds all ranges, use the highest tier
+        if (! $applicableTier && $tiers->isNotEmpty()) {
+            $applicableTier = $tiers->last();
+        }
+
+        if (! $applicableTier) {
+            return [
+                'total' => 0,
+                'breakdown' => [],
+            ];
+        }
+
+        $ratePerCum = (float) $applicableTier->rate_val;
+        $total = $consumption * $ratePerCum;
 
         return [
             'total' => round($total, 2),
-            'breakdown' => $breakdown,
+            'breakdown' => [
+                [
+                    'tier' => $applicableTier->range_id,
+                    'range' => "{$applicableTier->range_min}-{$applicableTier->range_max}",
+                    'consumption' => $consumption,
+                    'rate_val' => $applicableTier->rate_val,
+                    'charge' => round($total, 2),
+                ],
+            ],
         ];
     }
 
@@ -180,7 +175,6 @@ class WaterRateService
                         'range_min' => $rate->range_min,
                         'range_max' => $rate->range_max,
                         'rate_val' => round($rate->rate_val * $multiplier, 2),
-                        'rate_inc' => round($rate->rate_inc * $multiplier, 2),
                         'stat_id' => $rate->stat_id,
                     ]);
                     $count++;
