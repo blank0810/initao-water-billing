@@ -349,12 +349,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/bill-adjustments/recompute', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'recomputeBill'])->name('bill-adjustments.recompute');
         Route::post('/bill-adjustments/recompute-period', [\App\Http\Controllers\Billing\BillAdjustmentController::class, 'recomputePeriod'])->name('bill-adjustments.recompute-period');
 
-        // Penalty Management API
+        // Penalty Management API (read-only)
         Route::get('/penalties/summary', [\App\Http\Controllers\PenaltyController::class, 'summary'])->name('penalties.summary');
-        Route::post('/penalties/process', [\App\Http\Controllers\PenaltyController::class, 'process'])->name('penalties.process');
-        Route::post('/penalties/process-batch', [\App\Http\Controllers\PenaltyController::class, 'processBatch'])->name('penalties.process-batch');
         Route::get('/penalties/config', [\App\Http\Controllers\PenaltyController::class, 'getConfig'])->name('penalties.config');
-        Route::put('/penalties/config', [\App\Http\Controllers\PenaltyController::class, 'updateRate'])->name('penalties.config.update');
     });
 
     // -------------------------------------------------------------------------
@@ -674,6 +671,11 @@ Route::middleware('auth')->group(function () {
         // Penalty Configuration
         Route::get('/penalty', [\App\Http\Controllers\PenaltyController::class, 'index'])->name('config.penalty.index');
         Route::get('/penalty/history', [\App\Http\Controllers\PenaltyController::class, 'getHistory'])->name('penalties.config.history');
+
+        // Penalty Management (write operations)
+        Route::post('/penalties/process', [\App\Http\Controllers\PenaltyController::class, 'process'])->name('penalties.process');
+        Route::post('/penalties/process-batch', [\App\Http\Controllers\PenaltyController::class, 'processBatch'])->name('penalties.process-batch');
+        Route::put('/penalties/config', [\App\Http\Controllers\PenaltyController::class, 'updateRate'])->name('penalties.config.update');
 
         // Document Signatories
         Route::get('/document-signatories', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'index'])->name('config.document-signatories.index');

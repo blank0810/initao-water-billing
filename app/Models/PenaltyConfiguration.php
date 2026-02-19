@@ -26,6 +26,8 @@ class PenaltyConfiguration extends Model
 
     private const DEFAULT_RATE = 0.10;
 
+    public const DEFAULT_RATE_PERCENTAGE = 10.00;
+
     public function createdByUser()
     {
         return $this->belongsTo(User::class, 'created_by', 'id');
@@ -42,6 +44,7 @@ class PenaltyConfiguration extends Model
     public static function getActiveRate(): float
     {
         $config = static::where('is_active', true)
+            ->where('effective_date', '<=', now())
             ->orderByDesc('effective_date')
             ->first();
 

@@ -466,7 +466,7 @@ function updateBillingHistoryFromApi(billingHistory) {
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <button onclick="openBillPhoto('${bill.photo_url}', ${bill.has_photo ? 'true' : 'false'}, '${bill.period}')" class="p-2 rounded-lg transition-colors ${bill.has_photo ? 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20' : 'text-gray-300 hover:bg-gray-50 dark:text-gray-600 dark:hover:bg-gray-800'}" title="${bill.has_photo ? 'View meter reading photo' : 'No photo available'}">
+                <button data-photo-url="${bill.photo_url ? bill.photo_url.replace(/"/g, '&quot;') : ''}" data-has-photo="${bill.has_photo ? 'true' : 'false'}" data-period="${(bill.period || '').replace(/"/g, '&quot;')}" onclick="openBillPhoto(this.dataset.photoUrl, this.dataset.hasPhoto === 'true', this.dataset.period)" class="p-2 rounded-lg transition-colors ${bill.has_photo ? 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20' : 'text-gray-300 hover:bg-gray-50 dark:text-gray-600 dark:hover:bg-gray-800'}" title="${bill.has_photo ? 'View meter reading photo' : 'No photo available'}">
                     <i class="fas fa-camera"></i>
                 </button>
                 <div class="text-right space-y-2">
@@ -763,11 +763,14 @@ function submitProcessPayment() {
 }
 
 function openBillPhoto(photoUrl, hasPhoto, period) {
+    if (!hasPhoto) {
+        return;
+    }
     const modal = document.getElementById('billPhotoModal');
     const image = document.getElementById('billPhotoImage');
     const title = document.getElementById('billPhotoTitle');
     image.src = photoUrl;
-    title.textContent = hasPhoto ? `Meter Reading Photo - ${period}` : `No Photo - ${period}`;
+    title.textContent = `Meter Reading Photo - ${period}`;
     modal.classList.remove('hidden');
 }
 

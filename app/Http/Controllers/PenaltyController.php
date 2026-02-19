@@ -109,6 +109,7 @@ class PenaltyController extends Controller
     public function getConfig(): JsonResponse
     {
         $config = PenaltyConfiguration::where('is_active', true)
+            ->where('effective_date', '<=', now())
             ->orderByDesc('effective_date')
             ->first();
 
@@ -116,7 +117,7 @@ class PenaltyController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'rate_percentage' => 10.00,
+                    'rate_percentage' => PenaltyConfiguration::DEFAULT_RATE_PERCENTAGE,
                     'effective_date' => now()->toDateString(),
                     'updated_by_name' => null,
                 ],
@@ -157,7 +158,7 @@ class PenaltyController extends Controller
             DB::transaction(function () use ($validated, $userId) {
                 // Deactivate all current active configs
                 PenaltyConfiguration::where('is_active', true)
-                    ->update(['is_active' => false, 'updated_by' => $userId]);
+                    ->update(['is_active' => false, 'updated_by' => $userId, 'updated_at' => now()]);
 
                 // Create new active config
                 PenaltyConfiguration::create([
@@ -165,6 +166,7 @@ class PenaltyController extends Controller
                     'is_active' => true,
                     'effective_date' => now()->toDateString(),
                     'created_by' => $userId,
+                    'updated_by' => $userId,
                 ]);
             });
 

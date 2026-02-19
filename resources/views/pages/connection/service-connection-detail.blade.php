@@ -201,10 +201,10 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                 <template x-for="(meter, index) in meterHistory" :key="meter.assignment_id || index">
-                                    <tr @click="selectMeter(meter.assignment_id)" class="cursor-pointer transition-colors"
+                                    <tr @click="selectMeter(meter.assignment_id)" @keydown.enter="selectMeter(meter.assignment_id)" @keydown.space.prevent="selectMeter(meter.assignment_id)" tabindex="0" role="button" class="cursor-pointer transition-colors"
                                         :class="selectedAssignmentId === meter.assignment_id
                                             ? 'bg-blue-50 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-200 dark:ring-blue-700'
-                                            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'"
+                                            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'">
                                         <td class="py-3 px-3 text-sm font-mono text-gray-900 dark:text-white" x-text="meter.meter?.mtr_serial || '-'"></td>
                                         <td class="py-3 px-3 text-sm text-gray-700 dark:text-gray-300" x-text="meter.meter?.mtr_brand || '-'"></td>
                                         <td class="py-3 px-3 text-sm text-right text-gray-900 dark:text-white" x-text="formatNumber(meter.install_read)"></td>
