@@ -592,21 +592,9 @@
 
             <!-- Signatures -->
             <div class="signatures">
-                <div class="signature-box">
-                    <div class="line"></div>
-                    <div class="name">{{ $customerName }}</div>
-                    <div class="title">Concessioner</div>
-                </div>
-                <div class="signature-box">
-                    <div class="line"></div>
-                    <div class="name">{{ $application->processedBy?->name ?? '' }}</div>
-                    <div class="title">MEEDO Representative</div>
-                </div>
-                <div class="signature-box">
-                    <div class="line"></div>
-                    <div class="name"></div>
-                    <div class="title">Property Owner</div>
-                </div>
+                <x-document-signature position-key="CUSTOMER" :name="$customerName" label="Concessioner" :show-image="false" style="contract" />
+                <x-document-signature position-key="MEEDO_OFFICER" label="MEEDO Officer" style="contract" />
+                <x-document-signature position-key="CUSTOMER" :name="$customerName" label="Property Owner" :show-image="false" style="contract" />
             </div>
 
             <!-- Addendum -->
@@ -615,11 +603,7 @@
                 <p>
                     I, the undersigned property owner, hereby guarantee the payment of all water bills and other charges incurred by the above-named concessioner in connection with the water service installed in my property. In case of default by the concessioner, I agree to assume full responsibility for the settlement of all outstanding obligations.
                 </p>
-                <div class="signature-box">
-                    <div class="line"></div>
-                    <div class="name"></div>
-                    <div class="title">Property Owner's Signature Over Printed Name</div>
-                </div>
+                <x-document-signature position-key="CUSTOMER" :name="$customerName" label="Property Owner's Signature Over Printed Name" :show-image="false" style="contract" />
             </div>
         </div>
 

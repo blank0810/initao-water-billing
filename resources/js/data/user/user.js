@@ -163,8 +163,8 @@
             const nameCell = clone.querySelector('[data-col="name"]');
             nameCell.innerHTML = `
                 <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                        <i class="fas fa-user text-purple-600 dark:text-purple-400"></i>
+                    <div class="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden">
+                        <img src="${user.photo_url || '/images/logo.png'}" class="w-full h-full object-cover" alt="${user.name || 'User'}">
                     </div>
                     <div class="ml-3">
                         <div class="text-sm font-medium text-gray-900 dark:text-gray-100">${user.name || 'N/A'}</div>

@@ -214,6 +214,8 @@
 
         <!-- Transaction Detail Modal -->
         @include('components.ui.payment.transaction-detail-modal')
+
+        @include('pages.payment.partials.cancel-payment-modal')
     </div>
 
     <script>
@@ -238,6 +240,13 @@
             selectedDate: '',
             selectedTransaction: null,
             showDetailModal: false,
+
+            // Cancel payment state
+            showCancelPaymentModal: false,
+            cancelPaymentData: null,
+            cancelPaymentReason: '',
+            cancelPaymentError: '',
+            cancelPaymentLoading: false,
 
             async init() {
                 await this.loadPayments();
@@ -348,6 +357,54 @@
             viewTransaction(tx) {
                 this.selectedTransaction = tx;
                 this.showDetailModal = true;
+            },
+
+            openCancelPaymentModal(tx) {
+                this.cancelPaymentData = tx;
+                this.cancelPaymentReason = '';
+                this.cancelPaymentError = '';
+                this.showCancelPaymentModal = true;
+            },
+
+            async confirmCancelPayment() {
+                if (!this.cancelPaymentReason.trim()) {
+                    this.cancelPaymentError = 'Please provide a reason for cancellation.';
+                    return;
+                }
+
+                this.cancelPaymentLoading = true;
+                this.cancelPaymentError = '';
+
+                try {
+                    const response = await fetch(`/payment/${this.cancelPaymentData.payment_id}/cancel`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            reason: this.cancelPaymentReason.trim(),
+                        }),
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showCancelPaymentModal = false;
+                        this.cancelPaymentReason = '';
+                        // Reload transactions to reflect cancellation
+                        this.loadMyTransactions(this.selectedDate);
+                        // Reload stats to update totals
+                        this.loadStats();
+                    } else {
+                        this.cancelPaymentError = result.message || 'Failed to cancel payment.';
+                    }
+                } catch (error) {
+                    this.cancelPaymentError = 'Network error. Please try again.';
+                } finally {
+                    this.cancelPaymentLoading = false;
+                }
             }
         };
     }

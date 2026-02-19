@@ -190,4 +190,14 @@ class AreaController extends Controller
             'data' => $stats,
         ]);
     }
+
+    /**
+     * Auto-assign unassigned connections to areas based on barangay.
+     */
+    public function autoAssignConnections(): JsonResponse
+    {
+        $result = $this->areaService->autoAssignByBarangay();
+
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
 }

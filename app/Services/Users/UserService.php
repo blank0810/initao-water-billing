@@ -5,12 +5,19 @@ namespace App\Services\Users;
 use App\Models\Role;
 use App\Models\Status;
 use App\Models\User;
+use App\Services\FileUploadService;
+use App\Services\Notification\NotificationService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
+    public function __construct(
+        protected FileUploadService $fileUploadService,
+        protected NotificationService $notificationService
+    ) {}
+
     /**
      * Get all users with their roles (paginated)
      */
@@ -62,20 +69,43 @@ class UserService
      */
     public function createUser(array $data): User
     {
-        $user = User::create([
+        $userData = [
             'name' => $data['name'],
             'username' => $data['username'],
             'email' => $data['email'] ?? null,
             'password' => Hash::make($data['password']),
             'stat_id' => $data['status_id'],
-        ]);
+        ];
+
+        // Handle avatar upload
+        if (! empty($data['avatar'])) {
+            $result = $this->fileUploadService->storeBase64Image($data['avatar'], 'avatars');
+            if ($result['success']) {
+                $userData['photo_path'] = $result['path'];
+            }
+        }
+
+        // Handle signature upload
+        if (! empty($data['signature'])) {
+            $result = $this->fileUploadService->storeBase64Image($data['signature'], 'signatures');
+            if ($result['success']) {
+                $userData['signature_path'] = $result['path'];
+            }
+        }
+
+        $user = User::create($userData);
 
         // Assign role
         if (isset($data['role_id'])) {
             $user->roles()->attach($data['role_id']);
         }
 
-        return $user->load('roles', 'status');
+        $user = $user->load('roles', 'status');
+        $roleName = $user->roles->first()?->role_name ?? 'unknown';
+
+        $this->notificationService->notifyUserCreated($user->username, $roleName, auth()->id());
+
+        return $user;
     }
 
     /**
@@ -97,6 +127,43 @@ class UserService
         // Update status
         if (isset($data['status_id'])) {
             $updateData['stat_id'] = $data['status_id'];
+        }
+
+        // Handle avatar removal
+        if (! empty($data['remove_avatar'])) {
+            if ($user->photo_path) {
+                $this->fileUploadService->deleteFile($user->photo_path);
+            }
+            $updateData['photo_path'] = null;
+        }
+        // Handle avatar upload
+        elseif (! empty($data['avatar'])) {
+            $result = $this->fileUploadService->storeBase64Image($data['avatar'], 'avatars');
+            if ($result['success']) {
+                // Delete old photo if exists
+                if ($user->photo_path) {
+                    $this->fileUploadService->deleteFile($user->photo_path);
+                }
+                $updateData['photo_path'] = $result['path'];
+            }
+        }
+
+        // Handle signature removal
+        if (! empty($data['remove_signature'])) {
+            if ($user->signature_path) {
+                $this->fileUploadService->deleteFile($user->signature_path);
+            }
+            $updateData['signature_path'] = null;
+        }
+        // Handle signature upload
+        elseif (! empty($data['signature'])) {
+            $result = $this->fileUploadService->storeBase64Image($data['signature'], 'signatures');
+            if ($result['success']) {
+                if ($user->signature_path) {
+                    $this->fileUploadService->deleteFile($user->signature_path);
+                }
+                $updateData['signature_path'] = $result['path'];
+            }
         }
 
         $user->update($updateData);
@@ -130,6 +197,16 @@ class UserService
             ];
         }
 
+        // Clean up uploaded photo
+        if ($user->photo_path) {
+            $this->fileUploadService->deleteFile($user->photo_path);
+        }
+
+        // Clean up uploaded signature
+        if ($user->signature_path) {
+            $this->fileUploadService->deleteFile($user->signature_path);
+        }
+
         $user->roles()->detach();
         $user->delete();
 
@@ -151,6 +228,8 @@ class UserService
             'name' => $user->name,
             'email' => $user->email,
             'username' => $user->username,
+            'photo_url' => $user->photo_url,
+            'signature_url' => $user->signature_url,
             'role' => $role ? [
                 'role_id' => $role->role_id,
                 'role_name' => $role->role_name,

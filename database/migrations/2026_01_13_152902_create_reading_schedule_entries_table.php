@@ -18,8 +18,8 @@ return new class extends Migration
             // Optional: sequence/order for the route
             $table->integer('sequence_order')->default(0);
             // Optional: status per entry (pending, read, skipped)
-            $table->string('status')->default('pending'); 
-            
+            $table->string('status')->default('pending');
+
             $table->timestamps();
 
             // Foreign keys

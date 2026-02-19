@@ -12,7 +12,7 @@ class PurokFactory extends Factory
     public function definition(): array
     {
         return [
-            'p_desc' => 'Purok ' . fake()->numberBetween(1, 20),
+            'p_desc' => 'Purok '.fake()->numberBetween(1, 20),
             'stat_id' => 1, // Default to ACTIVE status
         ];
     }

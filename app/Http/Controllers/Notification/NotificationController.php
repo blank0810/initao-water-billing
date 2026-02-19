@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Notification;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 use App\Services\Notification\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,12 +16,59 @@ class NotificationController extends Controller
     ) {}
 
     /**
-     * Get notifications for authenticated user
+     * Show the notifications page
+     */
+    public function page()
+    {
+        return view('notifications.index');
+    }
+
+    /**
+     * Get paginated notifications for authenticated user (full page API)
      */
     public function index(Request $request): JsonResponse
     {
-        $limit = $request->input('limit', 50);
-        $notifications = $this->notificationService->getUserNotifications(Auth::id(), $limit);
+        $notifications = $this->notificationService->getUserNotifications(
+            Auth::id(),
+            $request->input('filter'),
+            $request->input('category'),
+            $request->input('search'),
+            (int) $request->input('per_page', 15)
+        );
+
+        // Add category color to each notification
+        $notifications->getCollection()->transform(function ($notification) {
+            $notification->category_color = Notification::getCategoryColor($notification->type);
+            $notification->time_ago = $notification->created_at->diffForHumans();
+
+            return $notification;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $notifications->items(),
+            'meta' => [
+                'current_page' => $notifications->currentPage(),
+                'last_page' => $notifications->lastPage(),
+                'per_page' => $notifications->perPage(),
+                'total' => $notifications->total(),
+            ],
+        ]);
+    }
+
+    /**
+     * Get recent notifications for dropdown (5 most recent)
+     */
+    public function recent(): JsonResponse
+    {
+        $notifications = $this->notificationService->getRecentNotifications(Auth::id(), 5);
+
+        $notifications->transform(function ($notification) {
+            $notification->category_color = Notification::getCategoryColor($notification->type);
+            $notification->time_ago = $notification->created_at->diffForHumans();
+
+            return $notification;
+        });
 
         return response()->json([
             'success' => true,
@@ -42,24 +90,30 @@ class NotificationController extends Controller
     }
 
     /**
+     * Get category counts for stats cards
+     */
+    public function categoryCounts(): JsonResponse
+    {
+        $counts = $this->notificationService->getCategoryCounts(Auth::id());
+
+        return response()->json([
+            'success' => true,
+            'data' => $counts,
+        ]);
+    }
+
+    /**
      * Mark a notification as read
      */
     public function markAsRead(int $id): JsonResponse
     {
-        try {
-            $notification = $this->notificationService->markAsRead($id);
+        $notification = $this->notificationService->markAsRead($id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Notification marked as read',
-                'data' => $notification,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 400);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification marked as read',
+            'data' => $notification,
+        ]);
     }
 
     /**

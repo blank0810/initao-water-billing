@@ -257,46 +257,54 @@ $user = Auth::user() ?? (object) [
 
                 <!-- Geographic Submenu -->
                 @can('config.geographic.manage')
-                <div class="space-y-1">
-                    <button @click="toggleSubmenu('geographic')"
-                        :class="activeMenu.startsWith('config-geographic-') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 font-medium' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                        class="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                        <div class="flex items-center">
-                            <i class="fas fa-map-marked-alt w-4 text-xs mr-2.5"></i>
-                            <span>Geographic</span>
-                        </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.geographic }"></i>
-                    </button>
+                <button @click="toggleSubmenu('geographic')"
+                    :class="[activeMenu.startsWith('config-geographic-') && 'active', openSubmenus.geographic && 'icon-glow']"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span style="flex:1; text-align:left;">Geographic</span>
+                    <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.geographic && 'rotated'"></i>
+                </button>
 
-                    <div x-show="openSubmenus.geographic" x-collapse class="ml-6 space-y-1 mt-1 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
-                        <a href="{{ route('config.barangays.index') }}" @click="setActiveMenu('config-geographic-barangays')"
-                            :class="activeMenu === 'config-geographic-barangays' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                            <i class="fas fa-map-marker-alt w-4 text-xs mr-2.5"></i>
-                            <span>Barangays</span>
-                        </a>
-                        <a href="{{ route('config.areas.index') }}" @click="setActiveMenu('config-geographic-areas')"
-                            :class="activeMenu === 'config-geographic-areas' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                            <i class="fas fa-layer-group w-4 text-xs mr-2.5"></i>
-                            <span>Areas</span>
-                        </a>
-                        <a href="{{ route('config.puroks.index') }}" @click="setActiveMenu('config-geographic-puroks')"
-                            :class="activeMenu === 'config-geographic-puroks' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                            <i class="fas fa-house-user w-4 text-xs mr-2.5"></i>
-                            <span>Puroks</span>
-                        </a>
-                    </div>
+                <div x-show="openSubmenus.geographic" x-collapse class="nav-submenu" style="padding-left: 12px;">
+                    <a href="{{ route('config.barangays.index') }}" @click="setActiveMenu('config-geographic-barangays')"
+                        :class="activeMenu === 'config-geographic-barangays' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Barangays</span>
+                    </a>
+                    <a href="{{ route('config.areas.index') }}" @click="setActiveMenu('config-geographic-areas')"
+                        :class="activeMenu === 'config-geographic-areas' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-layer-group"></i>
+                        <span>Areas</span>
+                    </a>
+                    <a href="{{ route('config.puroks.index') }}" @click="setActiveMenu('config-geographic-puroks')"
+                        :class="activeMenu === 'config-geographic-puroks' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-house-user"></i>
+                        <span>Puroks</span>
+                    </a>
+                    <a href="{{ route('config.reading-schedules.index') }}" @click="setActiveMenu('config-geographic-reading-schedules')"
+                        :class="activeMenu === 'config-geographic-reading-schedules' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Reading Schedules</span>
+                    </a>
                 </div>
                 @endcan
 
                 <!-- Water Rates -->
                 @can('config.billing.manage')
                 <a href="{{ route('config.water-rates.index') }}" @click="setActiveMenu('config-water-rates')"
-                    :class="activeMenu === 'config-water-rates' ? 'text-white bg-blue-600 dark:bg-blue-600' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                    class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                    <i class="fas fa-dollar-sign w-4 text-xs mr-2.5"></i>
+                    :class="activeMenu === 'config-water-rates' && 'active'"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-dollar-sign"></i>
                     <span>Water Rates</span>
                 </a>
 
@@ -331,43 +339,50 @@ $user = Auth::user() ?? (object) [
                             <i class="fas fa-gavel w-4 text-xs mr-2.5"></i>
                             <span>Penalty Configuration</span>
                         </a>
+                        <a href="{{ route('config.document-signatories.index') }}" @click="setActiveMenu('config-billing-signatories')"
+                        :class="activeMenu === 'config-billing-signatories' && 'active'"
+                        class="nav-submenu-item">
+                          <span class="nav-submenu-notch"></span>
+                          <i class="fas fa-pen-fancy"></i>
+                          <span>Document Signatories</span>
+                      </a>
                     </div>
                 </div>
                 @endcan
 
                 <!-- Access Control Submenu -->
                 @can('config.access.manage')
-                <div class="space-y-1">
-                    <button @click="toggleSubmenu('accessControl')"
-                        :class="activeMenu.startsWith('config-access-') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 font-medium' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                        class="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                        <div class="flex items-center">
-                            <i class="fas fa-shield-alt w-4 text-xs mr-2.5"></i>
-                            <span>Access Control</span>
-                        </div>
-                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.accessControl }"></i>
-                    </button>
+                <button @click="toggleSubmenu('accessControl')"
+                    :class="[activeMenu.startsWith('config-access-') && 'active', openSubmenus.accessControl && 'icon-glow']"
+                    class="nav-submenu-item">
+                    <span class="nav-submenu-notch"></span>
+                    <i class="fas fa-shield-alt"></i>
+                    <span style="flex:1; text-align:left;">Access Control</span>
+                    <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.accessControl && 'rotated'"></i>
+                </button>
 
-                    <div x-show="openSubmenus.accessControl" x-collapse class="ml-6 space-y-1 mt-1 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
-                        <a href="{{ route('admin.roles.index') }}" @click="setActiveMenu('config-access-roles')"
-                            :class="activeMenu === 'config-access-roles' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                            <i class="fas fa-user-shield w-4 text-xs mr-2.5"></i>
-                            <span>Roles</span>
-                        </a>
-                        <a href="{{ route('admin.permissions.index') }}" @click="setActiveMenu('config-access-permissions')"
-                            :class="activeMenu === 'config-access-permissions' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                            <i class="fas fa-key w-4 text-xs mr-2.5"></i>
-                            <span>Permissions</span>
-                        </a>
-                        <a href="{{ route('admin.role-permissions.matrix') }}" @click="setActiveMenu('config-access-matrix')"
-                            :class="activeMenu === 'config-access-matrix' ? 'text-white bg-blue-600 dark:bg-blue-600 border-l-2 border-blue-400 -ml-[3px] pl-[11px]' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                            class="flex items-center px-3 py-2 rounded-lg transition-all duration-200 text-sm">
-                            <i class="fas fa-th w-4 text-xs mr-2.5"></i>
-                            <span>Permission Matrix</span>
-                        </a>
-                    </div>
+                <div x-show="openSubmenus.accessControl" x-collapse class="nav-submenu" style="padding-left: 12px;">
+                    <a href="{{ route('admin.roles.index') }}" @click="setActiveMenu('config-access-roles')"
+                        :class="activeMenu === 'config-access-roles' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-user-shield"></i>
+                        <span>Roles</span>
+                    </a>
+                    <a href="{{ route('admin.permissions.index') }}" @click="setActiveMenu('config-access-permissions')"
+                        :class="activeMenu === 'config-access-permissions' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-key"></i>
+                        <span>Permissions</span>
+                    </a>
+                    <a href="{{ route('admin.role-permissions.matrix') }}" @click="setActiveMenu('config-access-matrix')"
+                        :class="activeMenu === 'config-access-matrix' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-th"></i>
+                        <span>Permission Matrix</span>
+                    </a>
                 </div>
                 @endcan
 
@@ -436,10 +451,12 @@ $user = Auth::user() ?? (object) [
                     '/config/barangays': 'config-geographic-barangays',
                     '/config/areas': 'config-geographic-areas',
                     '/config/puroks': 'config-geographic-puroks',
+                    '/config/reading-schedules': 'config-geographic-reading-schedules',
                     '/config/water-rates': 'config-water-rates',
                     '/config/account-types': 'config-billing-account-types',
                     '/config/charge-items': 'config-billing-charge-items',
                     '/config/penalty': 'config-billing-penalty',
+                    '/config/document-signatories': 'config-billing-signatories',
                     '/admin/roles': 'config-access-roles',
                     '/admin/permissions': 'config-access-permissions',
                     '/admin/role-permissions': 'config-access-matrix',

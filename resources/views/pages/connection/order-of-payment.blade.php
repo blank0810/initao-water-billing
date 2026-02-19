@@ -321,14 +321,12 @@
         <!-- Signature Section -->
         <div class="signature-section">
             <div class="signature-box">
-                <div class="signature-line">
-                    Prepared By
-                </div>
+                <div style="font-weight: 700; font-size: 11px; text-transform: uppercase; margin-top: 40px; min-height: 16px;">{{ auth()->user()?->name }}</div>
+                <div class="signature-line" style="margin-top: 4px;">Prepared By</div>
             </div>
             <div class="signature-box">
-                <div class="signature-line">
-                    Customer's Signature
-                </div>
+                <div style="font-weight: 700; font-size: 11px; text-transform: uppercase; margin-top: 40px; min-height: 16px;">{{ strtoupper($fullName) }}</div>
+                <div class="signature-line" style="margin-top: 4px;">Customer's Signature</div>
             </div>
         </div>
 

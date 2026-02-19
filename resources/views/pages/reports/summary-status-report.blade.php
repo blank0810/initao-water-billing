@@ -352,7 +352,7 @@
             background: #3580c0;
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @vite(['resources/css/app.css'])
 </head>
 <body>
     <!-- Back Link (Top Left) -->
@@ -563,17 +563,15 @@
         </div>
     </div>
 
-    <!-- Print Actions (Bottom Right Aligned) -->
-    <div class="print-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-        <a href="{{ route('reports.summary-status') }}?export=pdf&month={{ request('month', now()->month) }}&year={{ request('year', now()->year) }}" class="btn btn-secondary">
-            <i class="fas fa-file-pdf"></i> Export PDF
-        </a>
-        <a href="{{ route('reports.summary-status') }}?export=excel&month={{ request('month', now()->month) }}&year={{ request('year', now()->year) }}" class="btn btn-secondary">
-            <i class="fas fa-file-excel"></i> Export Excel
-        </a>
+    <!-- Print Actions (Bottom) -->
+    <div class="print-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
         <button onclick="window.print()" class="btn btn-primary">
             <i class="fas fa-print"></i> Print Document
         </button>
+        @include('components.export-dropdown-print', [
+            'exportFilename' => 'summary-status-report',
+            'exportSelector' => '.document'
+        ])
     </div>
 
     <script>

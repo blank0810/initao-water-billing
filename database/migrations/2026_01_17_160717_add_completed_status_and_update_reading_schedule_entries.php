@@ -14,7 +14,7 @@ return new class extends Migration
     {
         // 1. Add 'COMPLETED' status to statuses table if it doesn't exist
         $completedExists = DB::table('statuses')->where('stat_desc', 'COMPLETED')->exists();
-        if (!$completedExists) {
+        if (! $completedExists) {
             DB::table('statuses')->insert([
                 'stat_desc' => 'COMPLETED',
             ]);

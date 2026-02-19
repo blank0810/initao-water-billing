@@ -36,7 +36,7 @@ return new class extends Migration
     public function down(): void
     {
         throw new \RuntimeException(
-            'Irreversible migration: cannot restore NOT NULL constraints without data loss. ' .
+            'Irreversible migration: cannot restore NOT NULL constraints without data loss. '.
             'PaymentAllocation rows for one-time charges have NULL period_id/connection_id by design.'
         );
     }

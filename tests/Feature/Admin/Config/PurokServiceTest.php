@@ -14,6 +14,7 @@ class PurokServiceTest extends TestCase
     use RefreshDatabase;
 
     protected PurokService $service;
+
     protected Barangay $barangay;
 
     protected function setUp(): void

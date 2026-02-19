@@ -330,7 +330,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @vite(['resources/css/app.css'])
 </head>
 <body>
     <!-- Back Link (Top Left) -->
@@ -443,24 +443,7 @@
 
             <!-- Signatures -->
             <div class="signatures">
-                <div class="signature-block">
-                    <div class="signature-line">
-                        <div class="signature-name">_________________________</div>
-                        <div class="signature-title">Prepared by: Cashier</div>
-                    </div>
-                </div>
-                <div class="signature-block">
-                    <div class="signature-line">
-                        <div class="signature-name">_________________________</div>
-                        <div class="signature-title">Verified by: Accountant</div>
-                    </div>
-                </div>
-                <div class="signature-block">
-                    <div class="signature-line">
-                        <div class="signature-name">_________________________</div>
-                        <div class="signature-title">Noted by: Municipal Treasurer</div>
-                    </div>
-                </div>
+                <x-document-signature position-key="CURRENT_USER" :name="auth()->user()?->name" :signature-url="auth()->user()?->signature_url" label="Prepared by: Cashier" style="report" />
             </div>
         </div>
 
@@ -475,12 +458,10 @@
         <button onclick="window.print()" class="btn btn-primary">
             <i class="fas fa-print"></i> Print Document
         </button>
-        <a href="{{ route('reports.abstract-collection') }}?export=pdf&date_from={{ request('date_from', now()->startOfMonth()->format('Y-m-d')) }}&date_to={{ request('date_to', now()->format('Y-m-d')) }}" class="btn btn-secondary">
-            <i class="fas fa-file-pdf"></i> Export PDF
-        </a>
-        <a href="{{ route('reports.abstract-collection') }}?export=excel&date_from={{ request('date_from', now()->startOfMonth()->format('Y-m-d')) }}&date_to={{ request('date_to', now()->format('Y-m-d')) }}" class="btn btn-secondary">
-            <i class="fas fa-file-excel"></i> Export Excel
-        </a>
+        @include('components.export-dropdown-print', [
+            'exportFilename' => 'abstract-of-collection',
+            'exportSelector' => '.document'
+        ])
     </div>
 
     <script>

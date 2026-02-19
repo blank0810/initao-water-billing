@@ -4,7 +4,6 @@ namespace App\Services\Admin\Config;
 
 use App\Models\Barangay;
 use App\Models\Status;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class BarangayService
 {
@@ -13,16 +12,16 @@ class BarangayService
         $query = Barangay::query()->with('status');
 
         // Search filter
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('b_desc', 'like', "%{$search}%")
-                  ->orWhere('b_code', 'like', "%{$search}%");
+                    ->orWhere('b_code', 'like', "%{$search}%");
             });
         }
 
         // Status filter
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('stat_id', $filters['status']);
         }
 

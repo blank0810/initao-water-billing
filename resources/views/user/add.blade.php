@@ -51,6 +51,15 @@
                         </div>
                     </div>
 
+                    <!-- Digital Signature Section -->
+                    <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                            <i class="fas fa-pen-fancy mr-2 text-blue-600"></i>Digital Signature
+                            <span class="text-sm font-normal text-gray-400">(Optional)</span>
+                        </h3>
+                        <x-ui.signature-pad name="signature" />
+                    </div>
+
                     <!-- Personal Information -->
                     <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-700">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
