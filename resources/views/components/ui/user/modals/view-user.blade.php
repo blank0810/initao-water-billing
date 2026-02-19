@@ -3,8 +3,8 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4">
         <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center gap-3">
-                <div class="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                    <i class="fas fa-user text-blue-600 dark:text-blue-400 text-xl"></i>
+                <div class="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden">
+                    <img id="viewUserAvatar" src="{{ asset('images/logo.png') }}" class="w-full h-full object-cover" alt="User avatar">
                 </div>
                 <div>
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white">User Details</h3>
@@ -72,6 +72,8 @@ function showViewUserModal(user) {
         isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
         'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
     }`;
+
+    document.getElementById('viewUserAvatar').src = user.photo_url || '{{ asset("images/logo.png") }}';
 
     document.getElementById('viewUserModal').classList.remove('hidden');
 }

@@ -56,10 +56,6 @@ Route::get('/404', function () {
     return view('pages.info-pages.page-not-found');
 })->name('404');
 
-Route::get('/no-internet-found', function () {
-    return view('pages.info-pages.no-internet-found');
-})->name('no-internet');
-
 // Coming Soon page (for features under development)
 Route::get('/coming-soon', function () {
     return view('pages.coming-soon');
@@ -93,12 +89,21 @@ Route::middleware('auth')->group(function () {
     // -------------------------------------------------------------------------
     // Notifications - All authenticated users
     // -------------------------------------------------------------------------
+    Route::get('/notifications', [NotificationController::class, 'page'])->name('notifications.index');
+
     Route::prefix('api/notifications')->name('api.notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/recent', [NotificationController::class, 'recent'])->name('recent');
         Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::get('/category-counts', [NotificationController::class, 'categoryCounts'])->name('category-counts');
         Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
         Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
     });
+
+    // -------------------------------------------------------------------------
+    // Global Search - All authenticated users
+    // -------------------------------------------------------------------------
+    Route::get('/api/search/customers', \App\Http\Controllers\Search\CustomerSearchController::class)->name('api.search.customers');
 
     // -------------------------------------------------------------------------
     // Customer Management - View (customers.view permission)
@@ -113,6 +118,10 @@ Route::middleware('auth')->group(function () {
         })->name('customer.details');
         Route::get('/api/customer/{id}/details', [CustomerController::class, 'getDetails'])->name('customer.details.api');
         Route::get('/api/customer/{id}/documents', [CustomerController::class, 'getDocuments'])->name('customer.documents.api');
+        Route::get('/api/customer/{id}/ledger', [CustomerController::class, 'getLedger'])->name('customer.ledger.api');
+        Route::get('/api/customer/ledger/{entryId}', [CustomerController::class, 'getLedgerEntryDetails'])->name('customer.ledger.entry.api');
+        Route::get('/api/customer/{id}/ledger/export/csv', [CustomerController::class, 'exportLedgerCsv'])->name('customer.ledger.export.csv');
+        Route::get('/api/customer/{id}/ledger/export/pdf', [CustomerController::class, 'exportLedgerStatement'])->name('customer.ledger.export.pdf');
         Route::get('/customer/{id}/print-count', [CustomerController::class, 'printCount'])->name('customer.print-count');
         Route::get('/customer/invoice-list', function () {
             session(['active_menu' => 'invoice-list']);
@@ -219,6 +228,11 @@ Route::middleware('auth')->group(function () {
         Route::post('/payment/bill/{id}/process', [PaymentController::class, 'storeWaterBillPayment'])->name('payment.bill.store');
     });
 
+    // Payment Cancellation - Void (payments.void permission)
+    Route::middleware(['permission:payments.void'])->group(function () {
+        Route::post('/payment/{id}/cancel', [PaymentController::class, 'cancelPayment'])->name('payment.cancel');
+    });
+
     // -------------------------------------------------------------------------
     // Billing Management - View (billing.view permission)
     // -------------------------------------------------------------------------
@@ -228,6 +242,8 @@ Route::middleware('auth')->group(function () {
 
             return view('pages.billing.billing-index');
         })->name('billing.management');
+
+        Route::get('/api/billing/collections', [PaymentController::class, 'getCollections'])->name('api.billing.collections');
 
         Route::get('/billing/consumer/{id}', function ($id) {
             session(['active_menu' => 'billing-management']);
@@ -274,6 +290,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/areas/connection-area-stats', [\App\Http\Controllers\AreaController::class, 'connectionAreaStats'])->name('areas.connection-area-stats');
         Route::post('/areas/assign-connections', [\App\Http\Controllers\AreaController::class, 'assignAreaToConnections'])->name('areas.assign-connections');
         Route::post('/areas/remove-connections', [\App\Http\Controllers\AreaController::class, 'removeAreaFromConnections'])->name('areas.remove-connections');
+        Route::post('/areas/auto-assign', [\App\Http\Controllers\AreaController::class, 'autoAssignConnections'])->name('areas.auto-assign');
         Route::get('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'show'])->name('areas.show');
         Route::post('/areas', [\App\Http\Controllers\AreaController::class, 'store'])->name('areas.store');
         Route::put('/areas/{areaId}', [\App\Http\Controllers\AreaController::class, 'update'])->name('areas.update');
@@ -625,6 +642,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/puroks/{id}', [PurokController::class, 'show'])->name('config.puroks.show');
         Route::put('/puroks/{id}', [PurokController::class, 'update'])->name('config.puroks.update');
         Route::delete('/puroks/{id}', [PurokController::class, 'destroy'])->name('config.puroks.destroy');
+
+        // Reading Schedules (also requires billing.view for AJAX endpoints)
+        Route::get('/reading-schedules', [\App\Http\Controllers\ReadingScheduleController::class, 'configIndex'])->middleware('permission:billing.view')->name('config.reading-schedules.index');
     });
 
     // -------------------------------------------------------------------------
@@ -654,7 +674,15 @@ Route::middleware('auth')->group(function () {
         // Penalty Configuration
         Route::get('/penalty', [\App\Http\Controllers\PenaltyController::class, 'index'])->name('config.penalty.index');
         Route::get('/penalty/history', [\App\Http\Controllers\PenaltyController::class, 'getHistory'])->name('penalties.config.history');
+
+        // Document Signatories
+        Route::get('/document-signatories', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'index'])->name('config.document-signatories.index');
+        Route::get('/document-signatories/active-users', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'getActiveUsers'])->name('config.document-signatories.active-users');
+        Route::put('/document-signatories/{positionKey}', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'update'])->name('config.document-signatories.update');
     });
+
+    // Document Signatory JS Data (accessible to any authenticated user for printing)
+    Route::get('/config/document-signatories/js-data', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'getSignatoryDataForJs'])->name('config.document-signatories.js-data');
 
     // -------------------------------------------------------------------------
     // Activity Log - Super Admin Only

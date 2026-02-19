@@ -3,7 +3,6 @@
 namespace Tests\Feature\Customer;
 
 use App\Models\Customer;
-use App\Models\CustomerLedger;
 use App\Models\Status;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -49,6 +49,16 @@ class Notification extends Model
 
     public const TYPE_CONNECTION_RECONNECTED = 'connection_reconnected';
 
+    public const TYPE_PAYMENT_PROCESSED = 'payment_processed';
+
+    public const TYPE_PAYMENT_CANCELLED = 'payment_cancelled';
+
+    public const TYPE_BILLS_GENERATED = 'bills_generated';
+
+    public const TYPE_PENALTY_PROCESSED = 'penalty_processed';
+
+    public const TYPE_USER_CREATED = 'user_created';
+
     /**
      * Get the user that owns the notification
      */
@@ -141,5 +151,40 @@ class Notification extends Model
         }
 
         return $modelClass::find($this->source_id);
+    }
+
+    /**
+     * Get the category color for a notification type
+     */
+    public static function getCategoryColor(string $type): string
+    {
+        return match (true) {
+            str_starts_with($type, 'application_') => 'blue',
+            in_array($type, [self::TYPE_APPLICATION_PAID, self::TYPE_PAYMENT_PROCESSED]) => 'green',
+            in_array($type, [
+                self::TYPE_CONNECTION_SUSPENDED,
+                self::TYPE_CONNECTION_DISCONNECTED,
+                self::TYPE_PAYMENT_CANCELLED,
+                self::TYPE_PENALTY_PROCESSED,
+            ]) => 'red',
+            $type === self::TYPE_BILLS_GENERATED => 'amber',
+            in_array($type, [self::TYPE_USER_CREATED, self::TYPE_CONNECTION_RECONNECTED]) => 'indigo',
+            default => 'gray',
+        };
+    }
+
+    /**
+     * Get the category label for a notification type
+     */
+    public static function getCategory(string $type): string
+    {
+        return match (true) {
+            str_starts_with($type, 'application_') => 'applications',
+            in_array($type, [self::TYPE_PAYMENT_PROCESSED, self::TYPE_PAYMENT_CANCELLED, self::TYPE_APPLICATION_PAID]) => 'payments',
+            str_starts_with($type, 'connection_') => 'connections',
+            in_array($type, [self::TYPE_BILLS_GENERATED, self::TYPE_PENALTY_PROCESSED]) => 'billing',
+            $type === self::TYPE_USER_CREATED => 'system',
+            default => 'other',
+        };
     }
 }

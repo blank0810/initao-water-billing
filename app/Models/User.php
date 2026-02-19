@@ -27,6 +27,8 @@ class User extends Authenticatable
         'password',
         'stat_id',
         'u_type',
+        'photo_path',
+        'signature_path',
     ];
 
     /**
@@ -50,6 +52,30 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the full URL for the user's photo, with Initao logo fallback.
+     */
+    public function getPhotoUrlAttribute(): string
+    {
+        if ($this->photo_path) {
+            return asset($this->photo_path);
+        }
+
+        return asset('images/logo.png');
+    }
+
+    /**
+     * Get the full URL for the user's signature, or null if none.
+     */
+    public function getSignatureUrlAttribute(): ?string
+    {
+        if ($this->signature_path) {
+            return asset($this->signature_path);
+        }
+
+        return null;
     }
 
     /**

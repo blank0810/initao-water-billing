@@ -2,6 +2,7 @@
 $user = Auth::user() ?? (object) [
     'name' => 'Demo User',
     'email' => 'demo@example.com',
+    'photo_url' => asset('images/logo.png'),
 ];
 
 // Define page titles mapping
@@ -110,7 +111,7 @@ $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Pages', 'Dashboard'];
 $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
 @endphp
 
-<nav x-data="{ notifOpen: false, userOpen: false }" class="bg-[#e7e7e7] dark:bg-[#0d131c] z-30 relative sticky top-0">
+<nav class="bg-[#e7e7e7] dark:bg-[#0d131c] z-30 relative sticky top-0">
     <div class="max-w-full mx-auto px-6 sm:px-8 lg:px-10">
         <div class="flex justify-between h-24 items-center">
 
@@ -149,18 +150,79 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
             <!-- Right: Controls -->
             <div class="flex items-center space-x-4">
 
-                <!-- Search Bar -->
-                <div class="relative hidden lg:block">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 dark:text-gray-500">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                <!-- Global Customer Search -->
+                <div x-data="globalSearch()" x-on:click.outside="close()" x-on:keydown.escape.window="close()" class="relative hidden lg:block">
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 dark:text-gray-500">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input
+                            x-ref="searchInput"
+                            x-model="query"
+                            x-on:input.debounce.300ms="search()"
+                            x-on:focus="if (results.length) open = true"
+                            x-on:keydown.arrow-down.prevent="moveDown()"
+                            x-on:keydown.arrow-up.prevent="moveUp()"
+                            x-on:keydown.enter.prevent="selectCurrent()"
+                            type="text"
+                            placeholder="Search customers..."
+                            class="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 w-72 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                        >
+                        <!-- Loading Spinner -->
+                        <div x-show="loading" class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <svg class="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                        </div>
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        class="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 w-64 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                    >
+
+                    <!-- Results Dropdown -->
+                    <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute top-full left-0 mt-1 w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+
+                        <!-- No Results -->
+                        <template x-if="!loading && results.length === 0 && query.length >= 2 && searched">
+                            <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                                <svg class="mx-auto h-8 w-8 text-gray-300 dark:text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                No customers found for "<span x-text="query" class="font-medium"></span>"
+                            </div>
+                        </template>
+
+                        <!-- Results List -->
+                        <template x-for="(result, index) in results" :key="result.customer_id">
+                            <a :href="'/customer/details/' + result.customer_id"
+                               :class="{ 'bg-blue-50 dark:bg-blue-900/30': selectedIndex === index }"
+                               class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
+                               x-on:mouseenter="selectedIndex = index">
+                                <div class="flex items-center justify-between">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate" x-text="result.name"></p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                                            <span x-show="result.account_no" x-text="result.account_no"></span>
+                                            <span x-show="result.account_no && result.meter_serial"> &middot; </span>
+                                            <span x-show="result.meter_serial" x-text="result.meter_serial"></span>
+                                            <span x-show="(result.account_no || result.meter_serial) && result.barangay"> &middot; </span>
+                                            <span x-show="result.barangay" x-text="result.barangay"></span>
+                                        </p>
+                                    </div>
+                                    <span x-show="result.status"
+                                          :class="{
+                                              'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': result.status === 'ACTIVE',
+                                              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': result.status !== 'ACTIVE'
+                                          }"
+                                          class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0"
+                                          x-text="result.status">
+                                    </span>
+                                </div>
+                            </a>
+                        </template>
+                    </div>
                 </div>
 
                 <!-- Theme Toggle -->
@@ -191,18 +253,17 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                 </button>
 
                 <!-- Notifications -->
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open; $event.stopPropagation()"
-                            class="relative p-2.5 rounded-lg bg-gray-100 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300">
-                        <!-- Bell Icon -->
+                <div class="relative" x-data="notificationDropdown()" x-init="init()">
+                    <button @click="toggleDropdown()" class="relative p-2.5 rounded-lg bg-gray-100 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 text-gray-600 dark:text-gray-300">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
-                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-white dark:border-gray-800 font-medium">3</span>
+                        <span x-show="unreadCount > 0" x-text="unreadCount > 99 ? '99+' : unreadCount" x-cloak
+                              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center border-2 border-white dark:border-gray-800 font-medium"></span>
                     </button>
 
-                    <!-- Notification Dropdown -->
-                    <div x-show="open"
+                    <!-- Dropdown -->
+                    <div x-show="open" x-cloak
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
@@ -213,29 +274,56 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                          class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
 
                         <!-- Header -->
-                        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200">Notifications</h3>
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-200">Notifications</h3>
+                            <button x-show="unreadCount > 0" @click.stop="markAllRead()" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                                Mark all as read
+                            </button>
                         </div>
 
-                        <!-- Notifications List -->
-                        <div class="max-h-96 overflow-y-auto">
-                            <div class="p-4 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition duration-150">
-                                <p class="text-sm text-gray-800 dark:text-gray-200">New customer application pending approval</p>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">2 minutes ago</span>
-                            </div>
-                            <div class="p-4 border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition duration-150">
-                                <p class="text-sm text-gray-800 dark:text-gray-200">Payment received from John Doe</p>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">1 hour ago</span>
-                            </div>
-                            <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition duration-150">
-                                <p class="text-sm text-gray-800 dark:text-gray-200">System maintenance scheduled</p>
-                                <span class="text-xs text-gray-500 dark:text-gray-400">Yesterday</span>
-                            </div>
+                        <!-- List -->
+                        <div class="max-h-80 overflow-y-auto">
+                            <template x-if="loading">
+                                <div class="p-6 text-center">
+                                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                                </div>
+                            </template>
+
+                            <template x-if="!loading && notifications.length === 0">
+                                <div class="p-6 text-center">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">No notifications yet</p>
+                                </div>
+                            </template>
+
+                            <template x-for="notification in notifications" :key="notification.id">
+                                <a :href="notification.link || '#'" @click="markRead(notification)"
+                                   class="block p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition duration-150"
+                                   :class="{ 'bg-blue-50/50 dark:bg-blue-900/10': !notification.read_at }">
+                                    <div class="flex items-start gap-3">
+                                        <span class="mt-1.5 h-2.5 w-2.5 rounded-full flex-shrink-0"
+                                              :class="{
+                                                  'bg-blue-500': notification.category_color === 'blue',
+                                                  'bg-green-500': notification.category_color === 'green',
+                                                  'bg-red-500': notification.category_color === 'red',
+                                                  'bg-amber-500': notification.category_color === 'amber',
+                                                  'bg-indigo-500': notification.category_color === 'indigo',
+                                                  'bg-gray-400': notification.category_color === 'gray'
+                                              }"></span>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200" x-text="notification.title"></p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2" x-text="notification.message"></p>
+                                            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1" x-text="notification.time_ago"></p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </template>
                         </div>
 
                         <!-- Footer -->
-                        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-                            <a href="#" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">View all notifications</a>
+                        <div class="p-3 border-t border-gray-200 dark:border-gray-700 text-center">
+                            <a href="{{ route('notifications.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                                View all notifications
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -244,8 +332,8 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open; $event.stopPropagation()"
                             class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-200">
-                        <div class="h-8 w-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                        <div class="h-8 w-8 rounded-full overflow-hidden">
+                            <img src="{{ $user->photo_url }}" class="w-full h-full object-cover" alt="{{ $user->name }}">
                         </div>
                         <div class="hidden md:block text-left">
                             <div class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $user->name }}</div>
@@ -321,3 +409,151 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
         </div>
     </div>
 </nav>
+
+<script>
+    function notificationDropdown() {
+        return {
+            open: false,
+            loading: false,
+            notifications: [],
+            unreadCount: 0,
+
+            init() {
+                this.fetchUnreadCount();
+            },
+
+            async fetchUnreadCount() {
+                try {
+                    const res = await fetch('/api/notifications/unread-count');
+                    const data = await res.json();
+                    if (data.success) {
+                        this.unreadCount = data.count;
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch unread count:', e);
+                }
+            },
+
+            async toggleDropdown() {
+                this.open = !this.open;
+                if (this.open) {
+                    await this.fetchRecent();
+                    if (this.unreadCount > 0) {
+                        this.markAllRead();
+                    }
+                }
+            },
+
+            async fetchRecent() {
+                this.loading = true;
+                try {
+                    const res = await fetch('/api/notifications/recent');
+                    const data = await res.json();
+                    if (data.success) {
+                        this.notifications = data.data;
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch notifications:', e);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            async markRead(notification) {
+                if (!notification.read_at) {
+                    try {
+                        await fetch(`/api/notifications/${notification.id}/read`, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                        });
+                        notification.read_at = new Date().toISOString();
+                        this.unreadCount = Math.max(0, this.unreadCount - 1);
+                    } catch (e) {
+                        console.error('Failed to mark as read:', e);
+                    }
+                }
+            },
+
+            async markAllRead() {
+                try {
+                    await fetch('/api/notifications/read-all', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                    });
+                    this.notifications.forEach(n => n.read_at = new Date().toISOString());
+                    this.unreadCount = 0;
+                } catch (e) {
+                    console.error('Failed to mark all as read:', e);
+                }
+            }
+        };
+    }
+</script>
+
+<script>
+function globalSearch() {
+    return {
+        query: '',
+        results: [],
+        open: false,
+        loading: false,
+        searched: false,
+        selectedIndex: -1,
+
+        init() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                    e.preventDefault();
+                    this.$refs.searchInput.focus();
+                }
+            });
+        },
+
+        async search() {
+            if (this.query.length < 2) {
+                this.results = [];
+                this.open = false;
+                this.searched = false;
+                return;
+            }
+
+            this.loading = true;
+            try {
+                const response = await fetch(`/api/search/customers?q=${encodeURIComponent(this.query)}`);
+                this.results = await response.json();
+                this.open = true;
+                this.searched = true;
+                this.selectedIndex = -1;
+            } catch (error) {
+                console.error('Search failed:', error);
+                this.results = [];
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        close() {
+            this.open = false;
+            this.selectedIndex = -1;
+        },
+
+        moveDown() {
+            if (this.selectedIndex < this.results.length - 1) {
+                this.selectedIndex++;
+            }
+        },
+
+        moveUp() {
+            if (this.selectedIndex > 0) {
+                this.selectedIndex--;
+            }
+        },
+
+        selectCurrent() {
+            if (this.selectedIndex >= 0 && this.results[this.selectedIndex]) {
+                window.location.href = '/customer/details/' + this.results[this.selectedIndex].customer_id;
+            }
+        },
+    };
+}
+</script>

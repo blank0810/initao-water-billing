@@ -144,5 +144,8 @@
 <x-ui.customer.modals.connection-details />
 <x-ui.customer.modals.ledger-entry-details />
 
+    <script>
+        window.canVoidPayments = @json(auth()->user()?->can('payments.void') ?? false);
+    </script>
     @vite(['resources/js/data/customer/customer-details-data.js', 'resources/js/data/customer/enhanced-customer-data.js', 'resources/js/data/customer/customer-ledger-data.js'])
 </x-app-layout>

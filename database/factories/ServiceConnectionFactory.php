@@ -12,7 +12,7 @@ class ServiceConnectionFactory extends Factory
     public function definition(): array
     {
         return [
-            'account_no' => 'SC-' . fake()->unique()->numerify('######'),
+            'account_no' => 'SC-'.fake()->unique()->numerify('######'),
             'customer_id' => 1, // Will be overridden in tests
             'address_id' => 1, // Will be overridden in tests
             'account_type_id' => 1,

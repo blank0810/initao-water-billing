@@ -47,8 +47,11 @@ class BillAdjustment extends Model
      * Adjustment category constants.
      */
     public const CATEGORY_CONSUMPTION = 'consumption';
+
     public const CATEGORY_AMOUNT = 'amount';
+
     public const CATEGORY_BOTH = 'both';
+
     public const CATEGORY_OTHER = 'other';
 
     /**

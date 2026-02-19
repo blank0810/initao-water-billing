@@ -78,6 +78,37 @@ class LedgerService
     }
 
     /**
+     * Record a payment reversal as a DEBIT entry in the ledger
+     *
+     * Called when a payment is cancelled. Creates a REVERSAL entry
+     * that offsets the original PAYMENT CREDIT entry.
+     */
+    public function recordPaymentReversal(
+        PaymentAllocation $allocation,
+        Payment $payment,
+        string $description,
+        int $userId
+    ): CustomerLedger {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        return CustomerLedger::create([
+            'customer_id' => $payment->payer_id,
+            'connection_id' => $allocation->connection_id,
+            'period_id' => $allocation->period_id,
+            'txn_date' => now()->toDateString(),
+            'post_ts' => now(),
+            'source_type' => 'REVERSAL',
+            'source_id' => $payment->payment_id,
+            'source_line_no' => $allocation->payment_allocation_id,
+            'description' => $description,
+            'debit' => $allocation->amount_applied,
+            'credit' => 0,
+            'user_id' => $userId,
+            'stat_id' => $activeStatusId,
+        ]);
+    }
+
+    /**
      * Get customer ledger balance
      */
     public function getCustomerBalance(int $customerId): float

@@ -7,6 +7,7 @@ use App\Models\CustomerLedger;
 use App\Models\ServiceApplication;
 use App\Models\ServiceConnection;
 use App\Models\Status;
+use App\Services\Notification\NotificationService;
 use App\Services\ServiceApplication\ServiceApplicationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
@@ -18,7 +19,8 @@ class ServiceConnectionService
     private const MAX_ACCOUNT_NUMBER_RETRIES = 5;
 
     public function __construct(
-        protected ServiceApplicationService $applicationService
+        protected ServiceApplicationService $applicationService,
+        protected NotificationService $notificationService
     ) {}
 
     /**
@@ -132,6 +134,10 @@ class ServiceConnectionService
                         $connection->connection_id
                     );
 
+                    // Notify about completed connection
+                    $application->load('customer');
+                    $this->notificationService->notifyApplicationConnected($application, $connection);
+
                     return $connection;
                 });
             } catch (QueryException $e) {
@@ -195,9 +201,11 @@ class ServiceConnectionService
             'stat_id' => Status::getIdByDescription(Status::SUSPENDED),
         ]);
 
-        // TODO: Add audit logging for suspension with reason and suspendedBy
+        $connection = $connection->fresh('customer');
 
-        return $connection->fresh();
+        $this->notificationService->notifyConnectionSuspended($connection, $suspendedBy);
+
+        return $connection;
     }
 
     /**
@@ -224,7 +232,11 @@ class ServiceConnectionService
             'ended_at' => now(),
         ]);
 
-        return $connection->fresh();
+        $connection = $connection->fresh('customer');
+
+        $this->notificationService->notifyConnectionDisconnected($connection, $disconnectedBy);
+
+        return $connection;
     }
 
     /**
@@ -242,7 +254,11 @@ class ServiceConnectionService
             'stat_id' => Status::getIdByDescription(Status::ACTIVE),
         ]);
 
-        return $connection->fresh();
+        $connection = $connection->fresh('customer');
+
+        $this->notificationService->notifyConnectionReconnected($connection, $reconnectedBy);
+
+        return $connection;
     }
 
     /**

@@ -244,16 +244,28 @@ class PaymentManagementService
         $totalPending = $totalPendingApps + $totalPendingBills;
         $pendingCount = $pendingAppCount + $pendingBillCount;
 
-        // Today's collections
-        $todayPayments = Payment::whereDate('payment_date', today())->get();
+        // Today's collections (exclude cancelled)
+        $cancelledStatusId = Status::getIdByDescription(Status::CANCELLED);
+        $todayPayments = Payment::whereDate('payment_date', today())
+            ->where('stat_id', '!=', $cancelledStatusId)
+            ->get();
         $todayCollection = $todayPayments->sum('amount_received');
         $todayCount = $todayPayments->count();
 
-        // This month's collections
+        // This month's collections (exclude cancelled)
         $monthPayments = Payment::whereMonth('payment_date', now()->month)
             ->whereYear('payment_date', now()->year)
+            ->where('stat_id', '!=', $cancelledStatusId)
             ->get();
         $monthCollection = $monthPayments->sum('amount_received');
+
+        // Total transactions (all time, exclude cancelled)
+        $totalTransactions = Payment::where('stat_id', '!=', $cancelledStatusId)->count();
+
+        // Average payment (all time, exclude cancelled)
+        $averagePayment = $totalTransactions > 0
+            ? Payment::where('stat_id', '!=', $cancelledStatusId)->avg('amount_received')
+            : 0;
 
         return [
             'pending_amount' => $totalPending,
@@ -264,6 +276,134 @@ class PaymentManagementService
             'today_count' => $todayCount,
             'month_collection' => $monthCollection,
             'month_collection_formatted' => '₱ '.number_format($monthCollection, 2),
+            'total_transactions' => $totalTransactions,
+            'average_payment' => round($averagePayment, 2),
+            'average_payment_formatted' => '₱ '.number_format($averagePayment, 2),
+        ];
+    }
+
+    /**
+     * Get collections data for server-side DataTables
+     *
+     * Handles search, sorting, pagination, and custom filters.
+     * Returns DataTables-compatible JSON response array.
+     */
+    public function getCollections(array $params): array
+    {
+        $draw = (int) ($params['draw'] ?? 1);
+        $start = (int) ($params['start'] ?? 0);
+        $length = (int) ($params['length'] ?? 10);
+        $searchValue = $params['search']['value'] ?? '';
+        $orderColumnIndex = (int) ($params['order'][0]['column'] ?? 0);
+        $orderDir = ($params['order'][0]['dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+        // Custom filters
+        $statusFilter = $params['status'] ?? 'all';
+        $dateFrom = $params['date_from'] ?? null;
+        $dateTo = $params['date_to'] ?? null;
+
+        // Column mapping for sorting
+        $columns = [
+            0 => 'receipt_no',
+            1 => 'payment_date',
+            2 => 'payer_id',
+            3 => 'amount_received',
+            4 => 'user_id',
+            5 => 'stat_id',
+        ];
+        $orderColumn = $columns[$orderColumnIndex] ?? 'payment_date';
+
+        // Base query with eager loading
+        $query = Payment::with(['payer', 'user', 'status']);
+
+        // Status filter
+        if ($statusFilter !== 'all') {
+            $statusId = Status::getIdByDescription(strtoupper($statusFilter));
+            if ($statusId) {
+                $query->where('stat_id', $statusId);
+            }
+        }
+
+        // Date range filter
+        if ($dateFrom) {
+            $query->whereDate('payment_date', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $query->whereDate('payment_date', '<=', $dateTo);
+        }
+
+        // Search filter (receipt no, customer name)
+        if ($searchValue) {
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('receipt_no', 'like', "%{$searchValue}%")
+                    ->orWhere('amount_received', 'like', "%{$searchValue}%")
+                    ->orWhereHas('payer', function ($cq) use ($searchValue) {
+                        $cq->where('cust_first_name', 'like', "%{$searchValue}%")
+                            ->orWhere('cust_last_name', 'like', "%{$searchValue}%")
+                            ->orWhere('resolution_no', 'like', "%{$searchValue}%");
+                    })
+                    ->orWhereHas('user', function ($uq) use ($searchValue) {
+                        $uq->where('name', 'like', "%{$searchValue}%");
+                    });
+            });
+        }
+
+        // Total records (unfiltered)
+        $recordsTotal = Payment::count();
+
+        // Filtered records count
+        $recordsFiltered = $query->count();
+
+        // Sorting — for customer/cashier columns, sort by related table via subquery
+        if ($orderColumn === 'payer_id') {
+            $query->orderBy(
+                \App\Models\Customer::select('cust_last_name')
+                    ->whereColumn('customer.cust_id', 'Payment.payer_id')
+                    ->limit(1),
+                $orderDir
+            );
+        } elseif ($orderColumn === 'user_id') {
+            $query->orderBy(
+                \App\Models\User::select('name')
+                    ->whereColumn('users.id', 'Payment.user_id')
+                    ->limit(1),
+                $orderDir
+            );
+        } else {
+            $query->orderBy($orderColumn, $orderDir);
+        }
+
+        // Pagination
+        $payments = $query->skip($start)->take($length)->get();
+
+        // Format data for DataTables
+        $data = $payments->map(function ($payment) {
+            $isCancelled = $payment->status?->stat_desc === 'CANCELLED';
+
+            return [
+                'payment_id' => $payment->payment_id,
+                'receipt_no' => $payment->receipt_no,
+                'payment_date' => $payment->payment_date?->format('M d, Y'),
+                'payment_date_raw' => $payment->payment_date?->format('Y-m-d'),
+                'consumer_name' => $this->formatCustomerName($payment->payer),
+                'amount_received' => (float) $payment->amount_received,
+                'amount_formatted' => '₱ '.number_format($payment->amount_received, 2),
+                'cashier' => $payment->user?->name ?? '-',
+                'status' => $isCancelled ? 'Cancelled' : 'Active',
+                'status_raw' => $payment->status?->stat_desc ?? 'UNKNOWN',
+                'is_cancelled' => $isCancelled,
+                'receipt_url' => route('payment.receipt', $payment->payment_id),
+                'cancelled_at' => $payment->cancelled_at?->format('M d, Y g:i A'),
+                'cancelled_by_name' => $payment->cancelledBy?->name ?? null,
+                'cancellation_reason' => $payment->cancellation_reason,
+            ];
+        });
+
+        return [
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data->values()->toArray(),
         ];
     }
 
@@ -281,12 +421,14 @@ class PaymentManagementService
 
     /**
      * Get transactions processed by a specific cashier for a given date
+     * Includes cancelled payments with visual distinction
      */
     public function getCashierTransactions(int $userId, ?string $date = null): array
     {
         $targetDate = $date ? \Carbon\Carbon::parse($date) : today();
+        $cancelledStatusId = Status::getIdByDescription(Status::CANCELLED);
 
-        $payments = Payment::with(['payer', 'status'])
+        $payments = Payment::with(['payer', 'status', 'cancelledBy'])
             ->where('user_id', $userId)
             ->whereDate('payment_date', $targetDate)
             ->orderBy('created_at', 'desc')
@@ -298,18 +440,25 @@ class PaymentManagementService
             $payments->pluck('payment_id')
         )->pluck('payment_id')->flip();
 
-        // Calculate summary statistics
-        $totalCollected = $payments->sum('amount_received');
-        $transactionCount = $payments->count();
+        // Split active and cancelled payments for summary
+        $activePayments = $payments->filter(fn ($p) => $p->stat_id !== $cancelledStatusId);
+        $cancelledPayments = $payments->filter(fn ($p) => $p->stat_id === $cancelledStatusId);
 
-        // Group by payment type (derive from related data)
-        $byType = $this->groupPaymentsByType($payments, $applicationPaymentIds);
+        // Calculate summary statistics (exclude cancelled from total)
+        $totalCollected = $activePayments->sum('amount_received');
+        $transactionCount = $payments->count();
+        $cancelledAmount = $cancelledPayments->sum('amount_received');
+        $cancelledCount = $cancelledPayments->count();
+
+        // Group by payment type (active only)
+        $byType = $this->groupPaymentsByType($activePayments, $applicationPaymentIds);
 
         // Format transactions for display
-        $transactions = $payments->map(function ($payment) use ($applicationPaymentIds) {
+        $transactions = $payments->map(function ($payment) use ($applicationPaymentIds, $cancelledStatusId) {
             $paymentType = $this->getPaymentType($payment, $applicationPaymentIds);
+            $isCancelled = $payment->stat_id === $cancelledStatusId;
 
-            return [
+            $tx = [
                 'payment_id' => $payment->payment_id,
                 'receipt_no' => $payment->receipt_no,
                 'customer_name' => $this->formatCustomerName($payment->payer),
@@ -320,7 +469,17 @@ class PaymentManagementService
                 'amount_formatted' => '₱ '.number_format($payment->amount_received, 2),
                 'time' => $payment->created_at->format('g:i A'),
                 'receipt_url' => route('payment.receipt', $payment->payment_id),
+                'is_cancelled' => $isCancelled,
+                'status' => $isCancelled ? 'CANCELLED' : 'ACTIVE',
             ];
+
+            if ($isCancelled) {
+                $tx['cancelled_at'] = $payment->cancelled_at?->format('M d, Y g:i A');
+                $tx['cancelled_by_name'] = $payment->cancelledBy?->name ?? 'Unknown';
+                $tx['cancellation_reason'] = $payment->cancellation_reason;
+            }
+
+            return $tx;
         });
 
         return [
@@ -330,6 +489,9 @@ class PaymentManagementService
                 'total_collected' => $totalCollected,
                 'total_collected_formatted' => '₱ '.number_format($totalCollected, 2),
                 'transaction_count' => $transactionCount,
+                'cancelled_amount' => $cancelledAmount,
+                'cancelled_amount_formatted' => '₱ '.number_format($cancelledAmount, 2),
+                'cancelled_count' => $cancelledCount,
                 'by_type' => $byType,
             ],
             'transactions' => $transactions,

@@ -55,6 +55,9 @@
                 <i class="fas fa-map-marked-alt mr-2 text-blue-600"></i>Assign Areas to Service Connections
             </h3>
             <div class="flex items-center gap-2">
+                <button onclick="autoAssignConnections()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg">
+                    <i class="fas fa-magic mr-1"></i> Auto-Assign
+                </button>
                 <button onclick="openBulkAssignModal()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg">
                     <i class="fas fa-layer-group mr-1"></i> Bulk Assign
                 </button>
@@ -304,6 +307,40 @@
                 <button type="button" onclick="closeSingleAssignModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
                 <button type="button" onclick="submitSingleAssign()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
                     <i class="fas fa-check mr-1"></i> Assign
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-Assign Confirmation Modal -->
+<div id="autoAssignModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onclick="closeAutoAssignModal()"></div>
+        <div class="relative z-10 w-full max-w-md p-6 mx-auto bg-white rounded-lg shadow-xl dark:bg-gray-800">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <i class="fas fa-magic mr-2 text-green-600"></i>Auto-Assign Connections
+                </h3>
+                <button onclick="closeAutoAssignModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg mb-3">
+                    <p class="text-sm text-blue-800 dark:text-blue-300">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        This will automatically assign all <strong>unassigned</strong> connections to areas based on their barangay address.
+                    </p>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Connections that already have an area will not be affected. Connections without a matching barangay will be skipped.
+                </p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeAutoAssignModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">Cancel</button>
+                <button type="button" id="autoAssignConfirmBtn" onclick="submitAutoAssign()" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+                    <i class="fas fa-magic mr-1"></i> Auto-Assign
                 </button>
             </div>
         </div>
@@ -681,6 +718,52 @@ async function removeAreaFromSelected() {
     } catch (error) {
         console.error('Error removing area:', error);
         showAreaToast('Error removing area', 'error');
+    }
+}
+
+// ============================================================================
+// Auto-Assign Connections by Barangay
+// ============================================================================
+
+function autoAssignConnections() {
+    document.getElementById('autoAssignModal').classList.remove('hidden');
+}
+
+function closeAutoAssignModal() {
+    document.getElementById('autoAssignModal').classList.add('hidden');
+}
+
+async function submitAutoAssign() {
+    const btn = document.getElementById('autoAssignConfirmBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Assigning...';
+
+    try {
+        const response = await fetch('/areas/auto-assign', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            closeAutoAssignModal();
+            loadConnectionsByArea();
+            loadConnectionAreaStats();
+            loadAreas();
+            showAreaToast(result.message, 'success');
+        } else {
+            showAreaToast(result.message || 'Error running auto-assign', 'error');
+        }
+    } catch (error) {
+        console.error('Error auto-assigning connections:', error);
+        showAreaToast('Error running auto-assign', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-magic mr-1"></i> Auto-Assign';
     }
 }
 

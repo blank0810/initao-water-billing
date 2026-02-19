@@ -11,15 +11,11 @@ class Purok extends Model
 
     protected $table = 'purok';
 
-
     protected $primaryKey = 'p_id';
-
 
     public $timestamps = false;
 
-
     public $incrementing = true;
-
 
     protected $keyType = 'int';
 
@@ -44,4 +40,3 @@ class Purok extends Model
         return $this->hasMany(ConsumerAddress::class, 'p_id', 'p_id');
     }
 }
-

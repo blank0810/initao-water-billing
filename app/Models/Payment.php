@@ -23,11 +23,15 @@ class Payment extends Model
         'amount_received',
         'user_id',
         'stat_id',
+        'cancelled_at',
+        'cancelled_by',
+        'cancellation_reason',
     ];
 
     protected $casts = [
         'payment_date' => 'date',
         'amount_received' => 'decimal:2',
+        'cancelled_at' => 'datetime',
     ];
 
     /**
@@ -60,5 +64,13 @@ class Payment extends Model
     public function paymentAllocations()
     {
         return $this->hasMany(PaymentAllocation::class, 'payment_id', 'payment_id');
+    }
+
+    /**
+     * Get the user who cancelled this payment
+     */
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by', 'id');
     }
 }

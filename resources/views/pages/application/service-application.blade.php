@@ -658,7 +658,7 @@
                 customerPuroks: [],
 
                 // Same address checkbox
-                sameAsServiceAddress: false,
+                sameAsServiceAddress: true,
 
                 // Existing customer search
                 searchQuery: '',

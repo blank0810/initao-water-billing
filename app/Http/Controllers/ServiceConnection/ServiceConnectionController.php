@@ -276,7 +276,7 @@ class ServiceConnectionController extends Controller
                 if ($request->input('removal_read') < $currentAssignment->install_read) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Final reading cannot be less than the install reading (' . number_format($currentAssignment->install_read, 3) . ')',
+                        'message' => 'Final reading cannot be less than the install reading ('.number_format($currentAssignment->install_read, 3).')',
                     ], 422);
                 }
 

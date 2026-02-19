@@ -12,13 +12,13 @@ class PurokService
         $query = Purok::query()->with('status');
 
         // Search filter
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where('p_desc', 'like', "%{$search}%");
         }
 
         // Status filter
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('stat_id', $filters['status']);
         }
 

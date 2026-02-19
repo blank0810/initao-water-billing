@@ -12,17 +12,17 @@ class AreaService
         $query = Area::query()->with('status');
 
         // Search filter
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where('a_desc', 'like', "%{$filters['search']}%");
         }
 
         // Status filter
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('stat_id', $filters['status']);
         }
 
         $perPage = $filters['per_page'] ?? 15;
-        $paginated = $query->withCount(['activeAreaAssignments', 'serviceConnections', 'consumers'])
+        $paginated = $query->withCount(['activeAreaAssignments', 'serviceConnections'])
             ->orderBy('a_desc')
             ->paginate($perPage);
 
@@ -92,10 +92,10 @@ class AreaService
                     $q->whereNull('effective_to')
                         ->orWhere('effective_to', '>=', now()->format('Y-m-d'));
                 })->with('user:id,name,email');
-            }
+            },
         ])
-        ->withCount(['serviceConnections', 'consumers'])
-        ->findOrFail($id);
+            ->withCount(['serviceConnections'])
+            ->findOrFail($id);
 
         // Format active assignments
         $area->active_assignments = $area->areaAssignments->map(function ($assignment) {

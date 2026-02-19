@@ -10,13 +10,11 @@ class CustomerCharge extends Model
 {
     protected $table = 'CustomerCharge';
 
-
     protected $primaryKey = 'charge_id';
 
     public $timestamps = true;
 
     public $incrementing = true;
-
 
     protected $keyType = 'int';
 
@@ -106,11 +104,19 @@ class CustomerCharge extends Model
     }
 
     /**
-     * Accessor for paid amount (sum of all allocations)
+     * Accessor for paid amount (sum of active allocations only)
      */
     public function getPaidAmountAttribute(): float
     {
-        return (float) $this->paymentAllocations()->sum('amount_applied');
+        $cancelledStatusId = Status::getIdByDescription(Status::CANCELLED);
+
+        $query = $this->paymentAllocations();
+
+        if ($cancelledStatusId) {
+            $query->where('stat_id', '!=', $cancelledStatusId);
+        }
+
+        return (float) $query->sum('amount_applied');
     }
 
     /**

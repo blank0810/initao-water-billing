@@ -8,6 +8,7 @@ use App\Models\PenaltyConfiguration;
 use App\Models\Status;
 use App\Models\WaterBillHistory;
 use App\Services\Ledger\LedgerService;
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +18,8 @@ class PenaltyService
     private const PENALTY_CODE = 'LATE_PENALTY';
 
     public function __construct(
-        private LedgerService $ledgerService
+        private LedgerService $ledgerService,
+        private NotificationService $notificationService
     ) {}
 
     /**
@@ -171,6 +173,10 @@ class PenaltyService
                     'message' => $result['message'],
                 ];
             }
+        }
+
+        if ($processed > 0) {
+            $this->notificationService->notifyPenaltiesProcessed($processed, $userId);
         }
 
         return [

@@ -334,7 +334,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    @vite(['resources/css/app.css'])
 </head>
 <body>
     <!-- Back Link (Top Left) -->
@@ -493,12 +493,10 @@
         <button onclick="window.print()" class="btn btn-primary">
             <i class="fas fa-print"></i> Print Document
         </button>
-        <a href="{{ route('reports.billing-summary') }}?export=pdf&month={{ request('month', now()->month) }}&year={{ request('year', now()->year) }}" class="btn btn-secondary">
-            <i class="fas fa-file-pdf"></i> Export PDF
-        </a>
-        <a href="{{ route('reports.billing-summary') }}?export=excel&month={{ request('month', now()->month) }}&year={{ request('year', now()->year) }}" class="btn btn-secondary">
-            <i class="fas fa-file-excel"></i> Export Excel
-        </a>
+        @include('components.export-dropdown-print', [
+            'exportFilename' => 'billing-summary',
+            'exportSelector' => '.document'
+        ])
     </div>
 
     <script>

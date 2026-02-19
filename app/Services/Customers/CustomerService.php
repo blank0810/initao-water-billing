@@ -7,9 +7,9 @@ use App\Models\ConsumerAddress;
 use App\Models\Customer;
 use App\Models\CustomerCharge;
 use App\Models\CustomerLedger;
-use App\Models\PaymentAllocation;
 use App\Models\ServiceApplication;
 use App\Models\Status;
+use App\Models\WaterBillHistory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -198,33 +198,25 @@ class CustomerService
      */
     private function getCustomerCurrentBill(Customer $customer): float
     {
-        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        // Get BILL ledger entries and use source_id to check bill payment status
+        $billEntries = $customer->customerLedgerEntries
+            ->where('source_type', 'BILL');
 
-        // Sum unpaid BILL debits (ACTIVE = not yet paid)
-        $totalDebits = $customer->customerLedgerEntries
-            ->where('source_type', 'BILL')
-            ->where('stat_id', $activeStatusId)
-            ->sum('debit');
-
-        // Sum only PAYMENT credits that are allocated to bills via PaymentAllocation
-        // source_line_no on PAYMENT ledger entries stores the payment_allocation_id
-        $paymentEntries = $customer->customerLedgerEntries
-            ->where('source_type', 'PAYMENT');
-
-        $allocationIds = $paymentEntries->pluck('source_line_no')->filter()->values();
-
-        $totalCredits = 0;
-        if ($allocationIds->isNotEmpty()) {
-            $billAllocationIds = PaymentAllocation::whereIn('payment_allocation_id', $allocationIds)
-                ->where('target_type', 'BILL')
-                ->pluck('payment_allocation_id');
-
-            $totalCredits = $paymentEntries
-                ->whereIn('source_line_no', $billAllocationIds->toArray())
-                ->sum('credit');
+        if ($billEntries->isEmpty()) {
+            return 0;
         }
 
-        return (float) max(0, $totalDebits - $totalCredits);
+        // source_id points to WaterBillHistory.bill_id — check which are still unpaid
+        $unpaidBillIds = WaterBillHistory::whereIn('bill_id', $billEntries->pluck('source_id'))
+            ->whereIn('stat_id', array_filter([
+                Status::getIdByDescription(Status::ACTIVE),
+                Status::getIdByDescription(Status::OVERDUE),
+            ]))
+            ->pluck('bill_id');
+
+        return (float) $billEntries
+            ->whereIn('source_id', $unpaidBillIds->toArray())
+            ->sum('debit');
     }
 
     /**
@@ -511,26 +503,18 @@ class CustomerService
         // 2. Residential Count
         $residentialCount = Customer::where('c_type', 'RESIDENTIAL')->count();
 
-        // 3. Total Current Bill - Sum of unpaid BILL debits minus bill-related payments
+        // 3. Total Current Bill - Sum of unpaid BILL debits
+        // Join ledger to WaterBillHistory via source_id to check bill payment status
         $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+        $overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
 
-        $totalBillDebits = DB::table('CustomerLedger')
-            ->where('source_type', 'BILL')
-            ->where('stat_id', $activeStatusId)
-            ->sum('debit');
-
-        // Only subtract PAYMENT credits allocated to bills (via PaymentAllocation)
-        $totalBillCredits = DB::table('CustomerLedger')
-            ->where('source_type', 'PAYMENT')
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('PaymentAllocation')
-                    ->whereColumn('PaymentAllocation.payment_allocation_id', 'CustomerLedger.source_line_no')
-                    ->where('PaymentAllocation.target_type', 'BILL');
+        $totalCurrentBill = DB::table('CustomerLedger')
+            ->join('water_bill_history', function ($join) {
+                $join->on('CustomerLedger.source_id', '=', 'water_bill_history.bill_id')
+                    ->where('CustomerLedger.source_type', '=', 'BILL');
             })
-            ->sum('credit');
-
-        $totalCurrentBill = max(0, $totalBillDebits - $totalBillCredits);
+            ->whereIn('water_bill_history.stat_id', array_filter([$activeStatusId, $overdueStatusId]))
+            ->sum('CustomerLedger.debit');
 
         // 4. Overdue Count - Count distinct customers with unpaid bills past due date
         // Join CustomerLedger with WaterBillHistory to check due_date
