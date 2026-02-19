@@ -2,6 +2,7 @@
 
 namespace App\Services\Billing;
 
+use App\Models\BillAdjustment;
 use App\Models\CustomerLedger;
 use App\Models\MeterAssignment;
 use App\Models\MeterReading;
@@ -1289,18 +1290,27 @@ class WaterBillService
                 ];
             });
 
-        // Net adjustment amount from ledger ADJUST entries for this bill
-        $adjustLedgerDebit = CustomerLedger::where('connection_id', $connection->connection_id)
-            ->where('source_type', 'ADJUST')
-            ->where('stat_id', $activeStatusId)
-            ->whereIn('source_id', $bill->billAdjustments->pluck('bill_adjustment_id'))
-            ->sum('debit');
-        $adjustLedgerCredit = CustomerLedger::where('connection_id', $connection->connection_id)
-            ->where('source_type', 'ADJUST')
-            ->where('stat_id', $activeStatusId)
-            ->whereIn('source_id', $bill->billAdjustments->pluck('bill_adjustment_id'))
-            ->sum('credit');
-        $netAdjustmentFromLedger = (float) $adjustLedgerDebit - (float) $adjustLedgerCredit;
+        // Net adjustment from ledger for consumption-only adjustments.
+        // Amount adjustments already update bill->adjustment_total, so including
+        // their ledger entries here would double-count them.
+        $consumptionAdjustmentIds = $bill->billAdjustments
+            ->filter(fn ($adj) => $adj->stat_id === $activeStatusId && $adj->adjustment_category === BillAdjustment::CATEGORY_CONSUMPTION)
+            ->pluck('bill_adjustment_id');
+
+        $netAdjustmentFromLedger = 0;
+        if ($consumptionAdjustmentIds->isNotEmpty()) {
+            $adjustLedgerDebit = CustomerLedger::where('connection_id', $connection->connection_id)
+                ->where('source_type', 'ADJUST')
+                ->where('stat_id', $activeStatusId)
+                ->whereIn('source_id', $consumptionAdjustmentIds)
+                ->sum('debit');
+            $adjustLedgerCredit = CustomerLedger::where('connection_id', $connection->connection_id)
+                ->where('source_type', 'ADJUST')
+                ->where('stat_id', $activeStatusId)
+                ->whereIn('source_id', $consumptionAdjustmentIds)
+                ->sum('credit');
+            $netAdjustmentFromLedger = (float) $adjustLedgerDebit - (float) $adjustLedgerCredit;
+        }
 
         // Recent consumption history (last 6 billing periods for this connection)
         $recentBills = WaterBillHistory::with('period')

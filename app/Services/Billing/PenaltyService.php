@@ -2,8 +2,10 @@
 
 namespace App\Services\Billing;
 
+use App\Models\BillAdjustment;
 use App\Models\ChargeItem;
 use App\Models\CustomerCharge;
+use App\Models\CustomerLedger;
 use App\Models\PenaltyConfiguration;
 use App\Models\Status;
 use App\Models\WaterBillHistory;
@@ -79,11 +81,45 @@ class PenaltyService
     }
 
     /**
+     * Calculate the effective bill total including ledger-only consumption adjustments.
+     *
+     * Amount adjustments are already in adjustment_total. Consumption adjustments
+     * (adjustConsumption) only post to CustomerLedger, so we must add their net delta.
+     */
+    private function getEffectiveBillTotal(WaterBillHistory $bill): float
+    {
+        $activeStatusId = $this->getActiveStatusId();
+        $baseTotal = (float) $bill->water_amount + (float) $bill->adjustment_total;
+
+        // Get consumption-only adjustment IDs (these are ledger-only, not in adjustment_total)
+        $consumptionAdjustmentIds = $bill->billAdjustments
+            ->filter(fn ($adj) => $adj->stat_id === $activeStatusId && $adj->adjustment_category === BillAdjustment::CATEGORY_CONSUMPTION)
+            ->pluck('bill_adjustment_id');
+
+        if ($consumptionAdjustmentIds->isEmpty()) {
+            return $baseTotal;
+        }
+
+        $debit = (float) CustomerLedger::where('connection_id', $bill->connection_id)
+            ->where('source_type', 'ADJUST')
+            ->where('stat_id', $activeStatusId)
+            ->whereIn('source_id', $consumptionAdjustmentIds)
+            ->sum('debit');
+        $credit = (float) CustomerLedger::where('connection_id', $bill->connection_id)
+            ->where('source_type', 'ADJUST')
+            ->where('stat_id', $activeStatusId)
+            ->whereIn('source_id', $consumptionAdjustmentIds)
+            ->sum('credit');
+
+        return $baseTotal + ($debit - $credit);
+    }
+
+    /**
      * Find all overdue bills that are past due_date and still ACTIVE
      */
     public function findOverdueBills(): Collection
     {
-        return WaterBillHistory::with(['serviceConnection.customer', 'period'])
+        return WaterBillHistory::with(['serviceConnection.customer', 'period', 'billAdjustments'])
             ->where('stat_id', $this->getActiveStatusId())
             ->whereNotNull('due_date')
             ->whereDate('due_date', '<', now()->toDateString())
@@ -182,7 +218,7 @@ class PenaltyService
         // Calculate penalty as percentage of total bill amount (rate cached per request)
         $rate = $this->getPenaltyRate();
         $ratePercent = $rate * 100;
-        $billTotal = $bill->water_amount + $bill->adjustment_total;
+        $billTotal = $this->getEffectiveBillTotal($bill);
         $penaltyAmount = round($billTotal * $rate, 2);
 
         try {
@@ -352,7 +388,7 @@ class PenaltyService
                 $withPenalty++;
             } else {
                 $withoutPenalty++;
-                $estimatedTotal += round(($bill->water_amount + $bill->adjustment_total) * $rate, 2);
+                $estimatedTotal += round($this->getEffectiveBillTotal($bill) * $rate, 2);
             }
         }
 
