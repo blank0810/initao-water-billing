@@ -16,3 +16,7 @@ Schedule::call(function () {
 Schedule::command('billing:auto-create-period')
     ->lastDayOfMonth('00:00')
     ->description('Auto-create next month billing period and copy rates');
+
+Schedule::command('billing:auto-apply-penalties')
+    ->daily()
+    ->description('Auto-apply penalties to overdue bills');
