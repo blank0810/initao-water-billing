@@ -340,6 +340,13 @@ $user = Auth::user() ?? (object) [
                         <i class="fas fa-pen-fancy"></i>
                         <span>Document Signatories</span>
                     </a>
+                    <a href="{{ route('config.automation-settings.index') }}" @click="setActiveMenu('config-billing-automation')"
+                        :class="activeMenu === 'config-billing-automation' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-robot"></i>
+                        <span>Automation</span>
+                    </a>
                 </div>
                 @endcan
 
@@ -449,6 +456,7 @@ $user = Auth::user() ?? (object) [
                     '/config/account-types': 'config-billing-account-types',
                     '/config/charge-items': 'config-billing-charge-items',
                     '/config/document-signatories': 'config-billing-signatories',
+                    '/config/automation-settings': 'config-billing-automation',
                     '/admin/roles': 'config-access-roles',
                     '/admin/permissions': 'config-access-permissions',
                     '/admin/role-permissions': 'config-access-matrix',

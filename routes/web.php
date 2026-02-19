@@ -671,6 +671,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/document-signatories', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'index'])->name('config.document-signatories.index');
         Route::get('/document-signatories/active-users', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'getActiveUsers'])->name('config.document-signatories.active-users');
         Route::put('/document-signatories/{positionKey}', [\App\Http\Controllers\Admin\Config\DocumentSignatoryController::class, 'update'])->name('config.document-signatories.update');
+
+        // Automation Settings
+        Route::get('/automation-settings', [\App\Http\Controllers\Admin\Config\AutomationSettingController::class, 'index'])->name('config.automation-settings.index');
+        Route::post('/automation-settings', [\App\Http\Controllers\Admin\Config\AutomationSettingController::class, 'update'])->name('config.automation-settings.update');
     });
 
     // Document Signatory JS Data (accessible to any authenticated user for printing)
