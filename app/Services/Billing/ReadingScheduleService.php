@@ -496,6 +496,50 @@ class ReadingScheduleService
     }
 
     /**
+     * Auto-complete a schedule when all entries are completed.
+     * Called by system (not a user action). completed_by is null for system-initiated completions.
+     */
+    public function autoCompleteSchedule(int $scheduleId): array
+    {
+        $schedule = ReadingSchedule::with('period')->find($scheduleId);
+
+        if (! $schedule || $schedule->status !== 'in_progress') {
+            return ['success' => false, 'message' => 'Schedule not eligible for auto-completion.'];
+        }
+
+        if ($schedule->period?->is_closed) {
+            return ['success' => false, 'message' => 'Cannot modify schedule for a closed period.'];
+        }
+
+        $totalEntries = ReadingScheduleEntry::where('schedule_id', $scheduleId)->count();
+        if ($totalEntries === 0) {
+            return ['success' => false, 'message' => 'Schedule has no entries.'];
+        }
+
+        // Verify ALL entries are completed
+        $pendingCount = ReadingScheduleEntry::where('schedule_id', $scheduleId)
+            ->where('status_id', '!=', Status::getIdByDescription(Status::COMPLETED))
+            ->count();
+
+        if ($pendingCount > 0) {
+            return ['success' => false, 'message' => "Still {$pendingCount} entries pending."];
+        }
+
+        $schedule->update([
+            'status' => 'completed',
+            'actual_end_date' => now()->format('Y-m-d'),
+            'meters_missed' => 0,
+            'completed_by' => null, // System-initiated: no user actor
+        ]);
+
+        return [
+            'success' => true,
+            'message' => 'Schedule auto-completed (all entries read).',
+            'data' => $this->getScheduleById($schedule->schedule_id),
+        ];
+    }
+
+    /**
      * Mark schedule as delayed.
      */
     public function markAsDelayed(int $scheduleId, ?string $notes = null): array

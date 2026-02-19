@@ -8,6 +8,7 @@ use App\Models\ReadingSchedule;
 use App\Models\ReadingScheduleEntry;
 use App\Models\ServiceConnection;
 use App\Models\Status;
+use App\Models\SystemSetting;
 use App\Models\UploadedReading;
 use App\Services\FileUploadService;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,8 @@ class UploadedReadingService
 {
     public function __construct(
         private WaterBillService $waterBillService,
-        private FileUploadService $fileUploadService
+        private FileUploadService $fileUploadService,
+        private ReadingScheduleService $readingScheduleService
     ) {}
 
     /**
@@ -296,6 +298,39 @@ class UploadedReadingService
         foreach ($scheduleUploadCounts as $scheduleId => $count) {
             ReadingSchedule::where('schedule_id', $scheduleId)
                 ->increment('meters_read', $count);
+
+            // Check if all entries are now completed -> auto-close
+            if (SystemSetting::isEnabled(SystemSetting::AUTO_CLOSE_READING_SCHEDULE)) {
+                $this->tryAutoCompleteSchedule($scheduleId);
+            }
+        }
+    }
+
+    /**
+     * Try to auto-complete a schedule if all entries are completed.
+     */
+    private function tryAutoCompleteSchedule(int $scheduleId): void
+    {
+        $schedule = ReadingSchedule::find($scheduleId);
+
+        if (! $schedule || $schedule->status !== 'in_progress') {
+            return;
+        }
+
+        $totalEntries = ReadingScheduleEntry::where('schedule_id', $scheduleId)->count();
+
+        if ($totalEntries === 0) {
+            return;
+        }
+
+        $pending = ReadingScheduleEntry::where('schedule_id', $scheduleId)
+            ->where('status_id', '!=', Status::getIdByDescription(Status::COMPLETED))
+            ->count();
+
+        if ($pending === 0) {
+            // Note: this runs inside the processUploadedReadings() transaction.
+            // If the outer transaction rolls back, this schedule update will also be rolled back.
+            $this->readingScheduleService->autoCompleteSchedule($scheduleId);
         }
     }
 
