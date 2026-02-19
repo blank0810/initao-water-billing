@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             ChargeItemSeeder::class,      // Charge items (Connection Fee, Deposits, etc.)
             BillAdjustmentTypeSeeder::class, // Bill adjustment types (Meter Error, Penalty Waiver, etc.)
             AreaSeeder::class,            // Areas: 16 areas (one per barangay)
+            SystemSettingSeeder::class,   // System settings (automation flags)
 
             // RBAC seeders
             RoleSeeder::class,            // Roles (Super Admin, Admin, Billing Officer, etc.)
