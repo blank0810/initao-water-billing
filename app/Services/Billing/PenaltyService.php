@@ -62,7 +62,11 @@ class PenaltyService
     private function getActiveStatusId(): int
     {
         if ($this->activeStatusId === null) {
-            $this->activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+            $id = Status::getIdByDescription(Status::ACTIVE);
+            if ($id === null) {
+                throw new \RuntimeException('Status "'.Status::ACTIVE.'" not found. Ensure statuses are seeded.');
+            }
+            $this->activeStatusId = $id;
         }
 
         return $this->activeStatusId;
@@ -74,7 +78,11 @@ class PenaltyService
     private function getOverdueStatusId(): int
     {
         if ($this->overdueStatusId === null) {
-            $this->overdueStatusId = Status::getIdByDescription(Status::OVERDUE);
+            $id = Status::getIdByDescription(Status::OVERDUE);
+            if ($id === null) {
+                throw new \RuntimeException('Status "'.Status::OVERDUE.'" not found. Ensure statuses are seeded.');
+            }
+            $this->overdueStatusId = $id;
         }
 
         return $this->overdueStatusId;
@@ -93,7 +101,7 @@ class PenaltyService
 
         // Get consumption-only adjustment IDs (these are ledger-only, not in adjustment_total)
         $consumptionAdjustmentIds = $bill->billAdjustments
-            ->filter(fn ($adj) => $adj->stat_id === $activeStatusId && $adj->adjustment_category === BillAdjustment::CATEGORY_CONSUMPTION)
+            ->filter(fn ($adj) => (int) $adj->stat_id === $activeStatusId && $adj->adjustment_category === BillAdjustment::CATEGORY_CONSUMPTION)
             ->pluck('bill_adjustment_id');
 
         if ($consumptionAdjustmentIds->isEmpty()) {
@@ -355,7 +363,10 @@ class PenaltyService
             }
         }
 
-        $hasMore = $totalPending > $limit;
+        // Only signal more work if this batch actually made progress.
+        // If every bill in the batch errored, further calls would loop forever.
+        $madeProgress = $processed > 0 || $skipped > 0;
+        $hasMore = $madeProgress && ($totalPending > $limit);
 
         return [
             'success' => true,

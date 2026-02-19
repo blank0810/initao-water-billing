@@ -1273,7 +1273,7 @@ class WaterBillService
 
         // Bill adjustments (include direction for proper display)
         $adjustments = $bill->billAdjustments
-            ->filter(fn ($adj) => $adj->stat_id === $activeStatusId)
+            ->filter(fn ($adj) => (int) $adj->stat_id === $activeStatusId)
             ->map(function ($adj) {
                 $direction = $adj->billAdjustmentType?->direction ?? 'debit';
 
@@ -1294,7 +1294,7 @@ class WaterBillService
         // Amount adjustments already update bill->adjustment_total, so including
         // their ledger entries here would double-count them.
         $consumptionAdjustmentIds = $bill->billAdjustments
-            ->filter(fn ($adj) => $adj->stat_id === $activeStatusId && $adj->adjustment_category === BillAdjustment::CATEGORY_CONSUMPTION)
+            ->filter(fn ($adj) => (int) $adj->stat_id === $activeStatusId && $adj->adjustment_category === BillAdjustment::CATEGORY_CONSUMPTION)
             ->pluck('bill_adjustment_id');
 
         $netAdjustmentFromLedger = 0;
