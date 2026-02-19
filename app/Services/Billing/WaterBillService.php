@@ -2,6 +2,7 @@
 
 namespace App\Services\Billing;
 
+use App\Models\BillAdjustment;
 use App\Models\CustomerLedger;
 use App\Models\MeterAssignment;
 use App\Models\MeterReading;
@@ -238,20 +239,9 @@ class WaterBillService
             $applicableRate = $rates->last();
         }
 
-        // Calculate amount
-        $baseAmount = (float) $applicableRate->rate_val;
-        $rateIncrement = (float) $applicableRate->rate_inc;
-        $rangeMin = $applicableRate->range_min;
-        $excessConsumption = 0;
-        $excessAmount = 0;
-
-        // If rate_inc > 0, calculate excess
-        if ($rateIncrement > 0 && $consumption > $rangeMin) {
-            $excessConsumption = $consumption - $rangeMin;
-            $excessAmount = $excessConsumption * $rateIncrement;
-        }
-
-        $totalAmount = $baseAmount + $excessAmount;
+        // Calculate amount: consumption × rate per cu.m.
+        $ratePerCum = (float) $applicableRate->rate_val;
+        $totalAmount = $consumption * $ratePerCum;
 
         return [
             'success' => true,
@@ -260,10 +250,7 @@ class WaterBillService
                 'consumption' => $consumption,
                 'range' => $applicableRate->range_min.'-'.$applicableRate->range_max.' cu.m',
                 'range_id' => $applicableRate->range_id,
-                'base_amount' => $baseAmount,
-                'rate_increment' => $rateIncrement,
-                'excess_consumption' => $excessConsumption,
-                'excess_amount' => round($excessAmount, 2),
+                'rate_per_cum' => $ratePerCum,
                 'total_amount' => round($totalAmount, 2),
             ],
         ];
@@ -682,6 +669,8 @@ class WaterBillService
                 'adjustment_total' => (float) $bill->adjustment_total,
                 'total_amount' => round($totalAmount, 2),
                 'status' => $status,
+                'photo_url' => $bill->photo_url,
+                'has_photo' => $bill->has_photo,
             ];
         });
 
@@ -1148,7 +1137,7 @@ class WaterBillService
                 'created_at' => now(),
             ]);
 
-            // Create water bill history
+            // Create water bill history (inherit photo_path from uploaded reading)
             $bill = WaterBillHistory::create([
                 'connection_id' => $uploadedReading->connection_id,
                 'period_id' => $periodId,
@@ -1163,6 +1152,7 @@ class WaterBillService
                 'old_meter_consumption' => $oldMeterConsumption,
                 'new_meter_consumption' => $newMeterConsumption,
                 'stat_id' => $activeStatusId,
+                'photo_path' => $uploadedReading->photo_path,
             ]);
 
             // Create CustomerLedger debit entry for the bill
@@ -1281,13 +1271,46 @@ class WaterBillService
 
         $arrears = max(0, (float) $totalBillDebits - (float) $totalPaymentCredits);
 
-        // Bill adjustments
-        $adjustments = $bill->billAdjustments->map(function ($adj) {
-            return [
-                'type' => $adj->billAdjustmentType?->name ?? 'Adjustment',
-                'amount' => (float) $adj->amount,
-            ];
-        });
+        // Bill adjustments (include direction for proper display)
+        $adjustments = $bill->billAdjustments
+            ->filter(fn ($adj) => (int) $adj->stat_id === $activeStatusId)
+            ->map(function ($adj) {
+                $direction = $adj->billAdjustmentType?->direction ?? 'debit';
+
+                // For consumption adjustments, direction depends on bill change
+                if ($adj->adjustment_category === 'consumption' && $adj->old_amount !== null && $adj->new_amount !== null) {
+                    $direction = ((float) $adj->new_amount >= (float) $adj->old_amount) ? 'debit' : 'credit';
+                }
+
+                $amount = (float) $adj->amount;
+
+                return [
+                    'type' => $adj->billAdjustmentType?->name ?? 'Adjustment',
+                    'amount' => $direction === 'credit' ? -$amount : $amount,
+                ];
+            });
+
+        // Net adjustment from ledger for consumption-only adjustments.
+        // Amount adjustments already update bill->adjustment_total, so including
+        // their ledger entries here would double-count them.
+        $consumptionAdjustmentIds = $bill->billAdjustments
+            ->filter(fn ($adj) => (int) $adj->stat_id === $activeStatusId && $adj->adjustment_category === BillAdjustment::CATEGORY_CONSUMPTION)
+            ->pluck('bill_adjustment_id');
+
+        $netAdjustmentFromLedger = 0;
+        if ($consumptionAdjustmentIds->isNotEmpty()) {
+            $adjustLedgerDebit = CustomerLedger::where('connection_id', $connection->connection_id)
+                ->where('source_type', 'ADJUST')
+                ->where('stat_id', $activeStatusId)
+                ->whereIn('source_id', $consumptionAdjustmentIds)
+                ->sum('debit');
+            $adjustLedgerCredit = CustomerLedger::where('connection_id', $connection->connection_id)
+                ->where('source_type', 'ADJUST')
+                ->where('stat_id', $activeStatusId)
+                ->whereIn('source_id', $consumptionAdjustmentIds)
+                ->sum('credit');
+            $netAdjustmentFromLedger = (float) $adjustLedgerDebit - (float) $adjustLedgerCredit;
+        }
 
         // Recent consumption history (last 6 billing periods for this connection)
         $recentBills = WaterBillHistory::with('period')
@@ -1306,20 +1329,50 @@ class WaterBillService
             ];
         });
 
-        $totalAmount = (float) $bill->water_amount + (float) $bill->adjustment_total;
+        // Total = base bill + stored adjustments + ledger-only adjustments (consumption corrections)
+        $totalAmount = (float) $bill->water_amount + (float) $bill->adjustment_total + $netAdjustmentFromLedger;
+
+        // Look up applicable rate for this bill
+        $ratePerCum = null;
+        $rateTierRange = null;
+        $accountTypeId = $connection->account_type_id;
+        $periodId = $bill->period_id;
+        if ($accountTypeId) {
+            $allRates = WaterRate::where('stat_id', $activeStatusId)
+                ->where('class_id', $accountTypeId)
+                ->where(function ($q) use ($periodId) {
+                    $q->where('period_id', $periodId)
+                        ->orWhereNull('period_id');
+                })
+                ->orderByDesc('period_id')
+                ->orderBy('range_id')
+                ->get();
+
+            // Mirror calculateBillAmount(): exact range match, else fall back to highest tier
+            $applicableRate = $allRates->first(
+                fn ($r) => $bill->consumption >= $r->range_min && $bill->consumption <= $r->range_max
+            ) ?? $allRates->last();
+
+            if ($applicableRate) {
+                $ratePerCum = (float) $applicableRate->rate_val;
+                $rateTierRange = $applicableRate->range_min.'-'.$applicableRate->range_max;
+            }
+        }
 
         return [
             'bill' => [
                 'bill_id' => $bill->bill_id,
                 'consumption' => (float) $bill->consumption,
                 'water_amount' => (float) $bill->water_amount,
-                'adjustment_total' => (float) $bill->adjustment_total,
+                'adjustment_total' => round((float) $bill->adjustment_total + $netAdjustmentFromLedger, 2),
                 'total_amount' => round($totalAmount, 2),
                 'due_date' => $bill->due_date,
                 'created_at' => $bill->created_at,
                 'is_meter_change' => (bool) $bill->is_meter_change,
                 'old_meter_consumption' => $bill->old_meter_consumption ? (float) $bill->old_meter_consumption : null,
                 'new_meter_consumption' => $bill->new_meter_consumption ? (float) $bill->new_meter_consumption : null,
+                'rate_per_cum' => $ratePerCum,
+                'rate_tier_range' => $rateTierRange,
             ],
             'readings' => [
                 'previous' => (float) ($bill->previousReading?->reading_value ?? 0),

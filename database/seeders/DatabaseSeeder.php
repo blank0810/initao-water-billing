@@ -53,6 +53,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolePermissionSeeder::class,  // Assign permissions to roles
             TestUsersSeeder::class,       // Create test users for each role (includes super admin)
+            PenaltyConfigurationSeeder::class, // Penalty rate configuration (10% default)
             PeriodSeeder::class,          // Billing periods (12 months)
             MiscReferenceSeeder::class,   // Misc references (penalties, discounts, surcharges)
             MeterSeeder::class,           // Sample meters (25 meters: Neptune, Sensus, Badger, Itron, Master Meter)

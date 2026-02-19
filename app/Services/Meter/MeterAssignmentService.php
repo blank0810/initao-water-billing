@@ -240,7 +240,12 @@ class MeterAssignmentService
      */
     public function getCurrentAssignment(int $connectionId): ?MeterAssignment
     {
-        return MeterAssignment::with('meter')
+        return MeterAssignment::with([
+            'meter',
+            'meterReadings' => fn ($q) => $q->whereNotNull('period_id')->orderBy('reading_date', 'asc'),
+            'meterReadings.period',
+            'meterReadings.readingResponsibility',
+        ])
             ->where('connection_id', $connectionId)
             ->whereNull('removed_at')
             ->first();
@@ -251,7 +256,12 @@ class MeterAssignmentService
      */
     public function getAssignmentHistory(int $connectionId): Collection
     {
-        return MeterAssignment::with('meter')
+        return MeterAssignment::with([
+            'meter',
+            'meterReadings' => fn ($q) => $q->whereNotNull('period_id')->orderBy('reading_date', 'asc'),
+            'meterReadings.period',
+            'meterReadings.readingResponsibility',
+        ])
             ->where('connection_id', $connectionId)
             ->orderBy('installed_at', 'desc')
             ->get();

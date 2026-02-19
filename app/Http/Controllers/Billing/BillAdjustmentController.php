@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Billing;
 
 use App\Http\Controllers\Controller;
+use App\Models\Period;
+use App\Models\Status;
 use App\Services\Billing\BillAdjustmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,6 +14,39 @@ class BillAdjustmentController extends Controller
     public function __construct(
         private BillAdjustmentService $adjustmentService
     ) {}
+
+    /**
+     * Get all billing periods for adjustments (includes closed periods).
+     */
+    public function periods(): JsonResponse
+    {
+        $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
+
+        $periods = Period::select('per_id', 'per_name', 'start_date', 'end_date', 'grace_period', 'is_closed', 'stat_id')
+            ->orderBy('start_date', 'desc')
+            ->get()
+            ->map(function ($period) use ($activeStatusId) {
+                return [
+                    'per_id' => $period->per_id,
+                    'per_name' => $period->per_name,
+                    'start_date' => $period->start_date,
+                    'end_date' => $period->end_date,
+                    'grace_period' => $period->grace_period,
+                    'is_closed' => (bool) $period->is_closed,
+                    'is_active' => $period->stat_id === $activeStatusId,
+                ];
+            });
+
+        // Default period: most recent closed period
+        $defaultPeriod = $periods->first(fn ($p) => $p['is_closed']);
+        $defaultPeriodId = $defaultPeriod ? $defaultPeriod['per_id'] : ($periods->first()['per_id'] ?? null);
+
+        return response()->json([
+            'success' => true,
+            'data' => $periods,
+            'defaultPeriodId' => $defaultPeriodId,
+        ]);
+    }
 
     /**
      * Get all adjustments with optional filters.

@@ -17,8 +17,7 @@ class WaterRateFactory extends Factory
             'range_id' => fake()->numberBetween(1, 5),
             'range_min' => 0,
             'range_max' => 10,
-            'rate_val' => fake()->randomFloat(2, 50, 500),
-            'rate_inc' => fake()->randomFloat(2, 0, 20),
+            'rate_val' => fake()->randomFloat(2, 5, 30),
             'stat_id' => 2, // ACTIVE
         ];
     }

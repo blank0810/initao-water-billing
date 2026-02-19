@@ -59,7 +59,6 @@ class WaterRateService
                 'range_min' => $data['range_min'],
                 'range_max' => $data['range_max'],
                 'rate_val' => $data['rate_val'],
-                'rate_inc' => $data['rate_inc'],
             ]);
 
             return $existing->fresh();

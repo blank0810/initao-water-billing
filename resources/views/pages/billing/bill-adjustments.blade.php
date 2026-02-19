@@ -5,7 +5,7 @@
             <select x-model="periodFilter" @change="loadData()" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
                 <option value="">All Periods</option>
                 <template x-for="period in periods" :key="period.per_id">
-                    <option :value="String(period.per_id)" x-text="period.per_name"></option>
+                    <option :value="String(period.per_id)" x-text="period.per_name + (period.is_closed ? ' (Closed)' : ' (Open)')"></option>
                 </template>
             </select>
 
@@ -45,6 +45,18 @@
                 <i class="fas fa-file-export"></i>
             </button>
             <x-ui.button variant="primary" icon="fas fa-plus" onclick="openAddAdjustmentModal()">Add Adjustment</x-ui.button>
+        </div>
+    </div>
+
+    <!-- Open Period Warning -->
+    <div x-show="selectedPeriodIsOpen" x-cloak
+        class="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-600 dark:bg-amber-900/30 px-4 py-3">
+        <i class="fas fa-exclamation-triangle text-amber-500 dark:text-amber-400 mt-0.5"></i>
+        <div class="text-sm text-amber-800 dark:text-amber-200">
+            <span class="font-semibold">Not recommended.</span>
+            Creating adjustments for the currently open period is not recommended. Instead, use
+            <button onclick="openRecomputeModal()" class="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-100">Recompute Bill</button>
+            to recalculate bills from the current readings.
         </div>
     </div>
 
@@ -174,21 +186,26 @@ function adjustmentsData() {
             document.addEventListener('adjustment-created', () => this.loadData());
         },
 
+        get selectedPeriodIsOpen() {
+            if (!this.periodFilter) return false;
+            const selected = this.periods.find(p => String(p.per_id) === String(this.periodFilter));
+            return selected ? !selected.is_closed : false;
+        },
+
         async loadPeriods() {
             try {
-                const response = await fetch('/water-bills/billing-periods');
+                const response = await fetch('/bill-adjustments/periods');
                 const result = await response.json();
                 if (result.success) {
                     this.periods = result.data;
 
-                    // Set default period to active period
-                    if (result.activePeriodId) {
-                        this.periodFilter = String(result.activePeriodId);
+                    // Default to most recent closed period
+                    if (result.defaultPeriodId) {
+                        this.periodFilter = String(result.defaultPeriodId);
                     } else {
-                        // Fallback: find first non-closed period
-                        const activePeriod = this.periods.find(p => !p.is_closed);
-                        if (activePeriod) {
-                            this.periodFilter = String(activePeriod.per_id);
+                        // Fallback: first period in list
+                        if (this.periods.length > 0) {
+                            this.periodFilter = String(this.periods[0].per_id);
                         }
                     }
                 }

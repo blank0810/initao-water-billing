@@ -24,7 +24,6 @@ class WaterRate extends Model
         'range_min',
         'range_max',
         'rate_val',
-        'rate_inc',
         'stat_id',
     ];
 
@@ -35,7 +34,6 @@ class WaterRate extends Model
         'range_min' => 'integer',
         'range_max' => 'integer',
         'rate_val' => 'decimal:2',
-        'rate_inc' => 'decimal:2',
     ];
 
     /**
@@ -106,19 +104,7 @@ class WaterRate extends Model
             return 0;
         }
 
-        // For minimum charge tiers (rate_inc = 0), return the flat rate_val
-        if ($this->rate_inc == 0) {
-            return (float) $this->rate_val;
-        }
-
-        // Calculate consumption within this tier
-        $tierConsumption = min($consumption, $this->range_max) - $this->range_min;
-        if ($tierConsumption < 0) {
-            $tierConsumption = 0;
-        }
-
-        // Base rate + (consumption in tier * rate increment)
-        return (float) $this->rate_val + ($tierConsumption * (float) $this->rate_inc);
+        return $consumption * (float) $this->rate_val;
     }
 
     /**

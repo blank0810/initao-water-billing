@@ -59,6 +59,14 @@ class MeterReading extends Model
     }
 
     /**
+     * Get the reading responsibility from the database view
+     */
+    public function readingResponsibility()
+    {
+        return $this->hasOne(ReadingResponsibility::class, 'reading_id', 'reading_id');
+    }
+
+    /**
      * Get the water bill history as previous reading
      */
     public function waterBillHistoryAsPrevious()

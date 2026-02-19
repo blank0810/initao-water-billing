@@ -265,18 +265,14 @@
                     <!-- Calculation Breakdown -->
                     <template x-if="breakdown && !calculating">
                         <div class="space-y-3">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                                 <div class="p-2 bg-white dark:bg-gray-700 rounded">
                                     <p class="text-gray-500 dark:text-gray-400 text-xs uppercase">Range</p>
                                     <p class="font-medium text-gray-900 dark:text-white" x-text="breakdown.range"></p>
                                 </div>
                                 <div class="p-2 bg-white dark:bg-gray-700 rounded">
-                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase">Base Amount</p>
-                                    <p class="font-medium text-gray-900 dark:text-white">&#8369;<span x-text="parseFloat(breakdown.base_amount).toFixed(2)"></span></p>
-                                </div>
-                                <div class="p-2 bg-white dark:bg-gray-700 rounded">
-                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase">Excess (<span x-text="breakdown.excess_consumption"></span> x &#8369;<span x-text="breakdown.rate_increment"></span>)</p>
-                                    <p class="font-medium text-gray-900 dark:text-white">&#8369;<span x-text="parseFloat(breakdown.excess_amount).toFixed(2)"></span></p>
+                                    <p class="text-gray-500 dark:text-gray-400 text-xs uppercase">Rate per cu.m.</p>
+                                    <p class="font-medium text-gray-900 dark:text-white">&#8369;<span x-text="parseFloat(breakdown.rate_per_cum).toFixed(2)"></span></p>
                                 </div>
                                 <div class="p-2 bg-purple-100 dark:bg-purple-800 rounded">
                                     <p class="text-purple-600 dark:text-purple-300 text-xs uppercase font-semibold">Total Bill</p>

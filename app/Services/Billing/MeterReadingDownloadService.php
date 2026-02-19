@@ -321,7 +321,6 @@ class MeterReadingDownloadService
                 'range_min' => $rate->range_min,
                 'range_max' => $rate->range_max,
                 'rate_val' => (float) $rate->rate_val,
-                'rate_increment' => (float) $rate->rate_inc,
             ];
         });
 
@@ -381,7 +380,6 @@ class MeterReadingDownloadService
                 'range_min' => $rate->range_min,
                 'range_max' => $rate->range_max,
                 'rate_val' => (float) $rate->rate_val,
-                'rate_increment' => (float) $rate->rate_inc,
             ];
         });
 

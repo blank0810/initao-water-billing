@@ -149,8 +149,7 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Class</th>
                         <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Tier</th>
                         <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Range (cu.m)</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Base Rate</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Rate/cu.m</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Rate per cu.m.</th>
                         <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Type</th>
                         <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -173,9 +172,6 @@
                             </td>
                             <td class="px-4 py-3 text-right text-sm font-semibold text-gray-900 dark:text-white">
                                 <span x-text="'₱ ' + parseFloat(rate.rate_val).toFixed(2)"></span>
-                            </td>
-                            <td class="px-4 py-3 text-right text-sm text-gray-700 dark:text-gray-300">
-                                <span x-text="parseFloat(rate.rate_inc) > 0 ? '₱ ' + parseFloat(rate.rate_inc).toFixed(2) : '-'"></span>
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <span x-show="rate.period_id === null" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-600 dark:text-gray-300">
@@ -201,7 +197,7 @@
                     </template>
                     <template x-if="filteredRates.length === 0">
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                 <i class="fas fa-inbox text-3xl mb-2 opacity-50"></i>
                                 <p>No rates found</p>
                             </td>
@@ -316,25 +312,11 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Base Rate (₱)</label>
-                            <input type="number" x-model="editingRate.rate_val" step="0.01" min="0"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rate per cu.m (₱)</label>
-                            <input type="number" x-model="editingRate.rate_inc" step="0.01" min="0"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-
-                    <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                        <p class="text-xs text-blue-700 dark:text-blue-300">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            <strong>Base Rate:</strong> Fixed charge for this tier.<br>
-                            <strong>Rate per cu.m:</strong> Additional charge per cubic meter above the minimum.
-                        </p>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rate per cu.m. (₱)</label>
+                        <input type="number" x-model="editingRate.rate_val" step="0.01" min="0"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        <p class="mt-1 text-xs text-gray-500">Bill = Consumption x Rate per cu.m.</p>
                     </div>
                 </div>
                 <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
@@ -409,8 +391,7 @@
                             <li><code>range_id</code> - Tier level (1, 2, 3, 4)</li>
                             <li><code>range_min</code> - Minimum consumption</li>
                             <li><code>range_max</code> - Maximum consumption</li>
-                            <li><code>rate_val</code> - Base rate value</li>
-                            <li><code>rate_inc</code> - Rate increment per cu.m</li>
+                            <li><code>rate_val</code> - Rate per cu.m.</li>
                         </ul>
                     </div>
                 </div>
@@ -478,17 +459,12 @@
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                                 placeholder="10">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Base Rate (₱)</label>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rate per cu.m. (₱)</label>
                             <input type="number" x-model="newRate.rate_val" step="0.01" min="0"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                placeholder="150.00">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rate per cu.m (₱)</label>
-                            <input type="number" x-model="newRate.rate_inc" step="0.01" min="0"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                                 placeholder="15.00">
+                            <p class="mt-1 text-xs text-gray-500">Bill = Consumption x Rate per cu.m.</p>
                         </div>
                     </div>
 
@@ -660,7 +636,6 @@ function periodRatesData() {
                     },
                     body: JSON.stringify({
                         rate_val: this.editingRate.rate_val,
-                        rate_inc: this.editingRate.rate_inc,
                         range_min: this.editingRate.range_min,
                         range_max: this.editingRate.range_max,
                         period_id: this.selectedPeriodId === 'default' ? null : this.selectedPeriodId
@@ -771,7 +746,6 @@ function periodRatesData() {
                 range_min: '',
                 range_max: '',
                 rate_val: '',
-                rate_inc: '',
             };
             this.addRateError = '';
             this.showAddRateModal = true;

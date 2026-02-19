@@ -33,6 +33,7 @@ class WaterBillHistory extends Model
         'old_meter_consumption',
         'new_meter_consumption',
         'stat_id',
+        'photo_path',
     ];
 
     protected $casts = [
@@ -99,6 +100,22 @@ class WaterBillHistory extends Model
     public function getTotalAmountAttribute()
     {
         return $this->water_amount + $this->adjustment_total;
+    }
+
+    /**
+     * Get the full URL for the reading photo, or a default placeholder.
+     */
+    public function getPhotoUrlAttribute(): string
+    {
+        return asset($this->photo_path ?? 'images/no-reading-photo.svg');
+    }
+
+    /**
+     * Check if this bill has an actual reading photo.
+     */
+    public function getHasPhotoAttribute(): bool
+    {
+        return ! empty($this->photo_path);
     }
 
     /**
