@@ -510,6 +510,18 @@ class PaymentService
                 $remainingPayment -= $applyToBill;
             }
 
+            // Post-allocation check: mark bill as PAID if fully covered
+            // Handles edge cases where bill remaining was already 0 (e.g. zero-amount bills,
+            // or bill fully covered by prior partial payments with only charges outstanding)
+            $bill->refresh();
+            if ($bill->stat_id !== $paidStatusId && $bill->remaining_amount <= 0) {
+                $bill->update(['stat_id' => $paidStatusId]);
+
+                CustomerLedger::where('source_type', 'BILL')
+                    ->where('source_id', $bill->bill_id)
+                    ->update(['stat_id' => $paidStatusId]);
+            }
+
             $totalApplied = $allocations->sum('amount_applied');
 
             return [
