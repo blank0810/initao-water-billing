@@ -138,7 +138,8 @@ class PaymentManagementService
 
         // Pre-fetch unpaid charges grouped by (connection_id, period_id) to avoid N+1
         // JOIN CustomerLedger to get period_id for each charge — associates charges with specific bills
-        $bills = $query->orderBy('due_date', 'asc')->get();
+        $bills = $query->orderBy('due_date', 'asc')->get()
+            ->filter(fn ($bill) => $bill->remaining_amount > 0);
         $connectionIds = $bills->pluck('connection_id')->unique()->values();
 
         $chargesByBill = CustomerCharge::select('CustomerCharge.*', 'CustomerLedger.period_id as ledger_period_id')
@@ -240,8 +241,9 @@ class PaymentManagementService
         });
         $pendingAppCount = $pendingApplications->count();
 
-        // Pending water bills
-        $pendingBills = WaterBillHistory::whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))->get();
+        // Pending water bills (exclude fully paid / zero-remaining)
+        $pendingBills = WaterBillHistory::whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))->get()
+            ->filter(fn ($b) => $b->remaining_amount > 0);
         $totalPendingBills = $pendingBills->sum(fn ($b) => $b->remaining_amount);
         $pendingBillCount = $pendingBills->count();
 

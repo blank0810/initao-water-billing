@@ -390,7 +390,10 @@
             receipt: {},
 
             init() {
-                // No pre-fill — let cashier enter actual amount received
+                // Pre-fill amount with total due
+                this.$nextTick(() => {
+                    this.amountReceived = this.totalDue;
+                });
             },
 
             get billsWithCharges() {
