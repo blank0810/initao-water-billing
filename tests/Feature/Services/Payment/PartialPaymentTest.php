@@ -345,6 +345,7 @@ it('correctly computes paid_amount and remaining_amount on WaterBillHistory', fu
         'target_id' => $this->bill->bill_id,
         'amount_applied' => 40.00,
         'period_id' => $this->period->per_id,
+        'stat_id' => $this->activeStatusId,
         'connection_id' => $this->connection->connection_id,
     ]);
 

@@ -115,6 +115,7 @@ class PaymentService
                     'amount_applied' => $remainingOnCharge,
                     'period_id' => null,
                     'connection_id' => $charge->connection_id,
+                    'stat_id' => $activeStatusId,
                 ]);
 
                 $allocations->push($allocation);
@@ -455,6 +456,7 @@ class PaymentService
                     'amount_applied' => $applyAmount,
                     'period_id' => $bill->period_id,
                     'connection_id' => $connection->connection_id,
+                    'stat_id' => $activeStatusId,
                 ]);
                 $allocations->push($chargeAllocation);
 
@@ -488,6 +490,7 @@ class PaymentService
                     'amount_applied' => $applyToBill,
                     'period_id' => $bill->period_id,
                     'connection_id' => $connection->connection_id,
+                    'stat_id' => $activeStatusId,
                 ]);
                 $allocations->push($billAllocation);
 
@@ -656,6 +659,7 @@ class PaymentService
                     'amount_applied' => $billAmount,
                     'period_id' => $bill->period_id,
                     'connection_id' => $connectionId,
+                    'stat_id' => $activeStatusId,
                 ]);
 
                 $allocations->push($allocation);
@@ -686,6 +690,7 @@ class PaymentService
                     'amount_applied' => $chargeAmount,
                     'period_id' => $chargePeriodMap->get($charge->charge_id),
                     'connection_id' => $connectionId,
+                    'stat_id' => $activeStatusId,
                 ]);
 
                 $allocations->push($allocation);
