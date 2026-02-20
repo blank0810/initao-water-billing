@@ -172,7 +172,9 @@ class PaymentManagementService
         return $bills->map(function ($bill) use ($overdueId, $chargesByBill, $oldestBillPerConnection) {
             $connection = $bill->serviceConnection;
             $customer = $connection?->customer;
-            $totalAmount = $bill->water_amount + $bill->adjustment_total;
+            $totalAmount = $bill->remaining_amount;
+            $originalAmount = $bill->total_amount;
+            $isPartiallyPaid = $bill->isPartiallyPaid();
             $isOverdue = $bill->stat_id === $overdueId;
 
             // Get charges for this specific bill (by connection_id + period_id)
@@ -201,13 +203,16 @@ class PaymentManagementService
                 'address' => $this->formatAddress($connection?->address),
                 'amount' => $totalAmount,
                 'amount_formatted' => '₱ '.number_format($totalAmount, 2),
+                'original_amount' => $originalAmount,
+                'original_amount_formatted' => '₱ '.number_format($originalAmount, 2),
+                'is_partially_paid' => $isPartiallyPaid,
                 'charges_count' => $connCharges['count'],
                 'charges_total' => $connCharges['total'],
                 'charges_total_formatted' => $connCharges['total'] > 0 ? '₱ '.number_format($connCharges['total'], 2) : null,
                 'date' => $bill->due_date,
                 'date_formatted' => $bill->due_date?->format('M d, Y'),
-                'status' => $isOverdue ? 'Overdue' : 'Pending Payment',
-                'status_color' => $isOverdue ? 'red' : 'yellow',
+                'status' => $isPartiallyPaid ? 'Partially Paid' : ($isOverdue ? 'Overdue' : 'Pending Payment'),
+                'status_color' => $isPartiallyPaid ? 'blue' : ($isOverdue ? 'red' : 'yellow'),
                 'action_url' => route('payment.process.bill', $bill->bill_id),
                 'process_url' => route('payment.process.bill', $bill->bill_id),
                 'print_url' => null,
@@ -237,7 +242,7 @@ class PaymentManagementService
 
         // Pending water bills
         $pendingBills = WaterBillHistory::whereIn('stat_id', array_filter([$activeStatusId, $overdueStatusId]))->get();
-        $totalPendingBills = $pendingBills->sum(fn ($b) => $b->water_amount + $b->adjustment_total);
+        $totalPendingBills = $pendingBills->sum(fn ($b) => $b->remaining_amount);
         $pendingBillCount = $pendingBills->count();
 
         // Combined totals
