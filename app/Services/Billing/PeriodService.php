@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\DB;
 
 class PeriodService
 {
+    public function __construct(
+        private WaterRateService $waterRateService
+    ) {}
+
     /**
      * Get all periods with statistics for table display.
      */
@@ -114,9 +118,19 @@ class PeriodService
                 'stat_id' => Status::getIdByDescription(Status::ACTIVE),
             ]);
 
+            // Auto-copy water rates from the most recent previous period (or defaults)
+            $ratesCopied = $this->copyRatesFromPreviousPeriod($period);
+
+            $message = 'Period created successfully.';
+            if ($ratesCopied > 0) {
+                $message .= " {$ratesCopied} water rate(s) copied from previous period.";
+            } else {
+                $message .= ' No previous rates found to copy — please set up rates manually.';
+            }
+
             return [
                 'success' => true,
-                'message' => 'Period created successfully. Use "Create Period Rates" to set up rates for this period.',
+                'message' => $message,
                 'data' => $this->getPeriodDetails($period->per_id),
             ];
         });
@@ -374,5 +388,30 @@ class PeriodService
 
         // Allow reopening within 24 hours
         return $period->closed_at->diffInHours(now()) <= 24;
+    }
+
+    /**
+     * Copy water rates from the most recent previous period into the new period.
+     * Falls back to default rates if no previous period has rates.
+     */
+    private function copyRatesFromPreviousPeriod(Period $newPeriod): int
+    {
+        // Find the most recent period before this one that has rates
+        $previousPeriod = Period::where('per_id', '!=', $newPeriod->per_id)
+            ->where('start_date', '<', $newPeriod->start_date)
+            ->whereHas('waterRates')
+            ->orderByDesc('start_date')
+            ->first();
+
+        try {
+            return $this->waterRateService->copyRatesToPeriod(
+                $newPeriod->per_id,
+                0,
+                $previousPeriod?->per_id
+            );
+        } catch (\DomainException) {
+            // No source rates found at all
+            return 0;
+        }
     }
 }

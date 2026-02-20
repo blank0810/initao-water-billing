@@ -309,14 +309,16 @@ $user = Auth::user() ?? (object) [
                 </a>
 
                 <!-- Billing Configuration Submenu -->
-                <button @click="toggleSubmenu('billingConfig')"
-                    :class="[activeMenu.startsWith('config-billing-') && 'active', openSubmenus.billingConfig && 'icon-glow']"
-                    class="nav-submenu-item">
-                    <span class="nav-submenu-notch"></span>
-                    <i class="fas fa-receipt"></i>
-                    <span style="flex:1; text-align:left;">Billing Configuration</span>
-                    <i class="fas fa-chevron-down nav-btn-chevron" :class="openSubmenus.billingConfig && 'rotated'"></i>
-                </button>
+                <div class="space-y-1">
+                    <button @click="toggleSubmenu('billingConfig')"
+                        :class="activeMenu.startsWith('config-billing-') ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 font-medium' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                        class="flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-sm">
+                        <div class="flex items-center">
+                            <i class="fas fa-receipt w-4 text-xs mr-2.5"></i>
+                            <span>Billing Configuration</span>
+                        </div>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': openSubmenus.billingConfig }"></i>
+                    </button>
 
                 <div x-show="openSubmenus.billingConfig" x-collapse class="nav-submenu" style="padding-left: 12px;">
                     <a href="{{ route('config.account-types.index') }}" @click="setActiveMenu('config-billing-account-types')"
@@ -332,6 +334,20 @@ $user = Auth::user() ?? (object) [
                         <span class="nav-submenu-notch"></span>
                         <i class="fas fa-file-invoice-dollar"></i>
                         <span>Application Fee Templates</span>
+                    </a>
+                    <a href="{{ route('config.penalty.index') }}" @click="setActiveMenu('config-billing-penalty')"
+                        :class="activeMenu === 'config-billing-penalty' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-gavel"></i>
+                        <span>Penalty Configuration</span>
+                    </a>
+                    <a href="{{ route('config.document-signatories.index') }}" @click="setActiveMenu('config-billing-signatories')"
+                        :class="activeMenu === 'config-billing-signatories' && 'active'"
+                        class="nav-submenu-item">
+                        <span class="nav-submenu-notch"></span>
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>Document Signatories</span>
                     </a>
                 </div>
                 @endcan
@@ -473,6 +489,8 @@ $user = Auth::user() ?? (object) [
                     '/config/charge-items': 'config-billing-charge-items',
                     '/config/document-signatories': 'config-system-signatories',
                     '/config/automation-settings': 'config-system-automation',
+                    '/config/penalty': 'config-billing-penalty',
+                    '/config/document-signatories': 'config-billing-signatories',
                     '/admin/roles': 'config-access-roles',
                     '/admin/permissions': 'config-access-permissions',
                     '/admin/role-permissions': 'config-access-matrix',

@@ -200,8 +200,11 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                <template x-for="(meter, index) in meterHistory" :key="meter.ma_id || index">
-                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                <template x-for="(meter, index) in meterHistory" :key="meter.assignment_id || index">
+                                    <tr @click="selectMeter(meter.assignment_id)" @keydown.enter="selectMeter(meter.assignment_id)" @keydown.space.prevent="selectMeter(meter.assignment_id)" tabindex="0" role="button" class="cursor-pointer transition-colors"
+                                        :class="selectedAssignmentId === meter.assignment_id
+                                            ? 'bg-blue-50 dark:bg-blue-900/20 ring-1 ring-inset ring-blue-200 dark:ring-blue-700'
+                                            : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'">
                                         <td class="py-3 px-3 text-sm font-mono text-gray-900 dark:text-white" x-text="meter.meter?.mtr_serial || '-'"></td>
                                         <td class="py-3 px-3 text-sm text-gray-700 dark:text-gray-300" x-text="meter.meter?.mtr_brand || '-'"></td>
                                         <td class="py-3 px-3 text-sm text-right text-gray-900 dark:text-white" x-text="formatNumber(meter.install_read)"></td>
@@ -222,6 +225,83 @@
                             <i class="fas fa-inbox text-4xl text-gray-300 dark:text-gray-600 mb-2"></i>
                             <p class="text-sm text-gray-500 dark:text-gray-400">No meter history available</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Meter Readings -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6"
+                    x-show="selectedAssignmentId">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white flex items-center">
+                            <i class="fas fa-chart-line mr-2 text-teal-600 dark:text-teal-400"></i>
+                            Meter Readings
+                            <span class="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                                — <span class="font-mono" x-text="selectedMeterSerial"></span>
+                            </span>
+                        </h3>
+                        <span class="text-xs text-gray-500 dark:text-gray-400" x-show="selectedMeterReadings.length > 0"
+                            x-text="selectedMeterReadings.length + ' reading' + (selectedMeterReadings.length !== 1 ? 's' : '')"></span>
+                    </div>
+
+                    <div class="overflow-x-auto" x-show="selectedMeterReadings.length > 0">
+                        <table class="min-w-full">
+                            <thead>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <th class="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase py-2 px-3">Period</th>
+                                    <th class="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase py-2 px-3">Reading Date</th>
+                                    <th class="text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase py-2 px-3">Reading (cu.m.)</th>
+                                    <th class="text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase py-2 px-3">Consumption</th>
+                                    <th class="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase py-2 px-3">Estimated</th>
+                                    <th class="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase py-2 px-3">Reader</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                                <template x-for="(reading, idx) in paginatedReadings" :key="reading.reading_id || idx">
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="py-3 px-3 text-sm text-gray-900 dark:text-white" x-text="reading.period?.per_name || '-'"></td>
+                                        <td class="py-3 px-3 text-sm text-gray-700 dark:text-gray-300" x-text="formatDate(reading.reading_date)"></td>
+                                        <td class="py-3 px-3 text-sm text-right font-mono text-gray-900 dark:text-white" x-text="formatNumber(reading.reading_value)"></td>
+                                        <td class="py-3 px-3 text-sm text-right font-mono text-gray-900 dark:text-white" x-text="getConsumption(idx)"></td>
+                                        <td class="py-3 px-3 text-center">
+                                            <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full"
+                                                :class="reading.is_estimated
+                                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'"
+                                                x-text="reading.is_estimated ? 'Yes' : 'No'"></span>
+                                        </td>
+                                        <td class="py-3 px-3 text-sm text-gray-700 dark:text-gray-300" x-text="reading.reading_responsibility?.responsible_user_name || '-'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+
+                        <!-- Pagination -->
+                        <div x-show="totalReadingsPages > 1"
+                            class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                            <span class="text-xs text-gray-500 dark:text-gray-400"
+                                x-text="'Page ' + readingsPage + ' of ' + totalReadingsPages"></span>
+                            <div class="flex gap-2">
+                                <button @click="readingsPage--" :disabled="readingsPage <= 1"
+                                    class="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors"
+                                    :class="readingsPage <= 1
+                                        ? 'border-gray-200 text-gray-400 cursor-not-allowed dark:border-gray-700 dark:text-gray-600'
+                                        : 'border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'">
+                                    <i class="fas fa-chevron-left mr-1"></i>Previous
+                                </button>
+                                <button @click="readingsPage++" :disabled="readingsPage >= totalReadingsPages"
+                                    class="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors"
+                                    :class="readingsPage >= totalReadingsPages
+                                        ? 'border-gray-200 text-gray-400 cursor-not-allowed dark:border-gray-700 dark:text-gray-600'
+                                        : 'border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'">
+                                    Next<i class="fas fa-chevron-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="selectedMeterReadings.length === 0" class="text-center py-8">
+                        <i class="fas fa-chart-line text-4xl text-gray-300 dark:text-gray-600 mb-2"></i>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">No billing readings recorded for this meter</p>
                     </div>
                 </div>
 
@@ -548,6 +628,53 @@
             balance: balanceData || { total_billed: 0, total_paid: 0, balance: 0 },
             currentMeter: meterData,
             meterHistory: historyData || [],
+            selectedAssignmentId: null,
+            readingsPage: 1,
+            readingsPerPage: 12,
+
+            init() {
+                this.selectedAssignmentId = this.currentMeter?.assignment_id || null;
+            },
+
+            get selectedAssignment() {
+                if (!this.selectedAssignmentId) return null;
+                if (this.currentMeter?.assignment_id === this.selectedAssignmentId) return this.currentMeter;
+                return this.meterHistory.find(m => m.assignment_id === this.selectedAssignmentId) || null;
+            },
+
+            get selectedMeterReadings() {
+                return this.selectedAssignment?.meter_readings || [];
+            },
+
+            get paginatedReadings() {
+                const start = (this.readingsPage - 1) * this.readingsPerPage;
+                return this.selectedMeterReadings.slice(start, start + this.readingsPerPage);
+            },
+
+            get totalReadingsPages() {
+                return Math.ceil(this.selectedMeterReadings.length / this.readingsPerPage) || 1;
+            },
+
+            get selectedMeterSerial() {
+                return this.selectedAssignment?.meter?.mtr_serial || '-';
+            },
+
+            selectMeter(assignmentId) {
+                this.selectedAssignmentId = assignmentId;
+                this.readingsPage = 1;
+            },
+
+            getConsumption(pageIndex) {
+                const globalIndex = (this.readingsPage - 1) * this.readingsPerPage + pageIndex;
+                const readings = this.selectedMeterReadings;
+                const current = parseFloat(readings[globalIndex]?.reading_value || 0);
+                if (globalIndex === 0) {
+                    const installRead = parseFloat(this.selectedAssignment?.install_read || 0);
+                    return (current - installRead).toFixed(3);
+                }
+                const previous = parseFloat(readings[globalIndex - 1]?.reading_value || 0);
+                return (current - previous).toFixed(3);
+            },
 
             formatCurrency(amount) {
                 return new Intl.NumberFormat('en-PH', {

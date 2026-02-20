@@ -130,10 +130,10 @@
                         </template>
                     </div>
 
-                    <!-- Base Rate -->
-                    <div>
+                    <!-- Rate per cu.m. -->
+                    <div class="col-span-2">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Base Rate (₱) <span class="text-red-500">*</span>
+                            Rate per cu.m. (₱) <span class="text-red-500">*</span>
                         </label>
                         <input
                             type="number"
@@ -142,31 +142,12 @@
                             step="0.01"
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             :class="{'border-red-500': errors.rate_val}"
-                            placeholder="150.00"
-                            required
-                        />
-                        <template x-if="errors.rate_val">
-                            <p class="mt-1 text-sm text-red-600" x-text="errors.rate_val[0]"></p>
-                        </template>
-                    </div>
-
-                    <!-- Increment Rate -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Increment Rate (₱) <span class="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="number"
-                            x-model="form.rate_inc"
-                            min="0"
-                            step="0.01"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                            :class="{'border-red-500': errors.rate_inc}"
                             placeholder="15.00"
                             required
                         />
-                        <template x-if="errors.rate_inc">
-                            <p class="mt-1 text-sm text-red-600" x-text="errors.rate_inc[0]"></p>
+                        <p class="mt-1 text-xs text-gray-500">Bill = Consumption x Rate per cu.m.</p>
+                        <template x-if="errors.rate_val">
+                            <p class="mt-1 text-sm text-red-600" x-text="errors.rate_val[0]"></p>
                         </template>
                     </div>
                 </div>

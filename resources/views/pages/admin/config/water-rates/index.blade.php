@@ -47,8 +47,7 @@
                                 <tr>
                                     <th scope="col" class="px-6 py-3">Tier</th>
                                     <th scope="col" class="px-6 py-3">Range (m³)</th>
-                                    <th scope="col" class="px-6 py-3">Base Rate</th>
-                                    <th scope="col" class="px-6 py-3">Increment Rate</th>
+                                    <th scope="col" class="px-6 py-3">Rate per cu.m.</th>
                                     <th scope="col" class="px-6 py-3 text-center">Status</th>
                                     <th scope="col" class="px-6 py-3 text-center">Actions</th>
                                 </tr>
@@ -59,7 +58,6 @@
                                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white" x-text="rate.range_id"></td>
                                         <td class="px-6 py-4" x-text="rate.range_min + ' - ' + rate.range_max"></td>
                                         <td class="px-6 py-4" x-text="'₱' + parseFloat(rate.rate_val).toFixed(2)"></td>
-                                        <td class="px-6 py-4" x-text="'₱' + parseFloat(rate.rate_inc).toFixed(2)"></td>
                                         <td class="px-6 py-4 text-center">
                                             <span
                                                 x-bind:class="rate.stat_id == 2 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'"
@@ -84,7 +82,7 @@
                                 </template>
                                 <template x-if="tiers.length === 0">
                                     <tr>
-                                        <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                        <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                             <i class="fas fa-inbox text-3xl mb-2"></i>
                                             <p>No rate tiers configured</p>
                                         </td>

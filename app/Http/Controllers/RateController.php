@@ -221,7 +221,6 @@ class RateController extends Controller
             'range_min' => 'required|integer|min:0',
             'range_max' => 'required|integer|gt:range_min',
             'rate_val' => 'required|numeric|min:0',
-            'rate_inc' => 'required|numeric|min:0',
             'period_id' => 'nullable|integer|exists:period,per_id',
         ]);
 
@@ -257,7 +256,6 @@ class RateController extends Controller
             'range_min' => $request->input('range_min'),
             'range_max' => $request->input('range_max'),
             'rate_val' => $request->input('rate_val'),
-            'rate_inc' => $request->input('rate_inc'),
             'stat_id' => $activeStatusId,
         ]);
 
@@ -273,7 +271,6 @@ class RateController extends Controller
     {
         $request->validate([
             'rate_val' => 'required|numeric|min:0',
-            'rate_inc' => 'required|numeric|min:0',
             'range_min' => 'required|integer|min:0',
             'range_max' => 'required|integer|min:0',
             'period_id' => 'nullable|integer',
@@ -300,7 +297,6 @@ class RateController extends Controller
 
         $rate->update([
             'rate_val' => $request->input('rate_val'),
-            'rate_inc' => $request->input('rate_inc'),
             'range_min' => $request->input('range_min'),
             'range_max' => $request->input('range_max'),
         ]);
@@ -343,7 +339,7 @@ class RateController extends Controller
             $header = array_map(fn ($col) => strtolower(trim($col)), $header);
 
             // Required columns
-            $requiredCols = ['class_id', 'range_id', 'range_min', 'range_max', 'rate_val', 'rate_inc'];
+            $requiredCols = ['class_id', 'range_id', 'range_min', 'range_max', 'rate_val'];
             $colIndexes = [];
 
             foreach ($requiredCols as $col) {
@@ -377,7 +373,6 @@ class RateController extends Controller
                         'range_min' => (int) ($row[$colIndexes['range_min']] ?? 0),
                         'range_max' => (int) ($row[$colIndexes['range_max']] ?? 999),
                         'rate_val' => (float) ($row[$colIndexes['rate_val']] ?? 0),
-                        'rate_inc' => (float) ($row[$colIndexes['rate_inc']] ?? 0),
                         'stat_id' => $activeStatusId,
                     ]
                 );
@@ -425,7 +420,7 @@ class RateController extends Controller
             $handle = fopen('php://output', 'w');
 
             // Write header
-            fputcsv($handle, ['class_id', 'class_name', 'range_id', 'range_min', 'range_max', 'rate_val', 'rate_inc']);
+            fputcsv($handle, ['class_id', 'class_name', 'range_id', 'range_min', 'range_max', 'rate_val']);
 
             // Write data
             foreach ($defaultRates as $rate) {
@@ -436,7 +431,6 @@ class RateController extends Controller
                     $rate->range_min,
                     $rate->range_max,
                     $rate->rate_val,
-                    $rate->rate_inc,
                 ]);
             }
 
