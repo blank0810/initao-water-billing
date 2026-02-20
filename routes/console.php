@@ -12,3 +12,15 @@ Artisan::command('inspire', function () {
 Schedule::call(function () {
     app(NotificationService::class)->cleanupOldNotifications(90);
 })->daily()->description('Clean up old notifications');
+
+Schedule::command('billing:auto-create-period')
+    ->lastDayOfMonth('00:00')
+    ->description('Auto-create next month billing period and copy rates');
+
+Schedule::command('billing:auto-apply-penalties')
+    ->daily()
+    ->description('Auto-apply penalties to overdue bills');
+
+Schedule::command('billing:notify-overdue-schedules')
+    ->daily()
+    ->description('Notify admins about overdue reading schedules');

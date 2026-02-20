@@ -353,6 +353,40 @@ class NotificationService
     }
 
     /**
+     * Notify about auto-created period
+     */
+    public function notifyPeriodAutoCreated(string $periodName, ?string $closedPeriodName = null): void
+    {
+        $message = "Period {$periodName} was automatically created with rates copied from the previous period.";
+        if ($closedPeriodName) {
+            $message .= " Previous period ({$closedPeriodName}) was auto-closed.";
+        }
+
+        $this->notifyByRole(
+            Notification::TYPE_PERIOD_AUTO_CREATED,
+            'Period Auto-Created',
+            $message,
+            null, null, null, null
+        );
+    }
+
+    /**
+     * Notify about overdue reading schedule
+     */
+    public function notifyScheduleOverdue(string $areaName, string $periodName, int $scheduleId): void
+    {
+        $this->notifyByRole(
+            Notification::TYPE_SCHEDULE_OVERDUE,
+            'Reading Schedule Overdue',
+            "Reading schedule for {$areaName} ({$periodName}) is past its end date and needs manual review.",
+            null,
+            'ReadingSchedule',
+            $scheduleId,
+            null
+        );
+    }
+
+    /**
      * Get notifications for a user with optional filtering
      */
     public function getUserNotifications(
@@ -424,6 +458,8 @@ class NotificationService
             'billing' => [
                 Notification::TYPE_BILLS_GENERATED,
                 Notification::TYPE_PENALTY_PROCESSED,
+                Notification::TYPE_PERIOD_AUTO_CREATED,
+                Notification::TYPE_SCHEDULE_OVERDUE,
             ],
             'system' => [
                 Notification::TYPE_USER_CREATED,

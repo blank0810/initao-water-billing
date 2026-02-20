@@ -255,7 +255,7 @@ class PeriodService
     /**
      * Close a period.
      */
-    public function closePeriod(int $periodId, int $userId): array
+    public function closePeriod(int $periodId, ?int $userId = null): array
     {
         $period = Period::find($periodId);
 

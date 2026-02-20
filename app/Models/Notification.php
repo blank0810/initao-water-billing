@@ -59,6 +59,10 @@ class Notification extends Model
 
     public const TYPE_USER_CREATED = 'user_created';
 
+    public const TYPE_PERIOD_AUTO_CREATED = 'period_auto_created';
+
+    public const TYPE_SCHEDULE_OVERDUE = 'schedule_overdue';
+
     /**
      * Get the user that owns the notification
      */
@@ -166,8 +170,9 @@ class Notification extends Model
                 self::TYPE_CONNECTION_DISCONNECTED,
                 self::TYPE_PAYMENT_CANCELLED,
                 self::TYPE_PENALTY_PROCESSED,
+                self::TYPE_SCHEDULE_OVERDUE,
             ]) => 'red',
-            $type === self::TYPE_BILLS_GENERATED => 'amber',
+            in_array($type, [self::TYPE_BILLS_GENERATED, self::TYPE_PERIOD_AUTO_CREATED]) => 'amber',
             in_array($type, [self::TYPE_USER_CREATED, self::TYPE_CONNECTION_RECONNECTED]) => 'indigo',
             default => 'gray',
         };
@@ -182,7 +187,7 @@ class Notification extends Model
             str_starts_with($type, 'application_') => 'applications',
             in_array($type, [self::TYPE_PAYMENT_PROCESSED, self::TYPE_PAYMENT_CANCELLED, self::TYPE_APPLICATION_PAID]) => 'payments',
             str_starts_with($type, 'connection_') => 'connections',
-            in_array($type, [self::TYPE_BILLS_GENERATED, self::TYPE_PENALTY_PROCESSED]) => 'billing',
+            in_array($type, [self::TYPE_BILLS_GENERATED, self::TYPE_PENALTY_PROCESSED, self::TYPE_PERIOD_AUTO_CREATED, self::TYPE_SCHEDULE_OVERDUE]) => 'billing',
             $type === self::TYPE_USER_CREATED => 'system',
             default => 'other',
         };

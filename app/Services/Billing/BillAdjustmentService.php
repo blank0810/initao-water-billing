@@ -15,13 +15,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Service for handling bill adjustments.
+ * Service for handling bill adjustments and recomputation.
  *
- * NOTE: Bill adjustments are intentionally allowed on closed periods.
- * This is a business decision to support customer dispute resolution
- * and corrections that may be raised after a billing period is closed.
- * The period closure rule applies to routine billing operations (generating
- * new bills, standard processing) but not to adjustments/corrections.
+ * BUSINESS RULES:
+ * - Adjustments (consumption or amount) are ONLY for CLOSED periods.
+ *   Use case: Customer files a dispute after billing is finalized.
+ * - Recomputation is ONLY for OPEN periods.
+ *   Use case: Customer disputes amount at MEEDO before period closes.
+ * - These are mutually exclusive by period state, preventing conflicts.
  */
 class BillAdjustmentService
 {
@@ -76,6 +77,15 @@ class BillAdjustmentService
         $connection = $bill->serviceConnection;
         if (! $connection) {
             return ['success' => false, 'message' => 'Service connection not found.'];
+        }
+
+        // Block adjustments on open periods - use recompute instead
+        $period = $bill->period;
+        if ($period && ! $period->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'This bill\'s period is still open. Use "Recompute Bill" to correct billing errors during an open period. Adjustments are for closed/finalized periods only.',
+            ];
         }
 
         // Calculate old values
@@ -217,6 +227,15 @@ class BillAdjustmentService
 
         if (! $bill) {
             return ['success' => false, 'message' => 'Bill not found.'];
+        }
+
+        // Block adjustments on open periods - use recompute instead
+        $period = $bill->period;
+        if ($period && ! $period->is_closed) {
+            return [
+                'success' => false,
+                'message' => 'This bill\'s period is still open. Use "Recompute Bill" to correct billing errors during an open period. Adjustments are for closed/finalized periods only.',
+            ];
         }
 
         // Validate adjustment type
