@@ -22,6 +22,19 @@
 
 ---
 
+## Schema Changes Since Initial Plan (Updated 2026-02-20)
+
+| Change | Migration | Impact on Plan |
+|--------|-----------|---------------|
+| `rate_inc` column **removed** from `water_rates` | `2026_02_17_011906` | **HIGH** — Legacy tiered rates (base+increment) incompatible with flat-rate model. Decision: DO NOT migrate rates. Historical bills carry pre-calculated amounts. See Section 6 |
+| `PenaltyConfiguration` table **added** | `2026_02_16_000000` | **MEDIUM** — Added penalty config seeding step to Phase 1 Task 2. Seed with legacy 10% rate effective 2007-12-01 |
+| `water_bill_history.photo_path` **added** | `2026_02_17_002354` | **NONE** — Nullable field, defaults to NULL for migrated bills |
+| `users.signature_path` **added** | `2026_02_18_000001` | **NONE** — Unrelated to migration |
+| `DocumentSignatory` table **added** | `2026_02_18_000002` | **NONE** — Unrelated to migration |
+| Performance indexes added | `2026_02_09_000000` | **POSITIVE** — Indexes on `MeterAssignment`, `MeterReading`, `PaymentAllocation`, `CustomerLedger` will speed up migration lookups |
+
+---
+
 ## Schema Comparison: Legacy vs Current
 
 ### Legend
@@ -167,30 +180,42 @@ No overlap — legacy brands are different from seeded test data.
 
 ---
 
-### 6. Water Rates
+### 6. Water Rates (FLAT RATE MODEL — `rate_inc` REMOVED)
 
 **Legacy table:** `wat_Range` (8 rows)
 **Target table:** `water_rates` (PK: `wr_id`)
+
+> **SCHEMA CHANGE (Feb 2026):** The `rate_inc` column has been **dropped** from `water_rates`. The current system uses a **flat rate model** — a single `rate_val` per cu.m. for the entire consumption range, per account type. The legacy tiered system (base + increment per tier) no longer fits the current schema.
 
 | Legacy Field | → | Target Field | Transform |
 |---|---|---|---|
 | `RateId` | - | (dropped) | Always 1 — current uses `period_id` NULL for defaults |
 | `ClassId` | ~ | `class_id` | Maps to `account_type.at_id`: `1` → Residential, `2` → Commercial |
-| `RangeId` | ~ | `range_id` | Direct tier number. **But:** Legacy Commercial starts at RangeId 5, current expects 1-4 per class |
-| `RangeMin` | = | `range_min` | Direct |
-| `RangeMax` | = | `range_max` | Direct |
-| `RateVal` | = | `rate_val` | Direct (base rate for tier) |
-| `RateInc` | = | `rate_inc` | Direct (per cu.m increment) |
+| `RangeId` | - | (dropped) | Current uses single tier (range_id=1) per class |
+| `RangeMin` | - | (dropped) | Current uses 0-999 flat range |
+| `RangeMax` | - | (dropped) | Current uses 0-999 flat range |
+| `RateVal` | ~ | `rate_val` | **Not directly mappable.** Legacy has tiered base amounts; current has flat per-cu.m rate |
+| `RateInc` | - | **COLUMN REMOVED** | `rate_inc` no longer exists in `water_rates` table |
 | (none) | + | `period_id` | `NULL` (default rates, not period-specific) |
 | (none) | + | `stat_id` | `Status::ACTIVE` |
 
-**Important difference:** Legacy rate tiers (Residential): `0-1, 2-30, 31-50, 51-900`. Current seeder tiers: `0-10, 11-20, 21-30, 31+`. The **rate structures are different**. Migration should import legacy rates as the actual rates used, replacing the seeded test rates.
+**Current rate structure (flat model):**
+```
+Residential: 1 tier, range 0-999, rate_val = P20.00/cu.m
+Commercial:  1 tier, range 0-999, rate_val = P40.00/cu.m
+```
 
-**Legacy rates detail:**
+**Legacy rate structure (tiered model — for reference only):**
 ```
 Residential: 0-1 cu.m = P20 min | 2-30 = P40 + P20/cu.m | 31-50 = P620 + P20/cu.m | 51-900 = P1020 + P20/cu.m
 Commercial:  0-1 cu.m = P40 min | 2-30 = P80 + P40/cu.m | 31-50 = P1240 + P40/cu.m | 51-900 = P2040 + P40/cu.m
 ```
+
+**Migration decision: DO NOT migrate legacy rates.** The rate structures are fundamentally incompatible (tiered vs flat). This is **not a blocker** because:
+1. We migrate pre-calculated bill amounts (`AmtBill` → `water_amount`), NOT re-compute them
+2. Historical bills already have their correct amounts baked in
+3. The current flat rates are what the system uses going forward
+4. Legacy rate data is preserved in the Access DB for audit reference
 
 ---
 
@@ -255,6 +280,7 @@ Commercial:  0-1 cu.m = P40 min | 2-30 = P80 + P40/cu.m | 31-50 = P1240 + P40/cu
 | `AcctTypeId` | - | (dropped) | Always `1` (Water Bill) — not needed in current schema |
 | (none) | + | `adjustment_total` | Default `0` |
 | (none) | + | `is_meter_change` | Default `false` |
+| (none) | + | `photo_path` | NULL (added Feb 2026 — stores reading photo, not applicable to legacy data) |
 | (none) | + | `stat_id` | `Status::ACTIVE` |
 | (none) | + | `total_amount` | **STORED column**: auto-computed as `water_amount + adjustment_total` |
 
@@ -264,8 +290,11 @@ Commercial:  0-1 cu.m = P40 min | 2-30 = P80 + P40/cu.m | 31-50 = P1240 + P40/cu
 
 ### 10. Penalties
 
+> **SCHEMA CHANGE (Feb 2026):** A new `PenaltyConfiguration` table now stores configurable penalty rates. Legacy had `PenRate=10` on every `wat_Month` record. The current system reads the active rate from `PenaltyConfiguration` where `is_active=true`. Migration must seed a historical penalty config record.
+
 **Legacy table:** `wat_Pen` (27,482 rows)
 **Target table:** `CustomerCharge` (PK: `charge_id`)
+**Related new table:** `PenaltyConfiguration` (seed with legacy 10% rate)
 
 | Legacy Field | → | Target Field | Transform |
 |---|---|---|---|
@@ -454,6 +483,7 @@ Commercial:  0-1 cu.m = P40 min | 2-30 = P80 + P40/cu.m | 31-50 = P1240 + P40/cu
 | `wat_rMoSum_temp` | 0 | Temp query table |
 | `wat_ReadRem/Rem/Remarks` | 0 | Empty tables |
 | `wat_Rate` | 1 | Rate schedule name — only "Original" |
+| `wat_Range` | 8 | **Tiered rates incompatible with current flat-rate model.** Legacy tiers (base+increment per tier) cannot map to current single `rate_val` per class. Historical bills carry pre-calculated amounts, so rates are not needed for migration |
 | `wat_Source` | 3 | Water production sources |
 | `wat_Schedule` | 3 | Billing schedule types (migrated as area metadata) |
 
@@ -600,12 +630,13 @@ git commit -m "feat(migration): add migration infrastructure - CSV reader, logge
 
 ---
 
-### Task 2: Migrate Reference Data (Areas, Periods, Meters)
+### Task 2: Migrate Reference Data (Areas, Periods, Meters) + Seed Penalty Config
 
 **Files:**
 - Create: `app/Console/Commands/Migration/MigrateAreasCommand.php`
 - Create: `app/Console/Commands/Migration/MigratePeriodsCommand.php`
 - Create: `app/Console/Commands/Migration/MigrateMetersCommand.php`
+- Create: `app/Console/Commands/Migration/SeedPenaltyConfigCommand.php`
 
 Each command follows the pattern: read CSV → check `legacy_id_maps` for dedup → create record → insert mapping.
 
@@ -613,9 +644,12 @@ Each command follows the pattern: read CSV → check `legacy_id_maps` for dedup 
 - **Areas:** `wat_Area.AreaDesc` → `area.a_desc`. Empty descriptions → `"Area {AreaCode}"`.
 - **Periods:** Parse `"Dec 2007"` → `per_code: "200712"`, dates. All historical → `is_closed = true`.
 - **Meters:** `MeterSN` → `mtr_serial`. Resolve `BrandId` → brand name string. Empty serials → `"LEGACY-{MeterId}"`.
+- **Penalty Config:** Seed a `PenaltyConfiguration` record with `rate_percentage=10.00`, `effective_date='2007-12-01'`, `is_active=true`. This matches the legacy 10% penalty rate that was used across all 219 billing periods. Skip if an active config already exists.
 
-**Step 1:** Create all three commands
-**Step 2:** Run and verify: 22 areas, 219 periods, 622 meters
+**Note: Water rates (`wat_Range`) are NOT migrated.** The legacy tiered rate model (base + increment per tier) is incompatible with the current flat-rate model (`rate_val` per cu.m.). Historical bills carry pre-calculated amounts, so rates are not needed. See Schema Section 6 for details.
+
+**Step 1:** Create all four commands
+**Step 2:** Run and verify: 22 areas, 219 periods, 622 meters, 1 penalty config
 **Step 3: Commit**
 
 ---
@@ -650,6 +684,7 @@ Per schema sections 1, 2, 3. **Creates 3 records per consumer:**
 - `ClassId` → `c_type`, `ConsuNo` → zero-padded `account_no`
 - `Active` → status mapping, `LocaId` → landmark text
 - Generate `resolution_no`, parse `MM/DD/YY` dates
+- `users.signature_path` and `DocumentSignatory` table exist but are unrelated — no impact
 
 **Step 1:** Create command
 **Step 2:** Run — 3,002 customers + connections
@@ -710,6 +745,8 @@ Per schema section 9. Map `ReadId` as `legacy_id` (referenced by collections). T
 - Create: `app/Console/Commands/Migration/MigrateMiscChargesCommand.php`
 
 Per schema sections 10, 11. Penalties → CustomerCharge with LATE_PENALTY. Store ReadId in metadata. Misc → CustomerCharge via ChargeItem mapping.
+
+**Note:** The `PenaltyConfiguration` table (seeded in Task 2) provides the penalty rate. The `LATE_PENALTY` ChargeItem (seeded, `default_amount=0.00`) is the reference item — actual penalty amounts come from the legacy `PenAmt` field, not computed from the config during migration.
 
 **Step 1:** Create both commands
 **Step 2:** Run — ~27K penalties, ~7K misc
