@@ -238,9 +238,12 @@ class PaymentService
             'type' => 'BILL',
             'description' => 'Water Bill - '.($bill->period?->per_name ?? 'Unknown Period'),
             'period_name' => $bill->period?->per_name ?? 'Unknown',
-            'amount' => (float) ($bill->water_amount + $bill->adjustment_total),
+            'amount' => (float) $bill->remaining_amount,
+            'original_amount' => (float) $bill->total_amount,
+            'paid_amount' => (float) $bill->paid_amount,
             'due_date' => $bill->due_date?->format('M d, Y'),
             'is_overdue' => $bill->stat_id === $overdueStatusId,
+            'is_partially_paid' => $bill->isPartiallyPaid(),
             'period_id' => $bill->period_id,
         ]]);
 
