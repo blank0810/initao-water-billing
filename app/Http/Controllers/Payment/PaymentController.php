@@ -191,6 +191,8 @@ class PaymentController extends Controller
                         'payment' => $result['payment'],
                         'receipt_no' => $result['payment']->receipt_no,
                         'total_paid' => $result['total_paid'],
+                        'total_due' => $result['total_due'],
+                        'remaining_balance' => $result['remaining_balance'],
                         'amount_received' => $result['amount_received'],
                         'change' => $result['change'],
                     ],

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WaterBillHistory extends Model
 {
@@ -44,6 +45,12 @@ class WaterBillHistory extends Model
         'is_meter_change' => 'boolean',
         'old_meter_consumption' => 'decimal:3',
         'new_meter_consumption' => 'decimal:3',
+    ];
+
+    protected $appends = [
+        'total_amount',
+        'paid_amount',
+        'remaining_amount',
     ];
 
     /**
@@ -95,11 +102,60 @@ class WaterBillHistory extends Model
     }
 
     /**
+     * Get payment allocations for this bill (polymorphic)
+     */
+    public function paymentAllocations(): HasMany
+    {
+        return $this->hasMany(PaymentAllocation::class, 'target_id', 'bill_id')
+            ->where('target_type', 'BILL');
+    }
+
+    /**
      * Accessor for total amount (computed column)
      */
     public function getTotalAmountAttribute()
     {
         return $this->water_amount + $this->adjustment_total;
+    }
+
+    /**
+     * Accessor for paid amount (sum of active allocations only)
+     */
+    public function getPaidAmountAttribute(): float
+    {
+        $cancelledStatusId = Status::getIdByDescription(Status::CANCELLED);
+
+        $query = $this->paymentAllocations();
+
+        if ($cancelledStatusId) {
+            $query->where('stat_id', '!=', $cancelledStatusId);
+        }
+
+        return (float) $query->sum('amount_applied');
+    }
+
+    /**
+     * Accessor for remaining unpaid amount
+     */
+    public function getRemainingAmountAttribute(): float
+    {
+        return (float) max(0, $this->total_amount - $this->paid_amount);
+    }
+
+    /**
+     * Check if the bill is fully paid via allocations
+     */
+    public function isPaid(): bool
+    {
+        return $this->remaining_amount <= 0;
+    }
+
+    /**
+     * Check if the bill is partially paid
+     */
+    public function isPartiallyPaid(): bool
+    {
+        return $this->paid_amount > 0 && ! $this->isPaid();
     }
 
     /**

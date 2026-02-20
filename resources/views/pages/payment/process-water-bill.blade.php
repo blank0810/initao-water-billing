@@ -92,7 +92,7 @@
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Outstanding Items</h2>
                         <div class="flex items-center gap-2">
                             <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" x-text="totalItems + ' item(s)'"></span>
-                            <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Full payment required</span>
+                            <span x-show="totalDue > 0" class="px-2.5 py-1 text-xs font-medium rounded-full bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400">Partial payment accepted</span>
                         </div>
                     </div>
 
@@ -121,7 +121,12 @@
                                                 </div>
                                                 <p class="text-xs text-gray-500 dark:text-gray-400" x-text="'Due: ' + (billGroup.due_date || 'N/A')"></p>
                                             </div>
-                                            <p class="text-sm font-bold text-gray-900 dark:text-white" x-text="formatCurrency(billGroup.amount)"></p>
+                                            <div class="text-right">
+                                                <p class="text-sm font-bold text-gray-900 dark:text-white" x-text="formatCurrency(billGroup.amount)"></p>
+                                                <p x-show="billGroup.is_partially_paid" class="text-[10px] text-blue-600 dark:text-blue-400">
+                                                    Paid: <span x-text="formatCurrency(billGroup.paid_amount)"></span> of <span x-text="formatCurrency(billGroup.original_amount)"></span>
+                                                </p>
+                                            </div>
                                         </div>
 
                                         <!-- Nested Charges for this Bill -->
@@ -200,7 +205,7 @@
                                     </div>
                                     <div>
                                         <h3 class="font-semibold text-gray-900 dark:text-white">Collect Payment</h3>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">Full payment required per municipal ordinance</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Full or partial payment accepted</p>
                                     </div>
                                 </div>
                             </div>
@@ -245,24 +250,27 @@
                                     </div>
                                 </div>
 
-                                <!-- Change Display -->
-                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4" x-show="change !== null">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-sm text-gray-600 dark:text-gray-400">Change</span>
-                                        <span class="text-xl font-bold"
-                                            :class="change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
-                                            x-text="formatCurrency(change)"></span>
+                                <!-- Change / Remaining Balance Display -->
+                                <div class="rounded-xl p-4" x-show="amountReceived > 0 && totalItems > 0"
+                                    :class="amountReceived >= totalDue ? 'bg-green-50 dark:bg-green-900/20' : 'bg-amber-50 dark:bg-amber-900/20'">
+                                    <!-- Full payment or overpayment: show change -->
+                                    <div x-show="amountReceived >= totalDue">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-green-700 dark:text-green-400">Change</span>
+                                            <span class="text-xl font-bold text-green-600 dark:text-green-400"
+                                                x-text="formatCurrency(amountReceived - totalDue)"></span>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <!-- Error Message -->
-                                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4"
-                                    x-show="amountReceived > 0 && amountReceived < totalDue && totalItems > 0">
-                                    <div class="flex items-start gap-3">
-                                        <i class="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
-                                        <div>
-                                            <p class="text-sm font-medium text-red-800 dark:text-red-200">Insufficient Amount</p>
-                                            <p class="text-xs text-red-600 dark:text-red-400 mt-0.5">Full payment of <span x-text="formatCurrency(totalDue)"></span> is required for all outstanding items.</p>
+                                    <!-- Partial payment: show remaining balance -->
+                                    <div x-show="amountReceived < totalDue">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-amber-800 dark:text-amber-200">Partial Payment</span>
+                                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Remaining balance</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-amber-700 dark:text-amber-300">Balance after payment</span>
+                                            <span class="text-xl font-bold text-amber-600 dark:text-amber-400"
+                                                x-text="formatCurrency(totalDue - amountReceived)"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -332,16 +340,20 @@
                                         <span class="font-mono font-semibold text-gray-900 dark:text-white" x-text="receipt.receipt_no"></span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">Total Paid</span>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">Total Applied</span>
                                         <span class="font-semibold text-gray-900 dark:text-white" x-text="formatCurrency(receipt.total_paid)"></span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span class="text-sm text-gray-500 dark:text-gray-400">Amount Received</span>
                                         <span class="font-semibold text-gray-900 dark:text-white" x-text="formatCurrency(receipt.amount_received)"></span>
                                     </div>
-                                    <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-600">
+                                    <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-600" x-show="receipt.change > 0">
                                         <span class="text-sm text-gray-500 dark:text-gray-400">Change</span>
                                         <span class="font-bold text-green-600 dark:text-green-400" x-text="formatCurrency(receipt.change)"></span>
+                                    </div>
+                                    <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-600" x-show="receipt.remaining_balance > 0">
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">Remaining Balance</span>
+                                        <span class="font-bold text-amber-600 dark:text-amber-400" x-text="formatCurrency(receipt.remaining_balance)"></span>
                                     </div>
                                 </div>
 
@@ -381,7 +393,6 @@
                 // Pre-fill amount with total due
                 this.$nextTick(() => {
                     this.amountReceived = this.totalDue;
-                    this.calculateChange();
                 });
             },
 
@@ -419,7 +430,7 @@
                 return this.data.selected_bill_id
                     && this.totalItems > 0
                     && this.amountReceived
-                    && this.amountReceived >= this.totalDue;
+                    && this.amountReceived > 0;
             },
 
             calculateChange() {
