@@ -351,13 +351,13 @@ class PaymentService
     /**
      * Process payment for a single water bill + its period-matched charges
      *
-     * Creates Payment, PaymentAllocations, CustomerLedger entries
-     * Updates WaterBillHistory and charges status to PAID
+     * Supports partial payments. Allocation precedence: charges (penalties) first, then bill.
+     * Items are only marked PAID when fully covered. Multiple partial payments allowed.
      *
      * @param  int  $billId  The water bill to pay
      * @param  float  $amountReceived  Amount received from customer
      * @param  int  $userId  The cashier processing the payment
-     * @return array Contains 'payment', 'allocations', 'total_paid', 'amount_received', 'change'
+     * @return array Contains 'payment', 'allocations', 'total_paid', 'total_due', 'remaining_balance', 'amount_received', 'change'
      *
      * @throws \Exception
      */
@@ -416,18 +416,13 @@ class PaymentService
                 ->unique('charge_id')
                 ->filter(fn ($c) => $c->remaining_amount > 0);
 
-            $billAmount = $bill->water_amount + $bill->adjustment_total;
+            $billRemaining = $bill->remaining_amount;
             $chargesAmount = $charges->sum(fn ($c) => $c->remaining_amount);
-            $totalDue = $billAmount + $chargesAmount;
+            $totalDue = $billRemaining + $chargesAmount;
 
-            if ($amountReceived < $totalDue) {
-                throw new \Exception(
-                    'Full payment required. Amount due: ₱'.number_format($totalDue, 2)
-                    .'. Received: ₱'.number_format($amountReceived, 2)
-                );
-            }
-
-            $change = $amountReceived - $totalDue;
+            // Track how much of the payment is left to allocate
+            $remainingPayment = min($amountReceived, $totalDue);
+            $change = max(0, $amountReceived - $totalDue);
 
             // Create Payment record
             $payment = Payment::create([
@@ -439,40 +434,22 @@ class PaymentService
                 'stat_id' => $activeStatusId,
             ]);
 
-            // Allocate to the bill
-            $billAllocation = PaymentAllocation::create([
-                'payment_id' => $payment->payment_id,
-                'target_type' => 'BILL',
-                'target_id' => $bill->bill_id,
-                'amount_applied' => $billAmount,
-                'period_id' => $bill->period_id,
-                'connection_id' => $connection->connection_id,
-            ]);
-            $allocations->push($billAllocation);
+            // === ALLOCATION PHASE: Charges (penalties) FIRST, then bill ===
 
-            $this->ledgerService->recordPaymentAllocation(
-                $billAllocation,
-                $payment,
-                'Payment for Water Bill - '.($bill->period?->per_name ?? 'Unknown'),
-                $userId
-            );
-
-            $bill->update(['stat_id' => $paidStatusId]);
-
-            // Mark BILL ledger entry as PAID
-            CustomerLedger::where('source_type', 'BILL')
-                ->where('source_id', $bill->bill_id)
-                ->update(['stat_id' => $paidStatusId]);
-
-            // Allocate to period-matched charges
+            // 1. Allocate to period-matched charges first
             foreach ($charges as $charge) {
-                $chargeAmount = $charge->remaining_amount;
+                if ($remainingPayment <= 0) {
+                    break;
+                }
+
+                $chargeRemaining = $charge->remaining_amount;
+                $applyAmount = min($remainingPayment, $chargeRemaining);
 
                 $chargeAllocation = PaymentAllocation::create([
                     'payment_id' => $payment->payment_id,
                     'target_type' => 'CHARGE',
                     'target_id' => $charge->charge_id,
-                    'amount_applied' => $chargeAmount,
+                    'amount_applied' => $applyAmount,
                     'period_id' => $bill->period_id,
                     'connection_id' => $connection->connection_id,
                 ]);
@@ -485,18 +462,59 @@ class PaymentService
                     $userId
                 );
 
-                $charge->update(['stat_id' => $paidStatusId]);
+                // Mark charge as PAID only if fully covered
+                if ($applyAmount >= $chargeRemaining) {
+                    $charge->update(['stat_id' => $paidStatusId]);
 
-                // Mark CHARGE ledger entry as PAID
-                CustomerLedger::where('source_type', 'CHARGE')
-                    ->where('source_id', $charge->charge_id)
-                    ->update(['stat_id' => $paidStatusId]);
+                    CustomerLedger::where('source_type', 'CHARGE')
+                        ->where('source_id', $charge->charge_id)
+                        ->update(['stat_id' => $paidStatusId]);
+                }
+
+                $remainingPayment -= $applyAmount;
             }
+
+            // 2. Allocate remainder to the bill
+            if ($remainingPayment > 0) {
+                $applyToBill = min($remainingPayment, $billRemaining);
+
+                $billAllocation = PaymentAllocation::create([
+                    'payment_id' => $payment->payment_id,
+                    'target_type' => 'BILL',
+                    'target_id' => $bill->bill_id,
+                    'amount_applied' => $applyToBill,
+                    'period_id' => $bill->period_id,
+                    'connection_id' => $connection->connection_id,
+                ]);
+                $allocations->push($billAllocation);
+
+                $this->ledgerService->recordPaymentAllocation(
+                    $billAllocation,
+                    $payment,
+                    'Payment for Water Bill - '.($bill->period?->per_name ?? 'Unknown'),
+                    $userId
+                );
+
+                // Mark bill as PAID only if fully covered
+                if ($applyToBill >= $billRemaining) {
+                    $bill->update(['stat_id' => $paidStatusId]);
+
+                    CustomerLedger::where('source_type', 'BILL')
+                        ->where('source_id', $bill->bill_id)
+                        ->update(['stat_id' => $paidStatusId]);
+                }
+
+                $remainingPayment -= $applyToBill;
+            }
+
+            $totalApplied = $allocations->sum('amount_applied');
 
             return [
                 'payment' => $payment->fresh(),
                 'allocations' => $allocations,
-                'total_paid' => $totalDue,
+                'total_paid' => $totalApplied,
+                'total_due' => $totalDue,
+                'remaining_balance' => $totalDue - $totalApplied,
                 'amount_received' => $amountReceived,
                 'change' => $change,
             ];
