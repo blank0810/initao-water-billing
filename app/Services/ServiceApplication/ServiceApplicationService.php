@@ -110,26 +110,23 @@ class ServiceApplicationService
                 $customer = Customer::findOrFail($customerData['customerId'] ?? $customerData['customer_id'] ?? $customerData['id']);
             }
 
-            // Generate application number
-            $applicationNumber = 'APP-'.date('Y').'-'.str_pad(
-                ServiceApplication::count() + 1,
-                5,
-                '0',
-                STR_PAD_LEFT
-            );
-
             // Create service application with VERIFIED status (auto-verify workflow)
             // Customer can proceed directly to cashier for payment
             $application = ServiceApplication::create([
                 'customer_id' => $customer->cust_id,
                 'address_id' => $serviceAddress->ca_id,
-                'application_number' => $applicationNumber,
+                'application_number' => 'TEMP', // Placeholder, derived from ID below
                 'submitted_at' => now(),
                 'verified_at' => now(), // Auto-verified on submission
                 'verified_by' => $userId,
                 'processed_by' => $userId, // Set the processing officer
                 'stat_id' => $verifiedStatusId, // Skip PENDING, go directly to VERIFIED
                 'remarks' => $applicationData['remarks'] ?? null,
+            ]);
+
+            // Derive application number from the auto-incremented ID (race-condition safe)
+            $application->update([
+                'application_number' => 'APP-'.date('Y').'-'.str_pad($application->application_id, 5, '0', STR_PAD_LEFT),
             ]);
 
             // Generate charges immediately so customer can pay at cashier
