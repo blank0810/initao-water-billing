@@ -48,7 +48,6 @@ class ServiceApplicationService
             // Get status IDs - Application goes directly to VERIFIED (auto-verify workflow)
             $verifiedStatusId = Status::getIdByDescription(Status::VERIFIED);
             $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-            $pendingStatusId = Status::getIdByDescription(Status::PENDING);
 
             // Create SERVICE ADDRESS (where the water connection will be installed)
             // This is separate from the customer's home/contact address
@@ -99,7 +98,7 @@ class ServiceApplicationService
                     'id_number' => $transformedCustomer['id_number'] ?? null,
                     'ca_id' => $customerAddressId, // Customer's HOME address
                     'land_mark' => $customerLandmark ?? null,
-                    'stat_id' => $pendingStatusId,
+                    'stat_id' => $activeStatusId,
                     'c_type' => $transformedCustomer['c_type'] ?? 'RESIDENTIAL',
                     'resolution_no' => $resolutionNo,
                     'create_date' => now(),
@@ -111,20 +110,12 @@ class ServiceApplicationService
                 $customer = Customer::findOrFail($customerData['customerId'] ?? $customerData['customer_id'] ?? $customerData['id']);
             }
 
-            // Generate application number
-            $applicationNumber = 'APP-'.date('Y').'-'.str_pad(
-                ServiceApplication::count() + 1,
-                5,
-                '0',
-                STR_PAD_LEFT
-            );
-
             // Create service application with VERIFIED status (auto-verify workflow)
             // Customer can proceed directly to cashier for payment
             $application = ServiceApplication::create([
                 'customer_id' => $customer->cust_id,
                 'address_id' => $serviceAddress->ca_id,
-                'application_number' => $applicationNumber,
+                'application_number' => 'APP-'.date('Ymd').'-'.str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT),
                 'submitted_at' => now(),
                 'verified_at' => now(), // Auto-verified on submission
                 'verified_by' => $userId,
