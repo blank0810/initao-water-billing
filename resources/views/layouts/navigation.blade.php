@@ -150,9 +150,8 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
             <!-- Right: Controls -->
             <div class="flex items-center space-x-4">
 
-                <!-- Global Customer Search -->
-                <div x-data="globalSearch()" x-on:click.outside="close()" x-on:keydown.escape.window="close()" class="relative hidden lg:block">
-                    <!-- Search Input -->
+                <!-- Smart Sidebar Search -->
+                <div x-data="sidebarSearch()" x-on:click.outside="close()" x-on:keydown.escape.window="close()" class="relative hidden lg:block">
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 dark:text-gray-500">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,63 +161,40 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
                         <input
                             x-ref="searchInput"
                             x-model="query"
-                            x-on:input.debounce.300ms="search()"
+                            x-on:input="search()"
                             x-on:focus="if (results.length) open = true"
                             x-on:keydown.arrow-down.prevent="moveDown()"
                             x-on:keydown.arrow-up.prevent="moveUp()"
                             x-on:keydown.enter.prevent="selectCurrent()"
                             type="text"
-                            placeholder="Search customers..."
+                            placeholder="Search pages..."
                             class="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#111826] border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-200 w-72 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         >
-                        <!-- Loading Spinner -->
-                        <div x-show="loading" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                            <svg class="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
-                        </div>
                     </div>
 
-                    <!-- Results Dropdown -->
                     <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
                          class="absolute top-full left-0 mt-1 w-96 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
 
-                        <!-- No Results -->
-                        <template x-if="!loading && results.length === 0 && query.length >= 2 && searched">
+                        <template x-if="results.length === 0 && query.length >= 1">
                             <div class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 <svg class="mx-auto h-8 w-8 text-gray-300 dark:text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
-                                No customers found for "<span x-text="query" class="font-medium"></span>"
+                                No pages found for "<span x-text="query" class="font-medium"></span>"
                             </div>
                         </template>
 
-                        <!-- Results List -->
-                        <template x-for="(result, index) in results" :key="result.customer_id">
-                            <a :href="'/customer/details/' + result.customer_id"
+                        <template x-for="(result, index) in results" :key="result.route">
+                            <a :href="result.route"
                                :class="{ 'bg-blue-50 dark:bg-blue-900/30': selectedIndex === index }"
                                class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
                                x-on:mouseenter="selectedIndex = index">
-                                <div class="flex items-center justify-between">
-                                    <div class="min-w-0 flex-1">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate" x-text="result.name"></p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                                            <span x-show="result.account_no" x-text="result.account_no"></span>
-                                            <span x-show="result.account_no && result.meter_serial"> &middot; </span>
-                                            <span x-show="result.meter_serial" x-text="result.meter_serial"></span>
-                                            <span x-show="(result.account_no || result.meter_serial) && result.barangay"> &middot; </span>
-                                            <span x-show="result.barangay" x-text="result.barangay"></span>
-                                        </p>
+                                <div class="flex items-center gap-3">
+                                    <i :class="result.icon" class="text-blue-600 dark:text-blue-400 w-4"></i>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white" x-text="result.title"></p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5" x-show="result.category" x-text="result.category"></p>
                                     </div>
-                                    <span x-show="result.status"
-                                          :class="{
-                                              'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': result.status === 'ACTIVE',
-                                              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': result.status !== 'ACTIVE'
-                                          }"
-                                          class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0"
-                                          x-text="result.status">
-                                    </span>
                                 </div>
                             </a>
                         </template>
@@ -491,14 +467,44 @@ $hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
 </script>
 
 <script>
-function globalSearch() {
+function sidebarSearch() {
+    const pages = [
+        { title: 'Dashboard', route: '/dashboard', icon: 'fas fa-chart-pie', category: 'Main' },
+        { title: 'Add User', route: '/user/add', icon: 'fas fa-user-plus', category: 'User Management' },
+        { title: 'User List', route: '/user/list', icon: 'fas fa-list', category: 'User Management' },
+        { title: 'New Application', route: '/connection/service-application/create', icon: 'fas fa-plus-circle', category: 'Connection' },
+        { title: 'Applications', route: '/connection/service-application', icon: 'fas fa-file-alt', category: 'Connection' },
+        { title: 'Active Connections', route: '/customer/service-connection', icon: 'fas fa-plug', category: 'Connection' },
+        { title: 'Customer List', route: '/customer/list', icon: 'fas fa-list', category: 'Customer' },
+        { title: 'Customer Approval', route: '/customer/approve-customer', icon: 'fas fa-check-circle', category: 'Customer' },
+        { title: 'Payment Management', route: '/customer/payment-management', icon: 'fas fa-credit-card', category: 'Main' },
+        { title: 'Billing', route: '/billing/management', icon: 'fas fa-file-invoice-dollar', category: 'Main' },
+        { title: 'Meter', route: '/meter/management', icon: 'fas fa-tachometer-alt', category: 'Main' },
+        { title: 'Rate', route: '/rate/management', icon: 'fas fa-percentage', category: 'Main' },
+        { title: 'Ledger', route: '/ledger/management', icon: 'fas fa-book', category: 'Main' },
+        { title: 'Reports', route: '/reports', icon: 'fas fa-file-alt', category: 'Main' },
+        { title: 'Barangays', route: '/config/barangays', icon: 'fas fa-map-marker-alt', category: 'Config - Geographic' },
+        { title: 'Areas', route: '/config/areas', icon: 'fas fa-layer-group', category: 'Config - Geographic' },
+        { title: 'Puroks', route: '/config/puroks', icon: 'fas fa-house-user', category: 'Config - Geographic' },
+        { title: 'Reading Schedules', route: '/config/reading-schedules', icon: 'fas fa-calendar-alt', category: 'Config - Geographic' },
+        { title: 'Water Rates', route: '/config/water-rates', icon: 'fas fa-dollar-sign', category: 'Config - Billing' },
+        { title: 'Account Types', route: '/config/account-types', icon: 'fas fa-users-cog', category: 'Config - Billing' },
+        { title: 'Application Fee Templates', route: '/config/charge-items', icon: 'fas fa-file-invoice-dollar', category: 'Config - Billing' },
+        { title: 'Penalty Configuration', route: '/config/penalty', icon: 'fas fa-gavel', category: 'Config - Billing' },
+        { title: 'Document Signatories', route: '/config/document-signatories', icon: 'fas fa-pen-fancy', category: 'Config - System' },
+        { title: 'Automation', route: '/config/automation-settings', icon: 'fas fa-robot', category: 'Config - System' },
+        { title: 'Roles', route: '/admin/roles', icon: 'fas fa-user-shield', category: 'Config - Access' },
+        { title: 'Permissions', route: '/admin/permissions', icon: 'fas fa-key', category: 'Config - Access' },
+        { title: 'Permission Matrix', route: '/admin/role-permissions', icon: 'fas fa-th', category: 'Config - Access' },
+        { title: 'Activity Log', route: '/admin/activity-log', icon: 'fas fa-history', category: 'Admin' }
+    ];
+
     return {
         query: '',
         results: [],
         open: false,
-        loading: false,
-        searched: false,
         selectedIndex: -1,
+        allPages: pages,
 
         init() {
             document.addEventListener('keydown', (e) => {
@@ -509,27 +515,22 @@ function globalSearch() {
             });
         },
 
-        async search() {
-            if (this.query.length < 2) {
+        search() {
+            if (this.query.length < 1) {
                 this.results = [];
                 this.open = false;
-                this.searched = false;
                 return;
             }
 
-            this.loading = true;
-            try {
-                const response = await fetch(`/api/search/customers?q=${encodeURIComponent(this.query)}`);
-                this.results = await response.json();
-                this.open = true;
-                this.searched = true;
-                this.selectedIndex = -1;
-            } catch (error) {
-                console.error('Search failed:', error);
-                this.results = [];
-            } finally {
-                this.loading = false;
-            }
+            const q = this.query.toLowerCase();
+            this.results = this.allPages.filter(page => 
+                page.title.toLowerCase().includes(q) || 
+                page.category.toLowerCase().includes(q) ||
+                page.route.toLowerCase().includes(q)
+            ).slice(0, 8);
+            
+            this.open = this.results.length > 0;
+            this.selectedIndex = -1;
         },
 
         close() {
@@ -551,7 +552,7 @@ function globalSearch() {
 
         selectCurrent() {
             if (this.selectedIndex >= 0 && this.results[this.selectedIndex]) {
-                window.location.href = '/customer/details/' + this.results[this.selectedIndex].customer_id;
+                window.location.href = this.results[this.selectedIndex].route;
             }
         },
     };

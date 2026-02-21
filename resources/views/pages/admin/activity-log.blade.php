@@ -19,133 +19,108 @@
 @endpush
 
 <x-app-layout>
-    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-4"></div>
+    <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 
-    <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
-        <div class="flex-1 flex flex-col overflow-auto">
-            <main class="flex-1 p-6 overflow-auto">
-                <div class="max-w-7xl mx-auto">
-
-                    <!-- Header -->
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                                    <i class="fas fa-history mr-3 text-blue-600"></i>Activity Log
-                                </h1>
-                                <p class="text-gray-600 dark:text-gray-400">
-                                    View system activity and user login/logout history
-                                </p>
-                            </div>
-                            <div>
-                                <button onclick="loadActivityLogs()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
-                                    <i class="fas fa-sync-alt mr-2"></i>Refresh
-                                </button>
-                            </div>
-                        </div>
+            <!-- Page Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-history text-blue-600 dark:text-blue-400"></i>
                     </div>
-
-                    <!-- Filters -->
-                    <div class="mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                            <!-- Search -->
-                            <div>
-                                <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
-                                <input type="text" id="search" placeholder="Search logs..."
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-
-                            <!-- User Filter -->
-                            <div>
-                                <label for="user-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User</label>
-                                <select id="user-filter"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">All Users</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- Date From -->
-                            <div>
-                                <label for="date-from" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date From</label>
-                                <input type="date" id="date-from"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-
-                            <!-- Date To -->
-                            <div>
-                                <label for="date-to" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date To</label>
-                                <input type="date" id="date-to"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-
-                            <!-- Per Page -->
-                            <div>
-                                <label for="per-page" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Per Page</label>
-                                <select id="per-page"
-                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="25">25</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end mt-4">
-                            <button onclick="clearFilters()" class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg mr-2 transition">
-                                <i class="fas fa-times mr-2"></i>Clear Filters
-                            </button>
-                            <button onclick="loadActivityLogs()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                                <i class="fas fa-search mr-2"></i>Apply Filters
-                            </button>
-                        </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900 dark:text-white">Activity Log</h1>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">View system activity and user login/logout history</p>
                     </div>
-
-                    <!-- Table -->
-                    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                    <tr>
-                                        <th class="px-6 py-3 font-semibold">Timestamp</th>
-                                        <th class="px-6 py-3 font-semibold">User</th>
-                                        <th class="px-6 py-3 font-semibold">Action</th>
-                                        <th class="px-6 py-3 font-semibold">IP Address</th>
-                                        <th class="px-6 py-3 font-semibold">User Agent</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="activity-table-body">
-                                    <!-- Skeleton rows -->
-                                    @for($i = 0; $i < 5; $i++)
-                                    <tr class="skeleton-row bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                        <td class="px-6 py-4"><div class="skeleton h-4 w-32 rounded"></div></td>
-                                        <td class="px-6 py-4"><div class="skeleton h-4 w-24 rounded"></div></td>
-                                        <td class="px-6 py-4"><div class="skeleton h-4 w-20 rounded"></div></td>
-                                        <td class="px-6 py-4"><div class="skeleton h-4 w-28 rounded"></div></td>
-                                        <td class="px-6 py-4"><div class="skeleton h-4 w-48 rounded"></div></td>
-                                    </tr>
-                                    @endfor
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Pagination -->
-                        <div class="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
-                            <div class="text-sm text-gray-700 dark:text-gray-400 mb-4 sm:mb-0">
-                                Showing <span id="showing-from" class="font-semibold">0</span> to
-                                <span id="showing-to" class="font-semibold">0</span> of
-                                <span id="total-records" class="font-semibold">0</span> entries
-                            </div>
-                            <nav>
-                                <ul id="pagination-controls" class="inline-flex -space-x-px text-sm"></ul>
-                            </nav>
-                        </div>
-                    </div>
-
                 </div>
-            </main>
+                <button onclick="loadActivityLogs()" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+            </div>
+
+            <!-- Table Card -->
+            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+
+                <!-- Filter Bar -->
+                <div class="flex items-center justify-between px-6 pt-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+                    <!-- Left: Search -->
+                    <div class="relative">
+                        <input type="text" id="search" placeholder="Search logs..."
+                            class="pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                    </div>
+                    
+                    <!-- Right: Filters -->
+                    <div class="flex gap-2">
+                        <select id="user-filter"
+                            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 appearance-none pr-10">
+                            <option value="">All Users</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                        <input type="date" id="date-from" placeholder="From"
+                            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                        <input type="date" id="date-to" placeholder="To"
+                            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                        <select id="per-page"
+                            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 appearance-none pr-10">
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <button onclick="clearFilters()" title="Clear Filters"
+                            class="inline-flex items-center justify-center w-9 h-9 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-times text-sm"></i>
+                        </button>
+                        <button onclick="loadActivityLogs()" title="Apply Filters"
+                            class="inline-flex items-center justify-center w-9 h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                            <i class="fas fa-search text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-white dark:bg-gray-900">
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Timestamp</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">User</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Action</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">IP Address</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">User Agent</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activity-table-body" class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Skeleton rows -->
+                            @for($i = 0; $i < 5; $i++)
+                            <tr class="skeleton-row hover:bg-gray-50 dark:hover:bg-gray-800/50 animate-pulse">
+                                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div></td>
+                                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div></td>
+                                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>
+                                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28"></div></td>
+                                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48"></div></td>
+                            </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-700 dark:text-gray-400">
+                            Showing <span id="showing-from" class="font-semibold">0</span> to
+                            <span id="showing-to" class="font-semibold">0</span> of
+                            <span id="total-records" class="font-semibold">0</span> entries
+                        </span>
+                        <nav>
+                            <ul id="pagination-controls" class="inline-flex -space-x-px text-sm"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -208,12 +183,12 @@
                     });
                 } else {
                     const emptyRow = document.createElement('tr');
-                    emptyRow.className = 'bg-white dark:bg-gray-800';
                     emptyRow.innerHTML = `
-                        <td colspan="5" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                            <i class="fas fa-inbox text-4xl mb-4 text-gray-400 block"></i>
-                            <p class="text-lg font-medium">No activity logs found</p>
-                            <p class="text-sm mt-1">Activity will appear here when users login or logout</p>
+                        <td colspan="5" class="px-6 py-8 text-center">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-inbox text-3xl text-gray-300 dark:text-gray-600 mb-3"></i>
+                                <span class="text-gray-500 dark:text-gray-400">No activity logs found</span>
+                            </div>
                         </td>
                     `;
                     tbody.appendChild(emptyRow);
@@ -225,12 +200,15 @@
                 skeletonRows.forEach(row => row.classList.add('hidden'));
 
                 const errorRow = document.createElement('tr');
-                errorRow.className = 'bg-white dark:bg-gray-800';
                 errorRow.innerHTML = `
-                    <td colspan="5" class="px-6 py-12 text-center text-red-500">
-                        <i class="fas fa-exclamation-circle text-4xl mb-4 block"></i>
-                        <p class="text-lg font-medium">Error loading activity logs</p>
-                        <p class="text-sm mt-1">Please try again later</p>
+                    <td colspan="5" class="px-6 py-8 text-center">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-exclamation-circle text-3xl text-red-500 mb-3"></i>
+                            <span class="text-red-600 dark:text-red-400">Error loading activity logs</span>
+                            <button onclick="loadActivityLogs()" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                                <i class="fas fa-redo mr-2"></i>Retry
+                            </button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(errorRow);
@@ -239,7 +217,7 @@
 
         function createActivityRow(activity) {
             const row = document.createElement('tr');
-            row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
+            row.className = 'hover:bg-gray-50 dark:hover:bg-gray-800/50';
 
             const actionBadge = getActionBadge(activity.description);
             const userAgent = activity.user_agent || '';
@@ -248,19 +226,19 @@
                 : userAgent;
 
             row.innerHTML = `
-                <td class="px-6 py-4">
-                    <div class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(activity.created_at)}</div>
+                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                    <div class="font-medium text-gray-900 dark:text-white">${escapeHtml(activity.created_at)}</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">${escapeHtml(activity.created_at_human)}</div>
                 </td>
-                <td class="px-6 py-4">
-                    <div class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtml(activity.causer_name)}</div>
+                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                    <div class="font-medium text-gray-900 dark:text-white">${escapeHtml(activity.causer_name)}</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">${escapeHtml(activity.causer_email)}</div>
                 </td>
-                <td class="px-6 py-4">${actionBadge}</td>
-                <td class="px-6 py-4">
-                    <code class="text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-mono">${escapeHtml(activity.ip_address)}</code>
+                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">${actionBadge}</td>
+                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                    <code class="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-mono">${escapeHtml(activity.ip_address)}</code>
                 </td>
-                <td class="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate" title="${escapeHtml(userAgent)}">
+                <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate" title="${escapeHtml(userAgent)}">
                     ${escapeHtml(truncatedUserAgent)}
                 </td>
             `;
@@ -299,53 +277,32 @@
             // Previous button
             const prev = document.createElement('li');
             prev.innerHTML = `
-                <a href="#" class="flex items-center justify-center px-3 h-8 leading-tight border rounded-l-lg
-                    ${data.current_page === 1
-                        ? 'text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
-                        : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'}
-                    border-gray-300 dark:border-gray-600">
-                    <i class="fas fa-chevron-left text-xs"></i>
-                </a>`;
+                <button class="flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    ${data.current_page === 1 ? 'disabled' : ''}>
+                    Previous
+                </button>`;
             if (data.current_page > 1) {
-                prev.onclick = (e) => { e.preventDefault(); currentPage--; loadActivityLogs(); };
+                prev.querySelector('button').onclick = () => { currentPage--; loadActivityLogs(); };
             }
             container.appendChild(prev);
 
-            // Page numbers
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, data.current_page - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(data.last_page, startPage + maxVisiblePages - 1);
-
-            if (endPage - startPage < maxVisiblePages - 1) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                const page = document.createElement('li');
-                const isActive = i === data.current_page;
-                page.innerHTML = `
-                    <a href="#" class="flex items-center justify-center px-3 h-8 leading-tight border
-                        ${isActive
-                            ? 'text-blue-600 bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-600'
-                            : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white border-gray-300 dark:border-gray-600'}">
-                        ${i}
-                    </a>`;
-                page.onclick = (e) => { e.preventDefault(); currentPage = i; loadActivityLogs(); };
-                container.appendChild(page);
-            }
+            // Page numbers (simplified)
+            const pageInfo = document.createElement('li');
+            pageInfo.innerHTML = `
+                <span class="flex items-center justify-center px-3 py-2 text-sm text-gray-700 dark:text-gray-400">
+                    Page <span class="font-semibold mx-1">${data.current_page}</span> of <span class="font-semibold ml-1">${data.last_page}</span>
+                </span>`;
+            container.appendChild(pageInfo);
 
             // Next button
             const next = document.createElement('li');
             next.innerHTML = `
-                <a href="#" class="flex items-center justify-center px-3 h-8 leading-tight border rounded-r-lg
-                    ${data.current_page === data.last_page
-                        ? 'text-gray-400 bg-gray-100 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
-                        : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'}
-                    border-gray-300 dark:border-gray-600">
-                    <i class="fas fa-chevron-right text-xs"></i>
-                </a>`;
+                <button class="flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    ${data.current_page === data.last_page ? 'disabled' : ''}>
+                    Next
+                </button>`;
             if (data.current_page < data.last_page) {
-                next.onclick = (e) => { e.preventDefault(); currentPage++; loadActivityLogs(); };
+                next.querySelector('button').onclick = () => { currentPage++; loadActivityLogs(); };
             }
             container.appendChild(next);
         }

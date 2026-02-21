@@ -30,7 +30,7 @@
     </div>
 
     <!-- Divider -->
-    <div class="border-t border-gray-100 dark:border-gray-800 mt-2 mb-4"></div>
+    <div class="border-t border-gray-100 dark:border-gray-800 mt-4 mb-4"></div>
 
     <!-- Status Section -->
     <div class="flex items-center justify-between flex-wrap gap-3">

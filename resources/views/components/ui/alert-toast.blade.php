@@ -1,14 +1,14 @@
-<div id="alertToast" class="hidden fixed top-4 right-4 z-[60] max-w-md animate-slide-in">
-    <div id="toastContent" class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border-l-4 p-4 flex items-start gap-3">
-        <div id="toastIcon" class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fas text-lg"></i>
+<div id="alertToast" class="hidden fixed top-4 right-4 z-[60] max-w-sm animate-slide-in">
+    <div id="toastContent" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border p-4 flex items-start gap-3">
+        <div id="toastIcon" class="flex-shrink-0 w-5 h-5 flex items-center justify-center mt-0.5">
+            <i class="fas text-sm"></i>
         </div>
         <div class="flex-1 min-w-0">
-            <h4 id="toastTitle" class="font-semibold text-gray-900 dark:text-white text-sm"></h4>
-            <p id="toastMessage" class="text-sm text-gray-600 dark:text-gray-400 mt-1"></p>
+            <p id="toastTitle" class="text-sm font-semibold text-gray-900 dark:text-white"></p>
+            <p id="toastMessage" class="text-xs text-gray-600 dark:text-gray-400 mt-1"></p>
         </div>
-        <button onclick="closeToast()" class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-            <i class="fas fa-times"></i>
+        <button onclick="closeToast()" class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+            <i class="fas fa-times text-xs"></i>
         </button>
     </div>
 </div>
@@ -43,26 +43,22 @@ function showToast(title, message, type = 'info') {
     
     const types = {
         success: {
-            border: 'border-green-500',
-            iconBg: 'bg-green-100 dark:bg-green-900/30',
+            border: 'border-green-200 dark:border-green-900/50',
             iconColor: 'text-green-600 dark:text-green-400',
             icon: 'fa-check-circle'
         },
         error: {
-            border: 'border-red-500',
-            iconBg: 'bg-red-100 dark:bg-red-900/30',
+            border: 'border-red-200 dark:border-red-900/50',
             iconColor: 'text-red-600 dark:text-red-400',
             icon: 'fa-exclamation-circle'
         },
         warning: {
-            border: 'border-yellow-500',
-            iconBg: 'bg-yellow-100 dark:bg-yellow-900/30',
-            iconColor: 'text-yellow-600 dark:text-yellow-400',
+            border: 'border-orange-200 dark:border-orange-900/50',
+            iconColor: 'text-orange-600 dark:text-orange-400',
             icon: 'fa-exclamation-triangle'
         },
         info: {
-            border: 'border-blue-500',
-            iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+            border: 'border-blue-200 dark:border-blue-900/50',
             iconColor: 'text-blue-600 dark:text-blue-400',
             icon: 'fa-info-circle'
         }
@@ -70,9 +66,9 @@ function showToast(title, message, type = 'info') {
     
     const config = types[type] || types.info;
     
-    content.className = `bg-white dark:bg-gray-800 rounded-xl shadow-2xl border-l-4 ${config.border} p-4 flex items-start gap-3`;
-    icon.className = `flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${config.iconBg}`;
-    iconEl.className = `fas ${config.icon} text-lg ${config.iconColor}`;
+    content.className = `bg-white dark:bg-gray-800 rounded-lg shadow-lg border p-4 flex items-start gap-3 ${config.border}`;
+    icon.className = `flex-shrink-0 w-5 h-5 flex items-center justify-center mt-0.5`;
+    iconEl.className = `fas ${config.icon} text-sm ${config.iconColor}`;
     titleEl.textContent = title;
     messageEl.textContent = message;
     

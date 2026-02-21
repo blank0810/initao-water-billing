@@ -4,8 +4,8 @@
             
             <!-- Back Link -->
             <div class="mb-4">
-                <a href="{{ route('reports') }}" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-[#3D90D7] transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>
+                <a href="{{ route('reports') }}" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-[#3D90D7] transition-colors group">
+                    <i class="fas fa-chevron-left mr-2 text-gray-600 dark:text-gray-400 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] transition-all"></i>
                     Back to Reports
                 </a>
             </div>
@@ -25,10 +25,10 @@
             </div>
 
             <!-- Summary Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" x-show="!loading" x-transition>
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-users text-blue-600 dark:text-blue-400"></i>
                         </div>
                         <div>
@@ -37,9 +37,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
                         </div>
                         <div>
@@ -48,7 +48,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                             <i class="fas fa-pause-circle text-gray-600 dark:text-gray-400"></i>
@@ -59,9 +59,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-times-circle text-red-600 dark:text-red-400"></i>
                         </div>
                         <div>
@@ -73,74 +73,62 @@
             </div>
 
             <!-- Table Card -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
                 
                 <!-- Filter Bar -->
-                <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                    <div class="flex flex-wrap items-center justify-between gap-4">
-                        <!-- Search & Filters -->
-                        <div class="flex items-center gap-3">
-                            <div class="relative">
-                                <input type="text" x-model="searchQuery" @input="filterData()"
-                                    placeholder="Search by name or account..."
-                                    class="pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3D90D7] focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            </div>
-                            <select x-model="filterType" @change="filterData()"
-                                class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3D90D7] bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                                <option value="">All Types</option>
-                                <option value="Residential">Residential</option>
-                                <option value="Commercial">Commercial</option>
-                                <option value="Industrial">Industrial</option>
-                            </select>
-                            <!-- Date Filter -->
-                            <input type="date" x-model="filterDate" @change="filterData()"
-                                class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3D90D7] bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                            <select x-model="filterStatus" @change="filterData()"
-                                class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#3D90D7] bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                                <option value="">All Status</option>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                                <option value="Disconnected">Disconnected</option>
-                            </select>
-                            <!-- Sorting Controls (moved from bottom) -->
-                            <div class="flex items-center gap-2">
-                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</label>
-                                <select x-model="sortField" @change="sortData()"
-                                    class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                                    <option value="consumer_name">Consumer Name</option>
-                                    <option value="account_no">Account No.</option>
-                                    <option value="address">Address</option>
-                                    <option value="type">Type</option>
-                                    <option value="status">Status</option>
-                                </select>
-                                <button @click="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; sortData()"
-                                    class="px-2 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
-                                    <i :class="sortDirection === 'asc' ? 'fas fa-sort-amount-up' : 'fas fa-sort-amount-down'" class="text-gray-400"></i>
-                                </button>
-                            </div>
-                        </div>
+                <div class="flex items-center justify-between px-6 pt-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+                    <div class="relative">
+                        <input type="text" x-model="searchQuery" @input="filterData()"
+                            placeholder="Search account or name..."
+                            class="pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <div class="flex gap-2">
+                        <select x-model="filterType" @change="filterData()"
+                            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                            <option value="">All Types</option>
+                            <option value="Residential">Residential</option>
+                            <option value="Commercial">Commercial</option>
+                            <option value="Industrial">Industrial</option>
+                        </select>
+                        <select x-model="filterStatus" @change="filterData()"
+                            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                            <option value="">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Disconnected">Disconnected</option>
+                        </select>
                     </div>
                 </div>
 
                 <!-- Table -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead>
-                            <tr class="bg-gray-50 dark:bg-gray-800">
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Account No.</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Consumer Name</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Address</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Type</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Status</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Meter No.</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Action</th>
+                <div class="overflow-x-auto relative">
+                    <!-- Loading Overlay -->
+                    <div x-show="filtering" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="absolute inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Filtering...</span>
+                        </div>
+                    </div>
+                    <table class="min-w-full">
+                        <thead class="bg-white dark:bg-gray-900">
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Account No.</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Consumer Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Address</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Type</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Meter No.</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             <template x-for="(row, index) in paginatedData" :key="index">
-                                <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                     <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400" x-text="(currentPage - 1) * pageSize + index + 1"></td>
                                     <td class="px-4 py-3 text-sm font-mono text-[#3D90D7]" x-text="row.account_no"></td>
                                     <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white" x-text="row.consumer_name"></td>
@@ -162,9 +150,8 @@
                                     <td class="px-4 py-3 text-sm text-center font-mono text-gray-600 dark:text-gray-400" x-text="row.meter_no"></td>
                                     <td class="px-4 py-3 text-center">
                                         <a :href="'{{ route('reports.consumer-master-list') }}?account=' + row.account_no" target="_blank"
-                                           class="inline-flex items-center px-3 py-1.5 bg-[#3D90D7] hover:bg-[#3580c0] text-white text-xs font-medium rounded-lg transition-colors"
-                                           title="View Report Template">
-                                            <i class="fas fa-external-link-alt mr-1.5"></i>View Report
+                                           class="inline-flex items-center px-3 py-1.5 bg-[#3D90D7] hover:bg-[#3580c0] text-white text-xs font-medium rounded-lg transition-colors">
+                                            <i class="fas fa-external-link-alt mr-1.5"></i>View
                                         </a>
                                     </td>
                                 </tr>
@@ -173,40 +160,22 @@
                     </table>
                 </div>
 
-                <!-- Pagination & Per Page (Below Table) -->
-                <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                    <div class="flex flex-wrap items-center justify-between gap-4">
-                        <!-- Per Page Control (Left) -->
-                        <div class="flex items-center gap-2">
-                            <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Show</label>
-                            <select x-model.number="pageSize" @change="currentPage = 1"
-                                class="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                            </select>
-                            <label class="text-sm font-medium text-gray-600 dark:text-gray-400">entries</label>
-                        </div>
-
-                        <!-- Pagination Controls (Center) -->
-                        <div class="flex items-center gap-2">
-                            <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
-                                class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <span class="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span></span>
-                            <button @click="currentPage = Math.min(totalPages, currentPage + 1)" :disabled="currentPage === totalPages"
-                                class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-
-                        <!-- Results Info (Right) -->
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            Showing <span x-text="((currentPage - 1) * pageSize) + 1"></span> to 
-                            <span x-text="Math.min(currentPage * pageSize, filteredData.length)"></span> of 
-                            <span x-text="filteredData.length"></span> results
-                        </p>
+                <!-- Pagination -->
+                <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
+                            :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
+                            class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700">
+                            Previous
+                        </button>
+                        <span class="text-sm text-gray-700 dark:text-gray-400">
+                            Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
+                        </span>
+                        <button @click="currentPage = Math.min(totalPages, currentPage + 1)" :disabled="currentPage === totalPages"
+                            :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''"
+                            class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700">
+                            Next
+                        </button>
                     </div>
                 </div>
             </div>
@@ -237,8 +206,11 @@
                 ],
                 data: [],
                 filteredData: [],
+                loading: true,
+                filtering: false,
 
                 init() {
+                    setTimeout(() => { this.loading = false; }, 300);
                     this.data = [
                         { account_no: 'ACC-2026-001', consumer_name: 'Juan Dela Cruz', address: 'Poblacion, Initao', type: 'Residential', status: 'Active', meter_no: 'MTR-001' },
                         { account_no: 'ACC-2026-002', consumer_name: 'Maria Santos', address: 'Cogon, Initao', type: 'Residential', status: 'Active', meter_no: 'MTR-002' },
@@ -257,6 +229,7 @@
                 },
                 
                 filterData() {
+                    this.filtering = true;
                     let result = [...this.data];
                     
                     if (this.searchQuery) {
@@ -277,6 +250,7 @@
                     
                     this.filteredData = result;
                     this.sortData();
+                    setTimeout(() => { this.filtering = false; }, 100);
                 },
                 
                 sortData() {

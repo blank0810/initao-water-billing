@@ -1,16 +1,16 @@
 <x-app-layout>
-    <div class="min-h-screen bg-gray-50 dark:bg-gray-900" x-data="abstractTable()">
+    <div class="min-h-screen bg-gray-50 dark:bg-gray-900" x-data="abstractTable()" x-init="init()">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 
             <!-- Back Link -->
             <div class="mb-4">
-                <a href="{{ route('reports') }}" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-[#3D90D7] transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>
+                <a href="{{ route('reports') }}" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-[#3D90D7] transition-colors group">
+                    <i class="fas fa-chevron-left mr-2 text-gray-600 dark:text-gray-400 group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] transition-all"></i>
                     Back to Reports
                 </a>
             </div>
 
-            <!-- Page Header with Title and Export/Print Buttons -->
+            <!-- Page Header with Title -->
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-[#3D90D7]/10 rounded-lg flex items-center justify-center">
@@ -21,23 +21,30 @@
                         <p class="text-sm text-gray-500 dark:text-gray-400">View and print collection abstracts</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <x-export-dropdown />
-                    <a href="{{ route('reports.abstract-collection') }}" target="_blank"
-                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
-                        title="Download Printable">
-                        <i class="fas fa-print mr-2"></i>
-                        Print
-                    </a>
-                </div>
+                <x-export-dropdown />
             </div>
 
             <!-- Summary Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" x-show="!loading" x-transition>
+                <template x-if="loading">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <template x-for="i in 4" :key="i">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4 animate-pulse">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                                    <div class="flex-1">
+                                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 mb-2"></div>
+                                        <div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background-color: rgba(61, 144, 215, 0.1);">
-                            <i class="fas fa-file-alt" style="color: #3D90D7;"></i>
+                        <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-file-alt text-blue-600 dark:text-blue-400"></i>
                         </div>
                         <div>
                             <p class="text-xs text-gray-500 dark:text-gray-400">Total Records</p>
@@ -45,9 +52,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-money-bill-wave text-green-600 dark:text-green-400"></i>
                         </div>
                         <div>
@@ -56,9 +63,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-users text-purple-600 dark:text-purple-400"></i>
                         </div>
                         <div>
@@ -67,9 +74,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-chart-line text-amber-600 dark:text-amber-400"></i>
                         </div>
                         <div>
@@ -81,140 +88,101 @@
             </div>
 
             <!-- Table Card -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
 
-                <!-- Filter Bar - Dark Mode -->
-                <div class="p-4 border-b border-gray-200 dark:border-gray-700" style="background-color: #1f2937; border-bottom: 1px solid #374151;">
-                    <div class="flex flex-wrap items-center justify-between gap-4">
-                        <!-- Search & Filters -->
-                        <div class="flex items-center gap-3">
-                            <div class="relative">
-                                <input type="text" x-model="search"
-                                    placeholder="Search by OR number, collector, consumer..."
-                                    class="pl-10 pr-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-[#3D90D7] focus:border-transparent"
-                                    style="background-color: #374151; border-color: #4b5563; color: #ffffff;">
-                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            </div>
-                            <input type="date" x-model="dateFilter"
-                                class="px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-[#3D90D7]"
-                                style="background-color: #374151; border-color: #4b5563; color: #ffffff;">
-                            <select x-model="collectorFilter"
-                                class="px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-[#3D90D7]"
-                                style="background-color: #374151; border-color: #4b5563; color: #ffffff;">
-                                <option value="">All Collectors</option>
-                                <option value="Maria Santos">Maria Santos</option>
-                                <option value="Juan Dela Cruz">Juan Dela Cruz</option>
-                                <option value="Ana Reyes">Ana Reyes</option>
-                            </select>
-                            <!-- Sorting Controls -->
-                            <div class="flex items-center gap-2">
-                                <label class="text-sm font-medium" style="color: #ffffff;">Sort by:</label>
-                                <select x-model="sortField"
-                                    class="px-3 py-2 text-sm border rounded-lg"
-                                    style="background-color: #374151; border-color: #4b5563; color: #ffffff;">
-                                    <option value="date">Date</option>
-                                    <option value="orNumber">OR Number</option>
-                                    <option value="consumer">Consumer</option>
-                                    <option value="collector">Collector</option>
-                                    <option value="amount">Amount</option>
-                                </select>
-                                <button @click="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'"
-                                    class="px-2 py-2 text-sm border rounded-lg transition-colors"
-                                    style="background-color: #374151; border-color: #4b5563; color: #ffffff;"
-                                    onmouseover="this.style.backgroundColor='#4b5563'"
-                                    onmouseout="this.style.backgroundColor='#374151'">
-                                    <i :class="sortDirection === 'asc' ? 'fas fa-sort-amount-up' : 'fas fa-sort-amount-down'" class="text-gray-400"></i>
-                                </button>
-                            </div>
-                            <!-- Reset -->
-                            <button @click="resetFilters()" class="px-4 py-2 text-sm border rounded-lg font-medium transition-colors"
-                                style="background-color: #374151; border-color: #4b5563; color: #ffffff;"
-                                onmouseover="this.style.backgroundColor='#4b5563'"
-                                onmouseout="this.style.backgroundColor='#374151'">
-                                Reset
-                            </button>
-                        </div>
+                <!-- Filter Bar -->
+                <div class="flex items-center justify-between px-6 pt-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+                    <!-- Left: Search -->
+                    <div class="relative">
+                        <input type="text" x-model="search" @input="filterData()"
+                            placeholder="Search consumer..."
+                            class="pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    
+                    <!-- Right: Filters & Sort -->
+                    <div class="flex gap-2">
+                        <input type="date" x-model="dateFilter" @change="filterData()"
+                            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                        <select x-model="collectorFilter" @change="filterData()"
+                            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                            <option value="">All Collectors</option>
+                            <option value="Maria Santos">Maria Santos</option>
+                            <option value="Juan Dela Cruz">Juan Dela Cruz</option>
+                            <option value="Ana Reyes">Ana Reyes</option>
+                        </select>
+                        <select x-model="sortField" @change="sortData()"
+                            class="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+                            <option value="date">Date</option>
+                            <option value="orNumber">OR Number</option>
+                            <option value="consumer">Consumer</option>
+                            <option value="collector">Collector</option>
+                            <option value="amount">Amount</option>
+                        </select>
                     </div>
                 </div>
 
                 <!-- Table -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead>
-                            <tr class="bg-gray-50 dark:bg-gray-800">
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">OR Number</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Consumer</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Collector</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Amount</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-wider">Action</th>
+                <div class="overflow-x-auto relative">
+                    <!-- Loading Overlay -->
+                    <div x-show="filtering" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="absolute inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                        <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Filtering...</span>
+                        </div>
+                    </div>
+                    <table class="min-w-full">
+                        <thead class="bg-white dark:bg-gray-900">
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">OR Number</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Consumer</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Collector</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Amount</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             <template x-for="(row, index) in paginatedData" :key="row.id">
-                                <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors">
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400" x-text="(currentPage - 1) * perPage + index + 1"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white" x-text="row.orNumber"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300" x-text="row.date"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300" x-text="row.consumer"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300" x-text="row.collector"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-green-600 dark:text-green-400 text-right font-medium" x-text="'₱' + row.amount.toLocaleString('en-PH', {minimumFractionDigits: 2})"></td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400" x-text="(currentPage - 1) * pageSize + index + 1"></td>
+                                    <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white" x-text="row.orNumber"></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300" x-text="row.date"></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300" x-text="row.consumer"></td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300" x-text="row.collector"></td>
+                                    <td class="px-4 py-3 text-sm text-right font-mono text-green-600 dark:text-green-400 font-medium" x-text="'₱' + row.amount.toLocaleString('en-PH', {minimumFractionDigits: 2})"></td>
+                                    <td class="px-4 py-3 text-center">
                                         <a href="{{ route('reports.abstract-collection') }}" target="_blank"
-                                            class="inline-flex items-center px-3 py-1.5 bg-[#3D90D7] hover:bg-[#3580c0] text-white text-xs font-medium rounded-lg transition-colors"
-                                            title="View Report Template">
-                                            <i class="fas fa-external-link-alt mr-1.5"></i>View Report
+                                            class="inline-flex items-center px-3 py-1.5 bg-[#3D90D7] hover:bg-[#3580c0] text-white text-xs font-medium rounded-lg transition-colors">
+                                            <i class="fas fa-external-link-alt mr-1.5"></i>View
                                         </a>
                                     </td>
                                 </tr>
                             </template>
-                            <tr x-show="filteredData.length === 0">
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
-                                    <i class="fas fa-file-alt text-4xl text-gray-400 mb-2"></i>
-                                    <p class="mt-2 text-sm">No collection records found</p>
-                                </td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pagination & Per Page (Below Table) -->
-                <div class="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                    <div class="flex flex-wrap items-center justify-between gap-4">
-                        <!-- Per Page Control (Left) -->
-                        <div class="flex items-center gap-2">
-                            <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Show</label>
-                            <select x-model="perPage"
-                                class="px-3 py-1.5 text-sm border rounded-lg"
-                                style="background-color: #ffffff; border-color: #d1d5db; color: #111827;">
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                            <label class="text-sm font-medium text-gray-600 dark:text-gray-400">entries</label>
-                        </div>
-
-                        <!-- Pagination Controls (Center) -->
-                        <div class="flex items-center gap-2">
-                            <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
-                                class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <span class="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span></span>
-                            <button @click="currentPage = Math.min(totalPages, currentPage + 1)" :disabled="currentPage >= totalPages"
-                                class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
-
-                        <!-- Results Info (Right) -->
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            Showing <span x-text="Math.min((currentPage - 1) * perPage + 1, filteredData.length)"></span>
-                            to <span x-text="Math.min(currentPage * perPage, filteredData.length)"></span>
-                            of <span x-text="filteredData.length"></span> results
-                        </p>
+                <!-- Pagination -->
+                <div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <button @click="currentPage = Math.max(1, currentPage - 1)" :disabled="currentPage === 1"
+                            :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
+                            class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700">
+                            Previous
+                        </button>
+                        <span class="text-sm text-gray-700 dark:text-gray-400">
+                            Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
+                        </span>
+                        <button @click="currentPage = Math.min(totalPages, currentPage + 1)" :disabled="currentPage === totalPages"
+                            :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''"
+                            class="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700">
+                            Next
+                        </button>
                     </div>
                 </div>
             </div>
@@ -229,67 +197,81 @@
             search: '',
             dateFilter: '',
             collectorFilter: '',
-            perPage: 10,
+            pageSize: 10,
             currentPage: 1,
             sortField: 'date',
             sortDirection: 'desc',
+            data: [],
+            filteredData: [],
+            loading: true,
+            filtering: false,
 
-            exportFilename: 'abstract-of-collection',
-            exportColumns: [
-                { key: 'orNumber', label: 'OR Number' },
-                { key: 'date', label: 'Date' },
-                { key: 'consumer', label: 'Consumer' },
-                { key: 'collector', label: 'Collector' },
-                { key: 'amount', label: 'Amount', format: 'currency' },
-            ],
+            init() {
+                setTimeout(() => { this.loading = false; }, 300);
+                this.data = [
+                    { id: 1, orNumber: 'OR-2025-0001', date: '2025-01-15', consumer: 'Juan Dela Cruz', collector: 'Maria Santos', amount: 1250.50 },
+                    { id: 2, orNumber: 'OR-2025-0002', date: '2025-01-15', consumer: 'Pedro Santos', collector: 'Maria Santos', amount: 875.00 },
+                    { id: 3, orNumber: 'OR-2025-0003', date: '2025-01-14', consumer: 'Ana Reyes', collector: 'Juan Dela Cruz', amount: 1450.75 },
+                    { id: 4, orNumber: 'OR-2025-0004', date: '2025-01-14', consumer: 'Jose Garcia', collector: 'Ana Reyes', amount: 980.25 },
+                    { id: 5, orNumber: 'OR-2025-0005', date: '2025-01-13', consumer: 'Maria Lopez', collector: 'Maria Santos', amount: 1125.00 },
+                    { id: 6, orNumber: 'OR-2025-0006', date: '2025-01-13', consumer: 'Carlos Martinez', collector: 'Juan Dela Cruz', amount: 2250.50 },
+                    { id: 7, orNumber: 'OR-2025-0007', date: '2025-01-12', consumer: 'Rosa Fernandez', collector: 'Ana Reyes', amount: 750.00 },
+                    { id: 8, orNumber: 'OR-2025-0008', date: '2025-01-12', consumer: 'Luis Torres', collector: 'Maria Santos', amount: 1675.25 },
+                ];
+                this.filterData();
+            },
 
-            // Sample data - replace with actual data from backend
-            data: [
-                { id: 1, orNumber: 'OR-2025-0001', date: '2025-01-15', consumer: 'Juan Dela Cruz', collector: 'Maria Santos', amount: 1250.50 },
-                { id: 2, orNumber: 'OR-2025-0002', date: '2025-01-15', consumer: 'Pedro Santos', collector: 'Maria Santos', amount: 875.00 },
-                { id: 3, orNumber: 'OR-2025-0003', date: '2025-01-14', consumer: 'Ana Reyes', collector: 'Juan Dela Cruz', amount: 1450.75 },
-                { id: 4, orNumber: 'OR-2025-0004', date: '2025-01-14', consumer: 'Jose Garcia', collector: 'Ana Reyes', amount: 980.25 },
-                { id: 5, orNumber: 'OR-2025-0005', date: '2025-01-13', consumer: 'Maria Lopez', collector: 'Maria Santos', amount: 1125.00 },
-                { id: 6, orNumber: 'OR-2025-0006', date: '2025-01-13', consumer: 'Carlos Martinez', collector: 'Juan Dela Cruz', amount: 2250.50 },
-                { id: 7, orNumber: 'OR-2025-0007', date: '2025-01-12', consumer: 'Rosa Fernandez', collector: 'Ana Reyes', amount: 750.00 },
-                { id: 8, orNumber: 'OR-2025-0008', date: '2025-01-12', consumer: 'Luis Torres', collector: 'Maria Santos', amount: 1675.25 },
-            ],
+            filterData() {
+                this.filtering = true;
+                let result = [...this.data];
+                
+                if (this.search) {
+                    const query = this.search.toLowerCase();
+                    result = result.filter(row => 
+                        row.orNumber.toLowerCase().includes(query) ||
+                        row.consumer.toLowerCase().includes(query) ||
+                        row.collector.toLowerCase().includes(query)
+                    );
+                }
+                
+                if (this.dateFilter) {
+                    result = result.filter(row => row.date === this.dateFilter);
+                }
+                
+                if (this.collectorFilter) {
+                    result = result.filter(row => row.collector === this.collectorFilter);
+                }
+                
+                this.filteredData = result;
+                this.sortData();
+                setTimeout(() => { this.filtering = false; }, 100);
+            },
 
-            get filteredData() {
-                let result = this.data.filter(row => {
-                    const matchesSearch = this.search === '' ||
-                        row.orNumber.toLowerCase().includes(this.search.toLowerCase()) ||
-                        row.consumer.toLowerCase().includes(this.search.toLowerCase()) ||
-                        row.collector.toLowerCase().includes(this.search.toLowerCase());
-                    const matchesDate = this.dateFilter === '' || row.date === this.dateFilter;
-                    const matchesCollector = this.collectorFilter === '' || row.collector === this.collectorFilter;
-                    return matchesSearch && matchesDate && matchesCollector;
-                });
-
-                // Sort
-                result.sort((a, b) => {
+            sortData() {
+                this.filteredData.sort((a, b) => {
                     let aVal = a[this.sortField];
                     let bVal = b[this.sortField];
+                    
                     if (typeof aVal === 'string') {
                         aVal = aVal.toLowerCase();
                         bVal = bVal.toLowerCase();
                     }
+                    
                     if (this.sortDirection === 'asc') {
                         return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
                     }
-                    return aVal < bVal ? 1 : -1;
                 });
-
-                return result;
             },
 
             get paginatedData() {
-                const start = (this.currentPage - 1) * this.perPage;
-                return this.filteredData.slice(start, start + this.perPage);
+                const start = (this.currentPage - 1) * this.pageSize;
+                return this.filteredData.slice(start, start + this.pageSize);
             },
 
             get totalPages() {
-                return Math.ceil(this.filteredData.length / this.perPage) || 1;
+                return Math.ceil(this.filteredData.length / this.pageSize) || 1;
             },
 
             get totalCollected() {
@@ -303,20 +285,6 @@
             get avgCollection() {
                 if (this.filteredData.length === 0) return 0;
                 return this.totalCollected / this.filteredData.length;
-            },
-
-            resetFilters() {
-                this.search = '';
-                this.dateFilter = '';
-                this.collectorFilter = '';
-                this.currentPage = 1;
-            },
-
-            init() {
-                this.$watch('search', () => this.currentPage = 1);
-                this.$watch('dateFilter', () => this.currentPage = 1);
-                this.$watch('collectorFilter', () => this.currentPage = 1);
-                this.$watch('perPage', () => this.currentPage = 1);
             }
         }
     }

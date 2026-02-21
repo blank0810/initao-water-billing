@@ -30,19 +30,39 @@
         return document.querySelector('meta[name="csrf-token"]')?.content || '';
     }
 
-    // Show loading state
+    // Show loading state with skeleton
     function showLoading() {
         isLoading = true;
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="6" class="px-6 py-8 text-center">
-                    <div class="flex flex-col items-center">
-                        <i class="fas fa-spinner fa-spin text-3xl text-blue-500 mb-3"></i>
-                        <span class="text-gray-500 dark:text-gray-400">Loading users...</span>
-                    </div>
-                </td>
+        const skeletonHTML = `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 animate-pulse">
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+                <td class="px-4 py-3 text-center"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto"></div></td>
+            </tr>
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 animate-pulse">
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+                <td class="px-4 py-3 text-center"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto"></div></td>
+            </tr>
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 animate-pulse">
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28"></div></td>
+                <td class="px-4 py-3"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+                <td class="px-4 py-3 text-center"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12 mx-auto"></div></td>
             </tr>
         `;
+        tableBody.innerHTML = skeletonHTML;
     }
 
     // Show error state
@@ -94,7 +114,7 @@
             const result = await response.json();
             users = result.data || [];
             filteredUsers = [...users];
-            renderTable();
+            filterUsers();
         } catch (error) {
             console.error('Error fetching users:', error);
             showError('Failed to load users. Please try again.');
@@ -239,36 +259,36 @@
     function attachActionListeners() {
         // View buttons
         document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 const userId = btn.dataset.userId;
                 const user = users.find(u => u.id == userId);
                 if (user) {
-                    window.dispatchEvent(new CustomEvent('show-view-user', { detail: user }));
-                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'view-user' }));
+                    showViewUserModal(user);
                 }
             });
         });
 
         // Edit buttons
         document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 const userId = btn.dataset.userId;
                 const user = users.find(u => u.id == userId);
                 if (user) {
-                    window.dispatchEvent(new CustomEvent('show-edit-user', { detail: user }));
-                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'edit-user' }));
+                    showEditUserModal(user);
                 }
             });
         });
 
         // Delete buttons
         document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 const userId = btn.dataset.userId;
                 const user = users.find(u => u.id == userId);
                 if (user) {
-                    window.dispatchEvent(new CustomEvent('show-delete-user', { detail: user }));
-                    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'delete-user' }));
+                    showDeleteUserModal(user);
                 }
             });
         });
@@ -325,7 +345,7 @@
             const result = await response.json();
 
             if (result.success) {
-                await fetchUsers(); // Refresh the list
+                await fetchUsers();
                 window.dispatchEvent(new CustomEvent('close-modal', { detail: 'edit-user' }));
                 window.dispatchEvent(new CustomEvent('show-alert', {
                     detail: { type: 'success', message: result.message || 'User updated successfully' }
@@ -355,7 +375,7 @@
             const result = await response.json();
 
             if (result.success) {
-                await fetchUsers(); // Refresh the list
+                await fetchUsers();
                 window.dispatchEvent(new CustomEvent('close-modal', { detail: 'delete-user' }));
                 window.dispatchEvent(new CustomEvent('show-alert', {
                     detail: { type: 'success', message: result.message || 'User deleted successfully' }

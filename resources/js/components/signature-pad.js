@@ -103,8 +103,20 @@ window.signaturePadComponent = function (existingUrl = null) {
         },
 
         handleUpload(event) {
-            const file = event.target.files[0];
+            let file;
+            if (event.dataTransfer && event.dataTransfer.files) {
+                file = event.dataTransfer.files[0];
+            } else if (event.target && event.target.files) {
+                file = event.target.files[0];
+            }
+            
             if (!file) return;
+
+            const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                console.warn('Invalid file type. Please use PNG, JPG, or WebP.');
+                return;
+            }
 
             const reader = new FileReader();
             reader.onload = (e) => {
