@@ -48,7 +48,6 @@ class ServiceApplicationService
             // Get status IDs - Application goes directly to VERIFIED (auto-verify workflow)
             $verifiedStatusId = Status::getIdByDescription(Status::VERIFIED);
             $activeStatusId = Status::getIdByDescription(Status::ACTIVE);
-            $pendingStatusId = Status::getIdByDescription(Status::PENDING);
 
             // Create SERVICE ADDRESS (where the water connection will be installed)
             // This is separate from the customer's home/contact address
@@ -99,7 +98,7 @@ class ServiceApplicationService
                     'id_number' => $transformedCustomer['id_number'] ?? null,
                     'ca_id' => $customerAddressId, // Customer's HOME address
                     'land_mark' => $customerLandmark ?? null,
-                    'stat_id' => $pendingStatusId,
+                    'stat_id' => $activeStatusId,
                     'c_type' => $transformedCustomer['c_type'] ?? 'RESIDENTIAL',
                     'resolution_no' => $resolutionNo,
                     'create_date' => now(),
