@@ -7,6 +7,7 @@ use App\Models\CustomerLedger;
 use App\Models\ServiceApplication;
 use App\Models\ServiceConnection;
 use App\Models\Status;
+use App\Services\Charge\ApplicationChargeService;
 use App\Services\Notification\NotificationService;
 use App\Services\ServiceApplication\ServiceApplicationService;
 use Illuminate\Database\QueryException;
@@ -20,7 +21,8 @@ class ServiceConnectionService
 
     public function __construct(
         protected ServiceApplicationService $applicationService,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected ApplicationChargeService $chargeService
     ) {}
 
     /**
@@ -130,6 +132,12 @@ class ServiceConnectionService
 
                     // Mark application as connected
                     $this->applicationService->markAsConnected(
+                        $application->application_id,
+                        $connection->connection_id
+                    );
+
+                    // Transfer application charges and ledger entries to the new connection
+                    $this->chargeService->transferChargesToConnection(
                         $application->application_id,
                         $connection->connection_id
                     );

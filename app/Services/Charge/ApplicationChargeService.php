@@ -4,6 +4,8 @@ namespace App\Services\Charge;
 
 use App\Models\ChargeItem;
 use App\Models\CustomerCharge;
+use App\Models\CustomerLedger;
+use App\Models\PaymentAllocation;
 use App\Models\ServiceApplication;
 use App\Models\Status;
 use Illuminate\Support\Collection;
@@ -81,12 +83,41 @@ class ApplicationChargeService
     /**
      * Transfer charges to connection when application is completed
      *
-     * Updates CustomerCharge.connection_id for all charges
+     * Updates CustomerCharge.connection_id and corresponding CustomerLedger entries
      */
     public function transferChargesToConnection(int $applicationId, int $connectionId): void
     {
+        // Update charges
+        $chargeIds = CustomerCharge::where('application_id', $applicationId)
+            ->pluck('charge_id');
+
         CustomerCharge::where('application_id', $applicationId)
             ->update(['connection_id' => $connectionId]);
+
+        // Update ledger entries for these charges (CHARGE debits)
+        CustomerLedger::where('source_type', 'CHARGE')
+            ->whereIn('source_id', $chargeIds)
+            ->whereNull('connection_id')
+            ->update(['connection_id' => $connectionId]);
+
+        // Update ledger entries for payments allocated to these charges
+        $paymentIds = PaymentAllocation::where('target_type', 'CHARGE')
+            ->whereIn('target_id', $chargeIds)
+            ->pluck('payment_id');
+
+        if ($paymentIds->isNotEmpty()) {
+            // Update payment allocations
+            PaymentAllocation::where('target_type', 'CHARGE')
+                ->whereIn('target_id', $chargeIds)
+                ->whereNull('connection_id')
+                ->update(['connection_id' => $connectionId]);
+
+            // Update payment ledger entries that match these allocations
+            CustomerLedger::where('source_type', 'PAYMENT')
+                ->whereIn('source_id', $paymentIds)
+                ->whereNull('connection_id')
+                ->update(['connection_id' => $connectionId]);
+        }
     }
 
     /**
