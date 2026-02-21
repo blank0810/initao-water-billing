@@ -305,6 +305,9 @@
                     </div>
                 </div>
 
+                <!-- Transaction Ledger -->
+                @include('pages.connection.tabs.ledger-tab')
+
                 <!-- Suspension/Disconnection Info -->
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-700 p-6"
                     x-show="connection.status === 'SUSPENDED'">
@@ -634,6 +637,13 @@
 
             init() {
                 this.selectedAssignmentId = this.currentMeter?.assignment_id || null;
+
+                // Initialize connection ledger tab
+                this.$nextTick(() => {
+                    if (window.initializeConnectionLedgerTab && this.connection.id) {
+                        window.initializeConnectionLedgerTab(this.connection.id);
+                    }
+                });
             },
 
             get selectedAssignment() {
@@ -1160,4 +1170,6 @@
         btn.innerHTML = `<i class="fas fa-check mr-2"></i><span id="assignMeterBtnText">${btnText}</span>`;
     }
     </script>
+
+    @vite(['resources/js/data/connection/connection-ledger-data.js'])
 </x-app-layout>
