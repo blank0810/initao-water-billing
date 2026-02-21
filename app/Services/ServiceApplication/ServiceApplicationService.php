@@ -110,18 +110,12 @@ class ServiceApplicationService
                 $customer = Customer::findOrFail($customerData['customerId'] ?? $customerData['customer_id'] ?? $customerData['id']);
             }
 
-            // Generate application number with lock to prevent race conditions
-            $maxId = DB::table('ServiceApplication')
-                ->lockForUpdate()
-                ->max('application_id') ?? 0;
-            $applicationNumber = 'APP-'.date('Y').'-'.str_pad($maxId + 1, 5, '0', STR_PAD_LEFT);
-
             // Create service application with VERIFIED status (auto-verify workflow)
             // Customer can proceed directly to cashier for payment
             $application = ServiceApplication::create([
                 'customer_id' => $customer->cust_id,
                 'address_id' => $serviceAddress->ca_id,
-                'application_number' => $applicationNumber,
+                'application_number' => 'APP-'.date('Ymd').'-'.str_pad(random_int(0, 99999), 5, '0', STR_PAD_LEFT),
                 'submitted_at' => now(),
                 'verified_at' => now(), // Auto-verified on submission
                 'verified_by' => $userId,
