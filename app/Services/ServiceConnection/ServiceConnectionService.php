@@ -368,7 +368,7 @@ class ServiceConnectionService
      * @param  int  $limit  Maximum number of entries to return
      * @return Collection Ledger entries ordered by transaction date and post timestamp
      */
-    public function getStatementLedgerEntries(int $connectionId, int $limit = 50): Collection
+    public function getStatementLedgerEntries(int $connectionId, int $limit = 200): Collection
     {
         return CustomerLedger::where('connection_id', $connectionId)
             ->orderBy('txn_date', 'desc')
