@@ -59,7 +59,7 @@ class CustomerSearchService
 
             return [
                 'customer_id' => $customer->cust_id,
-                'name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}") . ($customer->cust_suffix ? ' ' . $customer->cust_suffix : ''),
+                'name' => $customer->full_name,
                 'resolution_no' => $customer->resolution_no ?? '',
                 'account_no' => $connection?->account_no ?? '',
                 'meter_serial' => $meter?->mtr_serial ?? '',
