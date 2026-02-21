@@ -166,6 +166,7 @@ window.enhancedCustomerData = enhancedCustomerData;
             const customerData = {
                 id: customer.customer_code,
                 CustomerName: `${customer.cust_first_name} ${customer.cust_middle_name} ${customer.cust_last_name}`,
+                suffix: customer.cust_suffix || '',
                 Email: customer.email || '',
                 AreaCode: customer.address,
                 Status: customer.workflow_status

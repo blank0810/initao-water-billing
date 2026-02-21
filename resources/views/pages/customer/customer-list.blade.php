@@ -119,6 +119,9 @@
         </div>
     </div>
 
+    {{-- Edit Customer Modal --}}
+    <x-ui.customer.modals.edit-customer />
+
     {{-- JavaScript --}}
     @vite(['resources/js/data/customer/customer-list-simple.js'])
 </x-app-layout>

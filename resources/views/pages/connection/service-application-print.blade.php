@@ -370,7 +370,8 @@
         $customerName = $application->customer
             ? trim(($application->customer->cust_first_name ?? '') . ' ' .
                    ($application->customer->cust_middle_name ? $application->customer->cust_middle_name[0] . '. ' : '') .
-                   ($application->customer->cust_last_name ?? ''))
+                   ($application->customer->cust_last_name ?? '') .
+                   ($application->customer->cust_suffix ? ' ' . $application->customer->cust_suffix : ''))
             : '-';
         $fullAddress = $application->address
             ? trim(($application->address->purok?->p_desc ?? '') . ', ' .

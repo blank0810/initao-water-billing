@@ -276,6 +276,17 @@
                            title="View Details">
                             <i class="fas fa-eye"></i>
                         </a>
+                        <button onclick="editCustomerFromList(${customer.cust_id})"
+                                class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                                title="Edit"
+                                data-first="${escapeHtml(customer.cust_first_name || '')}"
+                                data-middle="${escapeHtml(customer.cust_middle_name || '')}"
+                                data-last="${escapeHtml(customer.cust_last_name || '')}"
+                                data-suffix="${escapeHtml(customer.cust_suffix || '')}"
+                                data-type="${escapeHtml(customer.c_type || 'RESIDENTIAL')}"
+                                data-landmark="${escapeHtml(customer.land_mark || '')}">
+                            <i class="fas fa-edit"></i>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -424,6 +435,34 @@
      * Expose search function globally
      */
     window.searchAndFilterCustomers = searchAndFilterCustomers;
+
+    /**
+     * Edit customer - dispatch event to open edit modal
+     */
+    window.editCustomerFromList = function(custId) {
+        const btn = document.querySelector(`button[onclick="editCustomerFromList(${custId})"]`);
+        if (!btn) return;
+
+        window.dispatchEvent(new CustomEvent('edit-customer', {
+            detail: {
+                cust_id: custId,
+                cust_first_name: btn.dataset.first || '',
+                cust_middle_name: btn.dataset.middle || '',
+                cust_last_name: btn.dataset.last || '',
+                cust_suffix: btn.dataset.suffix || '',
+                c_type: btn.dataset.type || 'RESIDENTIAL',
+                land_mark: btn.dataset.landmark || '',
+            }
+        }));
+    };
+
+    /**
+     * Reload list after customer update
+     */
+    window.addEventListener('customer-updated', function() {
+        loadCustomers();
+        loadStats();
+    });
 
     /**
      * Initialize on DOM ready

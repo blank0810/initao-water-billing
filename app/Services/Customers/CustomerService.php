@@ -102,10 +102,11 @@ class CustomerService
 
             return [
                 'cust_id' => $customer->cust_id,
-                'customer_name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
+                'customer_name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}") . ($customer->cust_suffix ? ' ' . $customer->cust_suffix : ''),
                 'cust_first_name' => $customer->cust_first_name,
                 'cust_middle_name' => $customer->cust_middle_name ?? '',
                 'cust_last_name' => $customer->cust_last_name,
+                'cust_suffix' => $customer->cust_suffix ?? '',
                 'contact_number' => $customer->contact_number ?? '',
                 'location' => $this->formatLocation($customer),
                 'land_mark' => $customer->land_mark ?? '',
@@ -264,7 +265,7 @@ class CustomerService
         return $customers->map(function ($customer) {
             return [
                 'id' => $customer->cust_id,
-                'fullName' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
+                'fullName' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}") . ($customer->cust_suffix ? ' ' . $customer->cust_suffix : ''),
                 'phone' => $customer->contact_number ?? 'N/A',
                 'type' => $customer->c_type ?? 'RESIDENTIAL',
                 'connectionsCount' => $customer->serviceConnections ? $customer->serviceConnections->count() : 0,
@@ -296,6 +297,7 @@ class CustomerService
                     'cust_first_name' => strtoupper($data['cust_first_name']),
                     'cust_middle_name' => isset($data['cust_middle_name']) ? strtoupper($data['cust_middle_name']) : null,
                     'cust_last_name' => strtoupper($data['cust_last_name']),
+                    'cust_suffix' => isset($data['cust_suffix']) ? strtoupper($data['cust_suffix']) : null,
                     'ca_id' => $address->ca_id,
                     'land_mark' => isset($data['land_mark']) ? strtoupper($data['land_mark']) : null,
                     'c_type' => strtoupper($data['c_type']),
@@ -391,7 +393,7 @@ class CustomerService
         return [
             'customer' => [
                 'cust_id' => $customer->cust_id,
-                'customer_name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
+                'customer_name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}") . ($customer->cust_suffix ? ' ' . $customer->cust_suffix : ''),
             ],
             'applications' => $formattedApplications,
         ];
@@ -460,6 +462,7 @@ class CustomerService
             'cust_first_name' => strtoupper($data['cust_first_name']),
             'cust_middle_name' => isset($data['cust_middle_name']) ? strtoupper($data['cust_middle_name']) : null,
             'cust_last_name' => strtoupper($data['cust_last_name']),
+            'cust_suffix' => isset($data['cust_suffix']) ? strtoupper($data['cust_suffix']) : null,
             'c_type' => strtoupper($data['c_type']),
             'land_mark' => isset($data['land_mark']) ? strtoupper($data['land_mark']) : null,
         ]);
@@ -589,7 +592,7 @@ class CustomerService
      */
     private function buildCustomerInfo(Customer $customer): array
     {
-        $fullName = trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}");
+        $fullName = trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}") . ($customer->cust_suffix ? ' ' . $customer->cust_suffix : '');
         $address = $this->formatLocation($customer);
 
         return [
@@ -599,6 +602,7 @@ class CustomerService
             'first_name' => $customer->cust_first_name,
             'middle_name' => $customer->cust_middle_name ?? '',
             'last_name' => $customer->cust_last_name,
+            'suffix' => $customer->cust_suffix ?? '',
             'address' => $address,
         ];
     }
@@ -1381,7 +1385,7 @@ class CustomerService
         // Customer info
         $customerInfo = [
             'customer_code' => $customer->cust_id,
-            'name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
+            'name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}") . ($customer->cust_suffix ? ' ' . $customer->cust_suffix : ''),
             'address' => $this->formatLocation($customer),
         ];
 

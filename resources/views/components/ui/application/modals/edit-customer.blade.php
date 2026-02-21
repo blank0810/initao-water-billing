@@ -26,6 +26,26 @@
                 <input type="text" id="editCustomerName" required class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
             </div>
 
+            <!-- Suffix -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Suffix</label>
+                <select id="editCustomerSuffix"
+                        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        onchange="toggleEditCustomerSuffix()">
+                    <option value="">None</option>
+                    <option value="JR.">Jr.</option>
+                    <option value="SR.">Sr.</option>
+                    <option value="II">II</option>
+                    <option value="III">III</option>
+                    <option value="IV">IV</option>
+                    <option value="V">V</option>
+                    <option value="OTHER">Other</option>
+                </select>
+                <input type="text" id="editCustomerSuffixCustom"
+                       class="mt-2 w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white uppercase hidden"
+                       placeholder="Enter suffix" maxlength="10">
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number *</label>
@@ -129,14 +149,30 @@ document.getElementById('editArea')?.addEventListener('change', function(e) {
     }
 });
 
+function toggleEditCustomerSuffix() {
+    const select = document.getElementById('editCustomerSuffix');
+    const customInput = document.getElementById('editCustomerSuffixCustom');
+    if (select.value === 'OTHER') {
+        customInput.classList.remove('hidden');
+        customInput.focus();
+    } else {
+        customInput.classList.add('hidden');
+        customInput.value = '';
+    }
+}
+
 function closeEditCustomerModal() {
     document.getElementById('editCustomerModal').classList.add('hidden');
 }
 
 function saveEditCustomer() {
+    const suffixSelect = document.getElementById('editCustomerSuffix').value;
+    const resolvedSuffix = suffixSelect === 'OTHER' ? (document.getElementById('editCustomerSuffixCustom').value || '') : suffixSelect;
+
     const data = {
         id: document.getElementById('editCustomerId').value,
         CustomerName: document.getElementById('editCustomerName').value,
+        suffix: resolvedSuffix,
         phone: document.getElementById('editPhone').value,
         Email: document.getElementById('editEmail').value,
         id_type: document.getElementById('editIdType').value,
@@ -157,6 +193,27 @@ window.addEventListener('edit-customer', (e) => {
     const data = e.detail;
     document.getElementById('editCustomerId').value = data.id || '';
     document.getElementById('editCustomerName').value = data.CustomerName || '';
+
+    // Set suffix dropdown
+    const suffixSelect = document.getElementById('editCustomerSuffix');
+    const customInput = document.getElementById('editCustomerSuffixCustom');
+    const predefined = ['', 'JR.', 'SR.', 'II', 'III', 'IV', 'V'];
+    const upperSuffix = (data.suffix || '').toUpperCase();
+
+    if (predefined.includes(upperSuffix)) {
+        suffixSelect.value = upperSuffix;
+        customInput.classList.add('hidden');
+        customInput.value = '';
+    } else if (data.suffix) {
+        suffixSelect.value = 'OTHER';
+        customInput.value = data.suffix;
+        customInput.classList.remove('hidden');
+    } else {
+        suffixSelect.value = '';
+        customInput.classList.add('hidden');
+        customInput.value = '';
+    }
+
     document.getElementById('editPhone').value = data.phone || '';
     document.getElementById('editEmail').value = data.Email || '';
     document.getElementById('editIdType').value = data.id_type || '';

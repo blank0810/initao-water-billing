@@ -16,7 +16,7 @@ class CustomerSearchService
         $query = trim($query);
 
         $customers = Customer::query()
-            ->select('customer.cust_id', 'customer.cust_first_name', 'customer.cust_middle_name', 'customer.cust_last_name', 'customer.resolution_no', 'customer.ca_id', 'customer.stat_id')
+            ->select('customer.cust_id', 'customer.cust_first_name', 'customer.cust_middle_name', 'customer.cust_last_name', 'customer.cust_suffix', 'customer.resolution_no', 'customer.ca_id', 'customer.stat_id')
             ->with([
                 'status:stat_id,stat_desc',
                 'address.barangay:b_id,b_desc',
@@ -59,7 +59,7 @@ class CustomerSearchService
 
             return [
                 'customer_id' => $customer->cust_id,
-                'name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}"),
+                'name' => trim("{$customer->cust_first_name} {$customer->cust_middle_name} {$customer->cust_last_name}") . ($customer->cust_suffix ? ' ' . $customer->cust_suffix : ''),
                 'resolution_no' => $customer->resolution_no ?? '',
                 'account_no' => $connection?->account_no ?? '',
                 'meter_serial' => $meter?->mtr_serial ?? '',

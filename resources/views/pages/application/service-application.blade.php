@@ -148,7 +148,7 @@
                     </div>
 
                     <!-- Name Fields -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 First Name <span class="text-red-500">*</span>
@@ -167,6 +167,28 @@
                             </label>
                             <input type="text" x-model="customerForm.lastName" required placeholder="Dela Cruz"
                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <!-- Suffix -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Suffix <span class="text-gray-400 text-xs">(Optional)</span>
+                            </label>
+                            <select x-model="customerForm.suffix"
+                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">None</option>
+                                <option value="JR.">Jr.</option>
+                                <option value="SR.">Sr.</option>
+                                <option value="II">II</option>
+                                <option value="III">III</option>
+                                <option value="IV">IV</option>
+                                <option value="V">V</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                            <template x-if="customerForm.suffix === 'OTHER'">
+                                <input type="text" x-model="customerForm.customSuffix" placeholder="Enter suffix"
+                                       class="mt-2 w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white uppercase focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       maxlength="10">
+                            </template>
                         </div>
                     </div>
 
@@ -644,6 +666,8 @@
                     firstName: '',
                     middleName: '',
                     lastName: '',
+                    suffix: '',
+                    customSuffix: '',
                     phone: '',
                     customerType: '',
                     idType: '',
@@ -758,10 +782,12 @@
 
                 get customerDisplayName() {
                     if (this.customerType === 'new') {
+                        const suffix = this.customerForm.suffix === 'OTHER' ? this.customerForm.customSuffix : this.customerForm.suffix;
                         const name = [
                             this.customerForm.firstName,
                             this.customerForm.middleName,
-                            this.customerForm.lastName
+                            this.customerForm.lastName,
+                            suffix
                         ].filter(Boolean).join(' ');
                         return name.toUpperCase() || 'New Customer';
                     }
@@ -889,10 +915,15 @@
                     this.isSubmitting = true;
 
                     try {
+                        // Resolve suffix (if "OTHER", use custom value)
+                        const customerData = this.customerType === 'new'
+                            ? { ...this.customerForm, suffix: this.customerForm.suffix === 'OTHER' ? this.customerForm.customSuffix : this.customerForm.suffix }
+                            : { id: this.selectedCustomer.id };
+
                         // Prepare data
                         const data = {
                             customerType: this.customerType,
-                            customer: this.customerType === 'new' ? this.customerForm : { id: this.selectedCustomer.id },
+                            customer: customerData,
                             application: this.applicationForm
                         };
 
@@ -939,6 +970,7 @@
                     this.customerType = null;
                     this.customerForm = {
                         firstName: '', middleName: '', lastName: '',
+                        suffix: '', customSuffix: '',
                         phone: '', customerType: '', idType: '', idNumber: '',
                         barangay: '', purok: '', landmark: ''
                     };

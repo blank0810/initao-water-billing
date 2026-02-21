@@ -24,6 +24,7 @@ class Customer extends Model
         'cust_last_name',
         'cust_first_name',
         'cust_middle_name',
+        'cust_suffix',
         'contact_number',
         'id_type',
         'id_number',
@@ -43,7 +44,13 @@ class Customer extends Model
      */
     public function getFullNameAttribute(): string
     {
-        return trim("{$this->cust_first_name} {$this->cust_middle_name} {$this->cust_last_name}");
+        $name = trim("{$this->cust_first_name} {$this->cust_middle_name} {$this->cust_last_name}");
+
+        if ($this->cust_suffix) {
+            $name .= ' ' . $this->cust_suffix;
+        }
+
+        return $name;
     }
 
     /**

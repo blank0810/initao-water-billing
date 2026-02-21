@@ -54,6 +54,7 @@ class CustomerController extends Controller
             'cust_first_name' => ['required', 'string', 'max:50'],
             'cust_middle_name' => ['nullable', 'string', 'max:50'],
             'cust_last_name' => ['required', 'string', 'max:50'],
+            'cust_suffix' => ['nullable', 'string', 'max:10'],
             'c_type' => ['required', 'string', 'max:50'],
             'land_mark' => ['nullable', 'string', 'max:100'],
 
@@ -210,6 +211,7 @@ class CustomerController extends Controller
                 'cust_first_name' => ['required', 'string', 'max:50'],
                 'cust_middle_name' => ['nullable', 'string', 'max:50'],
                 'cust_last_name' => ['required', 'string', 'max:50'],
+                'cust_suffix' => ['nullable', 'string', 'max:10'],
                 'c_type' => ['required', 'string', 'max:50'],
                 'land_mark' => ['nullable', 'string', 'max:100'],
             ]);
