@@ -535,7 +535,7 @@ class ServiceConnectionService
             'REFUND' => ['bg' => 'bg-purple-100 dark:bg-purple-900', 'text' => 'text-purple-800 dark:text-purple-300'],
             'ADJUST' => ['bg' => 'bg-yellow-100 dark:bg-yellow-900', 'text' => 'text-yellow-800 dark:text-yellow-300'],
             'WRITE_OFF' => ['bg' => 'bg-gray-100 dark:bg-gray-700', 'text' => 'text-gray-800 dark:text-gray-300'],
-            'REVERSAL' => ['bg' => 'bg-amber-100 dark:bg-amber-900', 'text' => 'text-amber-800 dark:text-amber-300'],
+            'REVERSAL' => ['bg' => 'bg-red-100 dark:bg-red-900', 'text' => 'text-red-800 dark:text-red-300'],
             default => ['bg' => 'bg-gray-100 dark:bg-gray-700', 'text' => 'text-gray-800 dark:text-gray-300'],
         };
     }

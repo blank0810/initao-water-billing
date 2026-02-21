@@ -208,8 +208,8 @@
         }
 
         .type-reversal {
-            background: #fef3c7;
-            color: #92400e;
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .footer {
