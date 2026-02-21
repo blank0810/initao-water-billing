@@ -42,7 +42,16 @@ class AddUserManager {
     async populateRoleDropdown(selectElement) {
         if (!selectElement) return;
 
+        // Show loading skeleton
+        selectElement.innerHTML = '<option value="">Loading roles...</option>';
+        selectElement.disabled = true;
+        selectElement.classList.add('animate-pulse');
+
         const roles = await this.fetchRoles();
+
+        // Remove loading state
+        selectElement.disabled = false;
+        selectElement.classList.remove('animate-pulse');
 
         // Clear existing options except placeholder
         selectElement.innerHTML = '<option value="">Select Role</option>';
@@ -330,19 +339,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 data.signature = signatureInput.value;
             }
 
-            // Show loading state
+            // Show loading state with optimistic UI
             const submitBtn = addUserForm.querySelector('[type="submit"]');
             const originalText = submitBtn?.innerHTML;
             if (submitBtn) {
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
                 submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
             }
+
+            // Optimistic UI: Disable form inputs
+            const formInputs = addUserForm.querySelectorAll('input, select, textarea, button');
+            formInputs.forEach(input => {
+                if (input !== submitBtn) {
+                    input.disabled = true;
+                    input.classList.add('opacity-60');
+                }
+            });
 
             const result = await manager.createUser(data);
 
+            // Restore button state
             if (submitBtn) {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+
+            // Restore form inputs if failed
+            if (!result.success) {
+                formInputs.forEach(input => {
+                    input.disabled = false;
+                    input.classList.remove('opacity-60');
+                });
             }
 
             if (result.success) {

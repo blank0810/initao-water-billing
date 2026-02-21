@@ -1,5 +1,22 @@
-<x-ui.modal name="balance-modal" title="Customer Balance Inquiry" maxWidth="3xl">
-    <div class="p-6 space-y-6">
+<!-- Balance Inquiry Modal -->
+<div x-data="balanceInquiryModal()" 
+     x-on:open-modal.window="$event.detail == 'balance-modal' ? show = true : null"
+     x-on:close-modal.window="$event.detail == 'balance-modal' ? show = false : null"
+     x-show="show" 
+     x-cloak
+     class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+     :class="{ 'hidden': !show }">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col border border-gray-200 dark:border-gray-700">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-900 rounded-t-2xl">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Customer Balance Inquiry</h3>
+            <button @click="show = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Body (Scrollable) -->
+        <div class="overflow-y-auto flex-1 p-6 space-y-6 bg-white dark:bg-gray-900 rounded-b-2xl">
 
         <!-- Search Section (hidden when customer selected) -->
         <div x-show="!selectedCustomer" class="space-y-6">
@@ -157,8 +174,9 @@
             </div>
         </div>
     </div>
-</x-ui.modal>
-<!-- Alpine Component Registration (place after modal or in a separate script) -->
+</div>
+
+<!-- Alpine Component Registration -->
 <script>
     const API_ENDPOINTS = {
         searchCustomers: '/api/search/customers',
@@ -169,6 +187,7 @@
 
     function balanceInquiryModal() {
         return {
+            show: false,
             query: '',
             results: [],
             loading: false,

@@ -2,14 +2,6 @@
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900" x-data="{ activeTab: 'reports' }">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             
-            <!-- Back Link -->
-            <div class="mb-4">
-                <a href="{{ route('dashboard') }}" class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-[#3D90D7] transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Back to Dashboard
-                </a>
-            </div>
-
             <!-- Page Header -->
             <div class="mb-6">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -25,7 +17,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <span class="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline-flex items-center bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg">
+                        <span class="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline-flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg">
                             <i class="fas fa-calendar-alt mr-2 text-[#3D90D7]"></i>
                             {{ now()->format('F d, Y') }}
                         </span>
@@ -35,9 +27,9 @@
 
             <!-- Summary Cards - Reports Overview -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-users text-blue-600 dark:text-blue-400"></i>
                         </div>
                         <div>
@@ -46,9 +38,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-green-50 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-peso-sign text-green-600 dark:text-green-400"></i>
                         </div>
                         <div>
@@ -57,9 +49,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-file-invoice text-amber-600 dark:text-amber-400"></i>
                         </div>
                         <div>
@@ -68,9 +60,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-shadow p-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                        <div class="w-10 h-10 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400"></i>
                         </div>
                         <div>
@@ -82,28 +74,24 @@
             </div>
 
             <!-- Two-Tab Navigation -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
                 
                 <!-- Tab Header -->
-                <div class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div class="border-b border-gray-100 dark:border-gray-800">
                     <nav class="flex" aria-label="Tabs">
                         <button @click="activeTab = 'reports'" 
-                            :class="activeTab === 'reports' 
-                                ? 'border-[#3D90D7] text-[#3D90D7] bg-white dark:bg-gray-800' 
-                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-                            class="flex-1 sm:flex-none group inline-flex items-center justify-center px-8 py-4 border-b-2 font-medium text-sm transition-all">
+                            :class="activeTab === 'reports' ? 'border-[#3D90D7] text-[#3D90D7]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex-1 sm:flex-none inline-flex items-center justify-center px-8 py-4 border-b-2 font-medium text-sm transition-colors">
                             <i class="fas fa-file-alt mr-2"></i>
                             <span>Reports</span>
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">5</span>
+                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">5</span>
                         </button>
                         <button @click="activeTab = 'printables'" 
-                            :class="activeTab === 'printables' 
-                                ? 'border-[#3D90D7] text-[#3D90D7] bg-white dark:bg-gray-800' 
-                                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-                            class="flex-1 sm:flex-none group inline-flex items-center justify-center px-8 py-4 border-b-2 font-medium text-sm transition-all">
+                            :class="activeTab === 'printables' ? 'border-[#3D90D7] text-[#3D90D7]' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                            class="flex-1 sm:flex-none inline-flex items-center justify-center px-8 py-4 border-b-2 font-medium text-sm transition-colors">
                             <i class="fas fa-print mr-2"></i>
                             <span>Printables</span>
-                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">3</span>
+                            <span class="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">3</span>
                         </button>
                     </nav>
                 </div>
@@ -114,7 +102,7 @@
                     <!-- ========================================== -->
                     <!-- REPORTS TAB - Interactive Tables -->
                     <!-- ========================================== -->
-                    <div x-show="activeTab === 'reports'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                    <div x-show="activeTab === 'reports'">
                         
                         <!-- Reports Header -->
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -128,7 +116,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             
                             <!-- Report Card: Aging of Accounts -->
-                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md transition-all">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all p-5">
                                 <div class="flex items-start gap-4 mb-4">
                                     <div class="w-10 h-10 bg-[#3D90D7]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-clock text-[#3D90D7]"></i>
@@ -145,7 +133,7 @@
                             </div>
 
                             <!-- Report Card: Account Masterlist -->
-                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md transition-all">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all p-5">
                                 <div class="flex items-start gap-4 mb-4">
                                     <div class="w-10 h-10 bg-[#3D90D7]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-users text-[#3D90D7]"></i>
@@ -162,7 +150,7 @@
                             </div>
 
                             <!-- Report Card: Monthly Billing Summary -->
-                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md transition-all">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all p-5">
                                 <div class="flex items-start gap-4 mb-4">
                                     <div class="w-10 h-10 bg-[#3D90D7]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-file-invoice text-[#3D90D7]"></i>
@@ -179,7 +167,7 @@
                             </div>
 
                             <!-- Report Card: Monthly Collection Summary -->
-                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md transition-all">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all p-5">
                                 <div class="flex items-start gap-4 mb-4">
                                     <div class="w-10 h-10 bg-[#3D90D7]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-hand-holding-usd text-[#3D90D7]"></i>
@@ -196,7 +184,7 @@
                             </div>
 
                             <!-- Report Card: Monthly Status Report -->
-                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md transition-all">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all p-5">
                                 <div class="flex items-start gap-4 mb-4">
                                     <div class="w-10 h-10 bg-[#3D90D7]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-chart-pie text-[#3D90D7]"></i>
@@ -218,7 +206,7 @@
                     <!-- ========================================== -->
                     <!-- PRINTABLES TAB - Fixed Print-Ready Tables -->
                     <!-- ========================================== -->
-                    <div x-show="activeTab === 'printables'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                    <div x-show="activeTab === 'printables'">
                         
                         <!-- Printables Header -->
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -232,7 +220,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             
                             <!-- Printable Card: Abstract of Collections -->
-                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md transition-all">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all p-5">
                                 <div class="flex items-start gap-4 mb-4">
                                     <div class="w-10 h-10 bg-[#3D90D7]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-file-invoice-dollar text-[#3D90D7]"></i>
@@ -249,7 +237,7 @@
                             </div>
 
                             <!-- Printable Card: Bill History -->
-                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md transition-all">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all p-5">
                                 <div class="flex items-start gap-4 mb-4">
                                     <div class="w-10 h-10 bg-[#3D90D7]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-history text-[#3D90D7]"></i>
@@ -266,7 +254,7 @@
                             </div>
 
                             <!-- Printable Card: Billing Statement -->
-                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-md transition-all">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all p-5">
                                 <div class="flex items-start gap-4 mb-4">
                                     <div class="w-10 h-10 bg-[#3D90D7]/10 rounded-lg flex items-center justify-center flex-shrink-0">
                                         <i class="fas fa-receipt text-[#3D90D7]"></i>
