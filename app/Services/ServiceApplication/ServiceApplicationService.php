@@ -115,7 +115,7 @@ class ServiceApplicationService
             $application = ServiceApplication::create([
                 'customer_id' => $customer->cust_id,
                 'address_id' => $serviceAddress->ca_id,
-                'application_number' => 'TEMP', // Placeholder, derived from ID below
+                'application_number' => 'TEMP-'.uniqid(), // Unique placeholder, derived from ID below
                 'submitted_at' => now(),
                 'verified_at' => now(), // Auto-verified on submission
                 'verified_by' => $userId,
