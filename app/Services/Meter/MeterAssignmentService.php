@@ -244,7 +244,6 @@ class MeterAssignmentService
             'meter',
             'meterReadings' => fn ($q) => $q->whereNotNull('period_id')->orderBy('reading_date', 'asc'),
             'meterReadings.period',
-            'meterReadings.readingResponsibility',
         ])
             ->where('connection_id', $connectionId)
             ->whereNull('removed_at')
@@ -260,7 +259,6 @@ class MeterAssignmentService
             'meter',
             'meterReadings' => fn ($q) => $q->whereNotNull('period_id')->orderBy('reading_date', 'asc'),
             'meterReadings.period',
-            'meterReadings.readingResponsibility',
         ])
             ->where('connection_id', $connectionId)
             ->orderBy('installed_at', 'desc')

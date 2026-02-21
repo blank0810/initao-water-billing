@@ -194,6 +194,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/customer/service-connection/{id}/balance', [ServiceConnectionController::class, 'balance'])->name('service.connection.balance');
         Route::post('/customer/service-connection/{id}/assign-meter', [ServiceConnectionController::class, 'assignMeter'])->name('service.connection.assign-meter');
         Route::get('/customer/service-connection/{id}/statement', [ServiceConnectionController::class, 'printStatement'])->name('service.connection.statement');
+        Route::get('/customer/service-connection/{id}/ledger', [ServiceConnectionController::class, 'getLedger'])->name('service.connection.ledger');
     });
 
     // -------------------------------------------------------------------------

@@ -7,6 +7,7 @@ use App\Models\CustomerLedger;
 use App\Models\ServiceApplication;
 use App\Models\ServiceConnection;
 use App\Models\Status;
+use App\Services\Charge\ApplicationChargeService;
 use App\Services\Notification\NotificationService;
 use App\Services\ServiceApplication\ServiceApplicationService;
 use Illuminate\Database\QueryException;
@@ -20,7 +21,8 @@ class ServiceConnectionService
 
     public function __construct(
         protected ServiceApplicationService $applicationService,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected ApplicationChargeService $chargeService
     ) {}
 
     /**
@@ -130,6 +132,12 @@ class ServiceConnectionService
 
                     // Mark application as connected
                     $this->applicationService->markAsConnected(
+                        $application->application_id,
+                        $connection->connection_id
+                    );
+
+                    // Transfer application charges and ledger entries to the new connection
+                    $this->chargeService->transferChargesToConnection(
                         $application->application_id,
                         $connection->connection_id
                     );
@@ -360,12 +368,175 @@ class ServiceConnectionService
      * @param  int  $limit  Maximum number of entries to return
      * @return Collection Ledger entries ordered by transaction date and post timestamp
      */
-    public function getStatementLedgerEntries(int $connectionId, int $limit = 50): Collection
+    public function getStatementLedgerEntries(int $connectionId, int $limit = 200): Collection
     {
         return CustomerLedger::where('connection_id', $connectionId)
             ->orderBy('txn_date', 'desc')
             ->orderBy('post_ts', 'desc')
             ->limit($limit)
             ->get();
+    }
+
+    /**
+     * Get paginated, filterable ledger data for a connection
+     *
+     * Mirrors CustomerService::getLedgerData() but scoped to a single connection.
+     */
+    public function getConnectionLedgerData(int $connectionId, array $filters = []): array
+    {
+        $perPage = max(1, min(100, (int) ($filters['per_page'] ?? 20)));
+        $periodId = $filters['period_id'] ?? null;
+        $sourceType = $filters['source_type'] ?? null;
+
+        ServiceConnection::findOrFail($connectionId);
+
+        // Build query scoped to this connection
+        $query = CustomerLedger::with(['period', 'status', 'user'])
+            ->where('connection_id', $connectionId);
+
+        if ($periodId) {
+            $query->where('period_id', $periodId);
+        }
+
+        if ($sourceType) {
+            $query->where('source_type', $sourceType);
+        }
+
+        $entries = $query->orderBy('txn_date', 'desc')
+            ->orderBy('post_ts', 'desc')
+            ->orderBy('ledger_entry_id', 'desc')
+            ->paginate($perPage);
+
+        // Calculate running balances from ALL connection entries (oldest first)
+        $allEntries = CustomerLedger::where('connection_id', $connectionId)
+            ->orderBy('txn_date', 'asc')
+            ->orderBy('post_ts', 'asc')
+            ->orderBy('ledger_entry_id', 'asc')
+            ->get();
+
+        $runningBalances = [];
+        $runningBalance = 0;
+        foreach ($allEntries as $entry) {
+            $runningBalance += ($entry->debit - $entry->credit);
+            $runningBalances[$entry->ledger_entry_id] = $runningBalance;
+        }
+
+        // Format entries
+        $entriesWithBalance = $entries->getCollection()->map(function ($entry) use ($runningBalances) {
+            return $this->formatConnectionLedgerEntry($entry, $runningBalances[$entry->ledger_entry_id] ?? 0);
+        });
+
+        // Summary
+        $totals = CustomerLedger::where('connection_id', $connectionId)
+            ->selectRaw('SUM(debit) as total_debit, SUM(credit) as total_credit')
+            ->first();
+
+        $totalDebit = (float) ($totals->total_debit ?? 0);
+        $totalCredit = (float) ($totals->total_credit ?? 0);
+        $netBalance = $totalDebit - $totalCredit;
+
+        // Filter options
+        $periods = CustomerLedger::where('connection_id', $connectionId)
+            ->whereNotNull('period_id')
+            ->with('period')
+            ->get()
+            ->pluck('period')
+            ->filter()
+            ->unique('per_id')
+            ->sortByDesc('per_id')
+            ->map(fn ($period) => [
+                'per_id' => $period->per_id,
+                'label' => $period->per_month.' '.$period->per_year,
+            ])
+            ->values();
+
+        $types = CustomerLedger::where('connection_id', $connectionId)
+            ->distinct()
+            ->pluck('source_type')
+            ->map(fn ($type) => [
+                'value' => $type,
+                'label' => $this->getSourceTypeLabel($type),
+            ]);
+
+        return [
+            'entries' => $entriesWithBalance,
+            'pagination' => [
+                'current_page' => $entries->currentPage(),
+                'per_page' => $entries->perPage(),
+                'total' => $entries->total(),
+                'last_page' => $entries->lastPage(),
+            ],
+            'summary' => [
+                'total_debit' => $totalDebit,
+                'total_debit_formatted' => '₱'.number_format($totalDebit, 2),
+                'total_credit' => $totalCredit,
+                'total_credit_formatted' => '₱'.number_format($totalCredit, 2),
+                'net_balance' => $netBalance,
+                'net_balance_formatted' => '₱'.number_format($netBalance, 2),
+                'balance_class' => $netBalance > 0 ? 'text-red-600' : ($netBalance < 0 ? 'text-blue-600' : 'text-green-600'),
+            ],
+            'filters' => [
+                'periods' => $periods,
+                'types' => $types,
+            ],
+        ];
+    }
+
+    private function formatConnectionLedgerEntry(CustomerLedger $entry, float $runningBalance): array
+    {
+        return [
+            'ledger_entry_id' => $entry->ledger_entry_id,
+            'txn_date' => $entry->txn_date->format('Y-m-d'),
+            'txn_date_formatted' => $entry->txn_date->format('M d, Y'),
+            'post_ts' => $entry->post_ts?->format('Y-m-d H:i:s'),
+            'source_type' => $entry->source_type,
+            'source_type_label' => $this->getSourceTypeLabel($entry->source_type),
+            'source_type_badge' => $this->getSourceTypeBadge($entry->source_type),
+            'source_id' => $entry->source_id,
+            'description' => $entry->description ?? '-',
+            'debit' => (float) $entry->debit,
+            'debit_formatted' => $entry->debit > 0 ? '₱'.number_format($entry->debit, 2) : '-',
+            'credit' => (float) $entry->credit,
+            'credit_formatted' => $entry->credit > 0 ? '₱'.number_format($entry->credit, 2) : '-',
+            'running_balance' => $runningBalance,
+            'running_balance_formatted' => '₱'.number_format($runningBalance, 2),
+            'balance_class' => $runningBalance > 0 ? 'text-red-600' : ($runningBalance < 0 ? 'text-blue-600' : 'text-green-600'),
+            'period' => $entry->period ? [
+                'per_id' => $entry->period->per_id,
+                'period_label' => $entry->period->per_month.' '.$entry->period->per_year,
+            ] : null,
+            'status' => $entry->status ? [
+                'stat_desc' => $entry->status->stat_desc,
+            ] : null,
+        ];
+    }
+
+    private function getSourceTypeLabel(string $sourceType): string
+    {
+        return match ($sourceType) {
+            'BILL' => 'Water Bill',
+            'CHARGE' => 'Charge',
+            'PAYMENT' => 'Payment',
+            'REFUND' => 'Refund',
+            'ADJUST' => 'Adjustment',
+            'WRITE_OFF' => 'Write-Off',
+            'TRANSFER' => 'Transfer',
+            'REVERSAL' => 'Reversal',
+            default => $sourceType,
+        };
+    }
+
+    private function getSourceTypeBadge(string $sourceType): array
+    {
+        return match ($sourceType) {
+            'BILL' => ['bg' => 'bg-blue-100 dark:bg-blue-900', 'text' => 'text-blue-800 dark:text-blue-300'],
+            'CHARGE' => ['bg' => 'bg-orange-100 dark:bg-orange-900', 'text' => 'text-orange-800 dark:text-orange-300'],
+            'PAYMENT' => ['bg' => 'bg-green-100 dark:bg-green-900', 'text' => 'text-green-800 dark:text-green-300'],
+            'REFUND' => ['bg' => 'bg-purple-100 dark:bg-purple-900', 'text' => 'text-purple-800 dark:text-purple-300'],
+            'ADJUST' => ['bg' => 'bg-yellow-100 dark:bg-yellow-900', 'text' => 'text-yellow-800 dark:text-yellow-300'],
+            'WRITE_OFF' => ['bg' => 'bg-gray-100 dark:bg-gray-700', 'text' => 'text-gray-800 dark:text-gray-300'],
+            'REVERSAL' => ['bg' => 'bg-red-100 dark:bg-red-900', 'text' => 'text-red-800 dark:text-red-300'],
+            default => ['bg' => 'bg-gray-100 dark:bg-gray-700', 'text' => 'text-gray-800 dark:text-gray-300'],
+        };
     }
 }

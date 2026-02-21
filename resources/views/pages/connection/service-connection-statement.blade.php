@@ -207,6 +207,11 @@
             color: #3730a3;
         }
 
+        .type-reversal {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
         .footer {
             margin-top: 32px;
             padding-top: 16px;
@@ -303,11 +308,11 @@
     <div class="summary-cards">
         <div class="summary-card">
             <div class="summary-card-label">Total Billed</div>
-            <div class="summary-card-value">{{ number_format($balance['total_billed'] ?? 0, 2) }}</div>
+            <div class="summary-card-value">{{ number_format(($balance['total_bills'] ?? 0) + ($balance['total_charges'] ?? 0), 2) }}</div>
         </div>
         <div class="summary-card">
             <div class="summary-card-label">Total Paid</div>
-            <div class="summary-card-value positive">{{ number_format($balance['total_paid'] ?? 0, 2) }}</div>
+            <div class="summary-card-value positive">{{ number_format($balance['total_payments'] ?? 0, 2) }}</div>
         </div>
         <div class="summary-card">
             <div class="summary-card-label">Outstanding Balance</div>
@@ -345,6 +350,7 @@
                             'PAYMENT', 'APP\MODELS\PAYMENT' => 'type-payment',
                             'CHARGE', 'APP\MODELS\CUSTOMERCHARGE' => 'type-charge',
                             'ADJUSTMENT' => 'type-adjustment',
+                            'REVERSAL' => 'type-reversal',
                             default => ''
                         };
 
@@ -352,6 +358,7 @@
                             str_contains(strtoupper($entry->source_type ?? ''), 'BILL') => 'BILL',
                             str_contains(strtoupper($entry->source_type ?? ''), 'PAYMENT') => 'PAYMENT',
                             str_contains(strtoupper($entry->source_type ?? ''), 'CHARGE') => 'CHARGE',
+                            str_contains(strtoupper($entry->source_type ?? ''), 'REVERSAL') => 'REVERSAL',
                             default => $entry->source_type ?? '-'
                         };
                     @endphp
