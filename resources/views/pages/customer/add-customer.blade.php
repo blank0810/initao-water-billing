@@ -99,7 +99,7 @@
                                 <h3 class="ml-4 text-xl font-semibold text-gray-900 dark:text-white">Personal Information</h3>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                                 <div>
                                     <label for="cust_first_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
                                         First Name <span class="text-red-500">*</span>
@@ -121,6 +121,27 @@
                                     <input type="text" id="cust_last_name" name="cust_last_name" required
                                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase"
                                         placeholder="DELA CRUZ">
+                                </div>
+                                <!-- Suffix -->
+                                <div>
+                                    <label for="cust_suffix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                        Suffix <span class="text-gray-400 text-xs">(Optional)</span>
+                                    </label>
+                                    <select id="cust_suffix" name="cust_suffix"
+                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase"
+                                        onchange="toggleCustomSuffix()">
+                                        <option value="">None</option>
+                                        <option value="JR.">Jr.</option>
+                                        <option value="SR.">Sr.</option>
+                                        <option value="II">II</option>
+                                        <option value="III">III</option>
+                                        <option value="IV">IV</option>
+                                        <option value="V">V</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                    <input type="text" id="cust_suffix_custom" name="cust_suffix_custom"
+                                        class="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 uppercase hidden"
+                                        placeholder="Enter suffix" maxlength="10">
                                 </div>
                             </div>
 
@@ -686,6 +707,8 @@
             const firstName = document.getElementById('cust_first_name').value;
             const middleName = document.getElementById('cust_middle_name').value || 'N/A';
             const lastName = document.getElementById('cust_last_name').value;
+            const suffixSelect = document.getElementById('cust_suffix').value;
+            const suffix = suffixSelect === 'OTHER' ? (document.getElementById('cust_suffix_custom').value || '') : suffixSelect;
             const customerType = document.getElementById('c_type').value;
 
             const provinceEl = document.getElementById('province');
@@ -708,7 +731,7 @@
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Full Name</dt>
-                            <dd class="text-sm text-gray-900 dark:text-white font-semibold">${firstName} ${middleName} ${lastName}</dd>
+                            <dd class="text-sm text-gray-900 dark:text-white font-semibold">${firstName} ${middleName} ${lastName}${suffix ? ' ' + suffix : ''}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Customer Type</dt>
@@ -762,6 +785,20 @@
         }
 
         // ============================================
+        // SUFFIX TOGGLE
+        // ============================================
+        function toggleCustomSuffix() {
+            const select = document.getElementById('cust_suffix');
+            const customInput = document.getElementById('cust_suffix_custom');
+            if (select.value === 'OTHER') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+                customInput.value = '';
+            }
+        }
+
         // TOAST NOTIFICATIONS
         // ============================================
         function showToast(type, message) {
@@ -988,6 +1025,12 @@
 
                 // Remove terms checkbox from data (not needed in backend)
                 delete data['terms-checkbox'];
+
+                // Resolve suffix (if "OTHER", use custom value)
+                if (data.cust_suffix === 'OTHER') {
+                    data.cust_suffix = data.cust_suffix_custom || '';
+                }
+                delete data.cust_suffix_custom;
 
                 const response = await fetch('{{ route("customer.store") }}', {
                     method: 'POST',

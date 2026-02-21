@@ -278,12 +278,15 @@ class ApplicationProcessManager {
         const customer = this.allCustomers.find(c => c.customer_code === customerCode);
         if (!customer) return;
 
-        window.dispatchEvent(new CustomEvent('edit-customer', { 
+        window.dispatchEvent(new CustomEvent('edit-customer', {
             detail: {
-                id: customer.customer_code,
-                CustomerName: `${customer.cust_first_name} ${customer.cust_last_name}`,
-                Email: customer.email || '',
-                AreaCode: customer.address
+                cust_id: customer.cust_id,
+                cust_first_name: customer.cust_first_name || '',
+                cust_middle_name: customer.cust_middle_name || '',
+                cust_last_name: customer.cust_last_name || '',
+                cust_suffix: customer.cust_suffix || '',
+                c_type: customer.registration_type || 'RESIDENTIAL',
+                land_mark: customer.land_mark || '',
             }
         }));
     }
