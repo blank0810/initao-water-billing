@@ -16,7 +16,7 @@
         $addressParts = array_filter([$purokDesc, $barangayDesc]);
         $fullAddress = $addressParts ? implode(', ', $addressParts) : '-';
 
-        $balanceData = $balance ?? ['total_billed' => 0, 'total_paid' => 0, 'balance' => 0];
+        $balanceData = $balance ?? ['total_bills' => 0, 'total_charges' => 0, 'total_payments' => 0, 'balance' => 0];
         $meterData = $currentMeter ?? null;
         $meterHistoryData = $meterHistory ?? [];
     @endphp
@@ -139,11 +139,11 @@
                         <div class="space-y-3">
                             <div class="flex justify-between">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">Total Billed</span>
-                                <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="formatCurrency(balance.total_billed)"></span>
+                                <span class="text-sm font-medium text-gray-900 dark:text-white" x-text="formatCurrency((balance.total_bills || 0) + (balance.total_charges || 0))"></span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-sm text-gray-600 dark:text-gray-400">Total Paid</span>
-                                <span class="text-sm font-medium text-green-600 dark:text-green-400" x-text="formatCurrency(balance.total_paid)"></span>
+                                <span class="text-sm font-medium text-green-600 dark:text-green-400" x-text="formatCurrency(balance.total_payments)"></span>
                             </div>
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                                 <div class="flex justify-between items-center">
@@ -628,7 +628,7 @@
     function connectionDetail(connData, balanceData, meterData, historyData) {
         return {
             connection: connData || {},
-            balance: balanceData || { total_billed: 0, total_paid: 0, balance: 0 },
+            balance: balanceData || { total_bills: 0, total_charges: 0, total_payments: 0, balance: 0 },
             currentMeter: meterData,
             meterHistory: historyData || [],
             selectedAssignmentId: null,
