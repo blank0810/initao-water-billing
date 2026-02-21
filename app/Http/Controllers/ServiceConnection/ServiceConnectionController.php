@@ -394,6 +394,26 @@ class ServiceConnectionController extends Controller
     }
 
     /**
+     * Get connection ledger data (API)
+     */
+    public function getLedger(Request $request, int $id): JsonResponse
+    {
+        try {
+            $data = $this->connectionService->getConnectionLedgerData($id, $request->all());
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
      * Print account statement
      */
     public function printStatement(int $id): View
