@@ -137,13 +137,75 @@
             <!-- Step 2a: New Customer Registration -->
             <div x-show="currentStep === 2 && customerType === 'new'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                        <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">New Customer Registration</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Enter customer's personal information</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">New Customer Registration</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Enter customer's personal information</p>
+                        <!-- QR Scanner Button -->
+                        <div x-data="qrScanner" @qr-scanned.window="handleQrScanned($event.detail)">
+                            <button @click="openScanner()" type="button"
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+                                <i class="fas fa-qrcode"></i>
+                                <span class="hidden sm:inline">Scan National ID</span>
+                            </button>
+
+                            <!-- QR Scanner Modal -->
+                            <template x-teleport="body">
+                                <div x-show="isOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                     x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                     class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+                                     @keydown.escape.window="closeScanner()">
+                                    <div @click.outside="closeScanner()"
+                                         class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full">
+                                        <!-- Modal Header -->
+                                        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                                    <i class="fas fa-qrcode text-purple-600 dark:text-purple-400"></i>
+                                                </div>
+                                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Scan National ID QR Code</h3>
+                                            </div>
+                                            <button @click="closeScanner()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                                <i class="fas fa-times text-xl"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Scanner Body -->
+                                        <div class="p-4">
+                                            <div id="qr-reader" class="w-full rounded-lg overflow-hidden"></div>
+
+                                            <!-- Error Message -->
+                                            <div x-show="error" x-transition
+                                                 class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fas fa-exclamation-triangle text-amber-500"></i>
+                                                    <p class="text-sm text-amber-700 dark:text-amber-300" x-text="error"></p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Instructions -->
+                                            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                Hold the National ID QR code in front of the camera
+                                            </p>
+                                        </div>
+
+                                        <!-- Modal Footer -->
+                                        <div class="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700">
+                                            <button @click="closeScanner()" type="button"
+                                                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
@@ -963,6 +1025,45 @@
                         style: 'currency',
                         currency: 'PHP'
                     }).format(amount || 0);
+                },
+
+                handleQrScanned(data) {
+                    if (!data) return;
+
+                    // Auto-fill name fields
+                    if (data.firstName) this.customerForm.firstName = data.firstName.toUpperCase();
+                    if (data.middleName) this.customerForm.middleName = data.middleName.toUpperCase();
+                    if (data.lastName) this.customerForm.lastName = data.lastName.toUpperCase();
+
+                    // Handle suffix - check if it matches a dropdown value, otherwise use OTHER
+                    if (data.suffix) {
+                        const normalizedSuffix = data.suffix.toUpperCase().replace('.', '');
+                        const validSuffixes = ['JR.', 'SR.', 'II', 'III', 'IV', 'V'];
+                        const matchedSuffix = validSuffixes.find(s => s.replace('.', '') === normalizedSuffix);
+
+                        if (matchedSuffix) {
+                            this.customerForm.suffix = matchedSuffix;
+                            this.customerForm.customSuffix = '';
+                        } else {
+                            this.customerForm.suffix = 'OTHER';
+                            this.customerForm.customSuffix = data.suffix.toUpperCase();
+                        }
+                    }
+
+                    // Auto-fill ID fields
+                    this.customerForm.idType = 'National ID';
+                    if (data.idNumber) this.customerForm.idNumber = data.idNumber;
+
+                    // Show success toast
+                    this.showToast('National ID scanned successfully!', 'success');
+
+                    // Brief highlight effect on filled fields
+                    this.$nextTick(() => {
+                        document.querySelectorAll('[x-model^="customerForm.firstName"], [x-model^="customerForm.middleName"], [x-model^="customerForm.lastName"], [x-model^="customerForm.idNumber"], [x-model^="customerForm.idType"]').forEach(el => {
+                            el.classList.add('ring-2', 'ring-green-500');
+                            setTimeout(() => el.classList.remove('ring-2', 'ring-green-500'), 2000);
+                        });
+                    });
                 },
 
                 resetForm() {
