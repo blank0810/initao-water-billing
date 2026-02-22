@@ -93,3 +93,6 @@ Route::prefix('uploaded-readings')->middleware('auth:sanctum')->group(function (
     Route::get('/user/{userId}', [UploadedReadingController::class, 'getByUser'])
         ->where('userId', '[0-9]+');
 });
+
+// Phone submits scanned QR data (public, token-validated)
+Route::post('/scan/{token}', [\App\Http\Controllers\ScanSessionController::class, 'submit'])->name('api.scan.submit');
