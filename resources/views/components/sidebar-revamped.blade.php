@@ -142,13 +142,6 @@ $user = Auth::user() ?? (object) [
                     <span>Customer List</span>
                 </a>
                 @can('customers.manage')
-                <a href="{{ route('approve.customer') }}" @click="setActiveMenu('customer-approval')"
-                    :class="activeMenu === 'customer-approval' && 'active'"
-                    class="nav-submenu-item">
-                    <span class="nav-submenu-notch"></span>
-                    <i class="fas fa-check-circle"></i>
-                    <span>Customer Approval</span>
-                </a>
                 @endcan
             </div>
         </div>
@@ -466,9 +459,7 @@ $user = Auth::user() ?? (object) [
                     '/dashboard': 'dashboard',
                     '/customer/list': 'customer-list',
                     '/customer/payment-management': 'payment-management',
-                    '/customer/approve-customer': 'customer-approval',
                     '/customer/invoice-list': 'invoice-list',
-                    '/customer/declined-customer': 'declined-customer',
                     '/connection/service-application/create': 'connection-new',
                     '/connection/service-application': 'connection-applications',
                     '/customer/service-connection': 'connection-active',
@@ -631,7 +622,6 @@ $user = Auth::user() ?? (object) [
                 this.setActiveMenu(menu);
                 const routes = {
                     'payment-management': '{{ route("payment.management") }}',
-                    'approve-customer': '{{ route("approve.customer") }}',
                     'service-connection': '{{ route("service.connection") }}'
                 };
                 if (routes[menu]) {

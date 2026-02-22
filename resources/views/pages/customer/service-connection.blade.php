@@ -303,7 +303,7 @@
     function connectionData() {
         return {
             currentTab: 'connections',
-            approvalUrl: '{{ route('approve.customer') }}',
+            approvalUrl: '{{ route('application.list') }}',
             searchQuery: '',
             statusFilter: '',
             pageSize: 10,

@@ -48,10 +48,7 @@ $pageTitles = [
         'customer.list' => 'customer-list',
         'application.list' => 'application-list',
         'payment.management' => 'payment-management',
-        'approve.customer' => 'approve-customer',
-        // removed application.process
-        'invoice.list' => 'approve-customer',
-        'declined.customer' => 'approve-customer',
+        'invoice.list' => 'invoice-list',
         'service.connection' => 'service-connection',
         'customer.list' => 'customer-list',
         'customer.details' => 'customer-details',
@@ -83,9 +80,7 @@ $breadcrumbs = [
     'application-list' => ['Pages', 'Application Management', 'Application List'],
     'customer-list' => ['Pages', 'Customer Management', 'Customer List'],
     'payment-management' => ['Pages', 'Payment Management'],
-    'approve-customer' => ['Pages', 'Application Management', 'Customer Approval'],
     'invoice-list' => ['Pages', 'Application Management', 'Invoice List'],
-    'declined-customer' => ['Pages', 'Application Management', 'Declined Customers'],
     'service-application' => ['Pages', 'Service Application'],
     'service-connection' => ['Pages', 'Service Connection'],
     'customer-details' => ['Pages', 'Customer Management', 'Customer Details'],
@@ -108,7 +103,7 @@ $breadcrumbs = [
 ];
 
 $currentBreadcrumbs = $breadcrumbs[$activeMenu] ?? ['Pages', 'Dashboard'];
-$hideBreadcrumb = in_array(Route::currentRouteName(), ['approve.customer']);
+$hideBreadcrumb = false;
 @endphp
 
 <nav class="bg-[#e7e7e7] dark:bg-[#0d131c] z-30 relative sticky top-0">

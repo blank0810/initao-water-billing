@@ -15,15 +15,9 @@
             <div class="mb-6">
                 <div class="border-b border-gray-200 dark:border-gray-700">
                     <nav class="-mb-px flex space-x-8">
-                        <a href="{{ route('approve.customer') }}" class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-                            <i class="fas fa-check-circle mr-2"></i>Approval Queue
-                        </a>
-                        <a href="{{ route('invoice.list') }}" class="border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600 dark:text-blue-400">
+                        <span class="border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600 dark:text-blue-400">
                             <i class="fas fa-file-invoice mr-2"></i>Invoice List
-                        </a>
-                        <a href="{{ route('declined.customer') }}" class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
-                            <i class="fas fa-times-circle mr-2"></i>Declined Customer
-                        </a>
+                        </span>
                     </nav>
                 </div>
             </div>

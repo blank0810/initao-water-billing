@@ -6,7 +6,6 @@ use App\Models\Customer;
 use App\Models\CustomerCharge;
 use App\Models\CustomerLedger;
 use App\Models\ServiceApplication;
-use App\Models\ServiceConnection;
 use App\Models\Status;
 use App\Models\User;
 use App\Services\Charge\ApplicationChargeService;

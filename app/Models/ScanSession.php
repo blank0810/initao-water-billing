@@ -36,7 +36,7 @@ class ScanSession extends Model
 
     public function isPending(): bool
     {
-        return $this->status === 'pending' && !$this->isExpired();
+        return $this->status === 'pending' && ! $this->isExpired();
     }
 
     public static function generateToken(): string

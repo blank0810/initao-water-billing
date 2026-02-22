@@ -20,6 +20,10 @@
     // Store service connections data for modal access
     let serviceConnectionsData = [];
 
+    // Store allowed actions and customer status for UI conditional rendering
+    window.customerAllowedActions = [];
+    window.customerStatus = 'UNKNOWN';
+
     /**
      * Fetch customer details from API
      */
@@ -97,6 +101,18 @@
      * Populate customer details with API data
      */
     function populateCustomerDetails(data) {
+        // Store allowed actions and customer status for Alpine.js conditional rendering
+        window.customerAllowedActions = data.allowed_actions || [];
+        window.customerStatus = data.account_status?.status || 'UNKNOWN';
+
+        // Dispatch event so Alpine components can react
+        window.dispatchEvent(new CustomEvent('customer-details-loaded', {
+            detail: {
+                allowedActions: window.customerAllowedActions,
+                customerStatus: window.customerStatus
+            }
+        }));
+
         // Customer Information
         if (data.customer_info) {
             const info = data.customer_info;

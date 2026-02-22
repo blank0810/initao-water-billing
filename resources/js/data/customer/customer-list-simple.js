@@ -276,6 +276,7 @@
                            title="View Details">
                             <i class="fas fa-eye"></i>
                         </a>
+                        ${(customer.allowed_actions || []).includes('edit') ? `
                         <button onclick="editCustomerFromList(${customer.cust_id})"
                                 class="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
                                 title="Edit"
@@ -287,6 +288,7 @@
                                 data-landmark="${escapeHtml(customer.land_mark || '')}">
                             <i class="fas fa-edit"></i>
                         </button>
+                        ` : ''}
                     </div>
                 </td>
             </tr>

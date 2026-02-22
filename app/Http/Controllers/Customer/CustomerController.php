@@ -45,67 +45,6 @@ class CustomerController extends Controller
     }
 
     /**
-     * Validation rules for customer creation with service application
-     */
-    protected function validationRules(): array
-    {
-        return [
-            // Customer fields
-            'cust_first_name' => ['required', 'string', 'max:50'],
-            'cust_middle_name' => ['nullable', 'string', 'max:50'],
-            'cust_last_name' => ['required', 'string', 'max:50'],
-            'cust_suffix' => ['nullable', 'string', 'max:10'],
-            'c_type' => ['required', 'string', 'max:50'],
-            'land_mark' => ['nullable', 'string', 'max:100'],
-
-            // Address fields
-            'prov_id' => ['required', 'integer', 'exists:province,prov_id'],
-            't_id' => ['required', 'integer', 'exists:town,t_id'],
-            'b_id' => ['required', 'integer', 'exists:barangay,b_id'],
-            'p_id' => ['required', 'integer', 'exists:purok,p_id'],
-
-            // Service application fields
-            'account_type_id' => ['required', 'integer', 'exists:account_type,at_id'],
-            'rate_id' => ['required', 'integer', 'exists:water_rates,wr_id'],
-        ];
-    }
-
-    /**
-     * Store a newly created customer with service application (Approach B)
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function store(Request $request)
-    {
-        try {
-            $validated = $request->validate($this->validationRules());
-
-            // Create customer with service application
-            $result = $this->customerService->createCustomerWithApplication($validated);
-
-            return response()->json([
-                'success' => true,
-                'message' => $result['message'],
-                'customer' => $result['customer'],
-                'application' => $result['application'],
-            ], 200);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
      * Search customers by name, phone, or ID
      *
      * @return \Illuminate\Http\JsonResponse

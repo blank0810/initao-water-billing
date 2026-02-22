@@ -66,7 +66,7 @@ function confirmReturnToApproval() {
     // Simulate sending back to approval
     alert(`Application for ${returnConn.customer_name} returned to Approval.\nReason: ${reason || 'N/A'}`);
     closeReturnToApprovalModal();
-    window.location.href = "{{ route('approve.customer') }}";
+    window.location.href = "{{ route('application.list') }}";
 }
 window.openReturnToApprovalModal = openReturnToApprovalModal;
 window.closeReturnToApprovalModal = closeReturnToApprovalModal;

@@ -2,8 +2,6 @@
 
 namespace App\Services\Customers;
 
-use App\Http\Helpers\CustomerHelper;
-use App\Models\ConsumerAddress;
 use App\Models\Customer;
 use App\Models\CustomerCharge;
 use App\Models\CustomerLedger;
@@ -16,6 +14,10 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerService
 {
+    public function __construct(
+        protected CustomerStatusService $customerStatusService
+    ) {}
+
     /**
      * Get paginated list of customers with filters
      */
@@ -117,6 +119,7 @@ class CustomerService
                 'c_type' => $customer->c_type ?? 'N/A',
                 'meter_no' => $this->getCustomerMeterNumber($customer),
                 'current_bill' => $this->getCustomerCurrentBill($customer),
+                'allowed_actions' => $this->customerStatusService->getCustomerAllowedActions($customer),
             ];
         });
 
@@ -257,7 +260,7 @@ class CustomerService
                     ->orWhereRaw("CONCAT(cust_first_name, ' ', COALESCE(cust_middle_name, ''), ' ', cust_last_name) LIKE ?", ["%{$query}%"]);
             })
             ->whereHas('status', function (Builder $q) {
-                $q->where('stat_desc', '!=', 'INACTIVE');
+                $q->where('stat_desc', Status::ACTIVE);
             })
             ->limit(10)
             ->get();
@@ -271,95 +274,6 @@ class CustomerService
                 'connectionsCount' => $customer->serviceConnections ? $customer->serviceConnections->count() : 0,
             ];
         })->toArray();
-    }
-
-    /**
-     * Create customer with service application (Approach B)
-     * Creates: Customer + ConsumerAddress + ServiceApplication + CustomerCharges in one transaction
-     *
-     * @throws \Exception
-     */
-    public function createCustomerWithApplication(array $data): array
-    {
-        try {
-            return DB::transaction(function () use ($data) {
-                // 1. Create service address
-                $address = ConsumerAddress::create([
-                    'p_id' => $data['p_id'] ?? null,
-                    'b_id' => $data['b_id'] ?? null,
-                    't_id' => $data['t_id'] ?? null,
-                    'prov_id' => $data['prov_id'] ?? null,
-                    'stat_id' => Status::getIdByDescription(Status::ACTIVE),
-                ]);
-
-                // 2. Create customer
-                $customer = Customer::create([
-                    'cust_first_name' => strtoupper($data['cust_first_name']),
-                    'cust_middle_name' => isset($data['cust_middle_name']) ? strtoupper($data['cust_middle_name']) : null,
-                    'cust_last_name' => strtoupper($data['cust_last_name']),
-                    'cust_suffix' => isset($data['cust_suffix']) ? strtoupper($data['cust_suffix']) : null,
-                    'ca_id' => $address->ca_id,
-                    'land_mark' => isset($data['land_mark']) ? strtoupper($data['land_mark']) : null,
-                    'c_type' => strtoupper($data['c_type']),
-                    'resolution_no' => CustomerHelper::generateCustomerResolutionNumber(
-                        $data['cust_first_name'],
-                        $data['cust_last_name']
-                    ),
-                    'create_date' => now(),
-                    'stat_id' => Status::getIdByDescription(Status::PENDING), // PENDING until application is approved
-                ]);
-
-                // 3. Create service application
-                $application = ServiceApplication::create([
-                    'customer_id' => $customer->cust_id,
-                    'address_id' => $address->ca_id, // Service address (same as billing for now)
-                    'application_number' => $this->generateApplicationNumber(),
-                    'submitted_at' => now(),
-                    'stat_id' => Status::getIdByDescription(Status::PENDING),
-                ]);
-
-                // 4. Create customer charges if charge items are provided
-                if (isset($data['charge_items']) && is_array($data['charge_items'])) {
-                    foreach ($data['charge_items'] as $chargeItem) {
-                        CustomerCharge::create([
-                            'customer_id' => $customer->cust_id,
-                            'application_id' => $application->application_id,
-                            'connection_id' => null, // No connection yet
-                            'charge_item_id' => $chargeItem['charge_item_id'],
-                            'description' => $chargeItem['description'] ?? null,
-                            'quantity' => $chargeItem['quantity'] ?? 1,
-                            'unit_amount' => $chargeItem['unit_amount'],
-                            'due_date' => $data['due_date'] ?? now()->addDays(30),
-                            'stat_id' => Status::getIdByDescription(Status::PENDING), // PENDING payment
-                        ]);
-                    }
-                }
-
-                return [
-                    'success' => true,
-                    'customer' => $customer->load(['address', 'status']),
-                    'application' => $application->load('status'),
-                    'message' => 'Customer and service application created successfully',
-                ];
-            });
-        } catch (\Exception $e) {
-            throw new \Exception('Failed to create customer with application: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Generate unique application number
-     */
-    private function generateApplicationNumber(): string
-    {
-        $year = date('Y');
-        $lastApplication = ServiceApplication::whereYear('submitted_at', $year)
-            ->orderBy('application_id', 'desc')
-            ->first();
-
-        $nextNumber = $lastApplication ? ((int) substr($lastApplication->application_number, -5)) + 1 : 1;
-
-        return 'APP-'.$year.'-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -458,6 +372,8 @@ class CustomerService
             throw new \Exception('Customer not found');
         }
 
+        $this->customerStatusService->assertCustomerCanEdit($customer);
+
         $customer->update([
             'cust_first_name' => strtoupper($data['cust_first_name']),
             'cust_middle_name' => isset($data['cust_middle_name']) ? strtoupper($data['cust_middle_name']) : null,
@@ -481,6 +397,8 @@ class CustomerService
             if (! $customer) {
                 throw new \Exception('Customer not found');
             }
+
+            $this->customerStatusService->assertCustomerCanDelete($customer);
 
             // Delete related service applications (only if they're in PENDING status)
             $pendingStatusId = Status::getIdByDescription(Status::PENDING);
@@ -584,6 +502,7 @@ class CustomerService
             'meter_billing' => $this->buildMeterBilling($customer),
             'account_status' => $this->buildAccountStatus($customer),
             'service_connections' => $this->buildServiceConnections($customer),
+            'allowed_actions' => $this->customerStatusService->getCustomerAllowedActions($customer),
         ];
     }
 
