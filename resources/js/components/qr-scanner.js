@@ -1,10 +1,10 @@
 import { Html5Qrcode } from 'html5-qrcode';
-import { parsePhilSysQR } from '../parsers/philsys-parser.js';
 
 /**
  * Alpine.js QR Scanner Component
  *
  * Dispatches 'qr-scanned' event with parsed data on success.
+ * For now, displays raw QR output for debugging/testing.
  */
 document.addEventListener('alpine:init', () => {
     Alpine.data('qrScanner', () => ({
@@ -14,10 +14,12 @@ document.addEventListener('alpine:init', () => {
         scanner: null,
         error: '',
         mode: 'camera', // 'camera' or 'upload'
+        rawResult: '',   // Raw QR code output for display
 
         openScanner() {
             this.isOpen = true;
             this.error = '';
+            this.rawResult = '';
             this.mode = 'camera';
 
             // Wait for modal DOM to render, then start camera
@@ -29,6 +31,7 @@ document.addEventListener('alpine:init', () => {
         async switchMode(newMode) {
             if (this.mode === newMode) return;
             this.error = '';
+            this.rawResult = '';
 
             if (this.mode === 'camera' && this.scanner) {
                 try {
@@ -75,6 +78,7 @@ document.addEventListener('alpine:init', () => {
             if (!file) return;
 
             this.error = '';
+            this.rawResult = '';
             this.isProcessingFile = true;
 
             try {
@@ -87,20 +91,32 @@ document.addEventListener('alpine:init', () => {
                 this.error = 'Could not read QR code from image. Please try a clearer photo.';
             } finally {
                 this.isProcessingFile = false;
-                // Reset file input so the same file can be re-selected
                 event.target.value = '';
             }
         },
 
         onScanSuccess(decodedText) {
-            const parsed = parsePhilSysQR(decodedText);
+            console.log('[QR Scanner] Raw result:', decodedText);
 
-            if (parsed) {
-                // Dispatch event with parsed data for the parent form to consume
-                this.$dispatch('qr-scanned', parsed);
-                this.closeScanner();
-            } else {
-                this.error = 'QR code detected but could not read ID data. Please try again.';
+            // For now, just display the raw result — no parsing yet
+            this.rawResult = decodedText;
+
+            // Stop camera after successful scan so it doesn't keep scanning
+            if (this.scanner && this.isScanning) {
+                this.scanner.stop().then(() => {
+                    this.isScanning = false;
+                }).catch(() => {
+                    this.isScanning = false;
+                });
+            }
+        },
+
+        scanAgain() {
+            this.rawResult = '';
+            this.error = '';
+
+            if (this.mode === 'camera') {
+                this.$nextTick(() => this.startScanning());
             }
         },
 
@@ -118,6 +134,7 @@ document.addEventListener('alpine:init', () => {
             this.isProcessingFile = false;
             this.isOpen = false;
             this.error = '';
+            this.rawResult = '';
             this.mode = 'camera';
         }
     }));
