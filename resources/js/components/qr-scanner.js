@@ -1,4 +1,12 @@
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+
+// Support multiple barcode formats — PhilSys ID may use QR, PDF417, or Data Matrix
+const SUPPORTED_FORMATS = [
+    Html5QrcodeSupportedFormats.QR_CODE,
+    Html5QrcodeSupportedFormats.PDF_417,
+    Html5QrcodeSupportedFormats.DATA_MATRIX,
+    Html5QrcodeSupportedFormats.AZTEC,
+];
 
 /**
  * Alpine.js QR Scanner Component
@@ -22,7 +30,6 @@ document.addEventListener('alpine:init', () => {
             this.rawResult = '';
             this.mode = 'camera';
 
-            // Wait for modal DOM to render, then start camera
             this.$nextTick(() => {
                 this.startScanning();
             });
@@ -53,18 +60,26 @@ document.addEventListener('alpine:init', () => {
 
         async startScanning() {
             const readerId = 'qr-reader';
-            this.scanner = new Html5Qrcode(readerId);
+            this.scanner = new Html5Qrcode(readerId, {
+                formatsToSupport: SUPPORTED_FORMATS,
+                verbose: false
+            });
             this.isScanning = true;
 
             try {
                 await this.scanner.start(
                     { facingMode: 'environment' },
                     {
-                        fps: 10,
-                        qrbox: { width: 250, height: 250 },
+                        fps: 15,
+                        // Scan 80% of the viewfinder — no tiny box, much more forgiving
+                        qrbox: (viewfinderWidth, viewfinderHeight) => ({
+                            width: Math.floor(viewfinderWidth * 0.8),
+                            height: Math.floor(viewfinderHeight * 0.8),
+                        }),
+                        aspectRatio: 1.0,
                     },
-                    (decodedText) => this.onScanSuccess(decodedText),
-                    () => {} // Ignore scan errors (no QR found yet)
+                    (decodedText, decodedResult) => this.onScanSuccess(decodedText, decodedResult),
+                    () => {} // Ignore per-frame scan misses
                 );
             } catch (err) {
                 console.error('[QR Scanner] Failed to start camera:', err);
@@ -82,26 +97,30 @@ document.addEventListener('alpine:init', () => {
             this.isProcessingFile = true;
 
             try {
-                const html5Qrcode = new Html5Qrcode('qr-upload-region');
-                const result = await html5Qrcode.scanFile(file, true);
+                const html5Qrcode = new Html5Qrcode('qr-upload-region', {
+                    formatsToSupport: SUPPORTED_FORMATS,
+                    verbose: false
+                });
+                const result = await html5Qrcode.scanFile(file, /* showImage= */ false);
                 html5Qrcode.clear();
                 this.onScanSuccess(result);
             } catch (err) {
                 console.error('[QR Scanner] File scan failed:', err);
-                this.error = 'Could not read QR code from image. Please try a clearer photo.';
+                this.error = 'Could not detect a barcode in the image. Make sure the QR code is clear and well-lit, then try again.';
             } finally {
                 this.isProcessingFile = false;
                 event.target.value = '';
             }
         },
 
-        onScanSuccess(decodedText) {
+        onScanSuccess(decodedText, decodedResult) {
+            const format = decodedResult?.result?.format?.formatName || 'unknown';
+            console.log(`[QR Scanner] Detected format: ${format}`);
             console.log('[QR Scanner] Raw result:', decodedText);
 
-            // For now, just display the raw result — no parsing yet
             this.rawResult = decodedText;
 
-            // Stop camera after successful scan so it doesn't keep scanning
+            // Stop camera after successful scan
             if (this.scanner && this.isScanning) {
                 this.scanner.stop().then(() => {
                     this.isScanning = false;
