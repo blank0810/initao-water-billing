@@ -64,6 +64,24 @@ services:
     networks:
       - app-network
 
+  # --- Laravel Reverb (WebSocket Server) ---
+  water_billing_reverb:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: water_billing_reverb
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    ports:
+      - "${REVERB_PORT}:${REVERB_PORT}"
+    depends_on:
+      - water_billing_db
+    networks:
+      - app-network
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=${REVERB_PORT}", "--debug"]
+
   # --- Mailpit (Local Email Testing) ---
   mailpit:
     image: axllent/mailpit:latest

@@ -12,6 +12,7 @@ use App\Models\Status;
 use App\Models\User;
 use App\Models\WaterBillHistory;
 use App\Services\Charge\ApplicationChargeService;
+use App\Services\Customers\CustomerStatusService;
 use App\Services\Ledger\LedgerService;
 use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,8 @@ class PaymentService
     public function __construct(
         protected ApplicationChargeService $chargeService,
         protected LedgerService $ledgerService,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected CustomerStatusService $customerStatusService
     ) {}
 
     /**
@@ -61,6 +63,9 @@ class PaymentService
     public function processApplicationPayment(int $applicationId, float $amountReceived, int $userId): array
     {
         $application = ServiceApplication::with('customer')->findOrFail($applicationId);
+
+        // Validate customer status
+        $this->customerStatusService->assertCustomerCanProcessPayment($application->customer);
 
         // Validate application is in VERIFIED status
         if ($application->stat_id !== Status::getIdByDescription(Status::VERIFIED)) {
@@ -405,6 +410,9 @@ class PaymentService
                 throw new \Exception('No customer associated with this connection.');
             }
 
+            // Validate customer status
+            $this->customerStatusService->assertCustomerCanProcessPayment($customer);
+
             // Lock period-matched charges for this bill
             $charges = CustomerCharge::select('CustomerCharge.*', 'CustomerLedger.period_id as ledger_period_id')
                 ->leftJoin('CustomerLedger', function ($join) {
@@ -637,6 +645,9 @@ class PaymentService
             if (! $customer) {
                 throw new \Exception('No customer associated with this connection.');
             }
+
+            // Validate customer status
+            $this->customerStatusService->assertCustomerCanProcessPayment($customer);
 
             // --- Create Payment record ---
             $payment = Payment::create([

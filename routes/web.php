@@ -14,6 +14,7 @@ use App\Http\Controllers\Customer\CustomerApprovalController;
 use App\Http\Controllers\Customer\CustomerController;
 use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\Payment\PaymentController;
+use App\Http\Controllers\Scan\ScanSessionController;
 use App\Http\Controllers\ServiceApplication\ServiceApplicationController;
 use App\Http\Controllers\ServiceConnection\ServiceConnectionController;
 use App\Http\Controllers\User\ProfileController;
@@ -60,6 +61,9 @@ Route::get('/404', function () {
 Route::get('/coming-soon', function () {
     return view('pages.coming-soon');
 })->name('coming-soon');
+
+// Phone QR scanning page (public, token-validated)
+Route::get('/scan/{token}', [ScanSessionController::class, 'show'])->name('scan.show');
 
 // Fallback route for 404
 Route::fallback(function () {
@@ -132,10 +136,13 @@ Route::middleware('auth')->group(function () {
 
     // Customer Management - Manage (customers.manage permission)
     Route::middleware(['permission:customers.manage'])->group(function () {
-        Route::post('/customer/store', [CustomerController::class, 'store'])->name('customer.store');
-        Route::post('/customer', [CustomerController::class, 'store'])->name('customer.store.alt');
-        Route::put('/customer/{id}', [CustomerController::class, 'update'])->name('customer.update');
-        Route::delete('/customer/{id}', [CustomerController::class, 'destroy'])->name('customer.destroy');
+        // Legacy customer creation routes removed — customers are created via ServiceApplicationService
+        Route::put('/customer/{id}', [CustomerController::class, 'update'])
+            ->middleware('customer.status:edit')
+            ->name('customer.update');
+        Route::delete('/customer/{id}', [CustomerController::class, 'destroy'])
+            ->middleware('customer.status:delete')
+            ->name('customer.destroy');
 
         // Application Process
         Route::get('/customer/application-process', function () {
@@ -144,22 +151,8 @@ Route::middleware('auth')->group(function () {
             return view('pages.customer.application-process');
         })->name('application.process');
 
-        // Customer Approval
-        Route::get('/customer/approve-customer', function () {
-            session(['active_menu' => 'approve-customer']);
-
-            return view('pages.customer.approve-customer');
-        })->name('approve.customer');
-
-        Route::get('/customer/declined-customer', function () {
-            session(['active_menu' => 'declined-customer']);
-
-            return view('pages.customer.declined-customer');
-        })->name('declined.customer');
-
-        Route::post('/customer/approve', [CustomerApprovalController::class, 'approve'])->name('customer.approve');
-        Route::post('/customer/decline', [CustomerApprovalController::class, 'decline'])->name('customer.decline');
-        Route::post('/customer/restore', [CustomerApprovalController::class, 'restore'])->name('customer.restore');
+        // Customer Reactivation
+        Route::post('/customer/reactivate', [CustomerApprovalController::class, 'reactivate'])->name('customer.reactivate');
 
         // Service Application Workflow
         Route::get('/connection/service-application', [ServiceApplicationController::class, 'index'])->name('connection.service-application.index');
@@ -706,6 +699,11 @@ Route::middleware('auth')->group(function () {
 
         return view('pages.user-manual.documentation');
     })->name('user-manual');
+
+    // -------------------------------------------------------------------------
+    // Scan Session API (authenticated - PC creates sessions)
+    // -------------------------------------------------------------------------
+    Route::post('/api/scan-sessions', [ScanSessionController::class, 'store'])->name('api.scan-sessions.store');
 
 });
 

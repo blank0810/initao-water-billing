@@ -137,13 +137,180 @@
             <!-- Step 2a: New Customer Registration -->
             <div x-show="currentStep === 2 && customerType === 'new'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                        <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                <i class="fas fa-user text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">New Customer Registration</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Enter customer's personal information</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">New Customer Registration</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Enter customer's personal information</p>
+                        <!-- QR Scanner Button -->
+                        <div x-data="qrScanner" @qr-scanned.window="handleQrScanned($event.detail)">
+                            <button @click="openScanner()" type="button"
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+                                <i class="fas fa-qrcode"></i>
+                                <span class="hidden sm:inline">Scan National ID</span>
+                            </button>
+
+                            <!-- QR Scanner Modal -->
+                            <template x-teleport="body">
+                                <div x-show="isOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                     x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                     class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+                                     @keydown.escape.window="closeScanner()">
+                                    <div @click.outside="closeScanner()"
+                                         class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full">
+                                        <!-- Modal Header -->
+                                        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                                    <i class="fas fa-qrcode text-purple-600 dark:text-purple-400"></i>
+                                                </div>
+                                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Scan National ID QR Code</h3>
+                                            </div>
+                                            <button @click="closeScanner()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                                <i class="fas fa-times text-xl"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Mode Tabs -->
+                                        <div class="flex border-b border-gray-200 dark:border-gray-700">
+                                            <button @click="switchMode('phone')" type="button"
+                                                    :class="mode === 'phone' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
+                                                    class="flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2">
+                                                <i class="fas fa-mobile-alt"></i> Scan with Phone
+                                            </button>
+                                            <button @click="switchMode('upload')" type="button"
+                                                    :class="mode === 'upload' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
+                                                    class="flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2">
+                                                <i class="fas fa-upload"></i> Upload Image
+                                            </button>
+                                        </div>
+
+                                        <!-- Scanner Body -->
+                                        <div class="p-4">
+                                            <!-- Capture Flash Overlay -->
+                                            <div x-show="isCaptured" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                                 class="flex flex-col items-center justify-center py-16 rounded-lg bg-green-50 dark:bg-green-900/30 border-2 border-green-400">
+                                                <div class="w-16 h-16 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center mb-3 animate-bounce">
+                                                    <i class="fas fa-check text-green-600 dark:text-green-400 text-3xl"></i>
+                                                </div>
+                                                <p class="text-lg font-bold text-green-700 dark:text-green-300">Captured!</p>
+                                                <p class="text-sm text-green-600 dark:text-green-400">Reading QR data...</p>
+                                            </div>
+
+                                            <!-- Raw Result Display -->
+                                            <div x-show="rawResult && !isCaptured" x-transition>
+                                                <div class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg mb-3">
+                                                    <div class="flex items-center gap-2 mb-2">
+                                                        <i class="fas fa-check-circle text-green-500"></i>
+                                                        <span class="text-sm font-semibold text-green-700 dark:text-green-300">QR Code Detected</span>
+                                                    </div>
+                                                    <pre class="text-xs text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-900 rounded p-3 overflow-x-auto whitespace-pre-wrap break-all max-h-48 overflow-y-auto font-mono" x-text="rawResult"></pre>
+                                                </div>
+                                                <button @click="scanAgain()" type="button"
+                                                        class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                                    <i class="fas fa-redo mr-2"></i>Scan Again
+                                                </button>
+                                            </div>
+
+                                            <!-- Phone Scan Mode -->
+                                            <div x-show="mode === 'phone' && !rawResult && !isCaptured">
+                                                <div class="flex flex-col items-center py-4">
+                                                    <!-- QR Code Display -->
+                                                    <div x-show="qrCodeDataUrl && !isExpired" class="text-center">
+                                                        <img :src="qrCodeDataUrl" alt="Scan this QR code" class="mx-auto rounded-lg border border-gray-200 dark:border-gray-600">
+                                                        <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                                                            Scan this code with your phone camera
+                                                        </p>
+                                                        <!-- Waiting indicator -->
+                                                        <div class="mt-3 flex items-center justify-center gap-2">
+                                                            <span class="relative flex h-2.5 w-2.5">
+                                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-purple-500"></span>
+                                                            </span>
+                                                            <span class="text-xs text-gray-500 dark:text-gray-400">Waiting for phone...</span>
+                                                        </div>
+                                                        <!-- Countdown -->
+                                                        <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                                                            Link expires in <span class="font-mono font-semibold" x-text="countdown"></span>
+                                                        </p>
+                                                    </div>
+
+                                                    <!-- Expired state -->
+                                                    <div x-show="isExpired" class="text-center py-6">
+                                                        <i class="fas fa-clock text-3xl text-amber-400 mb-3"></i>
+                                                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Link expired</p>
+                                                        <button @click="regenerateSession()" type="button"
+                                                                class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                                            <i class="fas fa-redo mr-2"></i>Generate New Link
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Loading state -->
+                                                    <div x-show="!qrCodeDataUrl && !isExpired && !error" class="text-center py-8">
+                                                        <i class="fas fa-spinner fa-spin text-2xl text-purple-500 mb-3"></i>
+                                                        <p class="text-sm text-gray-500 dark:text-gray-400">Generating scan link...</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Upload Mode -->
+                                            <div x-show="mode === 'upload' && !rawResult && !isCaptured">
+                                                <div id="qr-upload-region" class="hidden"></div>
+                                                <label class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
+                                                       :class="isProcessingFile ? 'border-purple-300 bg-purple-50 dark:bg-purple-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 dark:hover:border-purple-500 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'">
+                                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                        <template x-if="!isProcessingFile">
+                                                            <div class="text-center">
+                                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                                                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                                                                    <span class="font-semibold text-purple-600 dark:text-purple-400">Click to upload</span> a photo of the QR code
+                                                                </p>
+                                                                <p class="text-xs text-gray-400 dark:text-gray-500">PNG, JPG or JPEG</p>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="isProcessingFile">
+                                                            <div class="text-center">
+                                                                <i class="fas fa-spinner fa-spin text-3xl text-purple-500 mb-3"></i>
+                                                                <p class="text-sm text-purple-600 dark:text-purple-400">Scanning QR code...</p>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                    <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event)" :disabled="isProcessingFile">
+                                                </label>
+                                            </div>
+
+                                            <!-- Error Message -->
+                                            <div x-show="error" x-transition
+                                                 class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                                                <div class="flex items-center gap-2">
+                                                    <i class="fas fa-exclamation-triangle text-amber-500"></i>
+                                                    <p class="text-sm text-amber-700 dark:text-amber-300" x-text="error"></p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Instructions -->
+                                            <p x-show="!rawResult && !isCaptured && !isExpired" class="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+                                                <i class="fas fa-info-circle mr-1"></i>
+                                                <span x-show="mode === 'phone'">Open the link on your phone to scan the National ID QR code</span>
+                                                <span x-show="mode === 'upload'">Upload a clear photo of the National ID QR code</span>
+                                            </p>
+                                        </div>
+
+                                        <!-- Modal Footer -->
+                                        <div class="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700">
+                                            <button @click="closeScanner()" type="button"
+                                                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors">
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
@@ -617,7 +784,7 @@
         </div>
 
         <!-- Success Modal -->
-        <div x-show="showSuccessModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        <div x-cloak x-show="showSuccessModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
              class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-8">
                 <div class="text-center">
@@ -963,6 +1130,52 @@
                         style: 'currency',
                         currency: 'PHP'
                     }).format(amount || 0);
+                },
+
+                handleQrScanned(data) {
+                    if (!data) return;
+
+                    // If only rawData was sent (parsing failed), show warning
+                    if (data.rawData && !data.firstName && !data.lastName) {
+                        this.showToast('QR code scanned but could not extract name fields. Data may be encrypted.', 'warning');
+                        this.customerForm.idType = 'National ID';
+                        return;
+                    }
+
+                    // Auto-fill name fields
+                    if (data.firstName) this.customerForm.firstName = data.firstName.toUpperCase();
+                    if (data.middleName) this.customerForm.middleName = data.middleName.toUpperCase();
+                    if (data.lastName) this.customerForm.lastName = data.lastName.toUpperCase();
+
+                    // Handle suffix - check if it matches a dropdown value, otherwise use OTHER
+                    if (data.suffix) {
+                        const normalizedSuffix = data.suffix.toUpperCase().replace('.', '');
+                        const validSuffixes = ['JR.', 'SR.', 'II', 'III', 'IV', 'V'];
+                        const matchedSuffix = validSuffixes.find(s => s.replace('.', '') === normalizedSuffix);
+
+                        if (matchedSuffix) {
+                            this.customerForm.suffix = matchedSuffix;
+                            this.customerForm.customSuffix = '';
+                        } else {
+                            this.customerForm.suffix = 'OTHER';
+                            this.customerForm.customSuffix = data.suffix.toUpperCase();
+                        }
+                    }
+
+                    // Auto-fill ID fields
+                    this.customerForm.idType = 'National ID';
+                    if (data.idNumber) this.customerForm.idNumber = data.idNumber;
+
+                    // Show success toast
+                    this.showToast('National ID scanned successfully!', 'success');
+
+                    // Brief highlight effect on filled fields
+                    this.$nextTick(() => {
+                        document.querySelectorAll('[x-model^="customerForm.firstName"], [x-model^="customerForm.middleName"], [x-model^="customerForm.lastName"], [x-model^="customerForm.idNumber"], [x-model^="customerForm.idType"]').forEach(el => {
+                            el.classList.add('ring-2', 'ring-green-500');
+                            setTimeout(() => el.classList.remove('ring-2', 'ring-green-500'), 2000);
+                        });
+                    });
                 },
 
                 resetForm() {

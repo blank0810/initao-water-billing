@@ -13,6 +13,8 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @stack('styles')
 </head>
 <body class="font-sans antialiased h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
     <div class="flex flex-col h-screen w-screen">

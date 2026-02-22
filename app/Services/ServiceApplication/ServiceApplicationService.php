@@ -9,6 +9,7 @@ use App\Models\ServiceApplication;
 use App\Models\Status;
 use App\Models\WaterRate;
 use App\Services\Charge\ApplicationChargeService;
+use App\Services\Customers\CustomerStatusService;
 use App\Services\Ledger\LedgerService;
 use App\Services\Notification\NotificationService;
 use App\Services\Payment\PaymentService;
@@ -22,7 +23,8 @@ class ServiceApplicationService
         protected ApplicationChargeService $chargeService,
         protected LedgerService $ledgerService,
         protected PaymentService $paymentService,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected CustomerStatusService $customerStatusService
     ) {}
 
     /**
@@ -109,6 +111,9 @@ class ServiceApplicationService
                 // The customer's ca_id (home address) remains unchanged
                 // Only the service application gets the new service address
                 $customer = Customer::findOrFail($customerData['customerId'] ?? $customerData['customer_id'] ?? $customerData['id']);
+
+                // Validate customer status before creating application
+                $this->customerStatusService->assertCustomerCanCreateApplication($customer);
             }
 
             // Create service application with VERIFIED status (auto-verify workflow)

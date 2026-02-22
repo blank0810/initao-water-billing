@@ -1,15 +1,76 @@
 <x-app-layout>
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div x-data="{ allowedActions: [], customerStatus: 'UNKNOWN' }"
+                 x-init="
+                    allowedActions = window.customerAllowedActions || [];
+                    customerStatus = window.customerStatus || 'UNKNOWN';
+                    window.addEventListener('customer-details-loaded', (e) => {
+                        allowedActions = e.detail.allowedActions;
+                        customerStatus = e.detail.customerStatus;
+                    });
+                 ">
+
             <x-ui.page-header
                 title="Customer Details"
                 subtitle="View customer information and history">
             <x-slot name="actions">
-                <x-ui.button variant="outline" href="{{ route('customer.list') }}">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to List
-                </x-ui.button>
+                <div class="flex items-center gap-2">
+                    <x-ui.button variant="outline" href="{{ route('customer.list') }}">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to List
+                    </x-ui.button>
+                    <template x-if="allowedActions.includes('edit')">
+                        <button onclick="document.dispatchEvent(new CustomEvent('open-edit-customer-modal'))"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <i class="fas fa-edit mr-2"></i>Edit
+                        </button>
+                    </template>
+                    <template x-if="allowedActions.includes('delete')">
+                        <button onclick="document.dispatchEvent(new CustomEvent('confirm-delete-customer'))"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                            <i class="fas fa-trash mr-2"></i>Delete
+                        </button>
+                    </template>
+                    <template x-if="allowedActions.includes('reactivate')">
+                        <button onclick="document.dispatchEvent(new CustomEvent('reactivate-customer'))"
+                                class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <i class="fas fa-redo mr-2"></i>Reactivate
+                        </button>
+                    </template>
+                </div>
             </x-slot>
             </x-ui.page-header>
+
+            {{-- Status Banners --}}
+            <div x-show="customerStatus === 'PENDING'" x-cloak class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-clock text-yellow-500 mr-3"></i>
+                    <div>
+                        <h4 class="text-sm font-semibold text-yellow-800 dark:text-yellow-300">Pending Customer</h4>
+                        <p class="text-sm text-yellow-700 dark:text-yellow-400">This customer is in pending status. Reactivate to restore full access.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="customerStatus === 'SUSPENDED'" x-cloak class="mb-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-pause-circle text-orange-500 mr-3"></i>
+                    <div>
+                        <h4 class="text-sm font-semibold text-orange-800 dark:text-orange-300">Suspended Customer</h4>
+                        <p class="text-sm text-orange-700 dark:text-orange-400">This customer is suspended. Only viewing and paying existing bills is available.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="customerStatus === 'INACTIVE'" x-cloak class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-ban text-red-500 mr-3"></i>
+                    <div>
+                        <h4 class="text-sm font-semibold text-red-800 dark:text-red-300">Inactive Customer</h4>
+                        <p class="text-sm text-red-700 dark:text-red-400">This customer is inactive. Only viewing and paying existing bills is available.</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- Customer Profile Cards Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -138,6 +199,8 @@
         </div>
 
         @include('pages.customer.tabs.ledger-tab')
+
+            </div> {{-- end x-data Alpine scope --}}
     </div>
 </div>
 
