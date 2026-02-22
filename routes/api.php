@@ -95,4 +95,4 @@ Route::prefix('uploaded-readings')->middleware('auth:sanctum')->group(function (
 });
 
 // Phone submits scanned QR data (public, token-validated)
-Route::post('/scan/{token}', [\App\Http\Controllers\ScanSessionController::class, 'submit'])->name('api.scan.submit');
+Route::post('/scan/{token}', [\App\Http\Controllers\Scan\ScanSessionController::class, 'submit'])->name('api.scan.submit');

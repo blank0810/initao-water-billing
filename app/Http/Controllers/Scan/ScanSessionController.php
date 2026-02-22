@@ -1,26 +1,25 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Scan;
 
-use App\Events\ScanCompleted;
-use App\Models\ScanSession;
+use App\Http\Controllers\Controller;
+use App\Services\Scan\ScanSessionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ScanSessionController extends Controller
 {
+    public function __construct(
+        private ScanSessionService $scanSessionService
+    ) {}
+
     /**
      * Create a new scan session (called from PC, authenticated).
      */
     public function store(Request $request): JsonResponse
     {
         try {
-            $session = ScanSession::create([
-                'token' => ScanSession::generateToken(),
-                'status' => 'pending',
-                'expires_at' => now()->addMinutes(5),
-                'created_by' => $request->user()->id,
-            ]);
+            $session = $this->scanSessionService->createSession($request->user()->id);
 
             return response()->json([
                 'success' => true,
@@ -40,15 +39,9 @@ class ScanSessionController extends Controller
      */
     public function show(string $token)
     {
-        $session = ScanSession::where('token', $token)->first();
+        $session = $this->scanSessionService->getValidSessionByToken($token);
 
-        if (! $session || $session->status === 'completed') {
-            return view('scan.expired', ['reason' => 'used']);
-        }
-
-        if ($session->isExpired()) {
-            $session->update(['status' => 'expired']);
-
+        if (! $session) {
             return view('scan.expired', ['reason' => 'expired']);
         }
 
@@ -60,9 +53,7 @@ class ScanSessionController extends Controller
      */
     public function submit(Request $request, string $token): JsonResponse
     {
-        $session = ScanSession::where('token', $token)
-            ->where('status', 'pending')
-            ->first();
+        $session = $this->scanSessionService->getPendingSession($token);
 
         if (! $session) {
             return response()->json([
@@ -85,13 +76,7 @@ class ScanSessionController extends Controller
             'format' => 'nullable|string|max:50',
         ]);
 
-        $session->update([
-            'status' => 'completed',
-            'scanned_data' => $validated,
-            'completed_at' => now(),
-        ]);
-
-        broadcast(new ScanCompleted($session));
+        $this->scanSessionService->completeSession($session, $validated);
 
         return response()->json([
             'success' => true,

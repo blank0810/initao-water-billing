@@ -14,7 +14,7 @@ use App\Http\Controllers\Customer\CustomerApprovalController;
 use App\Http\Controllers\Customer\CustomerController;
 use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\Payment\PaymentController;
-use App\Http\Controllers\ScanSessionController;
+use App\Http\Controllers\Scan\ScanSessionController;
 use App\Http\Controllers\ServiceApplication\ServiceApplicationController;
 use App\Http\Controllers\ServiceConnection\ServiceConnectionController;
 use App\Http\Controllers\User\ProfileController;
