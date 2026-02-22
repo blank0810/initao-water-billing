@@ -1,6 +1,5 @@
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
-// Support multiple barcode formats — PhilSys ID may use QR, PDF417, or Data Matrix
 const SUPPORTED_FORMATS = [
     Html5QrcodeSupportedFormats.QR_CODE,
     Html5QrcodeSupportedFormats.PDF_417,
@@ -11,23 +10,25 @@ const SUPPORTED_FORMATS = [
 /**
  * Alpine.js QR Scanner Component
  *
- * Dispatches 'qr-scanned' event with parsed data on success.
- * For now, displays raw QR output for debugging/testing.
+ * Works like a phone scanner — point the camera at a QR code,
+ * it auto-detects with a visual capture flash, then displays the result.
  */
 document.addEventListener('alpine:init', () => {
     Alpine.data('qrScanner', () => ({
         isOpen: false,
         isScanning: false,
+        isCaptured: false,      // Brief "captured!" flash state
         isProcessingFile: false,
         scanner: null,
         error: '',
-        mode: 'camera', // 'camera' or 'upload'
-        rawResult: '',   // Raw QR code output for display
+        mode: 'camera',
+        rawResult: '',
 
         openScanner() {
             this.isOpen = true;
             this.error = '';
             this.rawResult = '';
+            this.isCaptured = false;
             this.mode = 'camera';
 
             this.$nextTick(() => {
@@ -39,6 +40,7 @@ document.addEventListener('alpine:init', () => {
             if (this.mode === newMode) return;
             this.error = '';
             this.rawResult = '';
+            this.isCaptured = false;
 
             if (this.mode === 'camera' && this.scanner) {
                 try {
@@ -62,7 +64,11 @@ document.addEventListener('alpine:init', () => {
             const readerId = 'qr-reader';
             this.scanner = new Html5Qrcode(readerId, {
                 formatsToSupport: SUPPORTED_FORMATS,
-                verbose: false
+                verbose: false,
+                // Use browser's native BarcodeDetector if available (much better detection)
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                }
             });
             this.isScanning = true;
 
@@ -71,20 +77,28 @@ document.addEventListener('alpine:init', () => {
                     { facingMode: 'environment' },
                     {
                         fps: 15,
-                        // Scan 80% of the viewfinder — no tiny box, much more forgiving
-                        qrbox: (viewfinderWidth, viewfinderHeight) => ({
-                            width: Math.floor(viewfinderWidth * 0.8),
-                            height: Math.floor(viewfinderHeight * 0.8),
-                        }),
-                        aspectRatio: 1.0,
+                        // No qrbox — scan the ENTIRE camera frame, no positioning needed
+                        disableFlip: false,
                     },
                     (decodedText, decodedResult) => this.onScanSuccess(decodedText, decodedResult),
-                    () => {} // Ignore per-frame scan misses
+                    () => {}
                 );
             } catch (err) {
                 console.error('[QR Scanner] Failed to start camera:', err);
-                this.error = 'Could not access camera. Please check browser permissions.';
-                this.isScanning = false;
+
+                // If rear camera fails, try any available camera
+                try {
+                    await this.scanner.start(
+                        { facingMode: 'user' },
+                        { fps: 15, disableFlip: false },
+                        (decodedText, decodedResult) => this.onScanSuccess(decodedText, decodedResult),
+                        () => {}
+                    );
+                } catch (fallbackErr) {
+                    console.error('[QR Scanner] Fallback camera also failed:', fallbackErr);
+                    this.error = 'Could not access camera. Please check browser permissions.';
+                    this.isScanning = false;
+                }
             }
         },
 
@@ -94,16 +108,20 @@ document.addEventListener('alpine:init', () => {
 
             this.error = '';
             this.rawResult = '';
+            this.isCaptured = false;
             this.isProcessingFile = true;
 
             try {
                 const html5Qrcode = new Html5Qrcode('qr-upload-region', {
                     formatsToSupport: SUPPORTED_FORMATS,
-                    verbose: false
+                    verbose: false,
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
                 });
-                const result = await html5Qrcode.scanFile(file, /* showImage= */ false);
+                const result = await html5Qrcode.scanFile(file, false);
                 html5Qrcode.clear();
-                this.onScanSuccess(result);
+                this.showCapturedResult(result);
             } catch (err) {
                 console.error('[QR Scanner] File scan failed:', err);
                 this.error = 'Could not detect a barcode in the image. Make sure the QR code is clear and well-lit, then try again.';
@@ -114,13 +132,14 @@ document.addEventListener('alpine:init', () => {
         },
 
         onScanSuccess(decodedText, decodedResult) {
+            // Prevent duplicate captures
+            if (this.isCaptured || this.rawResult) return;
+
             const format = decodedResult?.result?.format?.formatName || 'unknown';
             console.log(`[QR Scanner] Detected format: ${format}`);
             console.log('[QR Scanner] Raw result:', decodedText);
 
-            this.rawResult = decodedText;
-
-            // Stop camera after successful scan
+            // Stop the camera immediately
             if (this.scanner && this.isScanning) {
                 this.scanner.stop().then(() => {
                     this.isScanning = false;
@@ -128,11 +147,25 @@ document.addEventListener('alpine:init', () => {
                     this.isScanning = false;
                 });
             }
+
+            this.showCapturedResult(decodedText);
+        },
+
+        showCapturedResult(text) {
+            // Show the green "Captured!" flash
+            this.isCaptured = true;
+
+            // After a brief flash, show the result
+            setTimeout(() => {
+                this.rawResult = text;
+                this.isCaptured = false;
+            }, 800);
         },
 
         scanAgain() {
             this.rawResult = '';
             this.error = '';
+            this.isCaptured = false;
 
             if (this.mode === 'camera') {
                 this.$nextTick(() => this.startScanning());
@@ -151,6 +184,7 @@ document.addEventListener('alpine:init', () => {
             }
             this.isScanning = false;
             this.isProcessingFile = false;
+            this.isCaptured = false;
             this.isOpen = false;
             this.error = '';
             this.rawResult = '';

@@ -192,8 +192,18 @@
 
                                         <!-- Scanner Body -->
                                         <div class="p-4">
+                                            <!-- Capture Flash Overlay -->
+                                            <div x-show="isCaptured" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                                 class="flex flex-col items-center justify-center py-16 rounded-lg bg-green-50 dark:bg-green-900/30 border-2 border-green-400">
+                                                <div class="w-16 h-16 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center mb-3 animate-bounce">
+                                                    <i class="fas fa-check text-green-600 dark:text-green-400 text-3xl"></i>
+                                                </div>
+                                                <p class="text-lg font-bold text-green-700 dark:text-green-300">Captured!</p>
+                                                <p class="text-sm text-green-600 dark:text-green-400">Reading QR data...</p>
+                                            </div>
+
                                             <!-- Raw Result Display -->
-                                            <div x-show="rawResult" x-transition>
+                                            <div x-show="rawResult && !isCaptured" x-transition>
                                                 <div class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg mb-3">
                                                     <div class="flex items-center gap-2 mb-2">
                                                         <i class="fas fa-check-circle text-green-500"></i>
@@ -208,20 +218,26 @@
                                             </div>
 
                                             <!-- Camera Mode -->
-                                            <div x-show="mode === 'camera' && !rawResult">
-                                                <!-- Scanning Indicator -->
-                                                <div x-show="isScanning" class="flex items-center justify-center gap-2 mb-3 py-2 px-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                                                    <span class="relative flex h-3 w-3">
-                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-                                                    </span>
-                                                    <span class="text-sm text-blue-700 dark:text-blue-300 font-medium">Scanning for QR code...</span>
+                                            <div x-show="mode === 'camera' && !rawResult && !isCaptured">
+                                                <div class="relative">
+                                                    <!-- Camera Feed -->
+                                                    <div id="qr-reader" class="w-full rounded-lg overflow-hidden"></div>
+
+                                                    <!-- Scanning Indicator Overlay -->
+                                                    <div x-show="isScanning" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 rounded-b-lg">
+                                                        <div class="flex items-center justify-center gap-2">
+                                                            <span class="relative flex h-2.5 w-2.5">
+                                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                                            </span>
+                                                            <span class="text-xs text-white font-medium">Point camera at QR code</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div id="qr-reader" class="w-full rounded-lg overflow-hidden"></div>
                                             </div>
 
                                             <!-- Upload Mode -->
-                                            <div x-show="mode === 'upload' && !rawResult">
+                                            <div x-show="mode === 'upload' && !rawResult && !isCaptured">
                                                 <div id="qr-upload-region" class="hidden"></div>
                                                 <label class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
                                                        :class="isProcessingFile ? 'border-purple-300 bg-purple-50 dark:bg-purple-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 dark:hover:border-purple-500 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'">
@@ -256,9 +272,9 @@
                                             </div>
 
                                             <!-- Instructions -->
-                                            <p x-show="!rawResult" class="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+                                            <p x-show="!rawResult && !isCaptured" class="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center">
                                                 <i class="fas fa-info-circle mr-1"></i>
-                                                <span x-show="mode === 'camera'">Hold the National ID QR code in front of the camera</span>
+                                                <span x-show="mode === 'camera'">Just hold up the QR code — it will be captured automatically</span>
                                                 <span x-show="mode === 'upload'">Upload a clear photo of the National ID QR code</span>
                                             </p>
                                         </div>
