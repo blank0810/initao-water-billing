@@ -178,10 +178,10 @@
 
                                         <!-- Mode Tabs -->
                                         <div class="flex border-b border-gray-200 dark:border-gray-700">
-                                            <button @click="switchMode('camera')" type="button"
-                                                    :class="mode === 'camera' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
+                                            <button @click="switchMode('phone')" type="button"
+                                                    :class="mode === 'phone' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
                                                     class="flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2">
-                                                <i class="fas fa-camera"></i> Camera
+                                                <i class="fas fa-mobile-alt"></i> Scan with Phone
                                             </button>
                                             <button @click="switchMode('upload')" type="button"
                                                     :class="mode === 'upload' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
@@ -217,21 +217,43 @@
                                                 </button>
                                             </div>
 
-                                            <!-- Camera Mode -->
-                                            <div x-show="mode === 'camera' && !rawResult && !isCaptured">
-                                                <div class="relative">
-                                                    <!-- Camera Feed -->
-                                                    <div id="qr-reader" class="w-full rounded-lg overflow-hidden"></div>
-
-                                                    <!-- Scanning Indicator Overlay -->
-                                                    <div x-show="isScanning" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 rounded-b-lg">
-                                                        <div class="flex items-center justify-center gap-2">
+                                            <!-- Phone Scan Mode -->
+                                            <div x-show="mode === 'phone' && !rawResult && !isCaptured">
+                                                <div class="flex flex-col items-center py-4">
+                                                    <!-- QR Code Display -->
+                                                    <div x-show="qrCodeDataUrl && !isExpired" class="text-center">
+                                                        <img :src="qrCodeDataUrl" alt="Scan this QR code" class="mx-auto rounded-lg border border-gray-200 dark:border-gray-600">
+                                                        <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                                                            Scan this code with your phone camera
+                                                        </p>
+                                                        <!-- Waiting indicator -->
+                                                        <div class="mt-3 flex items-center justify-center gap-2">
                                                             <span class="relative flex h-2.5 w-2.5">
-                                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-purple-500"></span>
                                                             </span>
-                                                            <span class="text-xs text-white font-medium">Point camera at QR code</span>
+                                                            <span class="text-xs text-gray-500 dark:text-gray-400">Waiting for phone...</span>
                                                         </div>
+                                                        <!-- Countdown -->
+                                                        <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                                                            Link expires in <span class="font-mono font-semibold" x-text="countdown"></span>
+                                                        </p>
+                                                    </div>
+
+                                                    <!-- Expired state -->
+                                                    <div x-show="isExpired" class="text-center py-6">
+                                                        <i class="fas fa-clock text-3xl text-amber-400 mb-3"></i>
+                                                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Link expired</p>
+                                                        <button @click="regenerateSession()" type="button"
+                                                                class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                                            <i class="fas fa-redo mr-2"></i>Generate New Link
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Loading state -->
+                                                    <div x-show="!qrCodeDataUrl && !isExpired && !error" class="text-center py-8">
+                                                        <i class="fas fa-spinner fa-spin text-2xl text-purple-500 mb-3"></i>
+                                                        <p class="text-sm text-gray-500 dark:text-gray-400">Generating scan link...</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -272,9 +294,9 @@
                                             </div>
 
                                             <!-- Instructions -->
-                                            <p x-show="!rawResult && !isCaptured" class="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center">
+                                            <p x-show="!rawResult && !isCaptured && !isExpired" class="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center">
                                                 <i class="fas fa-info-circle mr-1"></i>
-                                                <span x-show="mode === 'camera'">Just hold up the QR code — it will be captured automatically</span>
+                                                <span x-show="mode === 'phone'">Open the link on your phone to scan the National ID QR code</span>
                                                 <span x-show="mode === 'upload'">Upload a clear photo of the National ID QR code</span>
                                             </p>
                                         </div>
@@ -1112,6 +1134,13 @@
 
                 handleQrScanned(data) {
                     if (!data) return;
+
+                    // If only rawData was sent (parsing failed), show warning
+                    if (data.rawData && !data.firstName && !data.lastName) {
+                        this.showToast('QR code scanned but could not extract name fields. Data may be encrypted.', 'warning');
+                        this.customerForm.idType = 'National ID';
+                        return;
+                    }
 
                     // Auto-fill name fields
                     if (data.firstName) this.customerForm.firstName = data.firstName.toUpperCase();
