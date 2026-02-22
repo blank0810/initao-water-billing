@@ -176,9 +176,52 @@
                                             </button>
                                         </div>
 
+                                        <!-- Mode Tabs -->
+                                        <div class="flex border-b border-gray-200 dark:border-gray-700">
+                                            <button @click="switchMode('camera')" type="button"
+                                                    :class="mode === 'camera' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
+                                                    class="flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2">
+                                                <i class="fas fa-camera"></i> Camera
+                                            </button>
+                                            <button @click="switchMode('upload')" type="button"
+                                                    :class="mode === 'upload' ? 'border-purple-500 text-purple-600 dark:text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'"
+                                                    class="flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-2">
+                                                <i class="fas fa-upload"></i> Upload Image
+                                            </button>
+                                        </div>
+
                                         <!-- Scanner Body -->
                                         <div class="p-4">
-                                            <div id="qr-reader" class="w-full rounded-lg overflow-hidden"></div>
+                                            <!-- Camera Mode -->
+                                            <div x-show="mode === 'camera'">
+                                                <div id="qr-reader" class="w-full rounded-lg overflow-hidden"></div>
+                                            </div>
+
+                                            <!-- Upload Mode -->
+                                            <div x-show="mode === 'upload'">
+                                                <div id="qr-upload-region" class="hidden"></div>
+                                                <label class="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer transition-colors"
+                                                       :class="isProcessingFile ? 'border-purple-300 bg-purple-50 dark:bg-purple-900/10' : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 dark:hover:border-purple-500 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700'">
+                                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                        <template x-if="!isProcessingFile">
+                                                            <div class="text-center">
+                                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                                                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                                                                    <span class="font-semibold text-purple-600 dark:text-purple-400">Click to upload</span> a photo of the QR code
+                                                                </p>
+                                                                <p class="text-xs text-gray-400 dark:text-gray-500">PNG, JPG or JPEG</p>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="isProcessingFile">
+                                                            <div class="text-center">
+                                                                <i class="fas fa-spinner fa-spin text-3xl text-purple-500 mb-3"></i>
+                                                                <p class="text-sm text-purple-600 dark:text-purple-400">Scanning QR code...</p>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                    <input type="file" class="hidden" accept="image/*" @change="handleFileUpload($event)" :disabled="isProcessingFile">
+                                                </label>
+                                            </div>
 
                                             <!-- Error Message -->
                                             <div x-show="error" x-transition
@@ -192,7 +235,8 @@
                                             <!-- Instructions -->
                                             <p class="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center">
                                                 <i class="fas fa-info-circle mr-1"></i>
-                                                Hold the National ID QR code in front of the camera
+                                                <span x-show="mode === 'camera'">Hold the National ID QR code in front of the camera</span>
+                                                <span x-show="mode === 'upload'">Upload a clear photo of the National ID QR code</span>
                                             </p>
                                         </div>
 

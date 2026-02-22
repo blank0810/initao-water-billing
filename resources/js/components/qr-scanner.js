@@ -10,17 +10,38 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('qrScanner', () => ({
         isOpen: false,
         isScanning: false,
+        isProcessingFile: false,
         scanner: null,
         error: '',
+        mode: 'camera', // 'camera' or 'upload'
 
         openScanner() {
             this.isOpen = true;
             this.error = '';
+            this.mode = 'camera';
 
             // Wait for modal DOM to render, then start camera
             this.$nextTick(() => {
                 this.startScanning();
             });
+        },
+
+        switchMode(newMode) {
+            if (this.mode === newMode) return;
+            this.error = '';
+
+            if (this.mode === 'camera' && this.scanner) {
+                this.scanner.stop().catch(() => {});
+                this.scanner.clear();
+                this.scanner = null;
+                this.isScanning = false;
+            }
+
+            this.mode = newMode;
+
+            if (newMode === 'camera') {
+                this.$nextTick(() => this.startScanning());
+            }
         },
 
         async startScanning() {
@@ -42,6 +63,28 @@ document.addEventListener('alpine:init', () => {
                 console.error('[QR Scanner] Failed to start camera:', err);
                 this.error = 'Could not access camera. Please check browser permissions.';
                 this.isScanning = false;
+            }
+        },
+
+        async handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            this.error = '';
+            this.isProcessingFile = true;
+
+            try {
+                const html5Qrcode = new Html5Qrcode('qr-upload-region');
+                const result = await html5Qrcode.scanFile(file, true);
+                html5Qrcode.clear();
+                this.onScanSuccess(result);
+            } catch (err) {
+                console.error('[QR Scanner] File scan failed:', err);
+                this.error = 'Could not read QR code from image. Please try a clearer photo.';
+            } finally {
+                this.isProcessingFile = false;
+                // Reset file input so the same file can be re-selected
+                event.target.value = '';
             }
         },
 
@@ -68,8 +111,10 @@ document.addEventListener('alpine:init', () => {
                 this.scanner = null;
             }
             this.isScanning = false;
+            this.isProcessingFile = false;
             this.isOpen = false;
             this.error = '';
+            this.mode = 'camera';
         }
     }));
 });
