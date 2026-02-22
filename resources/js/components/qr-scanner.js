@@ -26,13 +26,17 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
-        switchMode(newMode) {
+        async switchMode(newMode) {
             if (this.mode === newMode) return;
             this.error = '';
 
             if (this.mode === 'camera' && this.scanner) {
-                this.scanner.stop().catch(() => {});
-                this.scanner.clear();
+                try {
+                    await this.scanner.stop();
+                    this.scanner.clear();
+                } catch (err) {
+                    console.warn('[QR Scanner] Error stopping camera:', err);
+                }
                 this.scanner = null;
                 this.isScanning = false;
             }
