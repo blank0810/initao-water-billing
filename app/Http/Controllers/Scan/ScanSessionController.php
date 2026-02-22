@@ -53,34 +53,17 @@ class ScanSessionController extends Controller
      */
     public function submit(Request $request, string $token): JsonResponse
     {
-        $session = $this->scanSessionService->getPendingSession($token);
-
-        if (! $session) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid or expired scan session.',
-            ], 404);
-        }
-
-        if ($session->isExpired()) {
-            $session->update(['status' => 'expired']);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Scan session has expired.',
-            ], 410);
-        }
-
         $validated = $request->validate([
             'raw_data' => 'required|string',
             'format' => 'nullable|string|max:50',
         ]);
 
-        $this->scanSessionService->completeSession($session, $validated);
+        $result = $this->scanSessionService->completeSession($token, $validated);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Scan received successfully.',
-        ]);
+        return match ($result['status']) {
+            'completed' => response()->json(['success' => true, 'message' => 'Scan received successfully.']),
+            'expired' => response()->json(['success' => false, 'message' => 'Scan session has expired.'], 410),
+            default => response()->json(['success' => false, 'message' => 'Invalid or expired scan session.'], 404),
+        };
     }
 }

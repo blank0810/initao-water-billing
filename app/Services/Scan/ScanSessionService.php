@@ -4,6 +4,7 @@ namespace App\Services\Scan;
 
 use App\Events\ScanCompleted;
 use App\Models\ScanSession;
+use Illuminate\Support\Facades\DB;
 
 class ScanSessionService
 {
@@ -34,21 +35,41 @@ class ScanSessionService
         return $session;
     }
 
-    public function getPendingSession(string $token): ?ScanSession
+    /**
+     * Atomically find a pending session, validate it, and mark it as completed.
+     *
+     * Uses lockForUpdate() to prevent TOCTOU race conditions where concurrent
+     * requests could both complete the same session.
+     *
+     * @return array{session: ScanSession, status: string}
+     */
+    public function completeSession(string $token, array $scannedData): array
     {
-        return ScanSession::where('token', $token)
-            ->where('status', 'pending')
-            ->first();
-    }
+        return DB::transaction(function () use ($token, $scannedData) {
+            $session = ScanSession::where('token', $token)
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->first();
 
-    public function completeSession(ScanSession $session, array $scannedData): void
-    {
-        $session->update([
-            'status' => 'completed',
-            'scanned_data' => $scannedData,
-            'completed_at' => now(),
-        ]);
+            if (! $session) {
+                return ['session' => null, 'status' => 'not_found'];
+            }
 
-        broadcast(new ScanCompleted($session));
+            if ($session->isExpired()) {
+                $session->update(['status' => 'expired']);
+
+                return ['session' => $session, 'status' => 'expired'];
+            }
+
+            $session->update([
+                'status' => 'completed',
+                'scanned_data' => $scannedData,
+                'completed_at' => now(),
+            ]);
+
+            broadcast(new ScanCompleted($session));
+
+            return ['session' => $session, 'status' => 'completed'];
+        });
     }
 }
