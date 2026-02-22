@@ -23,6 +23,7 @@ import './components/admin/config/reading-schedules/readingScheduleManager.js';
 
 // Shared Components
 import './components/signature-pad.js';
+import './components/qr-scanner.js';
 
 Alpine.plugin(collapse);
 
