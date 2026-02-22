@@ -25,6 +25,10 @@ import './components/admin/config/reading-schedules/readingScheduleManager.js';
 import './components/signature-pad.js';
 import './components/qr-scanner.js';
 
+// Expose Html5Qrcode globally for the phone scanning page (inline script)
+import { Html5Qrcode } from 'html5-qrcode';
+window.Html5Qrcode = Html5Qrcode;
+
 Alpine.plugin(collapse);
 
 window.Alpine = Alpine;

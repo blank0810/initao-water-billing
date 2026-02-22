@@ -25,7 +25,6 @@ class ScanSessionController extends Controller
             return response()->json([
                 'success' => true,
                 'token' => $session->token,
-                'scan_url' => url('/scan/'.$session->token),
                 'expires_at' => $session->expires_at->toISOString(),
             ]);
         } catch (\Exception $e) {

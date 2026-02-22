@@ -1,18 +1,28 @@
-import jsQR from 'jsqr';
-import QRCode from 'qrcode';
-import { parsePhilSysQR } from '../parsers/philsys-parser.js';
+import jsQR from "jsqr";
+import QRCode from "qrcode";
+import { parsePhilSysQR } from "../parsers/philsys-parser.js";
 
 // ─── Image Processing (kept from upload implementation) ─────────
 
 function getImageData(source, crop = null) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
     const sw = source.naturalWidth || source.videoWidth || source.width;
     const sh = source.naturalHeight || source.videoHeight || source.height;
     if (crop) {
         canvas.width = crop.w;
         canvas.height = crop.h;
-        ctx.drawImage(source, crop.x, crop.y, crop.w, crop.h, 0, 0, crop.w, crop.h);
+        ctx.drawImage(
+            source,
+            crop.x,
+            crop.y,
+            crop.w,
+            crop.h,
+            0,
+            0,
+            crop.w,
+            crop.h,
+        );
     } else {
         canvas.width = sw;
         canvas.height = sh;
@@ -27,13 +37,18 @@ function binarize(imageData) {
     const gray = new Uint8Array(len);
     for (let i = 0; i < len; i++) {
         const idx = i * 4;
-        gray[i] = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
+        gray[i] = Math.round(
+            0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2],
+        );
     }
     const histogram = new Array(256).fill(0);
     for (let i = 0; i < len; i++) histogram[gray[i]]++;
     let sum = 0;
     for (let i = 0; i < 256; i++) sum += i * histogram[i];
-    let sumB = 0, wB = 0, maxVar = 0, threshold = 128;
+    let sumB = 0,
+        wB = 0,
+        maxVar = 0,
+        threshold = 128;
     for (let t = 0; t < 256; t++) {
         wB += histogram[t];
         if (wB === 0) continue;
@@ -43,7 +58,10 @@ function binarize(imageData) {
         const mB = sumB / wB;
         const mF = (sum - sumB) / wF;
         const variance = wB * wF * (mB - mF) * (mB - mF);
-        if (variance > maxVar) { maxVar = variance; threshold = t; }
+        if (variance > maxVar) {
+            maxVar = variance;
+            threshold = t;
+        }
     }
     for (let i = 0; i < len; i++) {
         const val = gray[i] > threshold ? 255 : 0;
@@ -55,7 +73,7 @@ function binarize(imageData) {
 
 function tryJsQR(imageData) {
     const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: 'attemptBoth',
+        inversionAttempts: "attemptBoth",
     });
     return code ? code.data : null;
 }
@@ -64,29 +82,35 @@ function loadImage(file) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
-        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            resolve(img);
+        };
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error("Failed to load image"));
+        };
         img.src = url;
     });
 }
 
 // ─── Alpine Component ───────────────────────────────────────────
 
-document.addEventListener('alpine:init', () => {
-    Alpine.data('qrScanner', () => ({
+document.addEventListener("alpine:init", () => {
+    Alpine.data("qrScanner", () => ({
         isOpen: false,
         isCaptured: false,
         isProcessingFile: false,
-        error: '',
-        mode: 'phone',       // 'phone' or 'upload'
-        rawResult: '',
+        error: "",
+        mode: "phone", // 'phone' or 'upload'
+        rawResult: "",
 
         // Phone scan state
-        scanToken: '',
-        scanUrl: '',
-        qrCodeDataUrl: '',
+        scanToken: "",
+        scanUrl: "",
+        qrCodeDataUrl: "",
         expiresAt: null,
-        countdown: '',
+        countdown: "",
         isExpired: false,
         isWaiting: false,
         _countdownTimer: null,
@@ -94,27 +118,27 @@ document.addEventListener('alpine:init', () => {
 
         openScanner() {
             this.isOpen = true;
-            this.error = '';
-            this.rawResult = '';
+            this.error = "";
+            this.rawResult = "";
             this.isCaptured = false;
-            this.mode = 'phone';
+            this.mode = "phone";
 
             this.$nextTick(() => this.createScanSession());
         },
 
         async switchMode(newMode) {
             if (this.mode === newMode) return;
-            this.error = '';
-            this.rawResult = '';
+            this.error = "";
+            this.rawResult = "";
             this.isCaptured = false;
 
-            if (this.mode === 'phone') {
+            if (this.mode === "phone") {
                 this._cleanupPhoneSession();
             }
 
             this.mode = newMode;
 
-            if (newMode === 'phone') {
+            if (newMode === "phone") {
                 this.$nextTick(() => this.createScanSession());
             }
         },
@@ -124,34 +148,49 @@ document.addEventListener('alpine:init', () => {
         async createScanSession() {
             this.isWaiting = true;
             this.isExpired = false;
-            this.error = '';
-            this.scanToken = '';
-            this.qrCodeDataUrl = '';
-            this.countdown = '';
+            this.error = "";
+            this.scanToken = "";
+            this.qrCodeDataUrl = "";
+            this.countdown = "";
 
             try {
-                const response = await fetch('/api/scan-sessions', {
-                    method: 'POST',
+                const csrfToken = document.querySelector(
+                    'meta[name="csrf-token"]',
+                )?.content;
+                if (!csrfToken) throw new Error("CSRF token not found");
+
+                const response = await fetch("/api/scan-sessions", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'X-Requested-With': 'XMLHttpRequest',
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest",
                     },
                 });
 
+                if (!response.ok) {
+                    console.error(
+                        "[QR Scanner] Session create failed:",
+                        response.status,
+                        response.statusText,
+                    );
+                    throw new Error(`Server error (${response.status})`);
+                }
+
                 const data = await response.json();
-                if (!data.success) throw new Error(data.message || 'Failed to create session');
+                if (!data.success)
+                    throw new Error(data.message || "Failed to create session");
 
                 this.scanToken = data.token;
-                this.scanUrl = data.scan_url;
+                this.scanUrl = `${window.location.origin}/scan/${data.token}`;
                 this.expiresAt = new Date(data.expires_at);
 
                 // Generate QR code image from the scan URL
-                this.qrCodeDataUrl = await QRCode.toDataURL(data.scan_url, {
+                this.qrCodeDataUrl = await QRCode.toDataURL(this.scanUrl, {
                     width: 280,
                     margin: 2,
-                    color: { dark: '#1f2937', light: '#ffffff' },
+                    color: { dark: "#1f2937", light: "#ffffff" },
                 });
 
                 // Start countdown timer
@@ -159,10 +198,9 @@ document.addEventListener('alpine:init', () => {
 
                 // Listen for scan result via Echo
                 this._listenForResult();
-
             } catch (err) {
-                console.error('[QR Scanner] Failed to create session:', err);
-                this.error = 'Failed to create scan session. Please try again.';
+                console.error("[QR Scanner] Failed to create session:", err);
+                this.error = "Failed to create scan session. Please try again.";
                 this.isWaiting = false;
             }
         },
@@ -174,30 +212,34 @@ document.addEventListener('alpine:init', () => {
 
                 if (diff <= 0) {
                     this.isExpired = true;
-                    this.countdown = 'Expired';
+                    this.countdown = "Expired";
                     this._cleanupPhoneSession();
                     return;
                 }
 
                 const mins = Math.floor(diff / 60000);
                 const secs = Math.floor((diff % 60000) / 1000);
-                this.countdown = `${mins}:${secs.toString().padStart(2, '0')}`;
+                this.countdown = `${mins}:${secs.toString().padStart(2, "0")}`;
             }, 1000);
         },
 
         _listenForResult() {
             if (!window.Echo) {
-                console.error('[QR Scanner] Echo not available');
+                console.error("[QR Scanner] Echo not available");
                 return;
             }
 
-            this._echoChannel = window.Echo.private(`scan-session.${this.scanToken}`)
-                .listen('.scan.completed', (data) => {
-                    console.log('[QR Scanner] Received scan result via Reverb:', data);
-                    this._cleanupPhoneSession();
-                    this.isWaiting = false;
-                    this.showCapturedResult(data.raw_data);
-                });
+            this._echoChannel = window.Echo.private(
+                `scan-session.${this.scanToken}`,
+            ).listen(".scan.completed", (data) => {
+                console.log(
+                    "[QR Scanner] Received scan result via Reverb:",
+                    data,
+                );
+                this._cleanupPhoneSession();
+                this.isWaiting = false;
+                this.showCapturedResult(data.raw_data);
+            });
         },
 
         regenerateSession() {
@@ -222,8 +264,8 @@ document.addEventListener('alpine:init', () => {
             const file = event.target.files[0];
             if (!file) return;
 
-            this.error = '';
-            this.rawResult = '';
+            this.error = "";
+            this.rawResult = "";
             this.isCaptured = false;
             this.isProcessingFile = true;
 
@@ -240,14 +282,26 @@ document.addEventListener('alpine:init', () => {
 
                 // Attempt 3: jsQR on right half (binarized) — PhilSys QR is on the right
                 if (!result) {
-                    const crop = { x: Math.floor(iw * 0.4), y: 0, w: Math.ceil(iw * 0.6), h: ih };
+                    const crop = {
+                        x: Math.floor(iw * 0.4),
+                        y: 0,
+                        w: Math.ceil(iw * 0.6),
+                        h: ih,
+                    };
                     result = tryJsQR(binarize(getImageData(img, crop)));
                 }
 
                 // Attempt 4: Native BarcodeDetector
-                if (!result && 'BarcodeDetector' in window) {
+                if (!result && "BarcodeDetector" in window) {
                     try {
-                        const detector = new BarcodeDetector({ formats: ['qr_code', 'pdf417', 'data_matrix', 'aztec'] });
+                        const detector = new BarcodeDetector({
+                            formats: [
+                                "qr_code",
+                                "pdf417",
+                                "data_matrix",
+                                "aztec",
+                            ],
+                        });
                         const barcodes = await detector.detect(img);
                         if (barcodes.length > 0) result = barcodes[0].rawValue;
                     } catch (e) {}
@@ -256,13 +310,14 @@ document.addEventListener('alpine:init', () => {
                 if (result) {
                     this.showCapturedResult(result);
                 } else {
-                    this.error = 'Could not detect a barcode. Make sure the QR code is clearly visible.';
+                    this.error =
+                        "Could not detect a barcode. Make sure the QR code is clearly visible.";
                 }
             } catch (err) {
-                this.error = 'Failed to load the image file.';
+                this.error = "Failed to load the image file.";
             } finally {
                 this.isProcessingFile = false;
-                event.target.value = '';
+                event.target.value = "";
             }
         },
 
@@ -277,20 +332,22 @@ document.addEventListener('alpine:init', () => {
                 // Parse the raw QR data and dispatch parsed fields
                 const parsed = parsePhilSysQR(text);
                 if (parsed) {
-                    this.$dispatch('qr-scanned', parsed);
+                    this.$dispatch("qr-scanned", parsed);
                 } else {
-                    // Dispatch raw data so the handler can still show the toast
-                    this.$dispatch('qr-scanned', { rawData: text });
+                    this.$dispatch("qr-scanned", { rawData: text });
                 }
+
+                // Auto-close the scanner modal after dispatching
+                this.closeScanner();
             }, 800);
         },
 
         scanAgain() {
-            this.rawResult = '';
-            this.error = '';
+            this.rawResult = "";
+            this.error = "";
             this.isCaptured = false;
 
-            if (this.mode === 'phone') {
+            if (this.mode === "phone") {
                 this.createScanSession();
             }
         },
@@ -301,11 +358,11 @@ document.addEventListener('alpine:init', () => {
             this.isWaiting = false;
             this.isProcessingFile = false;
             this.isCaptured = false;
-            this.error = '';
-            this.rawResult = '';
-            this.mode = 'phone';
-            this.qrCodeDataUrl = '';
-            this.scanToken = '';
-        }
+            this.error = "";
+            this.rawResult = "";
+            this.mode = "phone";
+            this.qrCodeDataUrl = "";
+            this.scanToken = "";
+        },
     }));
 });
