@@ -762,7 +762,7 @@
         </div>
 
         <!-- Success Modal -->
-        <div x-show="showSuccessModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        <div x-cloak x-show="showSuccessModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
              class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-8">
                 <div class="text-center">
